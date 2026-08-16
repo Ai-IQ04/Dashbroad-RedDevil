@@ -5978,23 +5978,16 @@
       }
 
       if (archiveBtn) {
-        if (isAdmin) {
+        if (isAdmin && !isLocked) {
+          // ยังไม่ล็อก -> แสดงปุ่มสีเขียว + รูปกุญแจปลดล็อก 🔓 + ข้อความ "ปิดรอบสัปดาห์" ทางด้านบน
           archiveBtn.classList.remove('hidden');
           archiveBtn.classList.add('inline-flex');
-          if (isLocked) {
-            // ล็อกแล้ว -> สีเหลือง/ส้ม + รูปกุญแจล็อก 🔒 + ข้อความ "ปลดล็อกสัปดาห์"
-            archiveBtn.className = "apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm";
-            if (archiveBtnIcon) archiveBtnIcon.className = "fa-solid fa-lock text-[10px]";
-            if (archiveBtnText) archiveBtnText.textContent = "ปลดล็อกสัปดาห์";
-            archiveBtn.title = `คลิกเพื่อปลดล็อก ${getWeekName(currentWeekNumber)}`;
-          } else {
-            // ยังไม่ล็อก -> สีเขียว + รูปกุญแจปลดล็อก 🔓 + ข้อความ "ปิดรอบสัปดาห์"
-            archiveBtn.className = "apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm";
-            if (archiveBtnIcon) archiveBtnIcon.className = "fa-solid fa-lock-open text-[10px]";
-            if (archiveBtnText) archiveBtnText.textContent = "ปิดรอบสัปดาห์";
-            archiveBtn.title = `คลิกเพื่อปิดรอบ ${getWeekName(currentWeekNumber)}`;
-          }
+          archiveBtn.className = "apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm";
+          if (archiveBtnIcon) archiveBtnIcon.className = "fa-solid fa-lock-open text-[10px]";
+          if (archiveBtnText) archiveBtnText.textContent = "ปิดรอบสัปดาห์";
+          archiveBtn.title = `คลิกเพื่อปิดรอบ ${getWeekName(currentWeekNumber)}`;
         } else {
+          // ล็อกแล้ว หรือไม่ใช่ Admin -> ซ่อนปุ่มด้านบนออก (เพื่อไม่ให้ซ้ำซ้อนกับปุ่มในแถบแบนเนอร์)
           archiveBtn.classList.add('hidden');
           archiveBtn.classList.remove('inline-flex');
         }
