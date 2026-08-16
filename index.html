@@ -1047,21 +1047,16 @@
   <main class="flex-1 flex flex-col min-h-0 bg-transparent p-2 sm:p-3.5 overflow-hidden animate-apple-content">
     <!-- 🔒 ป้ายแจ้งเตือนสัปดาห์ปิดรอบแล้ว (Locked Week Alert Banner) -->
     <div id="locked-week-banner"
-      class="hidden mb-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-950/80 via-slate-950/90 to-amber-950/80 border border-amber-500/50 text-amber-200 text-xs flex items-center justify-between shadow-lg backdrop-blur shrink-0 animate-fade-in">
+      class="hidden mb-2 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-950/80 via-slate-950/90 to-amber-950/80 border border-amber-500/50 text-amber-200 text-xs flex items-center justify-between shadow-lg backdrop-blur shrink-0 animate-fade-in">
       <div class="flex items-center gap-2.5">
         <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-xs shrink-0 border border-amber-500/40">
           <i class="fa-solid fa-lock animate-pulse"></i>
         </span>
         <div>
           <span class="font-bold text-amber-300" id="locked-banner-week-name">สัปดาห์ที่ 1</span>
-          <span class="text-slate-300 ml-1">ถูกปิดรอบแล้ว (โหมดอ่านอย่างเดียว • การแก้ไขย้อนหลังต้องยืนยันด้วย Email Admin)</span>
+          <span class="text-slate-300 ml-1">ถูกปิดรอบแล้ว (โหมดอ่านอย่างเดียว • หากต้องการปลดล็อกให้กดปุ่มทางด้านขวาบน)</span>
         </div>
       </div>
-      <button id="btn-banner-unlock" onclick="toggleLockCurrentWeek()"
-        class="hidden apple-btn bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-2.5 py-1 text-[11px] rounded-lg shadow-sm flex items-center gap-1 transition">
-        <i class="fa-solid fa-lock-open text-[10px]"></i>
-        <span>ปลดล็อกรอบ</span>
-      </button>
     </div>
 
     <div
@@ -5819,22 +5814,28 @@
       }
       const w = currentWeekNumber;
       const currentlyLocked = isWeekLocked(w);
-      const actionText = currentlyLocked ? 'ปลดล็อก' : 'ปิดรอบ';
       const wName = getWeekName(w);
 
-      if (!confirm(`คุณต้องการ "${actionText}" ${wName} ใช่หรือไม่?\n\n${currentlyLocked ? 'เมื่อปลดล็อกแล้ว แอดมินจะสามารถแก้ไขข้อมูลได้ตามปกติ' : 'เมื่อปิดรอบแล้ว สัปดาห์นี้จะถูกล็อก หากต้องการแก้ไขย้อนหลังจะต้องยืนยันด้วย Email Admin ทุกครั้ง'}`)) {
+      // ถ้าล็อกอยู่ -> ให้เปิด Modal ถาม Email & Password เพื่อปลดล็อก
+      if (currentlyLocked) {
+        openUnlockWeekModal();
         return;
       }
 
-      lockedWeeks[w] = !currentlyLocked;
+      // ถ้ายังไม่ล็อก -> ถามยืนยันปิดรอบ
+      if (!confirm(`คุณต้องการ "ปิดรอบ" ${wName} ใช่หรือไม่?\n\nเมื่อปิดรอบแล้ว สัปดาห์นี้จะถูกล็อก หากต้องการปลดล็อกจะต้องยืนยันด้วย Email และ Password ของ Admin`)) {
+        return;
+      }
+
+      lockedWeeks[w] = true;
       localStorage.setItem('guild_locked_weeks', JSON.stringify(lockedWeeks));
       if (fbDb) {
         fbDb.ref('guild_app/locked_weeks').set(lockedWeeks);
       }
 
       addAuditLog(
-        currentlyLocked ? 'week_unlocked' : 'week_locked',
-        `${actionText} "${wName}"`,
+        'week_locked',
+        `ปิดรอบ "${wName}"`,
         `โดย Admin: ${currentAdminEmail || 'Admin'}`,
         'System'
       );
@@ -5843,7 +5844,105 @@
       renderLockBanner();
       renderTable();
       updateAdminUI();
-      showToast(`${actionText} ${wName} เรียบร้อยแล้ว`, currentlyLocked ? 'info' : 'success');
+      showToast(`🔒 ปิดรอบ ${wName} เรียบร้อยแล้ว`, 'success');
+    }
+
+    function openUnlockWeekModal() {
+      const modal = document.getElementById('unlock-week-modal');
+      const nameEl = document.getElementById('unlock-week-modal-name');
+      const emailInput = document.getElementById('unlock-week-email-input');
+      const passInput = document.getElementById('unlock-week-password-input');
+      const errEl = document.getElementById('unlock-week-error');
+
+      if (nameEl) nameEl.textContent = getWeekName(currentWeekNumber);
+      if (emailInput) emailInput.value = currentAdminEmail || '';
+      if (passInput) passInput.value = '';
+      if (errEl) errEl.classList.add('hidden');
+
+      if (modal) modal.classList.remove('hidden');
+      if (passInput) passInput.focus();
+    }
+
+    function closeUnlockWeekModal() {
+      const modal = document.getElementById('unlock-week-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function handleConfirmUnlockWeek(e) {
+      if (e) e.preventDefault();
+      const emailInput = document.getElementById('unlock-week-email-input');
+      const passInput = document.getElementById('unlock-week-password-input');
+      const errEl = document.getElementById('unlock-week-error');
+
+      const email = (emailInput ? emailInput.value : '').trim().toLowerCase();
+      const password = (passInput ? passInput.value : '');
+
+      if (!email || !password) {
+        if (errEl) {
+          errEl.textContent = 'กรุณากรอกทั้ง Email และ รหัสผ่าน';
+          errEl.classList.remove('hidden');
+        }
+        return;
+      }
+
+      // ตรวจสอบกับ Super Admin
+      const isSuper = (typeof SUPER_ADMIN_EMAIL !== 'undefined' && email === SUPER_ADMIN_EMAIL.toLowerCase());
+      const superAdminAcc = (typeof adminAccounts !== 'undefined' && Array.isArray(adminAccounts))
+        ? adminAccounts.find(a => a.email && a.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase())
+        : null;
+      const superPass = (superAdminAcc && superAdminAcc.password) ? superAdminAcc.password : (typeof DEFAULT_SUPER_ADMIN !== 'undefined' ? DEFAULT_SUPER_ADMIN.password : 'admin1234');
+
+      let isValidAdmin = false;
+
+      if (isSuper) {
+        if (password === superPass) {
+          isValidAdmin = true;
+        }
+      } else {
+        const account = (typeof adminAccounts !== 'undefined' && Array.isArray(adminAccounts))
+          ? adminAccounts.find(a => a.email && a.email.toLowerCase() === email)
+          : null;
+        if (account && account.password === password) {
+          isValidAdmin = true;
+        }
+      }
+
+      if (!isValidAdmin) {
+        if (errEl) {
+          errEl.textContent = '❌ Email หรือ รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง';
+          errEl.classList.remove('hidden');
+        }
+        return;
+      }
+
+      // ปลดล็อกสำเร็จ
+      const w = currentWeekNumber;
+      const wName = getWeekName(w);
+
+      lockedWeeks[w] = false;
+      localStorage.setItem('guild_locked_weeks', JSON.stringify(lockedWeeks));
+      if (fbDb) {
+        fbDb.ref('guild_app/locked_weeks').set(lockedWeeks);
+      }
+
+      currentAdminEmail = email;
+      localStorage.setItem('guild_current_admin_email', currentAdminEmail);
+      isAdmin = true;
+      localStorage.setItem('guild_is_admin', 'true');
+
+      addAuditLog(
+        'week_unlocked',
+        `ปลดล็อก "${wName}"`,
+        `ปลดล็อกสำเร็จโดย Admin: ${email}`,
+        'System'
+      );
+
+      closeUnlockWeekModal();
+      renderWeekTabs();
+      renderLockBanner();
+      renderTable();
+      updateAdminUI();
+      showToast(`🔓 ปลดล็อก ${wName} เรียบร้อยแล้ว (สามารถแก้ไขข้อมูลได้ตามปกติ)`, 'success');
     }
 
     function renderLockBanner() {
@@ -13219,6 +13318,81 @@
           <button type="submit"
             class="flex-1 py-2.5 px-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-500/20 active:scale-95 transition flex items-center justify-center gap-1.5">
             <i class="fa-solid fa-unlock-keyhole"></i> <span>ยืนยันแก้ไขย้อนหลัง</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= หน้าต่างยืนยัน Email & Password เพื่อปลดล็อกสัปดาห์ ================= -->
+  <div id="unlock-week-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-4 animate-fade-in">
+    <div
+      class="w-full max-w-md bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-emerald-500/50 rounded-3xl p-6 text-center shadow-2xl relative animate-scale-up">
+
+      <button type="button" onclick="closeUnlockWeekModal()"
+        class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 text-sm transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div
+        class="w-14 h-14 bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/30 text-2xl mb-4 border border-emerald-300/40">
+        <i class="fa-solid fa-lock-open text-xl animate-bounce"></i>
+      </div>
+
+      <h3 class="text-base font-extrabold text-white">
+        🔓 ยืนยันสิทธิ์เพื่อปลดล็อกสัปดาห์
+      </h3>
+
+      <div class="mt-2.5 text-xs text-slate-300 leading-relaxed bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-3 text-left space-y-1">
+        <div class="flex items-center gap-1.5 text-emerald-300 font-bold">
+          <i class="fa-solid fa-calendar-check text-[11px]"></i>
+          <span id="unlock-week-modal-name">สัปดาห์ที่ 1</span>
+        </div>
+        <p class="text-slate-300 text-[11.5px]">
+          กรุณากรอก Email และ Password ของแอดมิน เพื่อยืนยันการปลดล็อกรอบสัปดาห์นี้
+        </p>
+      </div>
+
+      <form onsubmit="handleConfirmUnlockWeek(event)" class="w-full mt-4 space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 text-left mb-1.5">
+            Email Admin:
+          </label>
+          <div class="relative">
+            <i class="fa-solid fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input type="email" id="unlock-week-email-input" required
+              placeholder="เช่น admin@gmail.com"
+              class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 text-white text-xs rounded-xl py-2.5 pl-9 pr-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition shadow-inner font-mono" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 text-left mb-1.5">
+            รหัสผ่าน (Password):
+          </label>
+          <div class="relative">
+            <i class="fa-solid fa-key absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input type="password" id="unlock-week-password-input" required
+              placeholder="••••••••"
+              class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 text-white text-xs rounded-xl py-2.5 pl-9 pr-10 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition shadow-inner font-mono" />
+            <button type="button" onclick="togglePasswordVisibility('unlock-week-password-input', this)"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs transition">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="unlock-week-error" class="hidden text-rose-400 text-[11px] font-medium text-left"></div>
+
+        <div class="flex items-center gap-2 pt-1">
+          <button type="button" onclick="closeUnlockWeekModal()"
+            class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">
+            ยกเลิก
+          </button>
+          <button type="submit"
+            class="flex-1 py-2.5 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-lock-open"></i> <span>ยืนยันปลดล็อก</span>
           </button>
         </div>
       </form>
