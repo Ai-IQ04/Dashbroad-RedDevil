@@ -87,30 +87,33 @@ function playBossAlertSound() {
 function switchAppModule(moduleName) {
   activeAppModule = moduleName;
   const scoringContainer = document.getElementById('scoring-module-container');
+  const scoringSubHeader = document.getElementById('scoring-sub-header');
   const bossContainer = document.getElementById('boss-timer-module-container');
   const tabScoring = document.getElementById('nav-tab-scoring');
   const tabBoss = document.getElementById('nav-tab-boss-timer');
 
   if (moduleName === 'boss_timer') {
     if (scoringContainer) scoringContainer.classList.add('hidden');
+    if (scoringSubHeader) scoringSubHeader.classList.add('hidden');
     if (bossContainer) bossContainer.classList.remove('hidden');
 
     if (tabScoring) {
-      tabScoring.className = "apple-btn px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800/80 transition flex items-center gap-1.5";
+      tabScoring.className = "apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-2 active:scale-95";
     }
     if (tabBoss) {
-      tabBoss.className = "apple-btn px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-md";
+      tabBoss.className = "apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-orange-500/20 active:scale-95";
     }
     renderBossTimerCards();
   } else {
     if (scoringContainer) scoringContainer.classList.remove('hidden');
+    if (scoringSubHeader) scoringSubHeader.classList.remove('hidden');
     if (bossContainer) bossContainer.classList.add('hidden');
 
     if (tabScoring) {
-      tabScoring.className = "apple-btn px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-md";
+      tabScoring.className = "apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-orange-500/20 active:scale-95";
     }
     if (tabBoss) {
-      tabBoss.className = "apple-btn px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800/80 transition flex items-center gap-1.5";
+      tabBoss.className = "apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-2 active:scale-95";
     }
   }
 }

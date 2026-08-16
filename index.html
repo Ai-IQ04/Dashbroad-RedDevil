@@ -608,254 +608,242 @@
 
   <!-- ================= ส่วนหัวเว็บ (Navbar & Admin Control) ================= -->
   <header
-    class="bg-slate-950/85 border-b border-slate-800/80 shrink-0 z-30 px-3 sm:px-5 py-2.5 animate-apple-header backdrop-blur-xl shadow-lg shadow-black/30">
-    <div class="flex items-center justify-between gap-3">
+    class="bg-slate-950/90 border-b border-slate-800/80 shrink-0 z-30 px-3 sm:px-5 py-2.5 backdrop-blur-xl shadow-xl shadow-black/40">
+    
+    <!-- Tier 1: Main Header Bar (Logo / Module Switcher / System Controls) -->
+    <div class="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
 
-      <!-- โลโก้ และ สัปดาห์ปัจจุบัน (Apple-Style App Icon & Capsule Badge) -->
-      <div class="flex items-center gap-3">
+      <!-- Left: Logo, Title, Online Count -->
+      <div class="flex items-center gap-3 shrink-0">
         <div
-          class="h-10 w-10 rounded-[12px] bg-gradient-to-tr from-amber-500 via-orange-600 to-rose-600 flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-105 hover:rotate-2 shadow-lg cursor-pointer"
-          style="box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 0 4px 14px -2px rgba(234, 88, 12, 0.5);">
-          <i class="fa-solid fa-shield-halved text-white text-lg filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]"></i>
+          class="h-10 w-10 rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-600 to-rose-600 flex items-center justify-center shrink-0 shadow-lg shadow-orange-500/20 border border-orange-400/30 cursor-pointer transition hover:scale-105">
+          <i class="fa-solid fa-shield-halved text-white text-lg filter drop-shadow"></i>
         </div>
         <div>
-          <div class="flex items-center gap-2.5 flex-wrap">
+          <div class="flex items-center gap-2">
             <h1
-              class="text-sm sm:text-base font-bold bg-gradient-to-r from-white via-amber-100 to-orange-200 bg-clip-text text-transparent leading-tight tracking-tight">
+              class="text-sm sm:text-base font-extrabold bg-gradient-to-r from-white via-amber-100 to-orange-200 bg-clip-text text-transparent leading-tight tracking-tight">
               Guild Activity & Scoring
             </h1>
-            <!-- 4-Week Capsule Tabs (แสดง 4 สัปดาห์ & แก้ไขชื่อได้) -->
-            <div id="week-tabs-bar"
-              class="flex items-center gap-1 bg-slate-900/90 border border-slate-800/90 rounded-full p-0.5 shadow-inner backdrop-blur">
-              <!-- Render via renderWeekTabs() -->
-            </div>
-          </div>
-          <div class="flex items-center gap-2 mt-1 flex-wrap">
-            <p class="text-[11px] text-slate-400 leading-none flex items-center gap-1.5"><span
-                class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span
-                data-i18n="header_subtitle">BlueDevil & RedDevil • ระบบเช็คชื่อ & จัดอันดับตาม CP</span></p>
-
-            <!-- 🟢 ป้ายแสดงจำนวนคนออนไลน์ Real-time (Online Presence Badge) -->
+            <!-- 🟢 ป้ายแสดงจำนวนคนออนไลน์ Real-time -->
             <div id="online-presence-badge"
-              class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 text-[10.5px] font-medium shadow-sm select-none cursor-help transition-all hover:bg-emerald-900/60"
-              title="กำลังใช้งานอยู่ 1 คน (👑 แอดมิน: 0, 👥 สมาชิก: 1)">
-              <span class="relative flex h-2 w-2">
-                <span
-                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 text-[10px] font-medium shadow-sm select-none cursor-help transition hover:bg-emerald-900/60"
+              title="กำลังใช้งานอยู่ 1 คน">
+              <span class="relative flex h-1.5 w-1.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
               </span>
               <span id="online-users-count" class="font-mono font-bold text-white">1</span>
-              <span id="online-users-label" data-i18n="online_users_label">คนออนไลน์</span>
+              <span id="online-users-label" class="hidden sm:inline" data-i18n="online_users_label">คนออนไลน์</span>
             </div>
           </div>
+          <p class="text-[11px] text-slate-400 leading-none mt-1">
+            BlueDevil & RedDevil • <span data-i18n="header_subtitle">ระบบเช็คชื่อ & บอสไทม์เมอร์</span>
+          </p>
         </div>
       </div>
 
-      <!-- 🧭 แถบนำทางสลับโมดูลหลัก (Apple Pro Segmented Nav Control) วางเด่นกลาง Header -->
-      <div class="flex items-center p-1 bg-slate-900/90 border border-slate-700/80 rounded-2xl shadow-xl backdrop-blur-xl">
-        <button id="nav-tab-scoring" onclick="switchAppModule('scoring')"
-          class="apple-btn px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-orange-500/20">
-          <i class="fa-solid fa-shield-halved text-sm"></i>
-          <span>เช็คชื่อ & คะแนนกิลด์</span>
+      <!-- Center: Prominent Segmented Nav Switcher -->
+      <div class="flex items-center justify-center flex-1 mx-2">
+        <div class="flex items-center p-1 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-xl backdrop-blur-xl">
+          <button id="nav-tab-scoring" onclick="switchAppModule('scoring')"
+            class="apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-orange-500/20 active:scale-95">
+            <i class="fa-solid fa-shield-halved text-sm"></i>
+            <span>เช็คชื่อ & คะแนนกิลด์</span>
+          </button>
+          <button id="nav-tab-boss-timer" onclick="switchAppModule('boss_timer')"
+            class="apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-2 active:scale-95">
+            <i class="fa-solid fa-stopwatch text-amber-400 text-sm"></i>
+            <span>บอสไทม์เมอร์</span>
+            <span id="badge-boss-alive-count" class="hidden px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-rose-600 text-white animate-pulse shadow-md">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: System Controls & Actions -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <!-- สลับโหมด Admin -->
+        <div id="admin-mode-container" class="flex items-center">
+          <button id="admin-toggle-btn" onclick="toggleAdminMode()"
+            class="apple-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm font-semibold">
+            <!-- Render via JS -->
+          </button>
+        </div>
+
+        <!-- ปุ่มสลับภาษา -->
+        <button id="btn-lang-toggle" onclick="toggleLanguage()"
+          class="apple-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sky-300 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
+          title="Switch Language / เปลี่ยนภาษา">
+          <i class="fa-solid fa-language text-sky-400 text-xs"></i>
+          <span id="lang-label">EN</span>
         </button>
-        <button id="nav-tab-boss-timer" onclick="switchAppModule('boss_timer')"
-          class="apple-btn px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-2">
-          <i class="fa-solid fa-stopwatch text-amber-400 text-sm"></i>
-          <span>บอสไทม์เมอร์ (Boss Timer)</span>
-          <span id="badge-boss-alive-count" class="hidden px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-rose-600 text-white animate-pulse shadow-md">0</span>
+
+        <!-- ปุ่มเพิ่มตัวละคร -->
+        <button id="btn-add-member-top" onclick="openAddMemberModal()"
+          class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm font-semibold">
+          <i class="fa-solid fa-user-plus text-xs"></i>
+          <span class="hidden md:inline" data-i18n="btn_add_char">เพิ่มตัวละคร</span>
+        </button>
+
+        <!-- ปุ่มส่งออก CSV -->
+        <button onclick="exportToCSV()"
+          class="apple-btn bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 text-emerald-300 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
+          title="Export to CSV" data-i18n-title="tooltip_export_csv">
+          <i class="fa-solid fa-file-excel text-emerald-400 text-xs"></i>
+          <span class="hidden lg:inline font-mono">CSV</span>
+        </button>
+
+        <!-- ปุ่มรีเซ็ตข้อมูล -->
+        <button id="btn-reset-top" onclick="resetAllData()"
+          class="apple-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 p-1.5 text-slate-400 hover:text-rose-400 text-xs shadow-sm"
+          title="Reset Data" data-i18n-title="tooltip_reset_data">
+          <i class="fa-solid fa-rotate-left text-[11px]"></i>
         </button>
       </div>
 
-      <!-- ส่วนควบคุมส่วนกลาง: จัดหมวดหมู่ 3 โซน Glass Capsules สไตล์ Apple macOS -->
-      <div class="flex items-center gap-2.5 flex-wrap">
-
-        <!-- 🌟 หมวดที่ 1: ศูนย์รวมกิจกรรม & สมาชิก (Member Hub) -->
-        <div
-          class="flex items-center gap-1.5 p-1 bg-slate-950/80 border border-slate-800/90 rounded-2xl backdrop-blur-md shadow-sm">
-          <!-- 🎁 ปุ่มเปิดร้านค้าของรางวัล & Showcase -->
-          <button type="button" onclick="openRewardStoreModal()"
-            class="apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm">
-            <i class="fa-solid fa-gift text-xs"></i>
-            <span>ร้านค้าของรางวัล (Shop)</span>
-          </button>
-
-          <!-- ปุ่มเปิดดูสรุปคะแนนทุกอาทิตย์ -->
-          <button onclick="openWeeklyHistoryModal()"
-            class="apple-btn apple-btn-sapphire inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
-            <i class="fa-solid fa-chart-line text-xs"></i>
-            <span data-i18n="btn_weekly_summary">สรุปคะแนน</span>
-          </button>
-
-          <!-- ปุ่มสรุป Top 10 เป็นรูปภาพ (LINE/Discord) -->
-          <button onclick="openTop10SummaryModal()"
-            class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
-            title="เซฟภาพสรุปคะแนน 10 อันดับแรกเพื่อแชร์ลง LINE / Discord">
-            <i class="fa-solid fa-camera text-xs"></i>
-            <span data-i18n="btn_top10_summary">สรุป Top 10</span>
-          </button>
-
-          <!-- ปุ่มขออัพเดท CP (ทุกคนเห็น) -->
-          <button onclick="openCpUpdateRequestModal()"
-            class="apple-btn apple-btn-sky inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
-            <i class="fa-solid fa-bolt text-xs"></i>
-            <span data-i18n="btn_request_cp">ขออัพเดท CP</span>
-          </button>
-
-          <!-- ปุ่มยื่นอุทธรณ์เช็คชื่อ (ทุกคนเห็น) -->
-          <button onclick="openAppealRequestModal()"
-            class="apple-btn apple-btn-magenta inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
-            <i class="fa-solid fa-bullhorn text-xs"></i>
-            <span data-i18n="btn_appeal_request">ยื่นอุทธรณ์</span>
-          </button>
-        </div>
-
-        <!-- 👑 หมวดที่ 2: ศูนย์งาน Admin (Admin Hub) - จัด 3 โซนย่อยชัดเจน -->
-        <div id="admin-hub-container"
-          class="hidden flex items-center gap-1.5 p-1 bg-gradient-to-r from-purple-950/50 via-slate-950/90 to-amber-950/50 border border-purple-500/40 rounded-2xl backdrop-blur-md shadow-md">
-          <div
-            class="px-2 py-0.5 text-[10px] font-black text-amber-400 uppercase tracking-wider flex items-center gap-1">
-            <i class="fa-solid fa-crown text-[10px]"></i> <span class="hidden xl:inline">ADMIN</span>
-          </div>
-
-          <!-- โซน 1: อนุมัติ & ของรางวัล (Approvals & Store) -->
-          <div class="flex items-center gap-1.5">
-            <!-- ปุ่มอนุมัติ CP (เฉพาะ Admin) -->
-            <button id="btn-approve-cp" onclick="openCpApprovalModal()"
-              class="hidden apple-btn apple-btn-violet inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
-              <i class="fa-solid fa-clipboard-check text-xs"></i>
-              <span data-i18n="btn_approve_cp">อนุมัติ CP</span>
-              <span id="cp-pending-badge"
-                class="hidden px-1.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
-            </button>
-
-            <!-- ปุ่มอนุมัติอุทธรณ์เช็คชื่อ (เฉพาะ Admin) -->
-            <button id="btn-approve-appeals" onclick="openAppealApprovalModal()"
-              class="hidden apple-btn apple-btn-coral inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
-              <i class="fa-solid fa-bullhorn text-xs"></i>
-              <span data-i18n="btn_appeal_approval">อุทธรณ์เช็คชื่อ</span>
-              <span id="appeal-pending-badge"
-                class="hidden px-1.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
-            </button>
-
-            <!-- ปุ่มอนุมัติของรางวัล (เฉพาะ Admin) -->
-            <button id="btn-approve-rewards" onclick="openRewardApprovalModal()"
-              class="hidden apple-btn apple-btn-orange inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
-              <i class="fa-solid fa-gift text-xs"></i>
-              <span data-i18n="btn_approve_rewards">อนุมัติรางวัล</span>
-              <span id="reward-pending-badge"
-                class="hidden px-1.5 py-0.5 bg-amber-300 text-slate-950 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
-            </button>
-
-            <!-- ปุ่มจัดการคลังสินค้า/เพิ่มรางวัล (เฉพาะ Admin) -->
-            <button id="btn-manage-rewards" onclick="openRewardStoreAdminModal()"
-              class="hidden apple-btn apple-btn-teal inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
-              <i class="fa-solid fa-boxes-stacked text-xs"></i>
-              <span data-i18n="btn_manage_rewards">คลังของรางวัล</span>
-            </button>
-          </div>
-
-          <!-- Divider 1 -->
-          <span class="h-4 w-px bg-slate-700/80 mx-0.5"></span>
-
-          <!-- โซน 2: จัดการกิลด์ & เช็คชื่อ (Guild & Operations) -->
-          <div class="flex items-center gap-1.5">
-            <!-- ปุ่มจัดการกิลด์ (เฉพาะ Admin) -->
-            <button id="btn-manage-guilds" onclick="openGuildManagerModal()"
-              class="hidden apple-btn apple-btn-forest inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
-              <i class="fa-solid fa-shield-cat text-xs"></i>
-              <span data-i18n="btn_manage_guilds">จัดการกิลด์</span>
-            </button>
-
-            <!-- ปุ่มติ๊ก All ตามกิลด์ (เฉพาะ Admin) -->
-            <button id="btn-batch-guild-check" onclick="openBatchGuildCheckModal()"
-              class="hidden apple-btn apple-btn-ocean inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
-              <i class="fa-solid fa-list-check text-xs"></i>
-              <span data-i18n="btn_batch_guild_check">ติ๊ก All</span>
-            </button>
-
-            <!-- ปุ่มล้างข้อมูลการติ๊กถูก (เฉพาะ Admin) -->
-            <button id="btn-clear-checks" onclick="openClearChecksModal()"
-              class="hidden apple-btn apple-btn-burgundy inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
-              <i class="fa-solid fa-broom text-xs"></i>
-              <span data-i18n="btn_clear_checks">ล้างติ๊ก</span>
-            </button>
-          </div>
-
-          <!-- Divider 2 -->
-          <span class="h-4 w-px bg-slate-700/80 mx-0.5"></span>
-
-          <!-- โซน 3: ความปลอดภัย & ระบบ (Security & System) -->
-          <div class="flex items-center gap-1.5">
-            <!-- ปุ่มจัดการ Admin (เฉพาะ Super Admin) -->
-            <button id="btn-manage-admins" onclick="openAdminApprovalModal()"
-              class="hidden apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
-              <i class="fa-solid fa-user-shield text-xs"></i>
-              <span data-i18n="btn_manage_admins">จัดการ Admin</span>
-              <span id="admin-pending-badge"
-                class="hidden px-1.5 py-0.5 bg-slate-950 text-amber-300 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
-            </button>
-
-            <!-- ปุ่มประวัติการแก้ไข Audit Logs (เฉพาะ Admin) -->
-            <button id="btn-audit-logs" onclick="openAuditLogsModal()"
-              class="hidden apple-btn apple-btn-steel inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
-              <i class="fa-solid fa-clock-rotate-left text-xs"></i>
-              <span data-i18n="btn_audit_logs">ประวัติ</span>
-            </button>
-
-            <!-- ปุ่มสำรอง & กู้คืนข้อมูล (JSON) -->
-            <button onclick="openBackupRestoreModal()"
-              class="apple-btn apple-btn-darkpurple inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
-              title="สำรองหรือกู้คืนข้อมูลกิลด์ (Backup & Restore)">
-              <i class="fa-solid fa-floppy-disk text-xs"></i>
-              <span data-i18n="btn_backup_restore">สำรอง</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- ⚙️ หมวดที่ 3: ระบบ & เครื่องมือควบคุม (System Controls) -->
-        <div
-          class="flex items-center gap-1.5 p-1 bg-slate-950/80 border border-slate-800/90 rounded-2xl backdrop-blur-md shadow-sm">
-          <!-- สลับโหมด Admin -->
-          <div id="admin-mode-container" class="flex items-center">
-            <button id="admin-toggle-btn" onclick="toggleAdminMode()"
-              class="apple-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm">
-              <!-- Render via JS -->
-            </button>
-          </div>
-
-          <!-- ปุ่มสลับภาษา -->
-          <button id="btn-lang-toggle" onclick="toggleLanguage()"
-            class="apple-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sky-300 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
-            title="Switch Language / เปลี่ยนภาษา">
-            <i class="fa-solid fa-language text-sky-400 text-xs"></i>
-            <span id="lang-label">EN</span>
-          </button>
-
-          <!-- ปุ่มเพิ่มตัวละคร -->
-          <button id="btn-add-member-top" onclick="openAddMemberModal()"
-            class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm">
-            <i class="fa-solid fa-user-plus text-xs"></i>
-            <span class="hidden sm:inline" data-i18n="btn_add_char">เพิ่มตัวละคร</span>
-          </button>
-
-          <!-- ปุ่มส่งออก CSV -->
-          <button onclick="exportToCSV()"
-            class="apple-btn bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 text-emerald-300 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
-            title="Export to CSV" data-i18n-title="tooltip_export_csv">
-            <i class="fa-solid fa-file-excel text-emerald-400 text-xs"></i>
-            <span class="hidden md:inline font-mono">CSV</span>
-          </button>
-
-          <!-- ปุ่มรีเซ็ตข้อมูล -->
-          <button id="btn-reset-top" onclick="resetAllData()"
-            class="apple-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 p-1.5 text-slate-400 hover:text-rose-400 text-xs shadow-sm"
-            title="Reset Data" data-i18n-title="tooltip_reset_data">
-            <i class="fa-solid fa-rotate-left text-[11px]"></i>
-          </button>
-        </div>
-
-      </div>
     </div>
+
+    <!-- Tier 2: Sub-Bar for Week Tabs & Member Hub (Contextual for Scoring Module) -->
+    <div id="scoring-sub-header" class="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between gap-3 flex-wrap">
+      
+      <!-- Left: 4-Week Capsule Tabs -->
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] font-bold text-slate-400 flex items-center gap-1">
+          <i class="fa-solid fa-calendar-week text-amber-400"></i> รอบสัปดาห์:
+        </span>
+        <div id="week-tabs-bar"
+          class="flex items-center gap-1 bg-slate-900/90 border border-slate-800/90 rounded-full p-0.5 shadow-inner backdrop-blur">
+          <!-- Render via renderWeekTabs() -->
+        </div>
+      </div>
+
+      <!-- Right: Member Hub Tools (ร้านค้า, สรุปคะแนน, Top 10, ขอ CP, อุทธรณ์) -->
+      <div class="flex items-center gap-1.5 p-1 bg-slate-950/80 border border-slate-800/90 rounded-2xl backdrop-blur-md shadow-sm flex-wrap">
+        <!-- 🎁 ปุ่มเปิดร้านค้าของรางวัล & Showcase -->
+        <button type="button" onclick="openRewardStoreModal()"
+          class="apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm">
+          <i class="fa-solid fa-gift text-xs"></i>
+          <span>ร้านค้าของรางวัล (Shop)</span>
+        </button>
+
+        <!-- ปุ่มเปิดดูสรุปคะแนนทุกอาทิตย์ -->
+        <button onclick="openWeeklyHistoryModal()"
+          class="apple-btn apple-btn-sapphire inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+          <i class="fa-solid fa-chart-line text-xs"></i>
+          <span data-i18n="btn_weekly_summary">สรุปคะแนน</span>
+        </button>
+
+        <!-- ปุ่มสรุป Top 10 เป็นรูปภาพ (LINE/Discord) -->
+        <button onclick="openTop10SummaryModal()"
+          class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
+          title="เซฟภาพสรุปคะแนน 10 อันดับแรกเพื่อแชร์ลง LINE / Discord">
+          <i class="fa-solid fa-camera text-xs"></i>
+          <span data-i18n="btn_top10_summary">สรุป Top 10</span>
+        </button>
+
+        <!-- ปุ่มขออัพเดท CP (ทุกคนเห็น) -->
+        <button onclick="openCpUpdateRequestModal()"
+          class="apple-btn apple-btn-sky inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+          <i class="fa-solid fa-bolt text-xs"></i>
+          <span data-i18n="btn_request_cp">ขออัพเดท CP</span>
+        </button>
+
+        <!-- ปุ่มยื่นอุทธรณ์เช็คชื่อ (ทุกคนเห็น) -->
+        <button onclick="openAppealRequestModal()"
+          class="apple-btn apple-btn-magenta inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+          <i class="fa-solid fa-bullhorn text-xs"></i>
+          <span data-i18n="btn_appeal_request">ยื่นอุทธรณ์</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Tier 3: Dedicated Admin Ribbon (เมื่อล็อกอิน Admin จะแสดงเป็นแถบทองหรูหราเฉพาะ) -->
+    <div id="admin-hub-container"
+      class="hidden mt-2 pt-2 border-t border-purple-500/30 flex items-center justify-between gap-2 p-1.5 bg-gradient-to-r from-purple-950/60 via-slate-950/90 to-amber-950/60 border border-purple-500/40 rounded-2xl backdrop-blur-md shadow-lg flex-wrap">
+      
+      <div class="px-2.5 py-1 text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+        <i class="fa-solid fa-crown text-amber-400"></i>
+        <span>แผงควบคุมแอดมิน</span>
+      </div>
+
+      <!-- กลุ่มปุ่ม 1: งานอนุมัติ & ของรางวัล -->
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <button id="btn-approve-cp" onclick="openCpApprovalModal()"
+          class="hidden apple-btn apple-btn-violet inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+          <i class="fa-solid fa-clipboard-check text-xs"></i>
+          <span data-i18n="btn_approve_cp">อนุมัติ CP</span>
+          <span id="cp-pending-badge"
+            class="hidden px-1.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
+        </button>
+
+        <button id="btn-approve-appeals" onclick="openAppealApprovalModal()"
+          class="hidden apple-btn apple-btn-coral inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+          <i class="fa-solid fa-bullhorn text-xs"></i>
+          <span data-i18n="btn_appeal_approval">อุทธรณ์เช็คชื่อ</span>
+          <span id="appeal-pending-badge"
+            class="hidden px-1.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
+        </button>
+
+        <button id="btn-approve-rewards" onclick="openRewardApprovalModal()"
+          class="hidden apple-btn apple-btn-orange inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+          <i class="fa-solid fa-gift text-xs"></i>
+          <span data-i18n="btn_approve_rewards">อนุมัติรางวัล</span>
+          <span id="reward-pending-badge"
+            class="hidden px-1.5 py-0.5 bg-amber-300 text-slate-950 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
+        </button>
+
+        <button id="btn-manage-rewards" onclick="openRewardStoreAdminModal()"
+          class="hidden apple-btn apple-btn-teal inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+          <i class="fa-solid fa-boxes-stacked text-xs"></i>
+          <span data-i18n="btn_manage_rewards">คลังของรางวัล</span>
+        </button>
+      </div>
+
+      <!-- กลุ่มปุ่ม 2: จัดการกิลด์ & เช็คชื่อ & ความปลอดภัย -->
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <button id="btn-manage-guilds" onclick="openGuildManagerModal()"
+          class="hidden apple-btn apple-btn-forest inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+          <i class="fa-solid fa-shield-cat text-xs"></i>
+          <span data-i18n="btn_manage_guilds">จัดการกิลด์</span>
+        </button>
+
+        <button id="btn-batch-guild-check" onclick="openBatchGuildCheckModal()"
+          class="hidden apple-btn apple-btn-ocean inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+          <i class="fa-solid fa-list-check text-xs"></i>
+          <span data-i18n="btn_batch_guild_check">ติ๊ก All</span>
+        </button>
+
+        <button id="btn-clear-checks" onclick="openClearChecksModal()"
+          class="hidden apple-btn apple-btn-burgundy inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+          <i class="fa-solid fa-broom text-xs"></i>
+          <span data-i18n="btn_clear_checks">ล้างติ๊ก</span>
+        </button>
+
+        <button id="btn-manage-admins" onclick="openAdminApprovalModal()"
+          class="hidden apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+          <i class="fa-solid fa-user-shield text-xs"></i>
+          <span data-i18n="btn_manage_admins">จัดการ Admin</span>
+          <span id="admin-pending-badge"
+            class="hidden px-1.5 py-0.5 bg-slate-950 text-amber-300 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
+        </button>
+
+        <button id="btn-audit-logs" onclick="openAuditLogsModal()"
+          class="hidden apple-btn apple-btn-steel inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+          <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+          <span data-i18n="btn_audit_logs">ประวัติ</span>
+        </button>
+
+        <button onclick="openBackupRestoreModal()"
+          class="apple-btn apple-btn-darkpurple inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
+          title="สำรองหรือกู้คืนข้อมูลกิลด์ (Backup & Restore)">
+          <i class="fa-solid fa-floppy-disk text-xs"></i>
+          <span data-i18n="btn_backup_restore">สำรองข้อมูล</span>
+        </button>
+      </div>
+
+    </div>
+
   </header>
 
   <!-- ================= โมดูลที่ 1: กิจกรรมและคะแนนกิลด์ (Guild Scoring Module) ================= -->
