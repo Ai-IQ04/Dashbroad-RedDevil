@@ -115,30 +115,31 @@ function switchAppModule(moduleName) {
   }
 }
 
-// Calculate Next Spawn Date
+// Calculate Next Spawn Date (Returns null if not recorded)
 function calculateNextSpawnDate(boss, defeatedDateStr) {
-  const now = new Date();
+  if (!defeatedDateStr) return null; // Unrecorded -> Do NOT show countdown
+
+  const defDate = new Date(defeatedDateStr);
+  if (isNaN(defDate.getTime())) return null;
 
   if (boss.respawnType === 'interval') {
-    if (!defeatedDateStr) return null; // Unrecorded
-    const defDate = new Date(defeatedDateStr);
-    if (isNaN(defDate.getTime())) return null;
     const nextSpawn = new Date(defDate.getTime() + (boss.intervalHours * 3600 * 1000));
     return nextSpawn;
   }
 
   if (boss.respawnType === 'fixed' && Array.isArray(boss.fixedTimes)) {
-    // Find the next upcoming fixed occurrence from now
+    // Find next upcoming occurrence after the recorded kill date
+    const baseDate = defDate;
     let nearest = null;
     for (let offset = 0; offset <= 7; offset++) {
-      const checkDate = new Date(now.getTime() + offset * 24 * 3600 * 1000);
+      const checkDate = new Date(baseDate.getTime() + offset * 24 * 3600 * 1000);
       const dayOfWeek = checkDate.getDay(); // 0 = Sun, 1 = Mon ...
 
       for (const ft of boss.fixedTimes) {
         if (ft.days.includes(dayOfWeek)) {
           const [h, m] = ft.time.split(':').map(Number);
           const candidate = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate(), h, m, 0, 0);
-          if (candidate > now) {
+          if (candidate > baseDate) {
             if (!nearest || candidate < nearest) {
               nearest = candidate;
             }
@@ -663,6 +664,27 @@ function handleConfirmMaintenance(e) {
   playChime();
 }
 
+// Clear all recorded timers back to clean unrecorded state
+function clearAllBossTimers() {
+  if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการล้างเวลาบอสทั้งหมดกลับสู่สถานะ "ยังไม่ลงเวลา"?')) return;
+
+  bossTimerData = {};
+  localStorage.setItem('guild_boss_timers', JSON.stringify(bossTimerData));
+  if (typeof fbDb !== 'undefined' && fbDb) {
+    fbDb.ref('guild_app/boss_timers').set(bossTimerData);
+  }
+
+  const adminEmail = typeof currentAdminEmail !== 'undefined' ? currentAdminEmail : 'Admin';
+  if (typeof addAuditLog === 'function') {
+    addAuditLog('boss_clear_all', 'ล้างเวลาบอสทั้งหมดเป็นค่าเริ่มต้น', `โดย Admin: ${adminEmail}`, 'BossTimer');
+  }
+
+  closeMaintenanceModal();
+  renderBossTimerCards();
+  updateUpcomingBossWidget();
+  showToast('🗑️ ล้างเวลาบอสทั้งหมดเรียบร้อยแล้ว (สถานะ: ยังไม่ลงเวลา)', 'info');
+}
+
 // AI OCR Image Handler
 function handleGlobalPasteForOCR(event) {
   if (activeAppModule !== 'boss_timer') return;
@@ -1150,3 +1172,4 @@ window.toggleBossSound = toggleBossSound;
 window.renderBossTimerCards = renderBossTimerCards;
 window.closeBossAiOcrModal = closeBossAiOcrModal;
 window.handleConfirmOcrSave = handleConfirmOcrSave;
+window.clearAllBossTimers = clearAllBossTimers;
