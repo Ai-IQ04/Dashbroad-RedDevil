@@ -758,15 +758,6 @@
               <span data-i18n="btn_manage_guilds">จัดการกิลด์</span>
             </button>
 
-            <!-- ปุ่มซิงค์ข้อมูล Discord (เฉพาะ Admin) -->
-            <button id="btn-sync-discord" onclick="triggerDiscordSync()"
-              class="hidden apple-btn bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-200 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm transition"
-              title="สั่งให้บอทสแกนข้อความการลงทะเบียนในห้อง Discord ทันที">
-              <i id="btn-sync-discord-icon" class="fa-brands fa-discord text-indigo-400 text-xs"></i>
-              <span id="btn-sync-discord-text">ซิงค์ Discord</span>
-              <span id="discord-active-count-badge" class="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9.5px] font-mono font-bold">0</span>
-            </button>
-
             <!-- ปุ่มติ๊ก All ตามกิลด์ (เฉพาะ Admin) -->
             <button id="btn-batch-guild-check" onclick="openBatchGuildCheckModal()"
               class="hidden apple-btn apple-btn-ocean inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
@@ -5764,117 +5755,6 @@
       } catch (err) {
         console.warn('Presence setup warning:', err);
       }
-
-      // 15. ดักฟังข้อมูลสมาชิกที่ยืนยันตัวตนใน Discord (Discord Verified Members)
-      fbDb.ref('guild_app/discord_verified').on('value', snapshot => {
-        const val = snapshot.val();
-        if (val && typeof val === 'object') {
-          discordVerifiedMembers = val;
-          localStorage.setItem('guild_discord_verified', JSON.stringify(discordVerifiedMembers));
-        } else {
-          discordVerifiedMembers = {};
-          localStorage.setItem('guild_discord_verified', JSON.stringify({}));
-        }
-        const countBadge = document.getElementById('discord-active-count-badge');
-        if (countBadge) {
-          countBadge.textContent = Object.keys(discordVerifiedMembers).length;
-        }
-        renderTable();
-      });
-
-      // 16. ดักฟังผลลัพธ์การสั่งซิงค์ Discord จากบอท
-      fbDb.ref('guild_app/bot_status/sync_result').on('value', snapshot => {
-        const val = snapshot.val();
-        if (val && val.timestamp && (Date.now() - val.timestamp) < 30000) {
-          const icon = document.getElementById('btn-sync-discord-icon');
-          const text = document.getElementById('btn-sync-discord-text');
-          if (icon) icon.className = 'fa-brands fa-discord text-indigo-400 text-xs';
-          if (text) text.textContent = 'ซิงค์ Discord';
-
-          const countBadge = document.getElementById('discord-active-count-badge');
-          if (countBadge && val.syncedCount !== undefined) {
-            countBadge.textContent = val.syncedCount;
-          }
-          showToast(`🎉 ซิงค์ Discord สำเร็จ! ยืนยันแล้ว ${val.syncedCount || 0} รายการ`, 'success');
-        }
-      });
-    }
-
-    let discordVerifiedMembers = JSON.parse(localStorage.getItem('guild_discord_verified')) || {};
-
-    function triggerDiscordSync() {
-      if (!isAdmin) {
-        showToast(t('toast_need_admin_check'), "warning");
-        openAdminEmailModal();
-        return;
-      }
-
-      const icon = document.getElementById('btn-sync-discord-icon');
-      const text = document.getElementById('btn-sync-discord-text');
-      if (icon) icon.className = 'fa-solid fa-arrows-rotate fa-spin text-indigo-400 text-xs';
-      if (text) text.textContent = 'กำลังซิงค์...';
-
-      showToast('📡 ส่งคำสั่งให้บอทสแกนข้อความ Discord แล้ว...', 'info');
-
-      if (fbDb) {
-        fbDb.ref('guild_app/bot_commands/sync').set({
-          requestedAt: Date.now(),
-          requestedBy: currentAdminEmail || 'Admin'
-        });
-      }
-
-      // ถ้าไม่มีการตอบกลับภายใน 10 วินาที ให้คืนสถานะปุ่ม
-      setTimeout(() => {
-        const curIcon = document.getElementById('btn-sync-discord-icon');
-        const curText = document.getElementById('btn-sync-discord-text');
-        if (curIcon && curIcon.classList.contains('fa-spin')) {
-          curIcon.className = 'fa-brands fa-discord text-indigo-400 text-xs';
-          if (curText) curText.textContent = 'ซิงค์ Discord';
-        }
-      }, 10000);
-    }
-
-    function getDiscordVerifiedData(member) {
-      if (!member || !discordVerifiedMembers || typeof discordVerifiedMembers !== 'object') return null;
-
-      const memEmail = (member.email || '').trim().toLowerCase();
-      const memName = (member.characterName || member.name || '').trim().toLowerCase();
-
-      // ค้นหาตาม email หรือ characterName
-      const entries = Object.values(discordVerifiedMembers);
-      for (const item of entries) {
-        if (!item || typeof item !== 'object') continue;
-        const itemEmail = (item.email || '').trim().toLowerCase();
-        const itemName = (item.characterName || item.name || '').trim().toLowerCase();
-
-        if (memEmail && itemEmail && memEmail === itemEmail) {
-          return item;
-        }
-        if (memName && itemName && memName === itemName) {
-          return item;
-        }
-      }
-      return null;
-    }
-
-    function renderDiscordActiveBadgeHtml(member) {
-      const verified = getDiscordVerifiedData(member);
-      if (!verified) return '';
-
-      const emailStr = verified.email || member.email || '';
-      const uidStr = verified.uid || verified.inGameMemberNo || '';
-      const tooltip = `✅ Discord Active Verified (สมาชิกยืนยันใน Discord แล้ว)\nอีเมล: ${emailStr}${uidStr ? `\nUID: ${uidStr}` : ''}\nชื่อ Discord: ${verified.discordTag || verified.discordName || verified.discordId || 'ยืนยันแล้ว'}`;
-
-      return `
-        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-[9px] font-bold text-emerald-300 shadow-sm shrink-0 whitespace-nowrap cursor-help transition hover:bg-emerald-500/25 select-none"
-              title="${escapeHtml(tooltip)}">
-          <span class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span class="font-mono uppercase tracking-wider">Active</span>
-        </span>
-      `;
     }
 
     // ================= ระบบจัดการ 4 สัปดาห์ & เปลี่ยนชื่อสัปดาห์ =================
@@ -5995,11 +5875,6 @@
         if (manageGuildsBtn) {
           manageGuildsBtn.classList.remove('hidden');
           manageGuildsBtn.classList.add('inline-flex');
-        }
-        const syncDiscordBtn = document.getElementById('btn-sync-discord');
-        if (syncDiscordBtn) {
-          syncDiscordBtn.classList.remove('hidden');
-          syncDiscordBtn.classList.add('inline-flex');
         }
         if (batchCheckBtn) {
           batchCheckBtn.classList.remove('hidden');
@@ -7320,7 +7195,6 @@
                   ${isAdmin ? '<i class="fa-solid fa-pen text-[9px] opacity-0 group-hover/name:opacity-100 text-sky-400 transition ml-1"></i>' : ''}
                 </span>
                 ${renderGuildBadgeHtml(member.guild)}
-                ${renderDiscordActiveBadgeHtml(member)}
               </div>
               <div class="text-[10px] text-zinc-500 truncate max-w-[220px] leading-tight mt-0.5 font-mono" title="${safeEmail}">
                 ${safeEmail || '-'}
