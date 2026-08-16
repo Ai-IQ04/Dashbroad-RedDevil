@@ -92,22 +92,22 @@ function parseRegistrationMessage(message) {
 
   if (!content) return null;
 
-  // Pattern การดึงข้อมูล
-  const emailMatch = content.match(/(?:อีเมล์|อีเมล|Email|E-mail)[:\s\u200B\n└L\-\|]*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i)
+  // Pattern การดึงข้อมูลแบบแม่นยำ
+  const emailMatch = content.match(/(?:อีเมล์|อีเมล|Email|E-mail)[*:\s\u200B\n└L\-\|]*`?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})`?/i)
     || content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
 
-  const charNameMatch = content.match(/(?:ชื่อตัวละคร|CharacterName|Character Name|Name)[:\s\u200B\n└L\-\|]+([^\n\r]+)/i);
-  const guildMatch = content.match(/(?:กิลด์|Guild)[:\s\u200B\n└L\-\|]+([^\n\r]+)/i);
-  const uidMatch = content.match(/(?:UID สมาชิก|UID|InGameMemberNo|MemberNo)[:\s\u200B\n└L\-\|]+([0-9]+)/i);
-  const walletMatch = content.match(/(?:WalletUSDT|Wallet|กระเป๋า)[:\s\u200B\n└L\-\|]+(0x[a-fA-F0-9]{40})/i);
+  const charNameMatch = content.match(/(?:ชื่อตัวละคร|CharacterName|Character Name)[*:\s\u200B\n└L\-\|]+`?([^\n\r`*]+)`?/i);
+  const guildMatch = content.match(/(?:กิลด์|Guild)[*:\s\u200B\n└L\-\|]+`?([^\n\r`*]+)`?/i);
+  const uidMatch = content.match(/(?:UID สมาชิก|UID|InGameMemberNo|MemberNo)[*:\s\u200B\n└L\-\|]+`?([0-9]+)`?/i);
+  const walletMatch = content.match(/(?:WalletUSDT|Wallet|กระเป๋า)[*:\s\u200B\n└L\-\|]+`?(0x[a-fA-F0-9]{40})`?/i);
 
   const discordUser = message.author;
 
-  const email = emailMatch ? emailMatch[1].trim() : '';
-  const characterName = charNameMatch ? charNameMatch[1].trim().replace(/^[`*_\s]+|[`*_\s]+$/g, '') : '';
-  const guild = guildMatch ? guildMatch[1].trim().replace(/^[`*_\s]+|[`*_\s]+$/g, '') : '';
-  const uid = uidMatch ? uidMatch[1].trim() : '';
-  const wallet = walletMatch ? walletMatch[1].trim() : '';
+  const email = emailMatch ? emailMatch[1].replace(/[`*_\s]/g, '').trim() : '';
+  const characterName = charNameMatch ? charNameMatch[1].replace(/[`*_\s]/g, '').trim() : '';
+  const guild = guildMatch ? guildMatch[1].replace(/[`*_\s]/g, '').trim() : '';
+  const uid = uidMatch ? uidMatch[1].replace(/[`*_\s]/g, '').trim() : '';
+  const wallet = walletMatch ? walletMatch[1].replace(/[`*_\s]/g, '').trim() : '';
 
   if (!email && !characterName) {
     return null;
