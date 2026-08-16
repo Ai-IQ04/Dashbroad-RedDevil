@@ -1035,9 +1035,9 @@
 
       <!-- ปุ่มบันทึกปิดรอบสัปดาห์ / ปลดล็อกสัปดาห์ (เฉพาะ Admin) -->
       <button id="btn-archive-week" onclick="toggleLockCurrentWeek()"
-        class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm"
-        title="คลิกเพื่อปิดรอบหรือปลดล็อกสัปดาห์นี้">
-        <i id="btn-archive-week-icon" class="fa-solid fa-lock text-[10px]"></i>
+        class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm"
+        title="คลิกเพื่อปิดรอบสัปดาห์นี้">
+        <i id="btn-archive-week-icon" class="fa-solid fa-lock-open text-[10px]"></i>
         <span id="btn-archive-week-text" data-i18n="btn_archive_week">ปิดรอบสัปดาห์</span>
       </button>
     </div>
@@ -1047,16 +1047,21 @@
   <main class="flex-1 flex flex-col min-h-0 bg-transparent p-2 sm:p-3.5 overflow-hidden animate-apple-content">
     <!-- 🔒 ป้ายแจ้งเตือนสัปดาห์ปิดรอบแล้ว (Locked Week Alert Banner) -->
     <div id="locked-week-banner"
-      class="hidden mb-2 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-950/80 via-slate-950/90 to-amber-950/80 border border-amber-500/50 text-amber-200 text-xs flex items-center justify-between shadow-lg backdrop-blur shrink-0 animate-fade-in">
+      class="hidden mb-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-950/80 via-slate-950/90 to-amber-950/80 border border-amber-500/50 text-amber-200 text-xs flex items-center justify-between shadow-lg backdrop-blur shrink-0 animate-fade-in">
       <div class="flex items-center gap-2.5">
         <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-xs shrink-0 border border-amber-500/40">
           <i class="fa-solid fa-lock animate-pulse"></i>
         </span>
         <div>
           <span class="font-bold text-amber-300" id="locked-banner-week-name">สัปดาห์ที่ 1</span>
-          <span class="text-slate-300 ml-1">ถูกปิดรอบแล้ว (โหมดอ่านอย่างเดียว • หากต้องการปลดล็อกให้กดปุ่มทางด้านขวาบน)</span>
+          <span class="text-slate-300 ml-1">ถูกปิดรอบแล้ว (โหมดอ่านอย่างเดียว • การแก้ไขย้อนหลังต้องยืนยันด้วย Email Admin)</span>
         </div>
       </div>
+      <button id="btn-banner-unlock" onclick="toggleLockCurrentWeek()"
+        class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl shadow-md border border-amber-400/50 hover:brightness-110 active:scale-95 transition shrink-0">
+        <i class="fa-solid fa-lock text-[11px]"></i>
+        <span>ปลดล็อกสัปดาห์</span>
+      </button>
     </div>
 
     <div
@@ -5977,13 +5982,15 @@
           archiveBtn.classList.remove('hidden');
           archiveBtn.classList.add('inline-flex');
           if (isLocked) {
-            archiveBtn.className = "apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm";
-            if (archiveBtnIcon) archiveBtnIcon.className = "fa-solid fa-lock-open text-[10px]";
+            // ล็อกแล้ว -> สีเหลือง/ส้ม + รูปกุญแจล็อก 🔒 + ข้อความ "ปลดล็อกสัปดาห์"
+            archiveBtn.className = "apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm";
+            if (archiveBtnIcon) archiveBtnIcon.className = "fa-solid fa-lock text-[10px]";
             if (archiveBtnText) archiveBtnText.textContent = "ปลดล็อกสัปดาห์";
             archiveBtn.title = `คลิกเพื่อปลดล็อก ${getWeekName(currentWeekNumber)}`;
           } else {
-            archiveBtn.className = "apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm";
-            if (archiveBtnIcon) archiveBtnIcon.className = "fa-solid fa-lock text-[10px]";
+            // ยังไม่ล็อก -> สีเขียว + รูปกุญแจปลดล็อก 🔓 + ข้อความ "ปิดรอบสัปดาห์"
+            archiveBtn.className = "apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm";
+            if (archiveBtnIcon) archiveBtnIcon.className = "fa-solid fa-lock-open text-[10px]";
             if (archiveBtnText) archiveBtnText.textContent = "ปิดรอบสัปดาห์";
             archiveBtn.title = `คลิกเพื่อปิดรอบ ${getWeekName(currentWeekNumber)}`;
           }
