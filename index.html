@@ -526,20 +526,20 @@
 
         <!-- ปุ่มอนุมัติ CP (เฉพาะ Admin) -->
         <button id="btn-approve-cp" onclick="openCpApprovalModal()"
-          class="hidden apple-btn apple-btn-purple inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm relative">
-          <i class="fa-solid fa-clipboard-check text-purple-400 text-[11px]"></i>
+          class="hidden apple-btn apple-btn-purple inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm">
+          <i class="fa-solid fa-clipboard-check text-purple-300 text-xs"></i>
           <span data-i18n="btn_approve_cp">อนุมัติ CP</span>
           <span id="cp-pending-badge"
-            class="hidden absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[9px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow px-1 animate-pulse">0</span>
+            class="hidden px-1.5 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded-full shadow leading-none animate-pulse">0</span>
         </button>
 
         <!-- ปุ่มอนุมัติอุทธรณ์เช็คชื่อ (เฉพาะ Admin) -->
         <button id="btn-approve-appeals" onclick="openAppealApprovalModal()"
-          class="hidden apple-btn apple-btn-rose inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm relative">
-          <i class="fa-solid fa-clipboard-question text-rose-400 text-[11px]"></i>
+          class="hidden apple-btn apple-btn-rose inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm">
+          <i class="fa-solid fa-bullhorn text-rose-300 text-xs"></i>
           <span data-i18n="btn_appeal_approval">อุทธรณ์เช็คชื่อ</span>
           <span id="appeal-pending-badge"
-            class="hidden absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[9px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow px-1 animate-pulse">0</span>
+            class="hidden px-1.5 py-0.5 bg-rose-500 text-white text-[10px] font-bold rounded-full shadow leading-none animate-pulse">0</span>
         </button>
 
         <!-- ปุ่มจัดการกิลด์ (เฉพาะ Admin) -->
@@ -572,11 +572,11 @@
 
         <!-- ปุ่มจัดการ Admin (เฉพาะ Super Admin) -->
         <button id="btn-manage-admins" onclick="openAdminApprovalModal()"
-          class="hidden apple-btn apple-btn-rose inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm relative">
-          <i class="fa-solid fa-user-shield text-rose-400 text-[11px]"></i>
+          class="hidden apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm">
+          <i class="fa-solid fa-user-shield text-amber-300 text-xs"></i>
           <span data-i18n="btn_manage_admins">จัดการ Admin</span>
           <span id="admin-pending-badge"
-            class="hidden absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[9px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow px-1 animate-pulse">0</span>
+            class="hidden px-1.5 py-0.5 bg-amber-500 text-slate-950 text-[10px] font-bold rounded-full shadow leading-none animate-pulse">0</span>
         </button>
 
         <!-- สลับโหมด Admin -->
