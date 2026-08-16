@@ -10372,14 +10372,14 @@
 
     // คำนวณแต้มสะสมในรอบเดือนปัจจุบันแยกรายบุคคล (รวม 4 สัปดาห์: W1 - W4)
     function getMemberWeeklyBreakdown(m) {
-      if (!m) return { wScores: [0, 0, 0, 0], total: 0 };
+      if (!m) return { wScores: [0, 0, 0, 0], baseTotal: 0, bonusPoints: 0, total: 0 };
       if (typeof m === 'string') {
         m = members.find(x => (x.characterName || x.name) === m);
       }
-      if (!m) return { wScores: [0, 0, 0, 0], total: 0 };
+      if (!m) return { wScores: [0, 0, 0, 0], baseTotal: 0, bonusPoints: 0, total: 0 };
 
       const wScores = [0, 0, 0, 0];
-      let total = 0;
+      let baseTotal = 0;
 
       for (let w = 1; w <= 4; w++) {
         let checksArr = null;
@@ -10392,11 +10392,14 @@
         if (Array.isArray(checksArr)) {
           const s = calculateTotalScore(checksArr);
           wScores[w - 1] = s;
-          total += s;
+          baseTotal += s;
         }
       }
 
-      return { wScores, total };
+      const bonusPoints = Number(m.bonusPoints) || 0;
+      const total = baseTotal + bonusPoints;
+
+      return { wScores, baseTotal, bonusPoints, total };
     }
 
     function getMemberMonthlyScore(m) {
@@ -10426,6 +10429,7 @@
       
       initRewardStoreDropzone();
       populateRewardMemberSelect();
+      populateAdminPointsMemberSelect();
       renderRewardStoreCatalog();
       renderAdminStoreInventory();
       renderStoreHistoryTable();
@@ -10507,6 +10511,7 @@
         if (btnAdmin) {
           btnAdmin.className = "apple-btn apple-btn-teal px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md";
         }
+        populateAdminPointsMemberSelect();
         renderAdminStoreInventory();
       }
     }
@@ -11523,6 +11528,125 @@
       renderRewardStoreCatalog();
     }
 
+    // ================= ระบบจัดการแต้มพิเศษ / เติมแต้มทดสอบ (Admin Bonus Points) =================
+    function populateAdminPointsMemberSelect() {
+      const select = document.getElementById('admin-points-member-select');
+      if (!select) return;
+      const currentVal = select.value;
+      select.innerHTML = '<option value="">-- กรุณาเลือกตัวละครที่ต้องการปรับแต้ม --</option>';
+
+      const sortedMembers = [...members].sort((a, b) => {
+        const nameA = a.characterName || a.name || '';
+        const nameB = b.characterName || b.name || '';
+        return nameA.localeCompare(nameB, currentLang === 'th' ? 'th' : 'en');
+      });
+
+      sortedMembers.forEach(m => {
+        const charName = m.characterName || m.name || '';
+        if (!charName) return;
+        const opt = document.createElement('option');
+        opt.value = charName;
+        const bonus = Number(m.bonusPoints) || 0;
+        opt.textContent = `${charName} (${m.guild || 'Guild'})${bonus > 0 ? ` [แต้มพิเศษ: +${bonus} PTS]` : ''}`;
+        select.appendChild(opt);
+      });
+
+      if (currentVal && members.some(m => (m.characterName || m.name) === currentVal)) {
+        select.value = currentVal;
+      }
+      onAdminPointsMemberChange();
+    }
+
+    function onAdminPointsMemberChange() {
+      const select = document.getElementById('admin-points-member-select');
+      const infoBox = document.getElementById('admin-points-member-info-box');
+      const summaryEl = document.getElementById('admin-points-current-summary');
+      const inputEl = document.getElementById('admin-points-input');
+      if (!select || !infoBox || !summaryEl) return;
+
+      const charName = select.value;
+      const m = members.find(x => (x.characterName || x.name) === charName);
+      if (m) {
+        infoBox.classList.remove('hidden');
+        infoBox.classList.add('flex');
+        const breakdown = getMemberWeeklyBreakdown(m);
+        const available = getMemberAvailablePoints(m);
+        const bonus = Number(m.bonusPoints) || 0;
+        summaryEl.innerHTML = `แต้มจากกิจกรรม: <strong class="text-white">${breakdown.baseTotal}</strong> PTS | แต้มพิเศษ: <strong class="text-amber-400 font-mono font-black">+${bonus}</strong> PTS ➔ แต้มพร้อมใช้: <strong class="text-emerald-400 font-mono font-black">${available}</strong> PTS`;
+        if (inputEl && (inputEl.value === '' || inputEl.value === '0')) {
+          inputEl.value = bonus > 0 ? bonus : 100;
+        }
+      } else {
+        infoBox.classList.add('hidden');
+        infoBox.classList.remove('flex');
+      }
+    }
+
+    function saveAdminMemberBonusPoints() {
+      if (!isAdmin) return;
+      const select = document.getElementById('admin-points-member-select');
+      const inputEl = document.getElementById('admin-points-input');
+      const reasonEl = document.getElementById('admin-points-reason');
+      const charName = select ? select.value : '';
+      if (!charName) {
+        showToast('กรุณาเลือกตัวละครก่อนบันทึกแต้ม', 'warning');
+        return;
+      }
+      const m = members.find(x => (x.characterName || x.name) === charName);
+      if (!m) return;
+
+      const pts = Math.max(0, parseInt(inputEl.value, 10) || 0);
+      const reason = (reasonEl ? reasonEl.value : '').trim() || 'ปรับแต้มพิเศษ / ทดสอบระบบ';
+
+      m.bonusPoints = pts;
+      saveData();
+
+      addAuditLog(
+        'points_adjust',
+        `ปรับแต้มพิเศษ (Bonus) ให้ "${charName}" เป็น ${pts} PTS`,
+        `เหตุผล: ${reason} | โดย: ${currentAdminEmail}`,
+        charName
+      );
+
+      showToast(`บันทึกแต้มพิเศษให้ ${charName} เป็น ${pts} PTS เรียบร้อยแล้ว`, 'success');
+      onAdminPointsMemberChange();
+      onRewardMemberSelected();
+      populateRewardMemberSelect();
+      populateAdminPointsMemberSelect();
+      renderRewardStoreCatalog();
+    }
+
+    function resetAdminMemberBonusPoints() {
+      if (!isAdmin) return;
+      const select = document.getElementById('admin-points-member-select');
+      const charName = select ? select.value : '';
+      if (!charName) {
+        showToast('กรุณาเลือกตัวละครก่อนรีเซ็ต', 'warning');
+        return;
+      }
+      const m = members.find(x => (x.characterName || x.name) === charName);
+      if (!m) return;
+
+      m.bonusPoints = 0;
+      saveData();
+
+      addAuditLog(
+        'points_reset',
+        `รีเซ็ตแต้มพิเศษของ "${charName}" กลับเป็น 0 (แต้มจริงตามกิจกรรม)`,
+        `โดย: ${currentAdminEmail}`,
+        charName
+      );
+
+      showToast(`รีเซ็ตแต้มพิเศษของ ${charName} กลับเป็น 0 (คืนค่าแต้มจริง) สำเร็จแล้ว`, 'success');
+      const inputEl = document.getElementById('admin-points-input');
+      if (inputEl) inputEl.value = 0;
+      onAdminPointsMemberChange();
+      onRewardMemberSelected();
+      populateRewardMemberSelect();
+      populateAdminPointsMemberSelect();
+      renderRewardStoreCatalog();
+    }
+
   </script>
 
   <!-- ================= Modal: สรุปคะแนน Top 10 (Export to Image) ================= -->
@@ -11787,6 +11911,60 @@
 
       <!-- Tab 3: Admin Inventory & Add Reward -->
       <div id="store-tab-admin" class="hidden flex-1 overflow-y-auto pr-1 py-2 space-y-4">
+        <!-- ⚡ Bonus & Test Points Management Box -->
+        <div class="bg-gradient-to-r from-slate-900/95 via-amber-950/20 to-slate-900/95 border border-amber-500/40 rounded-2xl p-4 shadow-lg">
+          <div class="flex items-center justify-between pb-2 mb-3 border-b border-slate-800/80">
+            <h4 class="text-sm font-extrabold text-white flex items-center gap-2">
+              <i class="fa-solid fa-bolt-lightning text-amber-400 text-base"></i> จัดการแต้มพิเศษ / เติมแต้มทดสอบ (Admin Bonus Points)
+            </h4>
+            <span class="text-[10.5px] text-amber-300/80 bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-mono font-bold">
+              Test &amp; Bonus Points
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+            <div class="md:col-span-2">
+              <label class="block text-slate-300 font-bold mb-1">เลือกตัวละครที่ต้องการปรับแต้ม *</label>
+              <select id="admin-points-member-select" onchange="onAdminPointsMemberChange()"
+                class="w-full bg-slate-900/95 border border-amber-500/40 rounded-xl px-3 py-2 text-white font-semibold focus:outline-none focus:border-amber-400">
+                <option value="">-- กรุณาเลือกตัวละคร --</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">แต้มพิเศษ (Bonus PTS) *</label>
+              <input type="number" id="admin-points-input" value="100" min="0" step="10"
+                class="w-full bg-slate-900 border border-amber-500/40 rounded-xl px-3 py-2 text-amber-300 font-mono font-black focus:outline-none focus:border-amber-400"
+                placeholder="เช่น 100, 500" />
+            </div>
+
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">เหตุผล / บันทึกช่วยจำ</label>
+              <input type="text" id="admin-points-reason" value="ทดสอบระบบร้านค้า"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-500"
+                placeholder="เช่น ทดสอบระบบ / รางวัลพิเศษ" />
+            </div>
+          </div>
+
+          <div id="admin-points-member-info-box" class="mt-3 p-3 rounded-xl bg-slate-950/90 border border-slate-800 flex items-center justify-between text-xs flex-wrap gap-2 hidden">
+            <div class="flex items-center gap-2 text-slate-300 flex-wrap">
+              <span class="text-slate-400 font-medium">สถานะแต้มปัจจุบัน:</span>
+              <span id="admin-points-current-summary" class="font-mono text-amber-300 font-bold">-</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="saveAdminMemberBonusPoints()"
+                class="apple-btn apple-btn-gold px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md">
+                <i class="fa-solid fa-plus text-xs"></i> <span>บันทึกแต้มพิเศษ</span>
+              </button>
+              <button type="button" onclick="resetAdminMemberBonusPoints()"
+                class="apple-btn apple-btn-ruby px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md"
+                title="ล้างแต้มพิเศษของคนนี้เป็น 0 ให้กลับมาเป็นแต้มจริง">
+                <i class="fa-solid fa-rotate-left text-xs"></i> <span>รีเซ็ตแต้มคนนี้กลับเป็น 0</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Add Item Box -->
         <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4">
           <h4 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
