@@ -515,6 +515,13 @@
           <span>จัดการกิลด์</span>
         </button>
 
+        <!-- ปุ่มติ๊ก All ตามกิลด์ (เฉพาะ Admin) -->
+        <button id="btn-batch-guild-check" onclick="openBatchGuildCheckModal()"
+          class="hidden apple-btn apple-btn-indigo inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm">
+          <i class="fa-solid fa-list-check text-indigo-400 text-[11px]"></i>
+          <span>ติ๊ก All ตามกิลด์</span>
+        </button>
+
         <!-- ปุ่มล้างข้อมูลการติ๊กถูก (เฉพาะ Admin) -->
         <button id="btn-clear-checks" onclick="openClearChecksModal()"
           class="hidden apple-btn apple-btn-rose inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm">
@@ -1042,6 +1049,86 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ================= หน้าต่างป๊อปอัป: ติ๊กถูก All ตามกิลด์ (Batch Guild Check Modal) ================= -->
+  <div id="batch-guild-check-modal"
+    class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div
+      class="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-md p-5 shadow-2xl space-y-4 apple-modal-box">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <div class="flex items-center gap-2.5">
+          <div
+            class="h-10 w-10 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-list-check"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">ติ๊กถูกทั้งหมดตามกิลด์ (Batch Check)</h3>
+            <p class="text-[11px] text-slate-400">เช็คชื่อสมาชิกพร้อมกันทั้งกิลด์</p>
+          </div>
+        </div>
+        <button onclick="closeBatchGuildCheckModal()" class="text-slate-400 hover:text-white p-1 rounded-lg transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3.5 text-xs text-slate-300">
+        <!-- เลือกกิลด์ -->
+        <div>
+          <label class="block font-semibold text-slate-200 mb-1">1. เลือกกิลด์ที่ต้องการดำเนินการ *</label>
+          <select id="batch-guild-select"
+            class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500">
+            <!-- Render via JS -->
+          </select>
+        </div>
+
+        <!-- เลือกกิจกรรมบอส -->
+        <div>
+          <label class="block font-semibold text-slate-200 mb-1">2. เลือกกิจกรรมบอส *</label>
+          <select id="batch-activity-select"
+            class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500">
+            <!-- Render via JS -->
+          </select>
+        </div>
+
+        <!-- เลือกรูปแบบการทำ -->
+        <div>
+          <label class="block font-semibold text-slate-200 mb-1.5">3. รูปแบบการดำเนินการ *</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 p-2.5 bg-slate-900/80 border border-emerald-500/30 rounded-xl cursor-pointer hover:border-emerald-500/60 transition">
+              <input type="radio" name="batch-action" value="check" checked class="accent-emerald-500">
+              <div>
+                <div class="font-bold text-emerald-300 text-xs">✅ ติ๊กถูกทั้งหมด</div>
+                <div class="text-[10px] text-slate-400">เข้าร่วมกิจกรรม</div>
+              </div>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 bg-slate-900/80 border border-rose-500/30 rounded-xl cursor-pointer hover:border-rose-500/60 transition">
+              <input type="radio" name="batch-action" value="uncheck" class="accent-rose-500">
+              <div>
+                <div class="font-bold text-rose-300 text-xs">❌ ยกเลิกติ๊กถูก</div>
+                <div class="text-[10px] text-slate-400">นำเครื่องหมายออก</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="bg-indigo-950/20 border border-indigo-500/30 rounded-xl p-2.5 text-indigo-300 text-[11px] leading-relaxed">
+          <i class="fa-solid fa-circle-info mr-1 text-indigo-400"></i>
+          ระบบจะดำเนินการกับสมาชิกใน <span id="batch-modal-week-label" class="font-bold text-white">สัปดาห์ปัจจุบัน</span> และซิงค์ข้อมูลให้ทุกคนทันที
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-zinc-800/80">
+        <button type="button" onclick="closeBatchGuildCheckModal()"
+          class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition">
+          ยกเลิก
+        </button>
+        <button type="button" onclick="handleConfirmBatchGuildCheck()"
+          class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/20 transition">
+          <i class="fa-solid fa-bolt mr-1"></i>ดำเนินการทันที
+        </button>
+      </div>
     </div>
   </div>
 
@@ -4785,6 +4872,7 @@
       const manageAdminBtn = document.getElementById('btn-manage-admins');
       const manageGuildsBtn = document.getElementById('btn-manage-guilds');
       const clearChecksBtn = document.getElementById('btn-clear-checks');
+      const batchCheckBtn = document.getElementById('btn-batch-guild-check');
 
       // อัพเดทสถานะ Super Admin
       isSuperAdmin = currentAdminEmail === SUPER_ADMIN_EMAIL;
@@ -4803,6 +4891,10 @@
         if (manageGuildsBtn) {
           manageGuildsBtn.classList.remove('hidden');
           manageGuildsBtn.classList.add('inline-flex');
+        }
+        if (batchCheckBtn) {
+          batchCheckBtn.classList.remove('hidden');
+          batchCheckBtn.classList.add('inline-flex');
         }
         if (clearChecksBtn) {
           clearChecksBtn.classList.remove('hidden');
@@ -4840,6 +4932,10 @@
         if (manageGuildsBtn) {
           manageGuildsBtn.classList.add('hidden');
           manageGuildsBtn.classList.remove('inline-flex');
+        }
+        if (batchCheckBtn) {
+          batchCheckBtn.classList.add('hidden');
+          batchCheckBtn.classList.remove('inline-flex');
         }
         if (clearChecksBtn) {
           clearChecksBtn.classList.add('hidden');
@@ -5245,6 +5341,92 @@
       renderTable();
       updateKPIs();
       closeClearChecksModal();
+    }
+
+    // ================= ระบบติ๊กถูก All ตามกิลด์ (Batch Guild Check-in) =================
+    function openBatchGuildCheckModal() {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_edit'), 'warning');
+        openAdminEmailModal();
+        return;
+      }
+
+      const modal = document.getElementById('batch-guild-check-modal');
+      const guildSelect = document.getElementById('batch-guild-select');
+      const actSelect = document.getElementById('batch-activity-select');
+      const weekLabel = document.getElementById('batch-modal-week-label');
+
+      if (weekLabel) weekLabel.textContent = getWeekName(currentWeekNumber);
+
+      // Populate Guilds
+      if (guildSelect) {
+        let gHtml = '';
+        guildsList.forEach(g => {
+          const count = members.filter(m => m.guild === g.name).length;
+          gHtml += `<option value="${escapeHtml(g.name)}">${g.icon || '🛡️'} กิลด์ ${escapeHtml(g.name)} (${count} คน)</option>`;
+        });
+        gHtml += `<option value="all">🌐 ทุกกิลด์รวมกัน (${members.length} คน)</option>`;
+        guildSelect.innerHTML = gHtml;
+      }
+
+      // Populate Activities
+      if (actSelect) {
+        let aHtml = `<option value="all">✨ ทุกกิจกรรมบอสทั้งหมด (${ACTIVITIES.length} บอส)</option>`;
+        ACTIVITIES.forEach((act, idx) => {
+          aHtml += `<option value="${idx}">⚔️ [${escapeHtml(act.day || '-')}] ${escapeHtml(act.name || act.shortName)} (${act.weight || 0} คะแนน)</option>`;
+        });
+        actSelect.innerHTML = aHtml;
+      }
+
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeBatchGuildCheckModal() {
+      const modal = document.getElementById('batch-guild-check-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function handleConfirmBatchGuildCheck() {
+      if (!isAdmin) return;
+
+      const selectedGuild = document.getElementById('batch-guild-select')?.value || 'all';
+      const selectedActivity = document.getElementById('batch-activity-select')?.value || 'all';
+      const actionType = document.querySelector('input[name="batch-action"]:checked')?.value || 'check';
+      const isChecked = actionType === 'check';
+
+      let affectedCount = 0;
+
+      members.forEach(m => {
+        if (selectedGuild === 'all' || m.guild === selectedGuild) {
+          ensureMemberWeeklyData(m);
+          affectedCount++;
+
+          if (selectedActivity === 'all') {
+            m.checks = new Array(ACTIVITIES.length).fill(isChecked);
+            m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(isChecked);
+          } else {
+            const actIdx = parseInt(selectedActivity);
+            if (!isNaN(actIdx) && actIdx >= 0 && actIdx < ACTIVITIES.length) {
+              m.checks[actIdx] = isChecked;
+              if (!Array.isArray(m.weeklyChecks[currentWeekNumber])) {
+                m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
+              }
+              m.weeklyChecks[currentWeekNumber][actIdx] = isChecked;
+            }
+          }
+        }
+      });
+
+      saveData();
+      renderTable();
+      updateKPIs();
+      closeBatchGuildCheckModal();
+
+      const guildLabel = selectedGuild === 'all' ? 'ทุกกิลด์' : `กิลด์ ${selectedGuild}`;
+      const actLabel = selectedActivity === 'all' ? 'ทุกบอส' : (ACTIVITIES[parseInt(selectedActivity)]?.shortName || 'บอสที่เลือก');
+      const actionLabel = isChecked ? 'ติ๊กถูกทั้งหมด' : 'ยกเลิกติ๊กถูก';
+
+      showToast(`${actionLabel} ให้ ${guildLabel} (${actLabel}) จำนวน ${affectedCount} คน เรียบร้อยแล้ว!`, 'success');
     }
 
     // Backward-compatible aliases
@@ -7856,6 +8038,7 @@
         closeGuildManagerModal();
         closeRenameGuildModal();
         closeClearChecksModal();
+        closeBatchGuildCheckModal();
       }
     });
 
