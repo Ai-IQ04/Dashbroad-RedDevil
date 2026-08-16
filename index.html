@@ -472,9 +472,23 @@
               <!-- Render via renderWeekTabs() -->
             </div>
           </div>
-          <p class="text-[11px] text-slate-400 leading-none mt-1 flex items-center gap-1.5"><span
-              class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span
-              data-i18n="header_subtitle">BlueDevil & RedDevil • ระบบเช็คชื่อ & จัดอันดับตาม CP</span></p>
+          <div class="flex items-center gap-2 mt-1 flex-wrap">
+            <p class="text-[11px] text-slate-400 leading-none flex items-center gap-1.5"><span
+                class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span
+                data-i18n="header_subtitle">BlueDevil & RedDevil • ระบบเช็คชื่อ & จัดอันดับตาม CP</span></p>
+            
+            <!-- 🟢 ป้ายแสดงจำนวนคนออนไลน์ Real-time (Online Presence Badge) -->
+            <div id="online-presence-badge"
+              class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 text-[10.5px] font-medium shadow-sm select-none cursor-help transition-all hover:bg-emerald-900/60"
+              title="กำลังใช้งานอยู่ 1 คน (👑 แอดมิน: 0, 👥 สมาชิก: 1)">
+              <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span id="online-users-count" class="font-mono font-bold text-white">1</span>
+              <span id="online-users-label" data-i18n="online_users_label">คนออนไลน์</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -4494,7 +4508,8 @@
         "lightbox_title": "ภาพสกรีนช็อตยืนยัน CP",
         "lightbox_hint": "กด Esc หรือคลิกปุ่มกากบาทเพื่อปิดหน้าต่าง",
         "toast_screenshot_required": "กรุณาแนบรูปภาพสกรีนช็อตยืนยันค่า CP ด้วยครับ",
-        "toast_screenshot_pasted": "วางภาพสกรีนช็อต (Ctrl+V) เรียบร้อยแล้ว!"
+        "toast_screenshot_pasted": "วางภาพสกรีนช็อต (Ctrl+V) เรียบร้อยแล้ว!",
+        "online_users_label": "คนออนไลน์"
       },
       "en": {
         "btn_top10_summary": "Top 10 Summary",
@@ -4812,7 +4827,8 @@
         "lightbox_title": "CP Verification Screenshot",
         "lightbox_hint": "Press Esc or click X to close full screen view",
         "toast_screenshot_required": "Please attach a full-screen screenshot to verify your CP value.",
-        "toast_screenshot_pasted": "Screenshot pasted (Ctrl+V) successfully!"
+        "toast_screenshot_pasted": "Screenshot pasted (Ctrl+V) successfully!",
+        "online_users_label": "Online"
       }
     };
 
@@ -5267,6 +5283,59 @@
           renderAppealApprovalList();
         }
       });
+
+      // 11. ระบบ Real-Time Online Presence (ตรวจจับและนับจำนวนคนออนไลน์สด)
+      try {
+        const userSessionId = 'user_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        const myPresenceRef = fbDb.ref('guild_app/presence/' + userSessionId);
+        const connectedRef = fbDb.ref('.info/connected');
+
+        connectedRef.on('value', snap => {
+          if (snap.val() === true) {
+            myPresenceRef.onDisconnect().remove();
+            myPresenceRef.set({
+              online: true,
+              role: isAdmin ? (isSuperAdmin ? 'super_admin' : 'admin') : 'member',
+              user: currentAdminEmail || 'Member',
+              lang: currentLang,
+              joinedAt: firebase.database.ServerValue.TIMESTAMP
+            });
+          }
+        });
+
+        // ดักฟังจำนวนคนออนไลน์ทั้งหมดแบบ Real-time
+        fbDb.ref('guild_app/presence').on('value', snap => {
+          const val = snap.val();
+          let totalOnline = 0;
+          let adminCount = 0;
+          let memberCount = 0;
+
+          if (val && typeof val === 'object') {
+            const list = Object.values(val);
+            totalOnline = list.length;
+            list.forEach(u => {
+              if (u.role === 'admin' || u.role === 'super_admin') {
+                adminCount++;
+              } else {
+                memberCount++;
+              }
+            });
+          }
+
+          if (totalOnline < 1) totalOnline = 1;
+
+          const countEl = document.getElementById('online-users-count');
+          const badgeEl = document.getElementById('online-presence-badge');
+          if (countEl) countEl.textContent = totalOnline;
+          if (badgeEl) {
+            badgeEl.title = currentLang === 'th'
+              ? `กำลังใช้งานอยู่ ${totalOnline} คน (👑 แอดมิน: ${adminCount}, 👥 สมาชิก: ${memberCount})`
+              : `Active Now: ${totalOnline} (👑 Admins: ${adminCount}, 👥 Members: ${memberCount})`;
+          }
+        });
+      } catch (err) {
+        console.warn('Presence setup warning:', err);
+      }
     }
 
     // ================= ระบบจัดการ 4 สัปดาห์ & เปลี่ยนชื่อสัปดาห์ =================
