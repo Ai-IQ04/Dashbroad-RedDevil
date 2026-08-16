@@ -11647,6 +11647,92 @@
       renderRewardStoreCatalog();
     }
 
+    function cancelMemberTestOrdersAndRefund(targetCharName) {
+      if (!isAdmin) return;
+      const select = document.getElementById('admin-points-member-select');
+      const charName = targetCharName || (select ? select.value : '');
+      if (!charName) {
+        showToast('กรุณาเลือกตัวละครที่ต้องการยกเลิกคำขอทดสอบ', 'warning');
+        return;
+      }
+      const m = members.find(x => (x.characterName || x.name) === charName);
+      if (!m) return;
+
+      // 1. รีเซ็ตแต้มพิเศษกลับเป็น 0
+      m.bonusPoints = 0;
+
+      // 2. ล้างคำขอแลกของรางวัลที่รอดำเนินการ (Pending) ของสมาชิกคนนี้ เพื่อคืนแต้มจริง
+      let removedCount = 0;
+      let refundedPoints = 0;
+
+      if (Array.isArray(storeRewardLogs)) {
+        storeRewardLogs = storeRewardLogs.filter(log => {
+          if (log.memberName === charName && (log.status === 'pending' || log.status === 'won_pending_delivery' || !log.status)) {
+            removedCount++;
+            refundedPoints += (log.cost || 0);
+            return false; // ลบคำขอทดสอบออก
+          }
+          return true;
+        });
+      }
+
+      saveData();
+      saveStoreData();
+
+      addAuditLog(
+        'test_orders_cleared',
+        `ยกเลิกคำขอแลกทดสอบของ "${charName}" (${removedCount} รายการ, คืน ${refundedPoints} PTS) และรีเซ็ตแต้มพิเศษกลับเป็น 0`,
+        `โดย: ${currentAdminEmail}`,
+        charName
+      );
+
+      showToast(`ยกเลิกคำขอทดสอบของ ${charName} สำเร็จ (${removedCount} รายการ) คืนแต้มปกติเรียบร้อยแล้ว`, 'success');
+      const inputEl = document.getElementById('admin-points-input');
+      if (inputEl) inputEl.value = 0;
+      onAdminPointsMemberChange();
+      onRewardMemberSelected();
+      populateRewardMemberSelect();
+      populateAdminPointsMemberSelect();
+      renderRewardStoreCatalog();
+      renderRewardApprovalList();
+      renderStoreHistoryTable();
+    }
+
+    function cancelAllTestOrdersAndRefundAll() {
+      if (!isAdmin) return;
+      if (!confirm('คุณต้องการยกเลิกคำขอแลกของรางวัลที่รอดำเนินการทั้งหมด และรีเซ็ตแต้มพิเศษของทุกคนกลับเป็นแต้มจริงใช่หรือไม่?')) return;
+
+      let totalRemoved = 0;
+      if (Array.isArray(storeRewardLogs)) {
+        const before = storeRewardLogs.length;
+        storeRewardLogs = storeRewardLogs.filter(log => log.status !== 'pending' && log.status !== 'won_pending_delivery' && log.status);
+        totalRemoved = before - storeRewardLogs.length;
+      }
+
+      members.forEach(m => {
+        m.bonusPoints = 0;
+      });
+
+      saveData();
+      saveStoreData();
+
+      addAuditLog(
+        'all_test_orders_cleared',
+        `ล้างคำขอแลกทดสอบของทุกคนทั้งหมด (${totalRemoved} รายการ) และรีเซ็ตแต้มพิเศษทุกคนกลับเป็น 0`,
+        `โดย: ${currentAdminEmail}`,
+        'System'
+      );
+
+      showToast(`ล้างคำขอแลกทดสอบทั้งหมด (${totalRemoved} รายการ) และคืนค่าแต้มจริงให้ทุกคนเรียบร้อยแล้ว`, 'success');
+      onAdminPointsMemberChange();
+      onRewardMemberSelected();
+      populateRewardMemberSelect();
+      populateAdminPointsMemberSelect();
+      renderRewardStoreCatalog();
+      renderRewardApprovalList();
+      renderStoreHistoryTable();
+    }
+
   </script>
 
   <!-- ================= Modal: สรุปคะแนน Top 10 (Export to Image) ================= -->
@@ -11913,13 +11999,20 @@
       <div id="store-tab-admin" class="hidden flex-1 overflow-y-auto pr-1 py-2 space-y-4">
         <!-- ⚡ Bonus & Test Points Management Box -->
         <div class="bg-gradient-to-r from-slate-900/95 via-amber-950/20 to-slate-900/95 border border-amber-500/40 rounded-2xl p-4 shadow-lg">
-          <div class="flex items-center justify-between pb-2 mb-3 border-b border-slate-800/80">
+          <div class="flex items-center justify-between pb-2 mb-3 border-b border-slate-800/80 flex-wrap gap-2">
             <h4 class="text-sm font-extrabold text-white flex items-center gap-2">
               <i class="fa-solid fa-bolt-lightning text-amber-400 text-base"></i> จัดการแต้มพิเศษ / เติมแต้มทดสอบ (Admin Bonus Points)
             </h4>
-            <span class="text-[10.5px] text-amber-300/80 bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-mono font-bold">
-              Test &amp; Bonus Points
-            </span>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="cancelAllTestOrdersAndRefundAll()"
+                class="apple-btn bg-slate-900 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-500/50 text-slate-300 hover:text-rose-300 px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1 shadow-sm"
+                title="ล้างคำขอแลกทดสอบและคืนแต้มทุกคนในระบบ">
+                <i class="fa-solid fa-broom text-[10px] text-rose-400"></i> <span>ล้างคำขอทดสอบทุกคน &amp; คืนแต้ม</span>
+              </button>
+              <span class="text-[10.5px] text-amber-300/80 bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-mono font-bold">
+                Test &amp; Bonus
+              </span>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
@@ -11951,15 +12044,20 @@
               <span class="text-slate-400 font-medium">สถานะแต้มปัจจุบัน:</span>
               <span id="admin-points-current-summary" class="font-mono text-amber-300 font-bold">-</span>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <button type="button" onclick="saveAdminMemberBonusPoints()"
-                class="apple-btn apple-btn-gold px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md">
+                class="apple-btn apple-btn-gold px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md">
                 <i class="fa-solid fa-plus text-xs"></i> <span>บันทึกแต้มพิเศษ</span>
               </button>
+              <button type="button" onclick="cancelMemberTestOrdersAndRefund()"
+                class="apple-btn apple-btn-burgundy px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md"
+                title="ล้างคำขอแลกทดสอบและคืนแต้มทั้งหมดของคนนี้">
+                <i class="fa-solid fa-trash-arrow-up text-xs"></i> <span>🗑️ ยกเลิกคำขอแลกทดสอบ &amp; คืนแต้ม</span>
+              </button>
               <button type="button" onclick="resetAdminMemberBonusPoints()"
-                class="apple-btn apple-btn-ruby px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md"
+                class="apple-btn apple-btn-ruby px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md"
                 title="ล้างแต้มพิเศษของคนนี้เป็น 0 ให้กลับมาเป็นแต้มจริง">
-                <i class="fa-solid fa-rotate-left text-xs"></i> <span>รีเซ็ตแต้มคนนี้กลับเป็น 0</span>
+                <i class="fa-solid fa-rotate-left text-xs"></i> <span>รีเซ็ตแต้มกลับเป็น 0</span>
               </button>
             </div>
           </div>
