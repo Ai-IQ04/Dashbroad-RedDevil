@@ -718,7 +718,7 @@
       </div>
 
       <!-- Right: Member Hub Tools (ร้านค้า, สรุปคะแนน, Top 10, ขอ CP, อุทธรณ์) -->
-      <div class="flex items-center gap-1.5 p-1 bg-slate-950/80 border border-slate-800/90 rounded-2xl backdrop-blur-md shadow-sm flex-wrap">
+      <div id="member-hub-container" class="flex items-center gap-1.5 p-1 bg-slate-950/80 border border-slate-800/90 rounded-2xl backdrop-blur-md shadow-sm flex-wrap">
         <!-- 🎁 ปุ่มเปิดร้านค้าของรางวัล & Showcase -->
         <button type="button" onclick="openRewardStoreModal()"
           class="apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm">
@@ -6223,6 +6223,7 @@
       renderLockBanner();
 
       const adminHub = document.getElementById('admin-hub-container');
+      const memberHub = document.getElementById('member-hub-container');
       if (adminHub) {
         if (isAdmin) {
           adminHub.classList.remove('hidden');
@@ -6230,6 +6231,13 @@
         } else {
           adminHub.classList.add('hidden');
           adminHub.classList.remove('flex');
+        }
+      }
+      if (memberHub) {
+        if (isAdmin) {
+          memberHub.classList.add('hidden');
+        } else {
+          memberHub.classList.remove('hidden');
         }
       }
 
