@@ -177,127 +177,246 @@
     }
 
     /* ================= Apple-Style Glass Buttons & Micro-Animations ================= */
+    /* ================= Apple-Style Glass Buttons & Micro-Animations ================= */
     .apple-btn {
       position: relative;
       overflow: hidden;
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-radius: 0.75rem;
-      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.16), 0 2px 8px rgba(0, 0, 0, 0.35);
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       user-select: none;
+      font-weight: 700;
+      letter-spacing: 0.01em;
     }
 
+    /* Apple Specular Light Sweep Sheen Animation */
     .apple-btn::before {
       content: '';
       position: absolute;
       top: 0;
-      left: -120%;
-      width: 80%;
+      left: -130%;
+      width: 90%;
       height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
-      transform: skewX(-20deg);
-      transition: left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.38), transparent);
+      transform: skewX(-22deg);
+      transition: left 0.7s cubic-bezier(0.16, 1, 0.3, 1);
       pointer-events: none;
+      z-index: 2;
     }
 
     .apple-btn:hover::before {
-      left: 140%;
+      left: 150%;
     }
 
+    /* Apple Spring Hover Lift & Tap */
     .apple-btn:hover {
-      transform: translateY(-2px);
+      transform: translateY(-2.5px) scale(1.025);
     }
 
     .apple-btn:active {
-      transform: translateY(0) scale(0.95);
+      transform: translateY(0.5px) scale(0.96);
     }
 
     .apple-btn i {
-      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .apple-btn:hover i {
-      transform: scale(1.15);
+      transform: scale(1.18);
     }
 
-    /* Apple Color Variants */
-    .apple-btn-rose {
-      background: rgba(136, 19, 55, 0.35);
-      color: #fecdd3;
-      border: 1px solid rgba(244, 63, 94, 0.35);
+    /* ================= Vibrant Non-Repeating Apple Pill Themes ================= */
+    /* 1. Gold / Amber (ร้านค้าของรางวัล) */
+    .apple-btn-gold {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+      color: #0f172a;
+      border: 1px solid rgba(253, 230, 138, 0.6);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 14px -2px rgba(245, 158, 11, 0.45);
+    }
+    .apple-btn-gold:hover {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 8px 24px -2px rgba(245, 158, 11, 0.65);
     }
 
-    .apple-btn-rose:hover {
-      background: rgba(225, 29, 72, 0.45);
+    /* 2. Ruby / Crimson (Boss Viewer) */
+    .apple-btn-ruby {
+      background: linear-gradient(135deg, #e11d48 0%, #be123c 50%, #881337 100%);
       color: #ffffff;
-      border-color: rgba(251, 113, 133, 0.6);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 6px 20px -2px rgba(244, 63, 94, 0.4);
+      border: 1px solid rgba(251, 113, 133, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 14px -2px rgba(225, 29, 72, 0.45);
+    }
+    .apple-btn-ruby:hover {
+      background: linear-gradient(135deg, #f43f5e 0%, #e11d48 50%, #9f1239 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 8px 24px -2px rgba(244, 63, 94, 0.65);
     }
 
-    .apple-btn-indigo {
-      background: rgba(49, 46, 129, 0.35);
-      color: #c7d2fe;
-      border: 1px solid rgba(99, 102, 241, 0.35);
-    }
-
-    .apple-btn-indigo:hover {
-      background: rgba(79, 70, 229, 0.45);
+    /* 3. Sapphire / Indigo (สรุปคะแนน) */
+    .apple-btn-sapphire {
+      background: linear-gradient(135deg, #4f46e5 0%, #4338ca 50%, #312e81 100%);
       color: #ffffff;
-      border-color: rgba(129, 140, 248, 0.6);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 6px 20px -2px rgba(99, 102, 241, 0.4);
+      border: 1px solid rgba(165, 180, 252, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 14px -2px rgba(79, 70, 229, 0.45);
+    }
+    .apple-btn-sapphire:hover {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #3730a3 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 8px 24px -2px rgba(99, 102, 241, 0.65);
     }
 
-    .apple-btn-amber {
-      background: rgba(120, 53, 15, 0.35);
-      color: #fde68a;
-      border: 1px solid rgba(245, 158, 11, 0.35);
-    }
-
-    .apple-btn-amber:hover {
-      background: rgba(217, 119, 6, 0.45);
-      color: #ffffff;
-      border-color: rgba(251, 191, 36, 0.6);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 6px 20px -2px rgba(245, 158, 11, 0.4);
-    }
-
-    .apple-btn-purple {
-      background: rgba(88, 28, 135, 0.35);
-      color: #e9d5ff;
-      border: 1px solid rgba(168, 85, 247, 0.35);
-    }
-
-    .apple-btn-purple:hover {
-      background: rgba(147, 51, 234, 0.45);
-      color: #ffffff;
-      border-color: rgba(192, 132, 252, 0.6);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 6px 20px -2px rgba(168, 85, 247, 0.4);
-    }
-
+    /* 4. Mint / Emerald (สรุป Top 10) */
     .apple-btn-emerald {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
       color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(110, 231, 183, 0.45);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(16, 185, 129, 0.45);
     }
-
     .apple-btn-emerald:hover {
-      background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 6px 22px -2px rgba(16, 185, 129, 0.65);
+      background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(16, 185, 129, 0.65);
     }
 
-    .apple-btn-slate {
-      background: rgba(30, 41, 59, 0.6);
-      color: #cbd5e1;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .apple-btn-slate:hover {
-      background: rgba(51, 65, 85, 0.85);
+    /* 5. Electric Sky / Cyan (ขออัพเดท CP) */
+    .apple-btn-sky {
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
       color: #ffffff;
-      border-color: rgba(255, 255, 255, 0.22);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 16px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(125, 211, 252, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(14, 165, 233, 0.45);
     }
+    .apple-btn-sky:hover {
+      background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 50%, #0284c7 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(56, 189, 248, 0.65);
+    }
+
+    /* 6. Vivid Magenta (ยื่นอุทธรณ์) */
+    .apple-btn-magenta {
+      background: linear-gradient(135deg, #d946ef 0%, #c026d3 50%, #86198f 100%);
+      color: #ffffff;
+      border: 1px solid rgba(240, 171, 252, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(217, 70, 239, 0.45);
+    }
+    .apple-btn-magenta:hover {
+      background: linear-gradient(135deg, #e879f9 0%, #d946ef 50%, #a21caf 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(217, 70, 239, 0.65);
+    }
+
+    /* 7. Royal Violet (อนุมัติ CP) */
+    .apple-btn-violet {
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #5b21b6 100%);
+      color: #ffffff;
+      border: 1px solid rgba(196, 181, 253, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(139, 92, 246, 0.45);
+    }
+    .apple-btn-violet:hover {
+      background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 50%, #6d28d9 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(139, 92, 246, 0.65);
+    }
+
+    /* 8. Coral Pink (อุทธรณ์เช็คชื่อ) */
+    .apple-btn-coral {
+      background: linear-gradient(135deg, #fb7185 0%, #e11d48 50%, #9f1239 100%);
+      color: #ffffff;
+      border: 1px solid rgba(254, 205, 211, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(251, 113, 133, 0.45);
+    }
+    .apple-btn-coral:hover {
+      background: linear-gradient(135deg, #fda4af 0%, #fb7185 50%, #be123c 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(251, 113, 133, 0.65);
+    }
+
+    /* 9. Sunset Orange (อนุมัติรางวัล) */
+    .apple-btn-orange {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #c2410c 100%);
+      color: #ffffff;
+      border: 1px solid rgba(254, 215, 170, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(249, 115, 22, 0.45);
+    }
+    .apple-btn-orange:hover {
+      background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(249, 115, 22, 0.65);
+    }
+
+    /* 10. Aqua Teal (คลังของรางวัล) */
+    .apple-btn-teal {
+      background: linear-gradient(135deg, #14b8a6 0%, #0d9488 50%, #115e59 100%);
+      color: #ffffff;
+      border: 1px solid rgba(153, 246, 228, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(20, 184, 166, 0.45);
+    }
+    .apple-btn-teal:hover {
+      background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 50%, #0f766e 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(20, 184, 166, 0.65);
+    }
+
+    /* 11. Forest Green (จัดการกิลด์) */
+    .apple-btn-forest {
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 50%, #166534 100%);
+      color: #ffffff;
+      border: 1px solid rgba(134, 239, 172, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(22, 163, 74, 0.45);
+    }
+    .apple-btn-forest:hover {
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(34, 197, 94, 0.65);
+    }
+
+    /* 12. Ocean Blue (ติ๊ก All) */
+    .apple-btn-ocean {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
+      color: #ffffff;
+      border: 1px solid rgba(147, 197, 253, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(37, 99, 235, 0.45);
+    }
+    .apple-btn-ocean:hover {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(59, 130, 246, 0.65);
+    }
+
+    /* 13. Wine Burgundy (ล้างติ๊ก) */
+    .apple-btn-burgundy {
+      background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 50%, #450a0a 100%);
+      color: #fecaca;
+      border: 1px solid rgba(248, 113, 113, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 14px -2px rgba(153, 27, 27, 0.45);
+    }
+    .apple-btn-burgundy:hover {
+      background: linear-gradient(135deg, #b91c1c 0%, #991b1b 50%, #7f1d1d 100%);
+      color: #ffffff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 8px 24px -2px rgba(185, 28, 28, 0.65);
+    }
+
+    /* 14. Steel Obsidian (ประวัติ) */
+    .apple-btn-steel {
+      background: linear-gradient(135deg, #334155 0%, #1e293b 50%, #0f172a 100%);
+      color: #fde68a;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 14px -2px rgba(15, 23, 42, 0.55);
+    }
+    .apple-btn-steel:hover {
+      background: linear-gradient(135deg, #475569 0%, #334155 50%, #1e293b 100%);
+      color: #ffffff;
+      border-color: rgba(251, 191, 36, 0.5);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 8px 24px -2px rgba(0, 0, 0, 0.7);
+    }
+
+    /* 15. Deep Royal Purple (สำรอง) */
+    .apple-btn-darkpurple {
+      background: linear-gradient(135deg, #581c87 0%, #3b0764 50%, #2e1065 100%);
+      color: #e9d5ff;
+      border: 1px solid rgba(192, 132, 252, 0.35);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 14px -2px rgba(88, 28, 135, 0.45);
+    }
+    .apple-btn-darkpurple:hover {
+      background: linear-gradient(135deg, #6b21a8 0%, #581c87 50%, #3b0764 100%);
+      color: #ffffff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 8px 24px -2px rgba(107, 33, 168, 0.65);
+    }
+
+    /* Backward compatibility aliases */
+    .apple-btn-amber { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #0f172a; border: 1px solid rgba(253, 230, 138, 0.5); }
+    .apple-btn-rose { background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); color: #ffffff; border: 1px solid rgba(251, 113, 133, 0.4); }
+    .apple-btn-indigo { background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: #ffffff; border: 1px solid rgba(165, 180, 252, 0.4); }
+    .apple-btn-purple { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: #ffffff; border: 1px solid rgba(196, 181, 253, 0.4); }
+    .apple-btn-slate { background: rgba(30, 41, 59, 0.7); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.12); }
 
     /* ================= Page & Component Animations ================= */
     @keyframes appleFadeInDown {
@@ -496,175 +615,188 @@
       <div class="flex items-center gap-2.5 flex-wrap">
 
         <!-- 🌟 หมวดที่ 1: ศูนย์รวมกิจกรรม & สมาชิก (Member Hub) -->
-        <div class="flex items-center gap-1.5 p-1 bg-slate-950/70 border border-slate-800/80 rounded-2xl backdrop-blur-md shadow-sm">
+        <div class="flex items-center gap-1.5 p-1 bg-slate-950/80 border border-slate-800/90 rounded-2xl backdrop-blur-md shadow-sm">
           <!-- 🎁 ปุ่มเปิดร้านค้าของรางวัล & Showcase -->
           <button type="button" onclick="openRewardStoreModal()"
-            class="apple-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold shadow-sm bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 rounded-xl border border-amber-300/40">
+            class="apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm">
             <i class="fa-solid fa-gift text-xs"></i>
             <span>ร้านค้าของรางวัล (Shop)</span>
           </button>
 
           <!-- ปุ่มเปิดดูตารางบอส (Boss Viewer) -->
           <button onclick="openBossViewerModal()"
-            class="apple-btn apple-btn-rose inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm">
-            <i class="fa-solid fa-dragon text-rose-400 text-[11px]"></i>
+            class="apple-btn apple-btn-ruby inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+            <i class="fa-solid fa-dragon text-xs"></i>
             <span data-i18n="btn_boss_viewer">Boss Viewer</span>
           </button>
 
           <!-- ปุ่มเปิดดูสรุปคะแนนทุกอาทิตย์ -->
           <button onclick="openWeeklyHistoryModal()"
-            class="apple-btn apple-btn-indigo inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm">
-            <i class="fa-solid fa-chart-line text-indigo-400 text-[11px]"></i>
+            class="apple-btn apple-btn-sapphire inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+            <i class="fa-solid fa-chart-line text-xs"></i>
             <span data-i18n="btn_weekly_summary">สรุปคะแนน</span>
           </button>
 
           <!-- ปุ่มสรุป Top 10 เป็นรูปภาพ (LINE/Discord) -->
           <button onclick="openTop10SummaryModal()"
-            class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm"
+            class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
             title="เซฟภาพสรุปคะแนน 10 อันดับแรกเพื่อแชร์ลง LINE / Discord">
-            <i class="fa-solid fa-camera text-emerald-400 text-[11px]"></i>
+            <i class="fa-solid fa-camera text-xs"></i>
             <span data-i18n="btn_top10_summary">สรุป Top 10</span>
           </button>
 
           <!-- ปุ่มขออัพเดท CP (ทุกคนเห็น) -->
           <button onclick="openCpUpdateRequestModal()"
-            class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm">
-            <i class="fa-solid fa-bolt text-amber-400 text-[11px]"></i>
+            class="apple-btn apple-btn-sky inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+            <i class="fa-solid fa-bolt text-xs"></i>
             <span data-i18n="btn_request_cp">ขออัพเดท CP</span>
           </button>
 
           <!-- ปุ่มยื่นอุทธรณ์เช็คชื่อ (ทุกคนเห็น) -->
           <button onclick="openAppealRequestModal()"
-            class="apple-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white border border-pink-400/30">
-            <i class="fa-solid fa-bullhorn text-pink-200 text-[11px]"></i>
+            class="apple-btn apple-btn-magenta inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+            <i class="fa-solid fa-bullhorn text-xs"></i>
             <span data-i18n="btn_appeal_request">ยื่นอุทธรณ์</span>
           </button>
         </div>
 
-        <!-- 👑 หมวดที่ 2: ศูนย์งาน Admin (Admin Hub) - กรอบสีทอง/ม่วงหรูหรา -->
-        <div id="admin-hub-container" class="hidden flex items-center gap-1.5 p-1 bg-gradient-to-r from-purple-950/40 via-slate-950/80 to-amber-950/40 border border-purple-500/30 rounded-2xl backdrop-blur-md shadow-sm">
-          <div class="px-2 py-0.5 text-[10px] font-bold text-amber-400/90 uppercase tracking-wider flex items-center gap-1">
-            <i class="fa-solid fa-crown text-[10px]"></i> <span class="hidden xl:inline">Admin</span>
+        <!-- 👑 หมวดที่ 2: ศูนย์งาน Admin (Admin Hub) - จัด 3 โซนย่อยชัดเจน -->
+        <div id="admin-hub-container" class="hidden flex items-center gap-1.5 p-1 bg-gradient-to-r from-purple-950/50 via-slate-950/90 to-amber-950/50 border border-purple-500/40 rounded-2xl backdrop-blur-md shadow-md">
+          <div class="px-2 py-0.5 text-[10px] font-black text-amber-400 uppercase tracking-wider flex items-center gap-1">
+            <i class="fa-solid fa-crown text-[10px]"></i> <span class="hidden xl:inline">ADMIN</span>
           </div>
 
-          <!-- ปุ่มอนุมัติ CP (เฉพาะ Admin) -->
-          <button id="btn-approve-cp" onclick="openCpApprovalModal()"
-            class="hidden apple-btn apple-btn-purple inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm">
-            <i class="fa-solid fa-clipboard-check text-purple-300 text-xs"></i>
-            <span data-i18n="btn_approve_cp">อนุมัติ CP</span>
-            <span id="cp-pending-badge"
-              class="hidden px-1.5 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded-full shadow leading-none animate-pulse">0</span>
-          </button>
+          <!-- โซน 1: อนุมัติ & ของรางวัล (Approvals & Store) -->
+          <div class="flex items-center gap-1.5">
+            <!-- ปุ่มอนุมัติ CP (เฉพาะ Admin) -->
+            <button id="btn-approve-cp" onclick="openCpApprovalModal()"
+              class="hidden apple-btn apple-btn-violet inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+              <i class="fa-solid fa-clipboard-check text-xs"></i>
+              <span data-i18n="btn_approve_cp">อนุมัติ CP</span>
+              <span id="cp-pending-badge"
+                class="hidden px-1.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
+            </button>
 
-          <!-- ปุ่มอนุมัติอุทธรณ์เช็คชื่อ (เฉพาะ Admin) -->
-          <button id="btn-approve-appeals" onclick="openAppealApprovalModal()"
-            class="hidden apple-btn apple-btn-rose inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm">
-            <i class="fa-solid fa-bullhorn text-rose-300 text-xs"></i>
-            <span data-i18n="btn_appeal_approval">อุทธรณ์เช็คชื่อ</span>
-            <span id="appeal-pending-badge"
-              class="hidden px-1.5 py-0.5 bg-rose-500 text-white text-[10px] font-bold rounded-full shadow leading-none animate-pulse">0</span>
-          </button>
+            <!-- ปุ่มอนุมัติอุทธรณ์เช็คชื่อ (เฉพาะ Admin) -->
+            <button id="btn-approve-appeals" onclick="openAppealApprovalModal()"
+              class="hidden apple-btn apple-btn-coral inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+              <i class="fa-solid fa-bullhorn text-xs"></i>
+              <span data-i18n="btn_appeal_approval">อุทธรณ์เช็คชื่อ</span>
+              <span id="appeal-pending-badge"
+                class="hidden px-1.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
+            </button>
 
-          <!-- ปุ่มอนุมัติของรางวัล (เฉพาะ Admin) -->
-          <button id="btn-approve-rewards" onclick="openRewardApprovalModal()"
-            class="hidden apple-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white border border-amber-400/30">
-            <i class="fa-solid fa-gift text-amber-200 text-xs"></i>
-            <span data-i18n="btn_approve_rewards">อนุมัติรางวัล</span>
-            <span id="reward-pending-badge"
-              class="hidden px-1.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
-          </button>
+            <!-- ปุ่มอนุมัติของรางวัล (เฉพาะ Admin) -->
+            <button id="btn-approve-rewards" onclick="openRewardApprovalModal()"
+              class="hidden apple-btn apple-btn-orange inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+              <i class="fa-solid fa-gift text-xs"></i>
+              <span data-i18n="btn_approve_rewards">อนุมัติรางวัล</span>
+              <span id="reward-pending-badge"
+                class="hidden px-1.5 py-0.5 bg-amber-300 text-slate-950 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
+            </button>
 
-          <!-- ปุ่มจัดการคลังสินค้า/เพิ่มรางวัล (เฉพาะ Admin) -->
-          <button id="btn-manage-rewards" onclick="openRewardStoreAdminModal()"
-            class="hidden apple-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40">
-            <i class="fa-solid fa-boxes-stacked text-amber-400 text-xs"></i>
-            <span data-i18n="btn_manage_rewards">คลังของรางวัล</span>
-          </button>
+            <!-- ปุ่มจัดการคลังสินค้า/เพิ่มรางวัล (เฉพาะ Admin) -->
+            <button id="btn-manage-rewards" onclick="openRewardStoreAdminModal()"
+              class="hidden apple-btn apple-btn-teal inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+              <i class="fa-solid fa-boxes-stacked text-xs"></i>
+              <span data-i18n="btn_manage_rewards">คลังของรางวัล</span>
+            </button>
+          </div>
 
-          <!-- ปุ่มจัดการ Admin (เฉพาะ Super Admin) -->
-          <button id="btn-manage-admins" onclick="openAdminApprovalModal()"
-            class="hidden apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm">
-            <i class="fa-solid fa-user-shield text-amber-300 text-xs"></i>
-            <span data-i18n="btn_manage_admins">จัดการ Admin</span>
-            <span id="admin-pending-badge"
-              class="hidden px-1.5 py-0.5 bg-amber-500 text-slate-950 text-[10px] font-bold rounded-full shadow leading-none animate-pulse">0</span>
-          </button>
+          <!-- Divider 1 -->
+          <span class="h-4 w-px bg-slate-700/80 mx-0.5"></span>
 
-          <span class="h-4 w-px bg-slate-800 mx-0.5"></span>
+          <!-- โซน 2: จัดการกิลด์ & เช็คชื่อ (Guild & Operations) -->
+          <div class="flex items-center gap-1.5">
+            <!-- ปุ่มจัดการกิลด์ (เฉพาะ Admin) -->
+            <button id="btn-manage-guilds" onclick="openGuildManagerModal()"
+              class="hidden apple-btn apple-btn-forest inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+              <i class="fa-solid fa-shield-cat text-xs"></i>
+              <span data-i18n="btn_manage_guilds">จัดการกิลด์</span>
+            </button>
 
-          <!-- ปุ่มจัดการกิลด์ (เฉพาะ Admin) -->
-          <button id="btn-manage-guilds" onclick="openGuildManagerModal()"
-            class="hidden apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm">
-            <i class="fa-solid fa-shield-cat text-emerald-400 text-[11px]"></i>
-            <span data-i18n="btn_manage_guilds">จัดการกิลด์</span>
-          </button>
+            <!-- ปุ่มติ๊ก All ตามกิลด์ (เฉพาะ Admin) -->
+            <button id="btn-batch-guild-check" onclick="openBatchGuildCheckModal()"
+              class="hidden apple-btn apple-btn-ocean inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+              <i class="fa-solid fa-list-check text-xs"></i>
+              <span data-i18n="btn_batch_guild_check">ติ๊ก All</span>
+            </button>
 
-          <!-- ปุ่มติ๊ก All ตามกิลด์ (เฉพาะ Admin) -->
-          <button id="btn-batch-guild-check" onclick="openBatchGuildCheckModal()"
-            class="hidden apple-btn apple-btn-indigo inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm">
-            <i class="fa-solid fa-list-check text-indigo-400 text-[11px]"></i>
-            <span data-i18n="btn_batch_guild_check">ติ๊ก All</span>
-          </button>
+            <!-- ปุ่มล้างข้อมูลการติ๊กถูก (เฉพาะ Admin) -->
+            <button id="btn-clear-checks" onclick="openClearChecksModal()"
+              class="hidden apple-btn apple-btn-burgundy inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+              <i class="fa-solid fa-broom text-xs"></i>
+              <span data-i18n="btn_clear_checks">ล้างติ๊ก</span>
+            </button>
+          </div>
 
-          <!-- ปุ่มล้างข้อมูลการติ๊กถูก (เฉพาะ Admin) -->
-          <button id="btn-clear-checks" onclick="openClearChecksModal()"
-            class="hidden apple-btn apple-btn-rose inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm">
-            <i class="fa-solid fa-broom text-rose-400 text-[11px]"></i>
-            <span data-i18n="btn_clear_checks">ล้างติ๊ก</span>
-          </button>
+          <!-- Divider 2 -->
+          <span class="h-4 w-px bg-slate-700/80 mx-0.5"></span>
 
-          <!-- ปุ่มประวัติการแก้ไข Audit Logs (เฉพาะ Admin) -->
-          <button id="btn-audit-logs" onclick="openAuditLogsModal()"
-            class="hidden apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm text-slate-300 hover:text-amber-300">
-            <i class="fa-solid fa-clock-rotate-left text-amber-400 text-[11px]"></i>
-            <span data-i18n="btn_audit_logs">ประวัติ</span>
-          </button>
+          <!-- โซน 3: ความปลอดภัย & ระบบ (Security & System) -->
+          <div class="flex items-center gap-1.5">
+            <!-- ปุ่มจัดการ Admin (เฉพาะ Super Admin) -->
+            <button id="btn-manage-admins" onclick="openAdminApprovalModal()"
+              class="hidden apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+              <i class="fa-solid fa-user-shield text-xs"></i>
+              <span data-i18n="btn_manage_admins">จัดการ Admin</span>
+              <span id="admin-pending-badge"
+                class="hidden px-1.5 py-0.5 bg-slate-950 text-amber-300 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
+            </button>
 
-          <!-- ปุ่มสำรอง & กู้คืนข้อมูล (JSON) -->
-          <button onclick="openBackupRestoreModal()"
-            class="apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm"
-            title="สำรองหรือกู้คืนข้อมูลกิลด์ (Backup & Restore)">
-            <i class="fa-solid fa-floppy-disk text-indigo-400 text-[11px]"></i>
-            <span data-i18n="btn_backup_restore">สำรอง</span>
-          </button>
+            <!-- ปุ่มประวัติการแก้ไข Audit Logs (เฉพาะ Admin) -->
+            <button id="btn-audit-logs" onclick="openAuditLogsModal()"
+              class="hidden apple-btn apple-btn-steel inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+              <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+              <span data-i18n="btn_audit_logs">ประวัติ</span>
+            </button>
+
+            <!-- ปุ่มสำรอง & กู้คืนข้อมูล (JSON) -->
+            <button onclick="openBackupRestoreModal()"
+              class="apple-btn apple-btn-darkpurple inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
+              title="สำรองหรือกู้คืนข้อมูลกิลด์ (Backup & Restore)">
+              <i class="fa-solid fa-floppy-disk text-xs"></i>
+              <span data-i18n="btn_backup_restore">สำรอง</span>
+            </button>
+          </div>
         </div>
 
         <!-- ⚙️ หมวดที่ 3: ระบบ & เครื่องมือควบคุม (System Controls) -->
-        <div class="flex items-center gap-1.5 p-1 bg-slate-950/70 border border-slate-800/80 rounded-2xl backdrop-blur-md shadow-sm">
+        <div class="flex items-center gap-1.5 p-1 bg-slate-950/80 border border-slate-800/90 rounded-2xl backdrop-blur-md shadow-sm">
           <!-- สลับโหมด Admin -->
           <div id="admin-mode-container" class="flex items-center">
             <button id="admin-toggle-btn" onclick="toggleAdminMode()"
-              class="apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm">
+              class="apple-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm">
               <!-- Render via JS -->
             </button>
           </div>
 
           <!-- ปุ่มสลับภาษา -->
           <button id="btn-lang-toggle" onclick="toggleLanguage()"
-            class="apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm"
+            class="apple-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sky-300 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
             title="Switch Language / เปลี่ยนภาษา">
-            <i class="fa-solid fa-language text-sky-400 text-[12px]"></i>
+            <i class="fa-solid fa-language text-sky-400 text-xs"></i>
             <span id="lang-label">EN</span>
           </button>
 
           <!-- ปุ่มเพิ่มตัวละคร -->
           <button id="btn-add-member-top" onclick="openAddMemberModal()"
-            class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-3 py-1.5 text-white text-xs font-semibold shadow-sm">
-            <i class="fa-solid fa-user-plus text-[11px]"></i>
+            class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm">
+            <i class="fa-solid fa-user-plus text-xs"></i>
             <span class="hidden sm:inline" data-i18n="btn_add_char">เพิ่มตัวละคร</span>
           </button>
 
           <!-- ปุ่มส่งออก CSV -->
           <button onclick="exportToCSV()"
-            class="apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium shadow-sm"
+            class="apple-btn bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 text-emerald-300 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
             title="Export to CSV" data-i18n-title="tooltip_export_csv">
-            <i class="fa-solid fa-file-excel text-emerald-400 text-[11px]"></i>
+            <i class="fa-solid fa-file-excel text-emerald-400 text-xs"></i>
             <span class="hidden md:inline font-mono">CSV</span>
           </button>
 
           <!-- ปุ่มรีเซ็ตข้อมูล -->
           <button id="btn-reset-top" onclick="resetAllData()"
-            class="apple-btn apple-btn-slate p-1.5 text-slate-400 hover:text-rose-400 text-xs shadow-sm"
+            class="apple-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 p-1.5 text-slate-400 hover:text-rose-400 text-xs shadow-sm"
             title="Reset Data" data-i18n-title="tooltip_reset_data">
             <i class="fa-solid fa-rotate-left text-[11px]"></i>
           </button>
@@ -810,22 +942,22 @@
 
     <!-- 🐉 ช่องบอสที่กำลังจะเกิด (Upcoming Boss Live Tracker) - วางตรงกลาง -->
     <div id="upcoming-boss-toolbar-widget" onclick="openBossViewerModal()"
-      class="cursor-pointer group flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-rose-950/40 via-slate-950/80 to-purple-950/40 hover:from-rose-900/50 hover:to-purple-900/50 border border-rose-500/30 hover:border-rose-400/60 rounded-xl transition-all duration-200 shadow-sm mx-auto">
-      <div class="w-6 h-6 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">
-        <i class="fa-solid fa-dragon animate-pulse text-[11px]"></i>
+      class="apple-btn cursor-pointer group inline-flex items-center gap-2.5 px-3.5 py-1.5 bg-gradient-to-r from-rose-950/90 via-slate-950/95 to-purple-950/90 hover:from-rose-900/90 hover:to-purple-900/90 border border-rose-400/50 hover:border-rose-300/80 rounded-2xl shadow-lg shadow-rose-950/40 transition-all duration-300 mx-auto">
+      <div class="w-6 h-6 rounded-xl bg-gradient-to-tr from-rose-500 via-red-500 to-amber-500 text-white shadow-md shadow-rose-500/30 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-rose-300/40">
+        <i class="fa-solid fa-dragon animate-pulse text-[11px] filter drop-shadow"></i>
       </div>
       <div class="flex items-center gap-2 flex-wrap text-xs">
         <div class="flex items-center gap-1.5">
-          <span class="text-[10px] text-rose-400/90 font-semibold uppercase tracking-wider hidden sm:inline" data-i18n="boss_next_spawn_label">บอสถัดไป:</span>
-          <span id="widget-boss-name" class="font-bold text-white tracking-wide truncate max-w-[120px] sm:max-w-[160px]">กำลังโหลด...</span>
-          <span id="widget-boss-loc" class="text-[10px] text-slate-400 hidden md:inline truncate max-w-[110px]">-</span>
+          <span class="text-[10px] text-rose-300 font-bold uppercase tracking-wider hidden sm:inline" data-i18n="boss_next_spawn_label">บอสถัดไป:</span>
+          <span id="widget-boss-name" class="font-extrabold text-white tracking-wide truncate max-w-[130px] sm:max-w-[170px] drop-shadow-sm">กำลังโหลด...</span>
+          <span id="widget-boss-loc" class="text-[10.5px] text-rose-200/75 font-medium hidden md:inline truncate max-w-[120px]">-</span>
         </div>
-        <div class="flex items-center gap-1 font-mono font-bold text-amber-300 bg-slate-900/90 border border-slate-700/80 px-2 py-0.5 rounded-lg text-[11px] shadow-inner" id="widget-boss-timer">
-          <i class="fa-regular fa-clock text-[10px] text-amber-400"></i>
+        <div class="flex items-center gap-1.5 font-mono font-black text-amber-300 bg-slate-900/95 border border-amber-500/50 px-2.5 py-0.5 rounded-full text-xs shadow-inner shadow-amber-500/20" id="widget-boss-timer">
+          <i class="fa-solid fa-clock text-[11px] text-amber-400"></i>
           <span id="widget-boss-timer-text">--:--:--</span>
         </div>
       </div>
-      <i class="fa-solid fa-chevron-right text-[10px] text-slate-500 group-hover:text-rose-300 transition-colors ml-0.5"></i>
+      <i class="fa-solid fa-chevron-right text-[11px] text-rose-300 group-hover:translate-x-1 transition-transform ml-0.5"></i>
     </div>
 
     <!-- ตัวกรอง และ การเรียงลำดับ -->
@@ -5562,11 +5694,11 @@
 
       if (isAdmin) {
         toggleBtn.className = isSuperAdmin
-          ? "apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm"
-          : "apple-btn apple-btn-rose inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm";
+          ? "apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm"
+          : "apple-btn apple-btn-ruby inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm";
         toggleBtn.innerHTML = isSuperAdmin
-          ? `<i class="fa-solid fa-crown text-amber-400 text-[11px]"></i><span>${t('mode_super_admin')}</span>`
-          : `<i class="fa-solid fa-lock-open text-rose-400 text-[11px]"></i><span>${t('mode_admin')}</span>`;
+          ? `<i class="fa-solid fa-crown text-slate-950 text-xs"></i><span>${t('mode_super_admin')}</span>`
+          : `<i class="fa-solid fa-lock-open text-white text-xs"></i><span>${t('mode_admin')}</span>`;
 
         if (addBtnTop) addBtnTop.classList.remove('hidden');
         if (resetBtnTop) resetBtnTop.classList.remove('hidden');
@@ -8788,9 +8920,9 @@
       if (locEl) locEl.textContent = loc ? `• ${loc}` : '';
 
       if (isSpawned) {
-        timerTextEl.innerHTML = `<span class="text-rose-400 font-bold animate-pulse">💥 SPAWNED!</span>`;
+        timerTextEl.innerHTML = `<span class="text-white font-black animate-pulse">💥 SPAWNED!</span>`;
         if (timerContainer) {
-          timerContainer.className = "flex items-center gap-1 font-mono font-bold text-rose-400 bg-rose-950/80 border border-rose-500/50 px-2 py-0.5 rounded-lg text-[11px] shadow-inner";
+          timerContainer.className = "flex items-center gap-1.5 font-mono font-black text-white bg-gradient-to-r from-rose-600 to-red-600 border border-rose-300 px-2.5 py-0.5 rounded-full text-xs shadow-md shadow-rose-600/40 animate-pulse";
         }
       } else {
         const totalSec = targetItem.remSec;
@@ -8813,8 +8945,8 @@
         if (timerContainer) {
           const isUrgent = totalSec <= 300; // <= 5 นาที
           timerContainer.className = isUrgent
-            ? "flex items-center gap-1 font-mono font-bold text-amber-300 bg-amber-950/80 border border-amber-500/60 px-2 py-0.5 rounded-lg text-[11px] shadow-inner animate-pulse"
-            : "flex items-center gap-1 font-mono font-bold text-amber-300 bg-slate-900/90 border border-slate-700/80 px-2 py-0.5 rounded-lg text-[11px] shadow-inner";
+            ? "flex items-center gap-1.5 font-mono font-black text-slate-950 bg-gradient-to-r from-amber-400 to-yellow-300 border border-yellow-200 px-2.5 py-0.5 rounded-full text-xs shadow-md shadow-amber-500/40 animate-bounce"
+            : "flex items-center gap-1.5 font-mono font-black text-amber-300 bg-slate-900/95 border border-amber-500/50 px-2.5 py-0.5 rounded-full text-xs shadow-inner shadow-amber-500/20";
         }
       }
     }
