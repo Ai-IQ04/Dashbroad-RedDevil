@@ -4557,7 +4557,6 @@
       updateKPIs();
       if (fbDb && !isRemoteSyncing) {
         fbDb.ref('guild_app/members_data').set(members);
-        fbDb.ref('guild_app/current_week').set(currentWeekNumber);
         fbDb.ref('guild_app/weekly_history').set(weeklyArchives);
       }
     }
@@ -4642,32 +4641,19 @@
         }
       });
 
-      // 4. ดักฟังข้อมูลสมาชิกและการเช็คชื่อ (ซิงค์คะแนน/CP ทั่วทั้งกิลด์แบบ Real-time)
+      // 4. ดักฟังข้อมูลสมาชิกและการเช็คชื่อ (ซิงค์คะแนน/CP ทั่วทั้งกิลด์แบบ Real-time โดยไม่รบกวนหน้าจอของคนอื่น)
       fbDb.ref('guild_app/members_data').on('value', snapshot => {
         const val = snapshot.val();
         if (Array.isArray(val) && val.length > 0) {
           isRemoteSyncing = true;
           members = val;
-          members.forEach(ensureMemberWeeklyChecks);
+          members.forEach(ensureMemberWeeklyData);
           localStorage.setItem('guild_members_data', JSON.stringify(members));
           updateKPIs();
           renderTable();
           isRemoteSyncing = false;
         } else if (members && members.length > 0) {
           fbDb.ref('guild_app/members_data').set(members);
-        }
-      });
-
-      // 5. ดักฟังสัปดาห์ปัจจุบัน
-      fbDb.ref('guild_app/current_week').on('value', snapshot => {
-        const val = snapshot.val();
-        if (val && typeof val === 'number') {
-          currentWeekNumber = Math.max(1, Math.min(4, val));
-          localStorage.setItem('guild_current_week', currentWeekNumber);
-          members.forEach(ensureMemberWeeklyChecks);
-          renderWeekTabs();
-          renderTable();
-          updateKPIs();
         }
       });
 
@@ -5823,7 +5809,21 @@
         </tr>
       `;
 
+      const tableWrapper = tbody.closest('.overflow-x-auto') || tbody.parentElement;
+      const prevTableScrollLeft = tableWrapper ? tableWrapper.scrollLeft : 0;
+      const prevTableScrollTop = tableWrapper ? tableWrapper.scrollTop : 0;
+      const prevWinY = window.scrollY;
+      const prevWinX = window.scrollX;
+
       tbody.innerHTML = rowsHtml + summaryHtml;
+
+      if (tableWrapper) {
+        tableWrapper.scrollLeft = prevTableScrollLeft;
+        tableWrapper.scrollTop = prevTableScrollTop;
+      }
+      if (prevWinY || prevWinX) {
+        window.scrollTo(prevWinX, prevWinY);
+      }
     }
 
     // ================= ระบบแก้ไข CP ด่วน (Quick Edit CP) =================
