@@ -120,7 +120,7 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
   const now = new Date();
 
   if (boss.respawnType === 'interval') {
-    if (!defeatedDateStr) return null;
+    if (!defeatedDateStr) return null; // Unrecorded
     const defDate = new Date(defeatedDateStr);
     if (isNaN(defDate.getTime())) return null;
     const nextSpawn = new Date(defDate.getTime() + (boss.intervalHours * 3600 * 1000));
@@ -215,10 +215,10 @@ function renderBossTimerCards() {
       nextSpawn = calculateNextSpawnDate(boss, timer.defeatedTime);
     }
 
-    let status = 'unknown'; // 'alive' | 'soon' | 'cooldown'
-    let diffMs = 0;
+    let status = 'unrecorded'; // 'alive' | 'soon' | 'cooldown' | 'unrecorded'
+    let diffMs = null;
 
-    if (nextSpawn) {
+    if (nextSpawn && !isNaN(nextSpawn.getTime())) {
       diffMs = nextSpawn.getTime() - now.getTime();
       if (diffMs <= 0) {
         status = 'alive';
@@ -236,7 +236,8 @@ function renderBossTimerCards() {
       timer,
       nextSpawn,
       status,
-      diffMs
+      diffMs,
+      respawnLabel: boss.respawnType === 'interval' ? (boss.intervalHours + ' ชม.') : (boss.scheduleText || 'Fixed')
     };
   });
 
@@ -281,13 +282,13 @@ function renderBossTimerCards() {
     return true;
   });
 
-  // Sort: Alive first, then Soon, then Cooldown by nearest nextSpawn
+  // Sort: Alive first, then Soon, then Cooldown by nearest nextSpawn, then Unrecorded
   filtered.sort((a, b) => {
-    const order = { alive: 1, soon: 2, cooldown: 3, unknown: 4 };
+    const order = { alive: 1, soon: 2, cooldown: 3, unrecorded: 4 };
     if (order[a.status] !== order[b.status]) {
       return order[a.status] - order[b.status];
     }
-    if (a.diffMs && b.diffMs) {
+    if (a.diffMs !== null && b.diffMs !== null) {
       return a.diffMs - b.diffMs;
     }
     return 0;
@@ -320,12 +321,12 @@ function renderBossTimerCards() {
     } else if (b.status === 'cooldown') {
       statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30 flex items-center gap-1"><i class="fa-solid fa-hourglass-half text-[8px] text-sky-400"></i> รอเกิด</span>`;
     } else {
-      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-400">ยังไม่มีเวลาตาย</span>`;
+      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-800/90 text-slate-400 border border-slate-700">⚪ ยังไม่ลงเวลา</span>`;
     }
 
     const countdownText = formatCountdown(b.diffMs, b.status);
     const lastDefeatedStr = b.timer.defeatedTime ? formatDateTimeShort(new Date(b.timer.defeatedTime)) : '-';
-    const nextSpawnStr = b.nextSpawn ? formatDateTimeShort(b.nextSpawn) : '-';
+    const nextSpawnStr = b.nextSpawn ? formatDateTimeShort(b.nextSpawn) : (b.respawnType === 'interval' ? 'รอลงเวลาตาย' : '-');
 
     html += `
       <div class="boss-card relative flex flex-col justify-between bg-gradient-to-b ${cardBg} border ${cardBorder} rounded-2xl p-3.5 shadow-lg backdrop-blur transition hover:scale-[1.01] hover:border-amber-400/60 duration-200">
@@ -338,34 +339,36 @@ function renderBossTimerCards() {
                 <h4 class="text-sm font-extrabold text-white tracking-tight">${escapeHtml(b.name)}</h4>
               </div>
               <p class="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                <i class="fa-solid fa-location-dot text-[10px] text-rose-400"></i>
-                <span class="truncate max-w-[170px]">${escapeHtml(b.map || '-')}</span>
+                <i class="fa-solid fa-location-dot text-slate-500 text-[10px]"></i>
+                <span class="truncate">${escapeHtml(b.map || 'ไม่ระบุแมพ')}</span>
               </p>
             </div>
-            ${statusBadge}
+            <div class="shrink-0" id="boss-status-badge-${b.id}">
+              ${statusBadge}
+            </div>
           </div>
 
-          <!-- Middle Countdown Box -->
-          <div class="my-2.5 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-center shadow-inner">
-            <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 block mb-0.5">นับถอยหลังเวลาเกิด</span>
-            <div class="font-mono text-lg sm:text-xl font-black ${b.status === 'alive' ? 'text-rose-400 animate-pulse' : b.status === 'soon' ? 'text-amber-300' : 'text-emerald-400'}" id="boss-cd-${b.id}">
+          <!-- Countdown Big Box -->
+          <div class="my-2.5 p-2 rounded-xl bg-slate-950/70 border border-slate-800/80 text-center">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">นับถอยหลัง</span>
+            <div id="boss-cd-${b.id}" class="text-base sm:text-lg font-black font-mono tracking-wider ${b.status === 'alive' ? 'text-rose-400 animate-pulse' : b.status === 'soon' ? 'text-amber-300 animate-pulse' : b.status === 'cooldown' ? 'text-sky-300' : 'text-slate-500'}">
               ${countdownText}
             </div>
-            <div class="mt-1 flex items-center justify-between text-[10.5px] text-slate-400 border-t border-slate-800/80 pt-1">
-              <span>เกิดรอบถัดไป:</span>
-              <span class="font-mono font-bold text-slate-200">${nextSpawnStr}</span>
-            </div>
           </div>
 
-          <!-- Info Details -->
-          <div class="text-[10.5px] text-slate-400 space-y-1 bg-slate-900/50 rounded-lg p-2 border border-slate-800/50">
-            <div class="flex justify-between">
-              <span>ระยะเกิด:</span>
-              <span class="text-slate-300 font-medium">${escapeHtml(b.scheduleText || (b.intervalHours + ' ชม.'))}</span>
+          <!-- Metadata Grid -->
+          <div class="grid grid-cols-2 gap-1.5 text-[10.5px] text-slate-300 pt-1 border-t border-slate-800/60">
+            <div>
+              <span class="text-slate-500 block text-[9.5px]">ระยะเกิด:</span>
+              <span class="font-medium text-amber-300/90">${escapeHtml(b.respawnLabel)}</span>
             </div>
-            <div class="flex justify-between">
-              <span>ตายล่าสุด:</span>
-              <span class="font-mono text-slate-300">${lastDefeatedStr}</span>
+            <div>
+              <span class="text-slate-500 block text-[9.5px]">เกิดรอบถัดไป:</span>
+              <span id="boss-next-${b.id}" class="font-mono font-medium ${b.nextSpawn ? 'text-emerald-300' : 'text-slate-500'}">${nextSpawnStr}</span>
+            </div>
+            <div class="col-span-2 text-slate-400 flex items-center justify-between text-[10px]">
+              <span>ตายล่าสุด: <strong class="font-mono text-slate-300">${lastDefeatedStr}</strong></span>
+              ${b.note ? `<span class="text-amber-400/80 truncate max-w-[120px]" title="${escapeHtml(b.note)}">ℹ️ ${escapeHtml(b.note)}</span>` : ''}
             </div>
           </div>
         </div>
@@ -398,6 +401,10 @@ function renderBossTimerCards() {
 
 // Format Countdown
 function formatCountdown(diffMs, status) {
+  if (status === 'unrecorded' || diffMs === null) {
+    return '--:--:--';
+  }
+
   if (status === 'alive') {
     const elapsedSec = Math.abs(Math.floor(diffMs / 1000));
     const h = Math.floor(elapsedSec / 3600);
@@ -406,7 +413,7 @@ function formatCountdown(diffMs, status) {
     return `SPAWNED (+${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')})`;
   }
 
-  if (diffMs <= 0 || isNaN(diffMs)) return 'พร้อมเกิด / ไม่ระบุ';
+  if (diffMs <= 0 || isNaN(diffMs)) return '--:--:--';
 
   const totalSec = Math.floor(diffMs / 1000);
   const d = Math.floor(totalSec / 86400);
@@ -441,7 +448,11 @@ function updateCountdowns() {
 
     const timer = bossTimerData[boss.id] || {};
     let nextSpawn = timer.customNextSpawn ? new Date(timer.customNextSpawn) : calculateNextSpawnDate(boss, timer.defeatedTime);
-    if (!nextSpawn) return;
+    if (!nextSpawn || isNaN(nextSpawn.getTime())) {
+      cdEl.textContent = '--:--:--';
+      cdEl.className = "text-base sm:text-lg font-black font-mono tracking-wider text-slate-500";
+      return;
+    }
 
     const diffMs = nextSpawn.getTime() - now.getTime();
     let status = 'cooldown';
@@ -452,64 +463,61 @@ function updateCountdowns() {
     }
 
     cdEl.textContent = formatCountdown(diffMs, status);
+
+    if (status === 'alive') {
+      cdEl.className = "text-base sm:text-lg font-black font-mono tracking-wider text-rose-400 animate-pulse";
+    } else if (status === 'soon') {
+      cdEl.className = "text-base sm:text-lg font-black font-mono tracking-wider text-amber-300 animate-pulse";
+    } else {
+      cdEl.className = "text-base sm:text-lg font-black font-mono tracking-wider text-sky-300";
+    }
   });
 }
 
-// Update Navbar Widget
+// Update Upcoming Boss in Main Header
 function updateUpcomingBossWidget() {
-  const nameEl = document.getElementById('widget-boss-name');
-  const locEl = document.getElementById('widget-boss-loc');
-  const timerTextEl = document.getElementById('widget-boss-timer-text');
-  const widgetBox = document.getElementById('upcoming-boss-toolbar-widget');
-  if (!nameEl || !timerTextEl) return;
+  const widget = document.getElementById('upcoming-boss-text');
+  if (!widget) return;
 
   const now = new Date();
-  let nearestBoss = null;
-  let minDiff = Infinity;
-  let aliveBoss = null;
+  const recordedBosses = [];
 
-  bossList.forEach(boss => {
-    const timer = bossTimerData[boss.id] || {};
-    const nextSpawn = timer.customNextSpawn ? new Date(timer.customNextSpawn) : calculateNextSpawnDate(boss, timer.defeatedTime);
-    if (nextSpawn) {
-      const diff = nextSpawn.getTime() - now.getTime();
-      if (diff <= 0) {
-        if (!aliveBoss || diff > aliveBoss.diff) {
-          aliveBoss = { boss, diff, nextSpawn };
-        }
-      } else if (diff < minDiff) {
-        minDiff = diff;
-        nearestBoss = { boss, diff, nextSpawn };
-      }
+  bossList.forEach(b => {
+    const timer = bossTimerData[b.id] || {};
+    const nextSpawn = timer.customNextSpawn ? new Date(timer.customNextSpawn) : calculateNextSpawnDate(b, timer.defeatedTime);
+    if (nextSpawn && !isNaN(nextSpawn.getTime())) {
+      const diffMs = nextSpawn.getTime() - now.getTime();
+      recordedBosses.push({ boss: b, nextSpawn, diffMs });
     }
   });
 
-  if (aliveBoss) {
-    nameEl.textContent = `${aliveBoss.boss.name}`;
-    if (locEl) locEl.textContent = `📍 ${aliveBoss.boss.map}`;
-    timerTextEl.textContent = 'ALIVE!';
-    timerTextEl.className = 'text-rose-400 font-black animate-pulse';
-  } else if (nearestBoss) {
-    nameEl.textContent = `${nearestBoss.boss.name}`;
-    if (locEl) locEl.textContent = `📍 ${nearestBoss.boss.map}`;
-    timerTextEl.textContent = formatCountdown(nearestBoss.diff, 'cooldown');
-    timerTextEl.className = nearestBoss.diff <= 30 * 60 * 1000 ? 'text-amber-400 font-bold' : 'text-emerald-400 font-bold';
+  if (recordedBosses.length === 0) {
+    widget.innerHTML = `<span class="text-slate-400">⏱️ บอสไทม์เมอร์ (พร้อมใช้งาน)</span>`;
+    return;
+  }
+
+  // Find nearest
+  recordedBosses.sort((a, b) => a.diffMs - b.diffMs);
+  const nearest = recordedBosses[0];
+
+  if (nearest.diffMs <= 0) {
+    widget.innerHTML = `<span class="text-rose-400 font-bold animate-pulse">🔴 ${escapeHtml(nearest.boss.name)} เกิดแล้ว!</span>`;
+  } else if (nearest.diffMs <= 30 * 60 * 1000) {
+    widget.innerHTML = `<span class="text-amber-300 font-bold animate-pulse">🟡 ${escapeHtml(nearest.boss.name)} ใน ${formatCountdown(nearest.diffMs, 'soon')}</span>`;
   } else {
-    nameEl.textContent = 'ไม่มีข้อมูล';
-    if (locEl) locEl.textContent = '-';
-    timerTextEl.textContent = '--:--:--';
+    widget.innerHTML = `<span class="text-slate-300">⏳ บอสถัดไป: <strong>${escapeHtml(nearest.boss.name)}</strong> (${formatCountdown(nearest.diffMs, 'cooldown')})</span>`;
   }
 }
 
-// Quick Record Boss Kill NOW
+// Record Boss Kill (Now)
 function recordBossKillNow(bossId) {
   const boss = bossList.find(b => b.id === bossId);
   if (!boss) return;
 
   const now = new Date();
   saveBossKillTime(bossId, now.toISOString(), (typeof currentAdminEmail !== 'undefined' ? currentAdminEmail : 'Admin'));
-  showToast(`💀 บันทึกเวลาตาย "${boss.name}" เรียบร้อยแล้ว (เริ่มนับรอบใหม่)`, 'success');
-  playBossAlertSound();
+  showToast(`บันทึกเวลาตายของ "${boss.name}" เรียบร้อยแล้ว!`, 'success');
+  playChime();
 }
 
 // Save Boss Kill Time
@@ -591,66 +599,69 @@ function handleSaveCustomKill(e) {
   showToast(`บันทึกเวลาตายย้อนหลังเรียบร้อยแล้ว`, 'success');
 }
 
-// Sync from Google Sheet
-async function syncBossFromGoogleSheet() {
-  const url = 'https://docs.google.com/spreadsheets/d/1azAI2SA9Z8a0mFSeqktU6UGLhLQuRerx3PmrGRskxrE/export?format=csv&gid=388933312';
-  try {
-    showToast('กำลังดึงข้อมูลจาก Google Sheets...', 'info');
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`HTTP Error ${resp.status}`);
-    const csvText = await resp.text();
+// ================= Server Maintenance Reset Modal =================
+function openMaintenanceModal() {
+  const modal = document.getElementById('boss-maintenance-modal');
+  const dateInput = document.getElementById('maint-reset-date');
+  const timeInput = document.getElementById('maint-reset-time');
 
-    const lines = csvText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    let updatedCount = 0;
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  if (dateInput) dateInput.value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  if (timeInput) timeInput.value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
-    // Parse CSV lines
-    for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim());
-      if (cols.length < 7) continue;
+  if (modal) modal.classList.remove('hidden');
+}
 
-      const name = cols[3];
-      const dateDef = cols[5]; // DD/MM/YYYY
-      const timeDef = cols[6]; // HH:MM
+function closeMaintenanceModal() {
+  const modal = document.getElementById('boss-maintenance-modal');
+  if (modal) modal.classList.add('hidden');
+}
 
-      if (!name || !dateDef || !timeDef || dateDef === 'NA' || timeDef === 'NA') continue;
+function handleConfirmMaintenance(e) {
+  if (e) e.preventDefault();
+  const dateVal = document.getElementById('maint-reset-date').value;
+  const timeVal = document.getElementById('maint-reset-time').value;
+  if (!dateVal || !timeVal) return;
 
-      // Match Boss by Name
-      const boss = bossList.find(b => b.name.toLowerCase() === name.toLowerCase());
-      if (boss) {
-        const parts = dateDef.split('/');
-        if (parts.length === 3) {
-          const d = parseInt(parts[0]);
-          const m = parseInt(parts[1]) - 1;
-          const y = parseInt(parts[2]);
-          const [h, min] = timeDef.split(':').map(Number);
-          const killDate = new Date(y, m, d, h || 0, min || 0, 0);
-
-          if (!isNaN(killDate.getTime())) {
-            const nextSpawn = calculateNextSpawnDate(boss, killDate.toISOString());
-            bossTimerData[boss.id] = {
-              defeatedTime: killDate.toISOString(),
-              nextSpawnTime: nextSpawn ? nextSpawn.toISOString() : null,
-              recordedBy: 'GoogleSheet Sync',
-              updatedAt: new Date().toISOString()
-            };
-            updatedCount++;
-          }
-        }
-      }
-    }
-
-    localStorage.setItem('guild_boss_timers', JSON.stringify(bossTimerData));
-    if (typeof fbDb !== 'undefined' && fbDb) {
-      fbDb.ref('guild_app/boss_timers').set(bossTimerData);
-    }
-
-    renderBossTimerCards();
-    updateUpcomingBossWidget();
-    showToast(`🔄 ซิงค์ข้อมูลบอสจากชีตสำเร็จ (${updatedCount} ตัว)`, 'success');
-  } catch (err) {
-    console.error('Sheet sync error:', err);
-    showToast('เกิดข้อผิดพลาดในการดึงข้อมูลจาก Google Sheets', 'error');
+  const resetDt = new Date(`${dateVal}T${timeVal}:00`);
+  if (isNaN(resetDt.getTime())) {
+    alert('วันที่หรือเวลาไม่ถูกต้อง');
+    return;
   }
+
+  const adminEmail = typeof currentAdminEmail !== 'undefined' ? currentAdminEmail : 'Admin';
+  const resetISO = resetDt.toISOString();
+  let count = 0;
+
+  // Reset all interval bosses to calculate from this server open time
+  bossList.forEach(boss => {
+    if (boss.respawnType === 'interval') {
+      const nextSpawn = new Date(resetDt.getTime() + (boss.intervalHours * 3600 * 1000));
+      bossTimerData[boss.id] = {
+        defeatedTime: resetISO,
+        nextSpawnTime: nextSpawn.toISOString(),
+        recordedBy: `${adminEmail} (Server Maintenance Reset)`,
+        updatedAt: new Date().toISOString()
+      };
+      count++;
+    }
+  });
+
+  localStorage.setItem('guild_boss_timers', JSON.stringify(bossTimerData));
+  if (typeof fbDb !== 'undefined' && fbDb) {
+    fbDb.ref('guild_app/boss_timers').set(bossTimerData);
+  }
+
+  if (typeof addAuditLog === 'function') {
+    addAuditLog('boss_maintenance', `รีเซ็ตเวลาบอส ${count} ตัวหลังเซิร์ฟเปิด`, `เวลาเปิดเซิร์ฟ: ${formatDateTimeShort(resetDt)} โดย: ${adminEmail}`, 'BossTimer');
+  }
+
+  closeMaintenanceModal();
+  renderBossTimerCards();
+  updateUpcomingBossWidget();
+  showToast(`🛠️ รีเซ็ตเวลาบอสตามคอลัมน์ E ทั้งหมด ${count} ตัวเรียบร้อยแล้ว!`, 'success');
+  playChime();
 }
 
 // AI OCR Image Handler
