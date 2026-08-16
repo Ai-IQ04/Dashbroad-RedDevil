@@ -837,24 +837,53 @@ function normalizeAndCleanThaiDropLog(rawText) {
     .replace(/ช[\s_]*นส[\s_]*วน/g, 'ชิ้นส่วน')
     .replace(/กล[\s_]*อง/g, 'กล่อง');
 
-  // 2. Detect Date (DD/MM) & Time (HH:MM)
+  // 2. Detect Date (DD/MM) & Time (HH:MM) - Prioritizing the front of the log lines
   let extractedDate = null;
   let extractedTime = null;
 
-  const dateTimeMatch = normalized.match(/(\d{1,2})[\/.-](\d{1,2})(?:\s+(\d{1,2})[:.](\d{2}))?/);
-  if (dateTimeMatch) {
-    const d = dateTimeMatch[1].padStart(2, '0');
-    const m = dateTimeMatch[2].padStart(2, '0');
-    const currentYear = new Date().getFullYear();
-    extractedDate = `${currentYear}-${m}-${d}`;
-    if (dateTimeMatch[3] && dateTimeMatch[4]) {
-      extractedTime = `${dateTimeMatch[3].padStart(2, '0')}:${dateTimeMatch[4].padStart(2, '0')}`;
+  const rawLines = normalized.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  // A. Check for date + time in header (e.g. "17/08 03:21" or "17/08 03.21")
+  for (const line of rawLines) {
+    const dtMatch = line.match(/(\d{1,2})[\/.-](\d{1,2})\s+(\d{1,2})[:.](\d{2})/);
+    if (dtMatch) {
+      const d = dtMatch[1].padStart(2, '0');
+      const m = dtMatch[2].padStart(2, '0');
+      const currentYear = new Date().getFullYear();
+      extractedDate = `${currentYear}-${m}-${d}`;
+      extractedTime = `${dtMatch[3].padStart(2, '0')}:${dtMatch[4].padStart(2, '0')}`;
+      break;
     }
   }
 
-  const timeStampMatch = normalized.match(/\[?(\d{1,2})[:.](\d{2})\]?/);
-  if (timeStampMatch && !extractedTime) {
-    extractedTime = `${timeStampMatch[1].padStart(2, '0')}:${timeStampMatch[2].padStart(2, '0')}`;
+  // B. If time not found from header, check the very FRONT of any log line: e.g. "[03:21]" or "03:21" or "[03.21]"
+  if (!extractedTime) {
+    for (const line of rawLines) {
+      const frontTimeMatch = line.match(/^\s*\[?\s*(\d{1,2})[:.](\d{2})\s*\]?/);
+      if (frontTimeMatch) {
+        extractedTime = `${frontTimeMatch[1].padStart(2, '0')}:${frontTimeMatch[2].padStart(2, '0')}`;
+        break;
+      }
+    }
+  }
+
+  // C. Fallback: Any timestamp in text
+  if (!extractedTime) {
+    const timeStampMatch = normalized.match(/\[?(\d{1,2})[:.](\d{2})\]?/);
+    if (timeStampMatch) {
+      extractedTime = `${timeStampMatch[1].padStart(2, '0')}:${timeStampMatch[2].padStart(2, '0')}`;
+    }
+  }
+
+  // D. Fallback: Date only (DD/MM)
+  if (!extractedDate) {
+    const dMatch = normalized.match(/(\d{1,2})[\/.-](\d{1,2})/);
+    if (dMatch) {
+      const d = dMatch[1].padStart(2, '0');
+      const m = dMatch[2].padStart(2, '0');
+      const currentYear = new Date().getFullYear();
+      extractedDate = `${currentYear}-${m}-${d}`;
+    }
   }
 
   // 3. Detect Boss (Check name or location keywords)
