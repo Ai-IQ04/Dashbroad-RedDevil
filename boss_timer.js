@@ -154,8 +154,7 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
 
 // Initialize Boss Data
 function initBossTimerModule() {
-  const savedBosses = localStorage.getItem('guild_boss_list');
-  bossList = savedBosses ? JSON.parse(savedBosses) : DEFAULT_BOSS_DATABASE;
+  bossList = DEFAULT_BOSS_DATABASE;
 
   const savedTimers = localStorage.getItem('guild_boss_timers');
   bossTimerData = savedTimers ? JSON.parse(savedTimers) : {};
@@ -994,3 +993,21 @@ function loadScript(src) {
     document.head.appendChild(script);
   });
 }
+
+// Expose all functions to global window for inline onclick handlers
+window.initBossTimerModule = initBossTimerModule;
+window.openMaintenanceModal = openMaintenanceModal;
+window.closeMaintenanceModal = closeMaintenanceModal;
+window.handleConfirmMaintenance = handleConfirmMaintenance;
+window.switchAppModule = switchAppModule;
+window.recordBossKillNow = recordBossKillNow;
+window.openCustomKillModal = openCustomKillModal;
+window.closeCustomKillModal = closeCustomKillModal;
+window.handleSaveCustomKill = handleSaveCustomKill;
+window.openBossDropLogModal = openBossDropLogModal;
+window.closeBossDropLogModal = closeBossDropLogModal;
+window.processImageForBossOCR = processImageForBossOCR;
+window.toggleBossSound = toggleBossSound;
+window.renderBossTimerCards = renderBossTimerCards;
+window.closeBossAiOcrModal = closeBossAiOcrModal;
+window.handleConfirmOcrSave = handleConfirmOcrSave;
