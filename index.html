@@ -758,6 +758,15 @@
               <span data-i18n="btn_manage_guilds">จัดการกิลด์</span>
             </button>
 
+            <!-- ปุ่มซิงค์ข้อมูล Discord (เฉพาะ Admin) -->
+            <button id="btn-sync-discord" onclick="triggerDiscordSync()"
+              class="hidden apple-btn bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-200 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm transition"
+              title="สั่งให้บอทสแกนข้อความการลงทะเบียนในห้อง Discord ทันที">
+              <i id="btn-sync-discord-icon" class="fa-brands fa-discord text-indigo-400 text-xs"></i>
+              <span id="btn-sync-discord-text">ซิงค์ Discord</span>
+              <span id="discord-active-count-badge" class="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9.5px] font-mono font-bold">0</span>
+            </button>
+
             <!-- ปุ่มติ๊ก All ตามกิลด์ (เฉพาะ Admin) -->
             <button id="btn-batch-guild-check" onclick="openBatchGuildCheckModal()"
               class="hidden apple-btn apple-btn-ocean inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
@@ -5766,11 +5775,64 @@
           discordVerifiedMembers = {};
           localStorage.setItem('guild_discord_verified', JSON.stringify({}));
         }
+        const countBadge = document.getElementById('discord-active-count-badge');
+        if (countBadge) {
+          countBadge.textContent = Object.keys(discordVerifiedMembers).length;
+        }
         renderTable();
+      });
+
+      // 16. ดักฟังผลลัพธ์การสั่งซิงค์ Discord จากบอท
+      fbDb.ref('guild_app/bot_status/sync_result').on('value', snapshot => {
+        const val = snapshot.val();
+        if (val && val.timestamp && (Date.now() - val.timestamp) < 30000) {
+          const icon = document.getElementById('btn-sync-discord-icon');
+          const text = document.getElementById('btn-sync-discord-text');
+          if (icon) icon.className = 'fa-brands fa-discord text-indigo-400 text-xs';
+          if (text) text.textContent = 'ซิงค์ Discord';
+
+          const countBadge = document.getElementById('discord-active-count-badge');
+          if (countBadge && val.syncedCount !== undefined) {
+            countBadge.textContent = val.syncedCount;
+          }
+          showToast(`🎉 ซิงค์ Discord สำเร็จ! ยืนยันแล้ว ${val.syncedCount || 0} รายการ`, 'success');
+        }
       });
     }
 
     let discordVerifiedMembers = JSON.parse(localStorage.getItem('guild_discord_verified')) || {};
+
+    function triggerDiscordSync() {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_check'), "warning");
+        openAdminEmailModal();
+        return;
+      }
+
+      const icon = document.getElementById('btn-sync-discord-icon');
+      const text = document.getElementById('btn-sync-discord-text');
+      if (icon) icon.className = 'fa-solid fa-arrows-rotate fa-spin text-indigo-400 text-xs';
+      if (text) text.textContent = 'กำลังซิงค์...';
+
+      showToast('📡 ส่งคำสั่งให้บอทสแกนข้อความ Discord แล้ว...', 'info');
+
+      if (fbDb) {
+        fbDb.ref('guild_app/bot_commands/sync').set({
+          requestedAt: Date.now(),
+          requestedBy: currentAdminEmail || 'Admin'
+        });
+      }
+
+      // ถ้าไม่มีการตอบกลับภายใน 10 วินาที ให้คืนสถานะปุ่ม
+      setTimeout(() => {
+        const curIcon = document.getElementById('btn-sync-discord-icon');
+        const curText = document.getElementById('btn-sync-discord-text');
+        if (curIcon && curIcon.classList.contains('fa-spin')) {
+          curIcon.className = 'fa-brands fa-discord text-indigo-400 text-xs';
+          if (curText) curText.textContent = 'ซิงค์ Discord';
+        }
+      }, 10000);
+    }
 
     function getDiscordVerifiedData(member) {
       if (!member || !discordVerifiedMembers || typeof discordVerifiedMembers !== 'object') return null;
@@ -5933,6 +5995,11 @@
         if (manageGuildsBtn) {
           manageGuildsBtn.classList.remove('hidden');
           manageGuildsBtn.classList.add('inline-flex');
+        }
+        const syncDiscordBtn = document.getElementById('btn-sync-discord');
+        if (syncDiscordBtn) {
+          syncDiscordBtn.classList.remove('hidden');
+          syncDiscordBtn.classList.add('inline-flex');
         }
         if (batchCheckBtn) {
           batchCheckBtn.classList.remove('hidden');
