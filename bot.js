@@ -162,8 +162,13 @@ async function checkAndSendBossAlerts() {
 
       const diffMs = nextSpawn.getTime() - now.getTime();
       const spawnTimestamp = Math.floor(nextSpawn.getTime() / 1000);
-      const isGuildEvent = GUILD_SCORING_BOSS_IDS.has(boss.id);
-      const eventLabel = isGuildEvent ? '⭐ กิจกรรมกิลด์ (Scoring Event)' : '🛡️ บอสทั่วไป (Field Boss)';
+      const pad = n => String(n).padStart(2, '0');
+      const spawnHour = pad(nextSpawn.getHours());
+      const spawnMin = pad(nextSpawn.getMinutes());
+      const timeHHmm = `${spawnHour}:${spawnMin}`;
+
+      const bossDisplayName = `${boss.level || '??'}, ${boss.name.toUpperCase()}`;
+      const mentionText = CONFIG.MENTION_TAG || '@Notification';
 
       // 🟡 1. แจ้งเตือนก่อนเกิด 5 นาที (เมื่อเหลือ 0 ถึง 5 นาที)
       if (diffMs > 0 && diffMs <= 5 * 60 * 1000) {
@@ -172,20 +177,15 @@ async function checkAndSendBossAlerts() {
           sentAlerts.add(alertKey);
 
           const embed5m = new EmbedBuilder()
-            .setColor('#F59E0B') // สีเหลืองทอง Amber
-            .setTitle(`🟡 [BOSS INCOMING] ${boss.name} ใกล้จะเกิดแล้วใน 5 นาที!`)
-            .setDescription(`เตรียมตัวรวมพล! บอสกำลังจะเกิดในอีก **5 นาที** กรุณาเดินทางไปยังจุดนัดพบ`)
-            .addFields(
-              { name: '👑 ชื่อบอส', value: `**${boss.name}** (Lv. ${boss.level || '??'})`, inline: true },
-              { name: '📍 สถานที่ / แมพ', value: `${boss.map || 'ไม่ระบุแมพ'}`, inline: true },
-              { name: '⚔️ ประเภท', value: `${eventLabel}`, inline: true },
-              { name: '⏰ เวลาที่จะเกิด', value: `<t:${spawnTimestamp}:F>\n⏳ **นับถอยหลัง:** <t:${spawnTimestamp}:R>`, inline: false }
-            )
-            .setFooter({ text: 'BlueDevil & RedDevil • ระบบติดตามบอส Real-time', iconURL: client.user.displayAvatarURL() })
+            .setColor('#FFD700') // สีเหลืองทอง
+            .setAuthor({ name: 'LORDNINE S.6' })
+            .setTitle(`⏳ SOON • ${bossDisplayName}`)
+            .setDescription(`\n# 🕖 ${timeHHmm}\n\n> ▎ เตรียมตัว! อีก 5 นาทีบอสจะเกิด`)
+            .setFooter({ text: '🛡️ LORD NINE SYSTEM' })
             .setTimestamp(nextSpawn);
 
-          await channel.send({ embeds: [embed5m] });
-          console.log(`📢 [ส่งแจ้งเตือน 5 นาที] ${boss.name} ในห้อง ${channel.name || CONFIG.BOSS_ALERT_CHANNEL_ID}`);
+          await channel.send({ content: mentionText, embeds: [embed5m] });
+          console.log(`📢 [ส่งแจ้งเตือน 5 นาที • Lord Nine Style] ${boss.name} ในห้อง ${channel.name || CONFIG.BOSS_ALERT_CHANNEL_ID}`);
         }
       }
 
@@ -196,21 +196,15 @@ async function checkAndSendBossAlerts() {
           sentAlerts.add(alertKey);
 
           const embedSpawned = new EmbedBuilder()
-            .setColor('#EF4444') // สีแดงสด Ruby Red
-            .setTitle(`🔴 [BOSS SPAWNED] ${boss.name} เกิดแล้ว! ออกล่าได้ทันที`)
-            .setDescription(`🚨 **บอสปรากฏตัวแล้ว!** สมาชิกกิลด์สามารถวาร์ปไปจุดเกิดและเริ่มโจมตีได้เลย`)
-            .addFields(
-              { name: '👑 ชื่อบอส', value: `**${boss.name}** (Lv. ${boss.level || '??'})`, inline: true },
-              { name: '📍 สถานที่ / แมพ', value: `${boss.map || 'ไม่ระบุแมพ'}`, inline: true },
-              { name: '⚔️ ประเภท', value: `${eventLabel}`, inline: true },
-              { name: '⏰ เวลาที่เกิด', value: `<t:${spawnTimestamp}:F> (<t:${spawnTimestamp}:R>)`, inline: false },
-              { name: '🗡️ สถานะ', value: `🔥 **ALIVE (เกิดแล้ว)**`, inline: true }
-            )
-            .setFooter({ text: 'BlueDevil & RedDevil • ระบบติดตามบอส Real-time', iconURL: client.user.displayAvatarURL() })
+            .setColor('#FF2A2A') // สีแดงสด
+            .setAuthor({ name: 'LORDNINE S.6' })
+            .setTitle(`🔴 SPAWN • ${bossDisplayName}`)
+            .setDescription(`\n# 🕖 ${timeHHmm}\n\n> ▎ บอสเกิดแล้ว! ออกล่าได้ทันที`)
+            .setFooter({ text: '🛡️ LORD NINE SYSTEM' })
             .setTimestamp(now);
 
-          await channel.send({ embeds: [embedSpawned] });
-          console.log(`🚨 [ส่งแจ้งเตือนบอสเกิดแล้ว!] ${boss.name} ในห้อง ${channel.name || CONFIG.BOSS_ALERT_CHANNEL_ID}`);
+          await channel.send({ content: mentionText, embeds: [embedSpawned] });
+          console.log(`🚨 [ส่งแจ้งเตือนบอสเกิดแล้ว! • Lord Nine Style] ${boss.name} ในห้อง ${channel.name || CONFIG.BOSS_ALERT_CHANNEL_ID}`);
         }
       }
     }
