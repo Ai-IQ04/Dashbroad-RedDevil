@@ -676,6 +676,77 @@ function handleGlobalPasteForOCR(event) {
   }
 }
 
+// Preprocess image for OCR: upscale 2.5x, invert dark game background, increase contrast, binarize
+async function preprocessImageCanvas(file) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Scale up 2.5x for sharp sub-pixel text rendering
+        const scale = 2.5;
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Get Pixel Data
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const d = imgData.data;
+
+        // 1. Calculate Average Luminance
+        let totalLum = 0;
+        const totalPixels = canvas.width * canvas.height;
+        for (let i = 0; i < d.length; i += 4) {
+          totalLum += (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
+        }
+        const avgLum = totalLum / totalPixels;
+        const isDarkBg = avgLum < 130;
+
+        // 2. Grayscale, Invert if dark, and Enhance Contrast
+        for (let i = 0; i < d.length; i += 4) {
+          let gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+
+          if (isDarkBg) {
+            // Invert: Light yellow/white text becomes dark on pure white
+            gray = 255 - gray;
+          }
+
+          // Contrast stretching & thresholding
+          if (gray > 160) {
+            gray = 255;
+          } else if (gray < 85) {
+            gray = 0;
+          } else {
+            gray = Math.round(((gray - 85) / 75) * 255);
+          }
+
+          d[i] = gray;
+          d[i + 1] = gray;
+          d[i + 2] = gray;
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+
+        canvas.toBlob(blob => {
+          if (blob) resolve(blob);
+          else resolve(file);
+        }, 'image/png');
+      } catch (err) {
+        console.warn('Canvas pre-processing fallback:', err);
+        resolve(file);
+      }
+    };
+    img.onerror = () => resolve(file);
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 // Process Image with AI OCR
 async function processImageForBossOCR(file) {
   if (!file) return;
@@ -690,22 +761,28 @@ async function processImageForBossOCR(file) {
     previewImg.classList.remove('hidden');
   }
   if (statusEl) {
-    statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังอ่านตัวหนังสือในรูปภาพด้วย AI...`;
+    statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400"></i> กำลังปรับความคมชัดของภาพ (Canvas AI Pre-processing)...`;
     statusEl.classList.remove('hidden');
   }
   if (resultBox) resultBox.classList.add('hidden');
   if (modal) modal.classList.remove('hidden');
 
   try {
-    // Check if Tesseract is available
+    // 1. Preprocess with Canvas Pipeline
+    const processedBlob = await preprocessImageCanvas(file);
+
+    // 2. Check if Tesseract is available
     if (typeof Tesseract === 'undefined') {
+      if (statusEl) statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดโมเดลภาษาไทย...`;
       await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
     }
 
-    const { data: { text } } = await Tesseract.recognize(file, 'eng+tha', {
+    if (statusEl) statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-amber-400"></i> กำลังสแกนอ่านข้อความภาษาไทย...`;
+
+    const { data: { text } } = await Tesseract.recognize(processedBlob, 'tha+eng', {
       logger: m => {
         if (statusEl && m.status === 'recognizing text') {
-          statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังอ่านข้อความ (${Math.round(m.progress * 100)}%)...`;
+          statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-amber-400"></i> กำลังอ่านข้อความ (${Math.round(m.progress * 100)}%)...`;
         }
       }
     });
@@ -727,8 +804,11 @@ function normalizeAndCleanThaiDropLog(rawText) {
 
   // 1. Text Normalization: Fix broken Thai vowels, floating spaces, tone marks
   let normalized = rawText
-    // Fix broken common Thai words in logs
+    // Clean up common Thai vowel / tone artifacts
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/ได[\s_]*ร[\s_]*บ/g, 'ได้รับ')
     .replace(/ได[\s_]*รับ/g, 'ได้รับ')
+    .replace(/ไดรับ/g, 'ได้รับ')
     .replace(/แห[\s_]*ง/g, 'แห่ง')
     .replace(/ท[\s_]*เส[\s_]*อมทราม/g, 'ที่เสื่อมทราม')
     .replace(/เส[\s_]*อมทราม/g, 'เสื่อมทราม')
@@ -736,12 +816,16 @@ function normalizeAndCleanThaiDropLog(rawText) {
     .replace(/หนอัปเกรด/g, 'หินอัปเกรด')
     .replace(/อ[\s_]*ปเกรด/g, 'อัปเกรด')
     .replace(/เคร[\s_]*องประดับ/g, 'เครื่องประดับ')
+    .replace(/เครองประดับ/g, 'เครื่องประดับ')
     .replace(/ต[\s_]*างห[\s_]*/g, 'ต่างหู')
+    .replace(/ตางหู/g, 'ต่างหู')
     .replace(/ผ[\s_]*าโพก/g, 'ผ้าโพก')
+    .replace(/ผาโพก/g, 'ผ้าโพก')
     .replace(/ศ[\s_]*รษะ/g, 'ศีรษะ')
     .replace(/ห[\s_]*บเขาอ[\s_]*ลาน/g, 'หุบเขาอูลาน')
     .replace(/หุบเขาอ[\s_]*ลาน/g, 'หุบเขาอูลาน')
     .replace(/ไข่ต[\s_]*น/g, 'ไข่ตุ๋น')
+    .replace(/ไข่ตุน/g, 'ไข่ตุ๋น')
     .replace(/ไข่ตุน/g, 'ไข่ตุ๋น')
     .replace(/เกราะแห[\s_]*ง/g, 'เกราะแห่ง')
     .replace(/อาว[\s_]*ธ/g, 'อาวุธ')
@@ -773,7 +857,7 @@ function normalizeAndCleanThaiDropLog(rawText) {
     extractedTime = `${timeStampMatch[1].padStart(2, '0')}:${timeStampMatch[2].padStart(2, '0')}`;
   }
 
-  // 3. Detect Boss
+  // 3. Detect Boss (Check name or location keywords)
   let matchedBoss = null;
   const lower = normalized.toLowerCase();
   for (const b of bossList) {
@@ -781,6 +865,32 @@ function normalizeAndCleanThaiDropLog(rawText) {
       matchedBoss = b;
       break;
     }
+  }
+
+  // Additional fuzzy keyword matching for Thai Boss names
+  if (!matchedBoss) {
+    if (lower.includes('ego') || lower.includes('อีโก้') || lower.includes('อูลาน')) matchedBoss = bossList.find(b => b.id === 'ego');
+    else if (lower.includes('dalia') || lower.includes('ดาเลีย')) matchedBoss = bossList.find(b => b.id === 'lady_dalia');
+    else if (lower.includes('vioren') || lower.includes('ไวโอเรน')) matchedBoss = bossList.find(b => b.id === 'vioren');
+    else if (lower.includes('venatus') || lower.includes('เวนาทัส')) matchedBoss = bossList.find(b => b.id === 'venatus');
+    else if (lower.includes('livera') || lower.includes('ลิเวร่า')) matchedBoss = bossList.find(b => b.id === 'livera');
+    else if (lower.includes('undomiel') || lower.includes('อันโดเมียล')) matchedBoss = bossList.find(b => b.id === 'undomiel');
+    else if (lower.includes('araneo') || lower.includes('อารานีโอ')) matchedBoss = bossList.find(b => b.id === 'araneo');
+    else if (lower.includes('aquleus') || lower.includes('อควิลิอุส') || lower.includes('เจเนอรัล')) matchedBoss = bossList.find(b => b.id === 'general_aquleus');
+    else if (lower.includes('amentis') || lower.includes('อาเมนทิส')) matchedBoss = bossList.find(b => b.id === 'amentis');
+    else if (lower.includes('gareth') || lower.includes('การิธ')) matchedBoss = bossList.find(b => b.id === 'gareth');
+    else if (lower.includes('braudmore') || lower.includes('บรอดมอร์') || lower.includes('บารอน')) matchedBoss = bossList.find(b => b.id === 'baron_braudmore');
+    else if (lower.includes('catena') || lower.includes('คาเทน่า')) matchedBoss = bossList.find(b => b.id === 'catena');
+    else if (lower.includes('shuliar') || lower.includes('ชูเลียร์')) matchedBoss = bossList.find(b => b.id === 'shuliar');
+    else if (lower.includes('larba') || lower.includes('ลาบา')) matchedBoss = bossList.find(b => b.id === 'larba');
+    else if (lower.includes('titore') || lower.includes('ทิทอร์')) matchedBoss = bossList.find(b => b.id === 'titore');
+    else if (lower.includes('wannitas') || lower.includes('วานิตัส')) matchedBoss = bossList.find(b => b.id === 'wannitas');
+    else if (lower.includes('metus') || lower.includes('เมทัส')) matchedBoss = bossList.find(b => b.id === 'metus');
+    else if (lower.includes('duplican') || lower.includes('ดุปพลิแคน')) matchedBoss = bossList.find(b => b.id === 'duplican');
+    else if (lower.includes('asta') || lower.includes('แอสตา')) matchedBoss = bossList.find(b => b.id === 'asta');
+    else if (lower.includes('ordo') || lower.includes('ออร์โด')) matchedBoss = bossList.find(b => b.id === 'ordo');
+    else if (lower.includes('supore') || lower.includes('ซูพอร์')) matchedBoss = bossList.find(b => b.id === 'supore');
+    else if (lower.includes('secreta') || lower.includes('ซีเครต้า')) matchedBoss = bossList.find(b => b.id === 'secreta');
   }
 
   // 4. Extract Clean Drop Items with Receiver
