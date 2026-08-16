@@ -6741,7 +6741,43 @@
       document.getElementById('kpi-top-boss').textContent = topBossName;
     }
 
-    // ================= คลิกเช็คชื่อ (เฉพาะ Admin พร้อมระบบป้องกันยกเลิกหลัง 5 นาที) =================
+    // ================= คลิกเช็คชื่อ (เฉพาะ Admin พร้อมระบบ Double Click & ป้องกันยกเลิกหลัง 5 นาที) =================
+    let lastCheckTapTracker = {};
+    let checkSingleTapTimeout = null;
+
+    function handleCheckClick(memberId, activityIndex, event) {
+      if (event) {
+        event.stopPropagation();
+      }
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_check'), "warning");
+        openAdminEmailModal();
+        return;
+      }
+
+      const key = `${memberId}_${activityIndex}`;
+      const now = Date.now();
+      const lastTap = lastCheckTapTracker[key] || 0;
+      const DOUBLE_TAP_THRESHOLD_MS = 450;
+
+      if ((now - lastTap) <= DOUBLE_TAP_THRESHOLD_MS && (now - lastTap) > 0) {
+        // Double Click / Double Tap สำเร็จ!
+        lastCheckTapTracker[key] = 0;
+        if (checkSingleTapTimeout) {
+          clearTimeout(checkSingleTapTimeout);
+          checkSingleTapTimeout = null;
+        }
+        toggleCheck(memberId, activityIndex);
+      } else {
+        // Tap ครั้งที่ 1 (รอคลิกครั้งที่ 2 ภายใน 450ms)
+        lastCheckTapTracker[key] = now;
+        if (checkSingleTapTimeout) clearTimeout(checkSingleTapTimeout);
+        checkSingleTapTimeout = setTimeout(() => {
+          lastCheckTapTracker[key] = 0;
+        }, DOUBLE_TAP_THRESHOLD_MS + 50);
+      }
+    }
+
     function toggleCheck(memberId, activityIndex) {
       if (!isAdmin) {
         showToast(t('toast_need_admin_check'), "warning");
@@ -6787,15 +6823,7 @@
           delete member.weeklyCheckTimestamps[currentWeekNumber][activityIndex];
         }
       } else {
-        // กำลังจะ "ติ๊กถูก"
-        // ถ้าเป็นการเริ่มติ๊กบอสครั้งแรกของตัวละครนี้ในสัปดาห์ปัจจุบัน ให้ถามยืนยันชื่อตัวละครก่อนเสมอ
-        const hasAnyChecks = Array.isArray(member.checks) && member.checks.some(Boolean);
-        if (!hasAnyChecks) {
-          const confirmed = confirm(`🛡️ ยืนยันการเริ่มเช็คชื่อ?\n\nคุณกำลังจะเริ่มเช็คชื่อให้ตัวละคร:\n👉 "${member.characterName}" (${member.guild || '-'})\n\nกิจกรรม: "${actName}" (${getWeekName(currentWeekNumber)})\n\nกรุณาตรวจสอบชื่อตัวละครให้ถูกต้อง ต้องการเริ่มเช็คชื่อใช่หรือไม่?`);
-          if (!confirmed) return;
-        }
-
-        // ติ๊กถูกใหม่ -> บันทึกเวลาปัจจุบัน
+        // ติ๊กถูกใหม่ (ผ่านการดับเบิ้ลคลิกมาแล้ว) -> บันทึกเวลาปัจจุบัน
         member.checks[activityIndex] = true;
         if (member.weeklyChecks && Array.isArray(member.weeklyChecks[currentWeekNumber])) {
           member.weeklyChecks[currentWeekNumber][activityIndex] = true;
@@ -7226,7 +7254,7 @@
           }
             </td>
 
-            <!-- รายชื่อบอส (เฉพาะ Admin ติ๊กได้) -->
+            <!-- รายชื่อบอส (เฉพาะ Admin ดับเบิ้ลคลิกเพื่อติ๊ก) -->
             ${ACTIVITIES.map((act, actIndex) => {
             const isChecked = member.checks && member.checks[actIndex];
             const isLucus = (act.shortName || '').toLowerCase().includes('lucus') || act.weight >= 16;
@@ -7236,12 +7264,13 @@
                 <td class="py-1 px-0 text-center w-7 sm:w-7.5 max-w-[30px] ${isDayEnd ? 'border-r-2 border-slate-700/80' : 'border-r border-slate-800/30'} ${isLucus ? 'bg-rose-950/10' : ''}">
                   <button 
                     type="button"
-                    onclick="toggleCheck(${member.id}, ${actIndex})" 
-                    title="${escapeHtml(act.name)} (${act.weight}%) ${!isAdmin ? '🔒' : ''}"
+                    onclick="handleCheckClick(${member.id}, ${actIndex}, event)"
+                    ondblclick="handleCheckClick(${member.id}, ${actIndex}, event)"
+                    title="${escapeHtml(act.name)} (${act.weight}%) • แตะ 2 ครั้งติดเพื่อเช็คชื่อ ${!isAdmin ? '🔒' : ''}"
                     class="w-4.5 h-4.5 sm:w-5 sm:h-5 mx-auto rounded-md flex items-center justify-center transition-all ${isChecked
                 ? 'bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 font-black shadow-[0_0_10px_rgba(16,185,129,0.5)] border border-emerald-300/50 apple-check-active scale-100 hover:brightness-110 active:scale-90'
                 : 'bg-slate-900/60 text-slate-600 border border-slate-800/80 hover:border-slate-600 hover:text-slate-400 active:scale-90'
-              } ${!isAdmin ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'}"
+              } ${!isAdmin ? 'cursor-not-allowed opacity-90' : 'cursor-pointer select-none'}"
                   >
                     ${isChecked
                 ? '<i class="fa-solid fa-check text-[9px]"></i>'
