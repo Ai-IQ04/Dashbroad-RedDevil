@@ -5201,38 +5201,38 @@
 
     const GUILD_COLOR_SCHEMES = {
       rose: {
-        badge: 'bg-rose-500/10 text-rose-300 border border-rose-500/30 ring-1 ring-rose-500/20 shadow-[0_0_8px_rgba(244,63,94,0.15)]',
-        dot: 'bg-rose-400',
+        badge: 'bg-gradient-to-r from-rose-600/90 to-red-600/90 text-white border border-rose-300/50 shadow-sm shadow-rose-600/30',
+        dot: 'bg-white ring-2 ring-rose-400',
         icon: '🔴',
         label: '🔴 แดง (Rose)'
       },
       cyan: {
-        badge: 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 ring-1 ring-cyan-500/20 shadow-[0_0_8px_rgba(6,182,212,0.15)]',
-        dot: 'bg-cyan-400',
+        badge: 'bg-gradient-to-r from-cyan-600/90 to-blue-600/90 text-white border border-cyan-300/50 shadow-sm shadow-cyan-600/30',
+        dot: 'bg-white ring-2 ring-cyan-400',
         icon: '🔵',
         label: '🔵 ฟ้า (Cyan)'
       },
       emerald: {
-        badge: 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 ring-1 ring-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.15)]',
-        dot: 'bg-emerald-400',
+        badge: 'bg-gradient-to-r from-emerald-600/90 to-teal-600/90 text-white border border-emerald-300/50 shadow-sm shadow-emerald-600/30',
+        dot: 'bg-white ring-2 ring-emerald-400',
         icon: '🟢',
         label: '🟢 เขียว (Emerald)'
       },
       amber: {
-        badge: 'bg-amber-500/10 text-amber-300 border border-amber-500/30 ring-1 ring-amber-500/20 shadow-[0_0_8px_rgba(245,158,11,0.15)]',
-        dot: 'bg-amber-400',
+        badge: 'bg-gradient-to-r from-amber-500/95 to-orange-500/95 text-slate-950 border border-amber-200/60 shadow-sm shadow-amber-500/30',
+        dot: 'bg-slate-950 ring-2 ring-amber-300',
         icon: '🟡',
         label: '🟡 ทอง/ส้ม (Amber)'
       },
       purple: {
-        badge: 'bg-purple-500/10 text-purple-300 border border-purple-500/30 ring-1 ring-purple-500/20 shadow-[0_0_8px_rgba(168,85,247,0.15)]',
-        dot: 'bg-purple-400',
+        badge: 'bg-gradient-to-r from-purple-600/90 to-violet-700/90 text-white border border-purple-300/50 shadow-sm shadow-purple-600/30',
+        dot: 'bg-white ring-2 ring-purple-400',
         icon: '🟣',
         label: '🟣 ม่วง (Purple)'
       },
       orange: {
-        badge: 'bg-orange-500/10 text-orange-300 border border-orange-500/30 ring-1 ring-orange-500/20 shadow-[0_0_8px_rgba(249,115,22,0.15)]',
-        dot: 'bg-orange-400',
+        badge: 'bg-gradient-to-r from-orange-500/95 to-red-600/95 text-white border border-orange-300/50 shadow-sm shadow-orange-500/30',
+        dot: 'bg-white ring-2 ring-orange-400',
         icon: '🟠',
         label: '🟠 ส้ม (Orange)'
       }
@@ -5251,7 +5251,7 @@
         dot: 'bg-slate-400'
       };
       return `
-        <span class="text-[9px] px-2 py-0.5 rounded-full font-bold shrink-0 flex items-center gap-1 whitespace-nowrap ${scheme.badge}">
+        <span class="text-[9.5px] px-2 py-0.5 rounded-full font-black shrink-0 flex items-center gap-1.5 whitespace-nowrap ${scheme.badge}">
           <span class="w-1.5 h-1.5 rounded-full ${scheme.dot} animate-pulse"></span>
           ${escapeHtml(g.name)}
         </span>
@@ -9858,7 +9858,7 @@
         badges.push({
           emoji: '🔥',
           icon: 'fa-fire',
-          color: 'text-amber-300 bg-amber-500/20 border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.2)]',
+          color: 'text-slate-950 bg-gradient-to-r from-orange-400 via-amber-400 to-orange-500 border border-orange-200/80 shadow-md shadow-orange-500/30',
           label: t('badge_mythic_slayer', 'ตำนานนักล่าบอส'),
           title: lang === 'th' ? 'ตำนานนักล่าบอส: เข้าร่วมครบ 100% (100 แต้มเต็ม)' : 'Mythic Slayer: 100% Attendance (100 pts)'
         });
@@ -9867,7 +9867,7 @@
         badges.push({
           emoji: '⚡',
           icon: 'fa-bolt',
-          color: 'text-sky-300 bg-sky-500/20 border-sky-500/40',
+          color: 'text-white bg-gradient-to-r from-sky-500 to-blue-600 border border-sky-300/60 shadow-md shadow-sky-500/30',
           label: t('badge_iron_vanguard', 'ขุนศึกไร้พ่าย'),
           title: lang === 'th' ? 'ขุนศึกไร้พ่าย: เข้าครบทุกกิจกรรม' : 'Iron Vanguard: Attended all activities'
         });
@@ -9876,7 +9876,7 @@
         badges.push({
           emoji: '🛡️',
           icon: 'fa-shield',
-          color: 'text-emerald-300 bg-emerald-500/15 border-emerald-500/35',
+          color: 'text-white bg-gradient-to-r from-emerald-500 to-teal-600 border border-emerald-300/60 shadow-md shadow-emerald-500/30',
           label: t('badge_elite_crusader', 'วีรชนแนวหน้า'),
           title: lang === 'th' ? 'วีรชนแนวหน้า: ผ่านเกณฑ์ปันผล (> 7 กิจกรรม)' : 'Elite Crusader: Dividend eligible (> 7 activities)'
         });
@@ -9890,7 +9890,7 @@
         badges.unshift({
           emoji: '👑',
           icon: 'fa-crown',
-          color: 'text-yellow-300 bg-yellow-500/25 border-yellow-500/50 shadow-[0_0_10px_rgba(234,179,8,0.25)]',
+          color: 'text-slate-950 bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-400 border border-yellow-200/90 shadow-md shadow-amber-400/40 font-black',
           label: t('badge_cp_rank1', 'ราชันย์พลังรบ'),
           title: lang === 'th' ? 'ราชันย์พลังรบ: อันดับ 1 ค่า CP สูงสุดในกิลด์' : 'CP Sovereign: Rank #1 CP in Guild'
         });
@@ -9898,7 +9898,7 @@
         badges.unshift({
           emoji: '⚔️',
           icon: 'fa-khanda',
-          color: 'text-rose-300 bg-rose-500/20 border-rose-500/40',
+          color: 'text-white bg-gradient-to-r from-rose-600 to-red-700 border border-rose-300/60 shadow-md shadow-rose-600/30 font-black',
           label: t('badge_warlord', 'มหาจอมทัพ'),
           title: lang === 'th' ? `มหาจอมทัพ: อันดับ Top 5 ค่า CP ในกิลด์ (#${cpRankIndex + 1})` : `Guild Warlord: Top 5 CP in Guild (#${cpRankIndex + 1})`
         });
