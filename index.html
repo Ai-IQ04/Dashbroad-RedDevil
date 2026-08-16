@@ -7222,6 +7222,8 @@
 
       // สรุปยอด
       const totalCount = filteredMembers.length;
+      const activeDiscordCount = filteredMembers.filter(m => getDiscordVerifiedData(m)).length;
+      const eligibleCount = filteredMembers.filter(m => isEligible(m.checks)).length;
       const activityTotals = ACTIVITIES.map((_, actIndex) => {
         return filteredMembers.filter(m => m.checks && m.checks[actIndex]).length;
       });
@@ -7233,6 +7235,9 @@
         : 0;
       const avgScore = totalCount > 0
         ? (filteredMembers.reduce((sum, m) => sum + calculateTotalScore(m.checks), 0) / totalCount).toFixed(1)
+        : 0;
+      const avgPenalty = totalCount > 0
+        ? (filteredMembers.reduce((sum, m) => sum + calculatePenalty(m.checks), 0) / totalCount).toFixed(1)
         : 0;
 
       const rowsHtml = filteredMembers.map((member, index) => {
@@ -7388,31 +7393,65 @@
 
       // แถวสรุปรวม (Summary Row)
       const summaryHtml = `
-        <tr class="bg-[#080c14] font-semibold border-t-2 border-slate-700 text-slate-200 sticky bottom-0 z-20 shadow-2xl backdrop-blur-xl">
-          <td class="py-2 px-1 text-center text-slate-400 font-mono text-[10px]">${t('summary_label')}</td>
-          <td class="py-2 px-2 border-r border-slate-800 text-indigo-300 text-[11px] font-bold">
+        <tr class="bg-[#080c14]/95 font-semibold border-t-2 border-slate-700/90 text-slate-200 sticky bottom-0 z-20 shadow-2xl backdrop-blur-xl select-none">
+          <!-- # -->
+          <td class="py-2.5 px-1 text-center text-slate-400 font-mono text-[11px] font-bold">${t('summary_label')}</td>
+          
+          <!-- สรุปจำนวนสมาชิก -->
+          <td class="py-2.5 px-2 border-r border-slate-800 text-indigo-300 text-[11.5px] font-bold">
             ${t('summary_total_avg', { count: totalCount })}
           </td>
-          <td class="py-2 px-1 text-center font-mono text-[10px] text-amber-300 border-r border-slate-800/80" title="${t('kpi_avg_cp')}">
+
+          <!-- สรุป Discord Active -->
+          <td class="py-2.5 px-1 text-center border-r border-slate-800/80" title="ยืนยัน Discord แล้ว ${activeDiscordCount}/${totalCount} คน">
+            <span class="inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-[10.5px] font-bold font-mono text-emerald-300 shadow-sm" title="ยืนยัน Discord แล้ว ${activeDiscordCount} คน">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              ${activeDiscordCount}
+            </span>
+          </td>
+
+          <!-- สรุป CP เฉลี่ย -->
+          <td class="py-2.5 px-1 text-center font-mono text-[11.5px] font-bold text-amber-300 border-r border-slate-800/80" title="${t('kpi_avg_cp')}">
             ${avgCp ? avgCp.toLocaleString() : '-'}
           </td>
-          <td class="py-2 px-1 text-center font-mono text-[10px] text-emerald-300 border-r border-slate-800/80" title="${t('col_attended')}">
+
+          <!-- สรุป เข้าร่วมเฉลี่ย -->
+          <td class="py-2.5 px-1 text-center font-mono text-[11px] font-bold text-emerald-300 border-r border-slate-800/80" title="${t('col_attended')}">
             ${avgActive}
           </td>
-          <td class="py-2 px-1 text-center font-mono text-[10px] text-indigo-300 border-r border-slate-800/80" title="${t('kpi_avg_score')}">${avgScore}</td>
-          <td class="py-2 px-1 text-center font-mono text-[10px] text-slate-400 border-r border-slate-800/80">-</td>
-          <td class="py-2 px-1 text-center font-mono text-[10px] text-slate-400 border-r-2 border-slate-700/80">-</td>
+
+          <!-- สรุป คะแนนเฉลี่ย -->
+          <td class="py-2.5 px-1 text-center font-mono text-[11.5px] font-bold text-indigo-300 border-r border-slate-800/80" title="${t('kpi_avg_score')}">
+            ${avgScore}
+          </td>
+
+          <!-- สรุป หักเฉลี่ย -->
+          <td class="py-2.5 px-1 text-center font-mono text-[11px] font-bold text-rose-300 border-r border-slate-800/80" title="หักเฉลี่ย">
+            ${avgPenalty}%
+          </td>
+
+          <!-- สรุป ผ่านเกณฑ์ปันผล -->
+          <td class="py-2.5 px-1 text-center border-r-2 border-slate-700/80" title="ผ่านเกณฑ์ ${eligibleCount}/${totalCount} คน">
+            <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px] font-bold">
+              ${eligibleCount} ผ่าน
+            </span>
+          </td>
+
+          <!-- สรุป จำนวนคนตีบอสแต่ละตัว -->
           ${activityTotals.map((tot, aIdx) => {
         const nextAct = ACTIVITIES[aIdx + 1];
         const isDayEnd = !nextAct || normalizeDay(nextAct.day) !== normalizeDay(ACTIVITIES[aIdx].day) || aIdx === ACTIVITIES.length - 1;
+        const isLucus = (ACTIVITIES[aIdx].shortName || '').toLowerCase().includes('lucus') || ACTIVITIES[aIdx].weight >= 16;
         return `
-            <td class="py-1.5 px-0.5 text-center font-mono text-[10px] ${isDayEnd ? 'border-r-2 border-slate-700/80' : 'border-r border-slate-800/30'} ${tot > 0 ? 'text-emerald-400 font-bold bg-emerald-950/10' : 'text-slate-600'
+            <td class="py-2 px-0.5 text-center font-mono text-[11px] ${isDayEnd ? 'border-r-2 border-slate-700/80' : 'border-r border-slate-800/30'} ${tot > 0 ? (isLucus ? 'text-rose-300 font-bold bg-rose-950/20' : 'text-emerald-400 font-bold bg-emerald-950/15') : 'text-slate-600'
           }" title="${ACTIVITIES[aIdx].name}: ${tot} ${t('unit_people')}">
               ${tot}
             </td>
           `;
       }).join('')}
-          <td class="py-2 px-1 text-center text-[10px] text-slate-600">-</td>
+
+          <!-- จัดการ -->
+          <td class="py-2.5 px-1 text-center text-[10px] text-slate-600 font-mono">-</td>
         </tr>
       `;
 
