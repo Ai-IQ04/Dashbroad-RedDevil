@@ -27,11 +27,11 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <!-- 2. Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- 3. Google Fonts: Modern Tech Stack (Prompt for Thai UI, Inter for Latin/Numbers, JetBrains Mono for Timers) -->
+  <!-- 3. Google Fonts: Modern Tech Stack (Sarabun for Character Names, Prompt for Thai UI, Inter for Latin/Numbers, JetBrains Mono for Timers) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Sarabun:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap"
     rel="stylesheet">
 
   <script>
@@ -42,6 +42,7 @@
           fontFamily: {
             sans: ['Prompt', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
             mono: ['JetBrains Mono', 'Inter', 'monospace'],
+            sarabun: ['Sarabun', 'sans-serif'],
           },
           colors: {
             guild: {
@@ -57,6 +58,9 @@
   </script>
 
   <style>
+    .font-sarabun {
+      font-family: 'Sarabun', sans-serif !important;
+    }
     /* Mobile Optimizations & Touch Response */
     * {
       -webkit-tap-highlight-color: transparent;
@@ -905,7 +909,7 @@
           <label class="block text-xs font-semibold text-slate-300 mb-1.5">ชื่อตัวละครใหม่</label>
           <input type="text" id="quick-name-input" required maxlength="30"
             placeholder="ชื่อตัวละครในเกม"
-            class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 font-bold transition">
+            class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-base font-sarabun font-bold focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition">
         </div>
 
         <div>
@@ -1358,7 +1362,7 @@
             (Character Name) *</label>
           <input type="text" id="new-char-name" required placeholder="เช่น DragonKnight"
             data-i18n-placeholder="placeholder_char_name"
-            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-indigo-500">
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-sm sm:text-base font-sarabun font-bold text-white focus:outline-none focus:border-indigo-500">
         </div>
 
         <div class="grid grid-cols-2 gap-2">
@@ -5832,14 +5836,14 @@
             <!-- ลำดับ / เหรียญรางวัล -->
             <td class="py-1.5 px-1 text-center font-mono text-[11px]">${rankBadge}</td>
             
-            <!-- ชื่อตัวละคร, กิลด์ & ตราเกียรติยศสูงสุด (สะอาดตา ไม่โดนบีบ) -->
+            <!-- ชื่อตัวละคร, กิลด์ & ตราเกียรติยศสูงสุด (สะอาดตา ไม่โดนบีบ ฟอนต์ Sarabun คมชัด) -->
             <td class="py-2 px-2.5 border-r border-zinc-800/80 notranslate" translate="no">
               <div class="flex items-center gap-1.5 flex-nowrap min-w-0">
-                <span class="font-bold text-white text-xs whitespace-nowrap shrink-0 ${isAdmin ? 'cursor-pointer hover:text-sky-300 hover:underline transition inline-flex items-center gap-1 group/name' : ''}"
+                <span class="font-sarabun font-bold text-white text-[13.5px] sm:text-[14.5px] tracking-wide whitespace-nowrap shrink-0 ${isAdmin ? 'cursor-pointer hover:text-sky-300 hover:underline transition inline-flex items-center gap-1 group/name' : ''}"
                   onclick="${isAdmin ? `openQuickEditNameModal(${member.id})` : ''}"
                   title="${isAdmin ? 'คลิกเพื่อแก้ไขชื่อตัวละคร / กิลด์' : safeName}">
                   ${safeName}
-                  ${isAdmin ? '<i class="fa-solid fa-pen text-[8px] opacity-0 group-hover/name:opacity-100 text-sky-400 transition ml-0.5"></i>' : ''}
+                  ${isAdmin ? '<i class="fa-solid fa-pen text-[9px] opacity-0 group-hover/name:opacity-100 text-sky-400 transition ml-1"></i>' : ''}
                 </span>
                 ${renderGuildBadgeHtml(member.guild)}
                 ${(() => {
