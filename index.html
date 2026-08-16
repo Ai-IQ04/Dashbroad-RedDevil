@@ -497,6 +497,13 @@
 
         <!-- 🌟 หมวดที่ 1: ศูนย์รวมกิจกรรม & สมาชิก (Member Hub) -->
         <div class="flex items-center gap-1.5 p-1 bg-slate-950/70 border border-slate-800/80 rounded-2xl backdrop-blur-md shadow-sm">
+          <!-- 🎁 ปุ่มเปิดร้านค้าของรางวัล & Showcase -->
+          <button type="button" onclick="openRewardStoreModal()"
+            class="apple-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold shadow-sm bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 rounded-xl border border-amber-300/40">
+            <i class="fa-solid fa-gift text-xs"></i>
+            <span>ร้านค้าของรางวัล (Shop)</span>
+          </button>
+
           <!-- ปุ่มเปิดดูตารางบอส (Boss Viewer) -->
           <button onclick="openBossViewerModal()"
             class="apple-btn apple-btn-rose inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm">
@@ -556,6 +563,15 @@
             <span data-i18n="btn_appeal_approval">อุทธรณ์เช็คชื่อ</span>
             <span id="appeal-pending-badge"
               class="hidden px-1.5 py-0.5 bg-rose-500 text-white text-[10px] font-bold rounded-full shadow leading-none animate-pulse">0</span>
+          </button>
+
+          <!-- ปุ่มอนุมัติของรางวัล (เฉพาะ Admin) -->
+          <button id="btn-approve-rewards" onclick="openRewardApprovalModal()"
+            class="hidden apple-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white border border-amber-400/30">
+            <i class="fa-solid fa-gift text-amber-200 text-xs"></i>
+            <span data-i18n="btn_approve_rewards">อนุมัติรางวัล</span>
+            <span id="reward-pending-badge"
+              class="hidden px-1.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
           </button>
 
           <!-- ปุ่มจัดการ Admin (เฉพาะ Super Admin) -->
@@ -4509,7 +4525,20 @@
         "lightbox_hint": "กด Esc หรือคลิกปุ่มกากบาทเพื่อปิดหน้าต่าง",
         "toast_screenshot_required": "กรุณาแนบรูปภาพสกรีนช็อตยืนยันค่า CP ด้วยครับ",
         "toast_screenshot_pasted": "วางภาพสกรีนช็อต (Ctrl+V) เรียบร้อยแล้ว!",
-        "online_users_label": "คนออนไลน์"
+        "online_users_label": "คนออนไลน์",
+        "btn_approve_rewards": "อนุมัติรางวัล",
+        "modal_reward_approval_title": "อนุมัติการแลกของรางวัล & จัดการส่งมอบ",
+        "modal_reward_approval_desc": "ตรวจสอบ อนุมัติ สุ่มเลือกผู้โชคดีเมื่อคนแลกเกินสต็อก และยืนยันการส่งของในเกม",
+        "reward_month_cycle_notice": "💡 คะแนนสะสมสำหรับรอบเดือนปัจจุบันเท่านั้น (รีเซ็ตทุกสิ้นเดือน ไม่สะสมข้ามเดือน)",
+        "btn_random_draw_stock": "🎲 สุ่มผู้โชคดีตามสต็อก ({stock} ชิ้น)",
+        "btn_mark_delivered": "✅ ยืนยันส่งของในเกมแล้ว",
+        "status_won_pending_delivery": "📦 ชนะการสุ่ม (รอส่งของในเกม)",
+        "status_delivered": "✅ ส่งของในเกมแล้ว",
+        "btn_reset_monthly_points": "🔄 รีเซ็ตคะแนนรอบเดือนใหม่ (สิ้นเดือน)",
+        "confirm_reset_monthly_points": "คุณแน่ใจหรือไม่ว่าต้องการรีเซ็ตคะแนนกิจกรรมของสมาชิกทุกคนเพื่อเริ่มรอบเดือนใหม่? (ประวัติรอบเดิมจะถูกเก็บไว้)",
+        "toast_monthly_points_reset": "รีเซ็ตคะแนนรอบเดือนใหม่เรียบร้อยแล้ว!",
+        "toast_item_drawn_success": "สุ่มผู้โชคดีสำหรับไอเทม \"{item}\" เรียบร้อย ({count} ท่าน) พร้อมคืนแต้มให้ผู้ที่ไม่ได้รับเลือก",
+        "toast_marked_delivered": "บันทึกการส่งของในเกมให้ \"{name}\" เรียบร้อยแล้ว!"
       },
       "en": {
         "btn_top10_summary": "Top 10 Summary",
@@ -4828,7 +4857,20 @@
         "lightbox_hint": "Press Esc or click X to close full screen view",
         "toast_screenshot_required": "Please attach a full-screen screenshot to verify your CP value.",
         "toast_screenshot_pasted": "Screenshot pasted (Ctrl+V) successfully!",
-        "online_users_label": "Online"
+        "online_users_label": "Online",
+        "btn_approve_rewards": "Reward Approvals",
+        "modal_reward_approval_title": "Reward Approvals & In-Game Delivery",
+        "modal_reward_approval_desc": "Review redemptions, draw winners when over-subscribed, and confirm in-game item deliveries",
+        "reward_month_cycle_notice": "💡 Points are valid for the current monthly cycle only (resets monthly, no carry-over)",
+        "btn_random_draw_stock": "🎲 Random Draw for Stock ({stock} items)",
+        "btn_mark_delivered": "✅ Mark In-Game Delivered",
+        "status_won_pending_delivery": "📦 Won (Pending Delivery)",
+        "status_delivered": "✅ Delivered In-Game",
+        "btn_reset_monthly_points": "🔄 Reset Monthly Points (Month-End)",
+        "confirm_reset_monthly_points": "Are you sure you want to reset all members' monthly points for a new month? (History will be archived)",
+        "toast_monthly_points_reset": "Monthly points cycle reset successfully!",
+        "toast_item_drawn_success": "Random draw for \"{item}\" completed ({count} winners). Points refunded to non-winners.",
+        "toast_marked_delivered": "Marked item as delivered in-game to \"{name}\"!"
       }
     };
 
@@ -5284,7 +5326,41 @@
         }
       });
 
-      // 11. ระบบ Real-Time Online Presence (ตรวจจับและนับจำนวนคนออนไลน์สด)
+      // 11. ดักฟังรายการคำขอแลกของรางวัล (Reward Store Redemptions)
+      fbDb.ref('guild_app/reward_store_logs').on('value', snapshot => {
+        const val = snapshot.val();
+        if (Array.isArray(val)) {
+          storeRewardLogs = val;
+        } else if (val && typeof val === 'object') {
+          storeRewardLogs = Object.values(val);
+        } else {
+          storeRewardLogs = [];
+        }
+        localStorage.setItem('guild_reward_store_logs', JSON.stringify(storeRewardLogs));
+        updateRewardPendingBadge();
+        renderStoreHistoryTable();
+        const rewModal = document.getElementById('reward-approval-modal');
+        if (rewModal && !rewModal.classList.contains('hidden')) {
+          renderRewardApprovalList();
+        }
+        const shopModal = document.getElementById('guild-reward-store-modal');
+        if (shopModal && !shopModal.classList.contains('hidden')) {
+          onRewardMemberSelected();
+        }
+      });
+
+      // 12. ดักฟังรายการคลังสินค้าของรางวัล (Reward Store Items)
+      fbDb.ref('guild_app/reward_store_items').on('value', snapshot => {
+        const val = snapshot.val();
+        if (Array.isArray(val) && val.length > 0) {
+          storeRewards = val;
+          localStorage.setItem('guild_reward_store_items', JSON.stringify(storeRewards));
+          renderRewardStoreCatalog();
+          renderAdminStoreInventory();
+        }
+      });
+
+      // 13. ระบบ Real-Time Online Presence (ตรวจจับและนับจำนวนคนออนไลน์สด)
       try {
         const userSessionId = 'user_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
         const myPresenceRef = fbDb.ref('guild_app/presence/' + userSessionId);
@@ -5433,6 +5509,7 @@
       const batchCheckBtn = document.getElementById('btn-batch-guild-check');
       const auditLogsBtn = document.getElementById('btn-audit-logs');
       const clearAuditLogsBtn = document.getElementById('btn-clear-audit-logs');
+      const approveRewardsBtn = document.getElementById('btn-approve-rewards');
 
       // อัพเดทสถานะ Super Admin
       isSuperAdmin = currentAdminEmail === SUPER_ADMIN_EMAIL;
@@ -5448,6 +5525,10 @@
         if (addBtnTop) addBtnTop.classList.remove('hidden');
         if (resetBtnTop) resetBtnTop.classList.remove('hidden');
         if (archiveBtn) archiveBtn.classList.remove('hidden');
+        if (approveRewardsBtn) {
+          approveRewardsBtn.classList.remove('hidden');
+          approveRewardsBtn.classList.add('inline-flex');
+        }
         if (manageGuildsBtn) {
           manageGuildsBtn.classList.remove('hidden');
           manageGuildsBtn.classList.add('inline-flex');
@@ -5502,6 +5583,10 @@
         if (addBtnTop) addBtnTop.classList.add('hidden');
         if (resetBtnTop) resetBtnTop.classList.add('hidden');
         if (archiveBtn) archiveBtn.classList.add('hidden');
+        if (approveRewardsBtn) {
+          approveRewardsBtn.classList.add('hidden');
+          approveRewardsBtn.classList.remove('inline-flex');
+        }
         if (manageGuildsBtn) {
           manageGuildsBtn.classList.add('hidden');
           manageGuildsBtn.classList.remove('inline-flex');
@@ -5544,6 +5629,7 @@
       renderWeekTabs();
       updateCpPendingBadge();
       updateAppealPendingBadge();
+      updateRewardPendingBadge();
       renderTable();
     }
 
@@ -9534,6 +9620,9 @@
         closeAppealRequestModal();
         closeAppealApprovalModal();
         closeImageLightbox();
+        closeRewardStoreModal();
+        closeRewardLightbox();
+        closeRewardApprovalModal();
       }
     });
 
@@ -10022,6 +10111,980 @@
       renderBossViewer();
     }
 
+    // =================================================================
+    // 🎁 โมดูลร้านค้าของรางวัล & ระบบสุ่มผู้โชคดี & จัดการส่งของในเกม
+    // =================================================================
+
+    const DEFAULT_STORE_REWARDS = [
+      {
+        id: 101,
+        name: "Time Shard Box x10",
+        cost: 150,
+        stock: 5,
+        desc: "กล่องลดคูลดาวน์สกิลกิลด์ สำหรับสายวอร์ (จำกัดตามสต็อก)",
+        image: "https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: 102,
+        name: "Cultured Cell Box x5",
+        cost: 250,
+        stock: 3,
+        desc: "วัสดุปลุกพลังอุปกรณ์สวมใส่ระดับสูง",
+        image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80"
+      }
+    ];
+
+    let storeRewards = JSON.parse(localStorage.getItem('guild_reward_store_items')) || DEFAULT_STORE_REWARDS;
+    let storeRewardLogs = JSON.parse(localStorage.getItem('guild_reward_store_logs')) || [];
+    let uploadedStoreImageBase64 = null;
+
+    function saveStoreData() {
+      localStorage.setItem('guild_reward_store_items', JSON.stringify(storeRewards));
+      localStorage.setItem('guild_reward_store_logs', JSON.stringify(storeRewardLogs));
+      updateRewardPendingBadge();
+      if (typeof saveData === 'function') saveData();
+      if (fbDb) {
+        fbDb.ref('guild_app/reward_store_items').set(storeRewards);
+        fbDb.ref('guild_app/reward_store_logs').set(storeRewardLogs);
+      }
+    }
+
+    function updateRewardPendingBadge() {
+      const badge = document.getElementById('reward-pending-badge');
+      if (!badge) return;
+      const pendingCount = (storeRewardLogs || []).filter(l => l.status === 'pending' || l.status === 'won_pending_delivery').length;
+      if (pendingCount > 0 && isAdmin) {
+        badge.textContent = pendingCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    // คำนวณแต้มสะสมในรอบเดือนปัจจุบัน (4 สัปดาห์ - ไม่สะสมข้ามเดือน)
+    function getMemberMonthlyScore(m) {
+      if (!m) return 0;
+      let total = m.score || 0;
+      if (Array.isArray(m.history)) {
+        m.history.forEach(h => {
+          total += (h.score || 0);
+        });
+      }
+      return total;
+    }
+
+    function getMemberAvailablePoints(m) {
+      if (!m) return 0;
+      const totalScore = getMemberMonthlyScore(m);
+      const spentOrReserved = (storeRewardLogs || [])
+        .filter(l => l.memberName === m.name && (l.status === 'approved' || l.status === 'won_pending_delivery' || l.status === 'delivered' || l.status === 'pending' || !l.status))
+        .reduce((sum, l) => sum + (l.cost || 0), 0);
+      return Math.max(0, totalScore - spentOrReserved);
+    }
+
+    function openRewardStoreModal() {
+      const modal = document.getElementById('guild-reward-store-modal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      
+      initRewardStoreDropzone();
+      populateRewardMemberSelect();
+      renderRewardStoreCatalog();
+      renderAdminStoreInventory();
+      renderStoreHistoryTable();
+      updateStoreAdminControls();
+    }
+
+    function closeRewardStoreModal() {
+      const modal = document.getElementById('guild-reward-store-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function openRewardLightbox(imageUrl, title) {
+      const modal = document.getElementById('reward-lightbox-modal');
+      const img = document.getElementById('reward-lightbox-img');
+      const titleEl = document.getElementById('reward-lightbox-title');
+      if (img) img.src = imageUrl;
+      if (titleEl) titleEl.textContent = title || 'Reward Item Image';
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeRewardLightbox() {
+      const modal = document.getElementById('reward-lightbox-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function updateStoreAdminControls() {
+      const adminTabs = document.querySelectorAll('.store-admin-only');
+      adminTabs.forEach(el => {
+        if (isAdmin) {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      });
+    }
+
+    function switchStoreTab(tab) {
+      const catalogTab = document.getElementById('store-tab-catalog');
+      const historyTab = document.getElementById('store-tab-history');
+      const adminTab = document.getElementById('store-tab-admin');
+
+      const btnCatalog = document.getElementById('btn-store-tab-catalog');
+      const btnHistory = document.getElementById('btn-store-tab-history');
+      const btnAdmin = document.getElementById('btn-store-tab-admin');
+
+      if (catalogTab) catalogTab.classList.add('hidden');
+      if (historyTab) historyTab.classList.add('hidden');
+      if (adminTab) adminTab.classList.add('hidden');
+
+      [btnCatalog, btnHistory, btnAdmin].forEach(b => {
+        if (b) {
+          b.classList.remove('bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
+          b.classList.add('text-slate-400');
+        }
+      });
+
+      if (tab === 'catalog') {
+        if (catalogTab) catalogTab.classList.remove('hidden');
+        if (btnCatalog) {
+          btnCatalog.classList.add('bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
+          btnCatalog.classList.remove('text-slate-400');
+        }
+        renderRewardStoreCatalog();
+      } else if (tab === 'history') {
+        if (historyTab) historyTab.classList.remove('hidden');
+        if (btnHistory) {
+          btnHistory.classList.add('bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
+          btnHistory.classList.remove('text-slate-400');
+        }
+        renderStoreHistoryTable();
+      } else if (tab === 'admin') {
+        if (adminTab) adminTab.classList.remove('hidden');
+        if (btnAdmin) {
+          btnAdmin.classList.add('bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
+          btnAdmin.classList.remove('text-slate-400');
+        }
+        renderAdminStoreInventory();
+      }
+    }
+
+    function populateRewardMemberSelect() {
+      const select = document.getElementById('store-member-select');
+      if (!select) return;
+      const currentVal = select.value;
+      select.innerHTML = '<option value="">-- กรุณาเลือกตัวละครของคุณเพื่อตรวจสอบแต้ม --</option>';
+
+      const sortedMembers = [...members].sort((a, b) => a.name.localeCompare(b.name));
+      sortedMembers.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.name;
+        opt.textContent = `${m.name} (${m.guild || 'Guild'}) - CP ${m.cp ? m.cp.toLocaleString() : 0}`;
+        select.appendChild(opt);
+      });
+
+      if (currentVal && members.some(m => m.name === currentVal)) {
+        select.value = currentVal;
+      }
+      onRewardMemberSelected();
+    }
+
+    function onRewardMemberSelected() {
+      const select = document.getElementById('store-member-select');
+      const badge = document.getElementById('store-user-points-badge');
+      const pointEl = document.getElementById('store-user-points-val');
+      const infoEl = document.getElementById('store-user-points-info');
+      if (!select || !pointEl) return;
+
+      const memberName = select.value;
+      const m = members.find(x => x.name === memberName);
+
+      if (m) {
+        const available = getMemberAvailablePoints(m);
+        const monthlyTotal = getMemberMonthlyScore(m);
+        const pendingCount = (storeRewardLogs || []).filter(l => l.memberName === m.name && (l.status === 'pending' || l.status === 'won_pending_delivery')).length;
+        
+        pointEl.textContent = `${available.toLocaleString()} PTS`;
+        if (infoEl) {
+          infoEl.textContent = `(แต้มเดือนนี้: ${monthlyTotal} PTS${pendingCount > 0 ? ` • รอดำเนินการ ${pendingCount} รายการ` : ''})`;
+        }
+        if (badge) badge.classList.remove('opacity-50');
+      } else {
+        pointEl.textContent = '0 PTS';
+        if (infoEl) infoEl.textContent = '(เลือกตัวละครเพื่อคำนวณแต้มเดือนนี้)';
+        if (badge) badge.classList.add('opacity-50');
+      }
+      renderRewardStoreCatalog();
+    }
+
+    function renderRewardStoreCatalog() {
+      const grid = document.getElementById('reward-catalog-grid');
+      if (!grid) return;
+
+      const select = document.getElementById('store-member-select');
+      const memberName = select ? select.value : '';
+      const m = members.find(x => x.name === memberName);
+      const availablePoints = m ? getMemberAvailablePoints(m) : 0;
+
+      if (!storeRewards || storeRewards.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-12 text-center text-slate-500">
+            <i class="fa-solid fa-box-open text-4xl mb-3 opacity-40"></i>
+            <p class="text-sm font-medium">ยังไม่มีสินค้าในร้านค้าของรางวัล</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = storeRewards.map(item => {
+        const itemRequests = (storeRewardLogs || []).filter(l => l.itemId === item.id && l.status === 'pending');
+        const pendingCount = itemRequests.length;
+        const isOutOfStock = item.stock <= 0;
+        const canRedeem = m && availablePoints >= item.cost && !isOutOfStock;
+        const alreadyRequested = m && itemRequests.some(l => l.memberName === m.name);
+
+        return `
+          <div class="bg-[#0b101d] border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-between hover:border-amber-500/40 transition-all duration-200 group shadow-lg">
+            <div>
+              <div class="relative w-full aspect-video rounded-xl bg-slate-950 border border-slate-800/60 overflow-hidden flex items-center justify-center cursor-pointer group/img"
+                   onclick="openRewardLightbox('${escapeHtml(item.image || '')}', '${escapeHtml(item.name)}')">
+                <img src="${escapeHtml(item.image || 'https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=600&q=80')}" 
+                     alt="${escapeHtml(item.name)}" 
+                     class="w-full h-full object-contain p-1.5 transition-transform duration-300 group-hover/img:scale-105"
+                     loading="lazy" />
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                  <span class="px-2 py-1 rounded bg-black/70 text-white text-[11px] font-semibold flex items-center gap-1">
+                    <i class="fa-solid fa-magnifying-glass-plus text-amber-400"></i> ดูภาพขยาย
+                  </span>
+                </div>
+                ${isOutOfStock ? `
+                  <div class="absolute top-2 right-2 px-2 py-0.5 rounded bg-rose-600/90 text-white text-[10px] font-black uppercase tracking-wider shadow">
+                    สินค้าหมด (Out of Stock)
+                  </div>
+                ` : `
+                  <div class="absolute top-2 right-2 px-2 py-0.5 rounded bg-slate-900/90 backdrop-blur-sm border border-slate-700 text-slate-300 text-[10px] font-mono flex items-center gap-1.5">
+                    <span>สต็อก: <strong class="text-amber-400">${item.stock}</strong></span>
+                    ${pendingCount > 0 ? `<span class="text-rose-400 font-bold">• รอสุ่ม ${pendingCount} คน</span>` : ''}
+                  </div>
+                `}
+              </div>
+
+              <div class="mt-3">
+                <h4 class="text-sm font-bold text-white group-hover:text-amber-300 transition-colors line-clamp-1">${escapeHtml(item.name)}</h4>
+                <p class="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">${escapeHtml(item.desc || 'ไม่มีคำอธิบาย')}</p>
+                ${pendingCount > item.stock ? `
+                  <div class="mt-2 px-2 py-1 rounded bg-amber-500/10 border border-amber-500/25 text-[11px] text-amber-300 flex items-center gap-1">
+                    <i class="fa-solid fa-dice text-amber-400"></i> มีคนขอแลกเกินสต็อก (ระบบจะสุ่มเมื่อปิดรอบ)
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+              <div class="flex flex-col">
+                <span class="text-[10px] text-slate-500 font-medium">ราคาแต้มรอบเดือน</span>
+                <span class="text-sm font-black text-amber-400 font-mono flex items-center gap-1">
+                  <i class="fa-solid fa-coins text-xs"></i> ${item.cost.toLocaleString()} PTS
+                </span>
+              </div>
+
+              <button onclick="requestRedeemRewardItem(${item.id})" 
+                      ${!canRedeem ? 'disabled' : ''}
+                      class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 ${
+                        canRedeem 
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 hover:shadow-amber-500/20 active:scale-95' 
+                          : 'bg-slate-800/80 text-slate-500 cursor-not-allowed border border-slate-700/50'
+                      }">
+                <i class="fa-solid fa-gift text-[11px]"></i>
+                <span>${!m ? 'เลือกตัวละคร' : isOutOfStock ? 'หมด' : alreadyRequested ? 'ส่งคำขอแล้ว' : availablePoints < item.cost ? 'แต้มไม่พอ' : 'ส่งคำขอแลก'}</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function requestRedeemRewardItem(itemId) {
+      const item = storeRewards.find(x => x.id === itemId);
+      if (!item) return;
+
+      const select = document.getElementById('store-member-select');
+      const memberName = select ? select.value : '';
+      if (!memberName) {
+        showToast('กรุณาเลือกตัวละครที่จะใช้แต้มแลกของรางวัลก่อนครับ', 'warning');
+        return;
+      }
+
+      const m = members.find(x => x.name === memberName);
+      if (!m) return;
+
+      const available = getMemberAvailablePoints(m);
+      if (available < item.cost) {
+        showToast(`แต้มของคุณไม่เพียงพอ (ต้องการ ${item.cost} PTS แต่มี ${available} PTS ในรอบเดือนนี้)`, 'warning');
+        return;
+      }
+
+      if (item.stock <= 0) {
+        showToast('ขออภัย ไอเทมนี้หมดสต็อกแล้ว', 'warning');
+        return;
+      }
+
+      const pendingForThis = (storeRewardLogs || []).filter(l => l.itemId === item.id && l.status === 'pending').length;
+      let confirmMsg = `ยืนยันการส่งคำขอแลก "${item.name}"\nโดยใช้แต้มของ "${m.name}" จำนวน ${item.cost} PTS หรือไม่?`;
+      if (pendingForThis >= item.stock) {
+        confirmMsg += `\n\n⚠️ มีผู้ขอแลกแล้ว ${pendingForThis} คน (เกินสต็อก ${item.stock} ชิ้น)\nระบบจะสุ่มผู้โชคดีและคืนแต้มให้อัตโนมัติหากไม่ได้รับเลือก`;
+      }
+
+      if (!confirm(confirmMsg)) return;
+
+      const logEntry = {
+        id: 'REQ-' + Date.now(),
+        itemId: item.id,
+        itemName: item.name,
+        cost: item.cost,
+        memberName: m.name,
+        guild: m.guild || 'Guild',
+        timestamp: Date.now(),
+        dateStr: new Date().toLocaleString('th-TH'),
+        status: 'pending',
+        approvedBy: null
+      };
+
+      storeRewardLogs.unshift(logEntry);
+      saveStoreData();
+
+      if (typeof recordAuditLog === 'function') {
+        recordAuditLog('REWARD_REQUEST', `ส่งคำขอแลกของรางวัล "${item.name}" (ใช้ ${item.cost} PTS) ให้ตัวละคร "${m.name}"`);
+      }
+
+      showToast(`ส่งคำขอแลก "${item.name}" เรียบร้อยแล้ว! รอดำเนินการสุ่ม/อนุมัติจาก Admin`, 'success');
+      onRewardMemberSelected();
+      renderRewardApprovalList();
+    }
+
+    // =================================================================
+    // 👑 ระบบ Admin: สุ่มผู้โชคดี / อนุมัติ / ปฏิเสธ / ยืนยันส่งของในเกม
+    // =================================================================
+
+    function openRewardApprovalModal() {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_edit'), 'warning');
+        return;
+      }
+      const modal = document.getElementById('reward-approval-modal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      renderRewardApprovalList();
+    }
+
+    function closeRewardApprovalModal() {
+      const modal = document.getElementById('reward-approval-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function renderRewardApprovalList() {
+      const pendingContainer = document.getElementById('reward-approval-pending-list');
+      const deliveryContainer = document.getElementById('reward-approval-delivery-list');
+      const processedContainer = document.getElementById('reward-approval-processed-list');
+      const pendingBadge = document.getElementById('reward-approval-count-badge');
+      if (!pendingContainer) return;
+
+      const pendingList = (storeRewardLogs || []).filter(l => l.status === 'pending');
+      const deliveryList = (storeRewardLogs || []).filter(l => l.status === 'won_pending_delivery');
+      const processedList = (storeRewardLogs || []).filter(l => l.status === 'delivered' || l.status === 'rejected');
+
+      if (pendingBadge) {
+        pendingBadge.textContent = `${pendingList.length + deliveryList.length} รายการ`;
+      }
+
+      // Group Pending Requests by Item
+      if (pendingList.length === 0) {
+        pendingContainer.innerHTML = `
+          <div class="py-8 text-center text-slate-500 bg-slate-950/40 rounded-xl border border-slate-800/60">
+            <i class="fa-solid fa-circle-check text-3xl text-emerald-500/50 mb-2"></i>
+            <p class="text-xs">ไม่มีคำขอแลกของรางวัลใหม่ที่รอดำเนินการ</p>
+          </div>
+        `;
+      } else {
+        const itemMap = {};
+        pendingList.forEach(req => {
+          if (!itemMap[req.itemId]) itemMap[req.itemId] = [];
+          itemMap[req.itemId].push(req);
+        });
+
+        let groupHtml = '';
+        Object.keys(itemMap).forEach(itemIdStr => {
+          const reqs = itemMap[itemIdStr];
+          const itemId = parseInt(itemIdStr);
+          const item = storeRewards.find(x => x.id === itemId) || { name: reqs[0].itemName, stock: 1, cost: reqs[0].cost };
+          const isOverDemand = reqs.length > item.stock;
+
+          groupHtml += `
+            <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 space-y-3 shadow-md">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+                <div class="flex items-center gap-2.5">
+                  <div class="h-9 w-9 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-sm">
+                    <i class="fa-solid fa-gift"></i>
+                  </div>
+                  <div>
+                    <h5 class="text-sm font-bold text-white">${escapeHtml(item.name)}</h5>
+                    <p class="text-[11px] text-slate-400 font-mono">
+                      สต็อกคงเหลือ: <span class="text-amber-400 font-bold">${item.stock}</span> ชิ้น • มีผู้ขอแลก: <span class="text-rose-400 font-bold">${reqs.length}</span> คน
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  ${isOverDemand ? `
+                    <button onclick="executeRandomDrawForStoreItem(${itemId})"
+                      class="apple-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-black bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white rounded-xl shadow-lg shadow-rose-600/30 animate-pulse">
+                      <i class="fa-solid fa-dice text-sm"></i> สุ่ม ${item.stock} ผู้โชคดี (ตามสต็อก)
+                    </button>
+                  ` : `
+                    <button onclick="executeRandomDrawForStoreItem(${itemId})"
+                      class="apple-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-sm">
+                      <i class="fa-solid fa-check-double text-xs"></i> อนุมัติทั้งหมด (${reqs.length} คน)
+                    </button>
+                  `}
+                </div>
+              </div>
+
+              <!-- List of Members in this Item Group -->
+              <div class="space-y-2">
+                ${reqs.map(req => {
+                  const m = members.find(x => x.name === req.memberName);
+                  const mScore = m ? getMemberMonthlyScore(m) : 0;
+                  const cpVal = m && m.cp ? m.cp.toLocaleString() : '0';
+                  return `
+                    <div class="bg-slate-900/80 border border-slate-800/80 rounded-xl p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                      <div class="flex items-center gap-2.5">
+                        <span class="w-6 h-6 rounded-full bg-slate-800 text-slate-300 font-mono text-[10px] flex items-center justify-center font-bold">👤</span>
+                        <div>
+                          <div class="flex items-center gap-2">
+                            <span class="font-bold text-white">${escapeHtml(req.memberName)}</span>
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">${escapeHtml(req.guild || 'Guild')}</span>
+                            <span class="text-[10px] text-amber-300 font-mono">CP: ${cpVal}</span>
+                          </div>
+                          <p class="text-[11px] text-slate-400 mt-0.5 font-mono">
+                            แต้มเดือนนี้: <span class="text-emerald-400 font-bold">${mScore} PTS</span> • เวลาขอ: ${escapeHtml(req.dateStr || '')}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div class="flex items-center gap-1.5 self-end sm:self-center">
+                        <button onclick="approveRewardRedemption('${req.id}')"
+                          class="px-2.5 py-1 text-[11px] font-bold bg-emerald-600/90 hover:bg-emerald-500 text-white rounded-lg">
+                          <i class="fa-solid fa-check"></i> อนุมัติเดี่ยว
+                        </button>
+                        <button onclick="rejectRewardRedemption('${req.id}')"
+                          class="px-2.5 py-1 text-[11px] font-semibold bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-lg">
+                          <i class="fa-solid fa-xmark"></i> ปฏิเสธ (คืนแต้ม)
+                        </button>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        });
+        pendingContainer.innerHTML = groupHtml;
+      }
+
+      // Render Pending In-Game Delivery
+      if (deliveryContainer) {
+        if (deliveryList.length === 0) {
+          deliveryContainer.innerHTML = `
+            <div class="py-4 text-center text-slate-600 text-xs">
+              ไม่มีรายการที่รอส่งมอบของรางวัลในเกม
+            </div>
+          `;
+        } else {
+          deliveryContainer.innerHTML = deliveryList.map(req => {
+            return `
+              <div class="bg-gradient-to-r from-amber-950/40 via-slate-950/80 to-slate-950/80 border border-amber-500/40 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow">
+                <div class="flex items-center gap-3">
+                  <div class="h-9 w-9 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center text-sm shrink-0">
+                    <i class="fa-solid fa-box-open"></i>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm font-bold text-white">${escapeHtml(req.memberName)}</span>
+                      <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">${escapeHtml(req.guild || 'Guild')}</span>
+                      <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">รอส่งของในเกม</span>
+                    </div>
+                    <p class="text-xs text-amber-200 mt-0.5">รางวัล: <strong class="text-white">${escapeHtml(req.itemName)}</strong> (${req.cost} PTS)</p>
+                  </div>
+                </div>
+
+                <button onclick="markRewardDelivered('${req.id}')"
+                  class="apple-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-md">
+                  <i class="fa-solid fa-paper-plane text-xs"></i> ✅ ส่งของในเกมแล้ว
+                </button>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      // Render Processed History
+      if (processedContainer) {
+        if (processedList.length === 0) {
+          processedContainer.innerHTML = `
+            <div class="py-4 text-center text-slate-600 text-xs">
+              ยังไม่มีประวัติการส่งของรางวัลที่เสร็จสิ้น
+            </div>
+          `;
+        } else {
+          processedContainer.innerHTML = processedList.slice(0, 15).map(req => {
+            const isDelivered = req.status === 'delivered';
+            return `
+              <div class="bg-slate-950/50 border border-slate-800/80 rounded-lg p-2.5 flex items-center justify-between text-xs text-slate-400">
+                <div class="flex items-center gap-2">
+                  <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${isDelivered ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'}">
+                    ${isDelivered ? 'ส่งของแล้ว' : 'ปฏิเสธ/คืนแต้ม'}
+                  </span>
+                  <span class="font-semibold text-slate-200">${escapeHtml(req.memberName)}</span>
+                  <span>(${escapeHtml(req.itemName)})</span>
+                </div>
+                <div class="text-[11px] text-slate-500 font-mono">
+                  ${escapeHtml(req.dateStr || '')} ${req.deliveredBy ? `โดย ${escapeHtml(req.deliveredBy)}` : ''}
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    }
+
+    // ฟังก์ชันสุ่มผู้โชคดีตามสต็อกของรางวัล
+    function executeRandomDrawForStoreItem(itemId) {
+      if (!isAdmin) return;
+      const item = storeRewards.find(x => x.id === itemId);
+      if (!item) return;
+
+      const reqs = (storeRewardLogs || []).filter(l => l.itemId === itemId && l.status === 'pending');
+      if (reqs.length === 0) {
+        showToast('ไม่มีคำขอที่รอดำเนินการสำหรับไอเทมนี้', 'info');
+        return;
+      }
+
+      if (item.stock <= 0) {
+        showToast('สินค้าหมดสต็อกแล้ว ไม่สามารถสุ่มได้', 'warning');
+        return;
+      }
+
+      const drawCount = Math.min(item.stock, reqs.length);
+      if (!confirm(`ยืนยันการสุ่มเลือกผู้โชคดีจำนวน ${drawCount} ท่าน จากผู้ขอแลกทั้งหมด ${reqs.length} คน หรือไม่?\n(ผู้ที่สุ่มไม่ถูกจะได้รับแต้มคืนทันทีอัตโนมัติ)`)) {
+        return;
+      }
+
+      // Shuffle list
+      const shuffled = [...reqs];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+
+      const winners = shuffled.slice(0, drawCount);
+      const losers = shuffled.slice(drawCount);
+
+      winners.forEach(w => {
+        w.status = 'won_pending_delivery';
+        w.approvedBy = currentAdminEmail || 'Admin';
+        w.processedAt = Date.now();
+      });
+
+      losers.forEach(l => {
+        l.status = 'rejected';
+        l.rejectedReason = 'ไม่ได้รับสิทธิ์ในการสุ่ม (คืนแต้มอัตโนมัติ)';
+        l.approvedBy = currentAdminEmail || 'Admin';
+        l.processedAt = Date.now();
+      });
+
+      item.stock = Math.max(0, item.stock - drawCount);
+      saveStoreData();
+
+      if (typeof recordAuditLog === 'function') {
+        recordAuditLog('REWARD_RANDOM_DRAW', `สุ่มผู้โชคดีรับของรางวัล "${item.name}" จำนวน ${drawCount} ท่าน: ${winners.map(w => w.memberName).join(', ')} โดย ${currentAdminEmail}`);
+      }
+
+      showToast(`สุ่มผู้โชคดีสำหรับ "${item.name}" สำเร็จ (${drawCount} ท่าน) ส่งต่อไปยังแผงรอส่งของในเกมเรียบร้อย!`, 'success');
+      renderRewardApprovalList();
+      renderRewardStoreCatalog();
+      renderAdminStoreInventory();
+      renderStoreHistoryTable();
+      updateRewardPendingBadge();
+    }
+
+    function approveRewardRedemption(reqId) {
+      if (!isAdmin) return;
+      const req = storeRewardLogs.find(x => x.id === reqId);
+      if (!req) return;
+
+      const item = storeRewards.find(x => x.id === req.itemId);
+      if (item) {
+        if (item.stock > 0) {
+          item.stock -= 1;
+        }
+      }
+
+      req.status = 'won_pending_delivery';
+      req.approvedBy = currentAdminEmail || 'Admin';
+      req.processedAt = Date.now();
+
+      saveStoreData();
+
+      if (typeof recordAuditLog === 'function') {
+        recordAuditLog('REWARD_APPROVE', `อนุมัติคำขอแลกของรางวัล "${req.itemName}" ให้แก่ "${req.memberName}" (รอส่งของในเกม) โดย ${currentAdminEmail}`);
+      }
+
+      showToast(`อนุมัติคำขอของ "${req.memberName}" แล้ว (ย้ายไปรอส่งของในเกม)`, 'success');
+      renderRewardApprovalList();
+      renderRewardStoreCatalog();
+      renderAdminStoreInventory();
+      renderStoreHistoryTable();
+      updateRewardPendingBadge();
+    }
+
+    function rejectRewardRedemption(reqId) {
+      if (!isAdmin) return;
+      const req = storeRewardLogs.find(x => x.id === reqId);
+      if (!req) return;
+
+      req.status = 'rejected';
+      req.approvedBy = currentAdminEmail || 'Admin';
+      req.processedAt = Date.now();
+
+      saveStoreData();
+
+      if (typeof recordAuditLog === 'function') {
+        recordAuditLog('REWARD_REJECT', `ปฏิเสธคำขอแลกของรางวัล "${req.itemName}" ของ "${req.memberName}" โดย ${currentAdminEmail}`);
+      }
+
+      showToast(`ปฏิเสธคำขอของ "${req.memberName}" แล้ว (แต้มถูกคืนเข้าบัญชี)`, 'info');
+      renderRewardApprovalList();
+      renderRewardStoreCatalog();
+      renderStoreHistoryTable();
+      updateRewardPendingBadge();
+    }
+
+    function markRewardDelivered(reqId) {
+      if (!isAdmin) return;
+      const req = storeRewardLogs.find(x => x.id === reqId);
+      if (!req) return;
+
+      req.status = 'delivered';
+      req.deliveredBy = currentAdminEmail || 'Admin';
+      req.deliveredAt = Date.now();
+
+      saveStoreData();
+
+      if (typeof recordAuditLog === 'function') {
+        recordAuditLog('REWARD_DELIVERED', `ยืนยันการส่งของรางวัลในเกม "${req.itemName}" ให้แก่ "${req.memberName}" สำเร็จ โดย ${currentAdminEmail}`);
+      }
+
+      showToast(t('toast_marked_delivered', { name: req.memberName }), 'success');
+      renderRewardApprovalList();
+      renderStoreHistoryTable();
+      updateRewardPendingBadge();
+    }
+
+    // ฟังก์ชันสำหรับ Admin กดรีเซ็ตคะแนนรอบเดือนใหม่ (สิ้นเดือน)
+    function resetMonthlyPointsAdmin() {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_edit'), 'warning');
+        return;
+      }
+
+      if (!confirm(t('confirm_reset_monthly_points'))) return;
+
+      // Reset all members active checks / scores
+      members.forEach(m => {
+        if (Array.isArray(m.checks)) {
+          m.checks = m.checks.map(() => false);
+        }
+        m.score = 0;
+        m.history = [];
+      });
+
+      // Clear pending logs
+      storeRewardLogs = [];
+      saveStoreData();
+      saveData();
+
+      if (typeof recordAuditLog === 'function') {
+        recordAuditLog('MONTHLY_POINTS_RESET', `รีเซ็ตคะแนนรอบเดือนใหม่และล้างรอบกิจกรรมประจำเดือน โดย ${currentAdminEmail}`);
+      }
+
+      showToast(t('toast_monthly_points_reset'), 'success');
+      renderTable();
+      updateKPIs();
+      onRewardMemberSelected();
+      renderRewardStoreCatalog();
+      renderRewardApprovalList();
+    }
+
+    function renderStoreHistoryTable() {
+      const tbody = document.getElementById('store-history-tbody');
+      if (!tbody) return;
+
+      if (!storeRewardLogs || storeRewardLogs.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="py-8 text-center text-slate-500 text-xs">
+              ยังไม่มีประวัติการแลกของรางวัลในรอบเดือนนี้
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = storeRewardLogs.map((log, idx) => {
+        let statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">รอดำเนินการ</span>`;
+        if (log.status === 'won_pending_delivery') {
+          statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">ชนะสุ่ม (รอส่งของ)</span>`;
+        } else if (log.status === 'delivered' || log.status === 'approved') {
+          statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ส่งมอบเรียบร้อย</span>`;
+        } else if (log.status === 'rejected') {
+          statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">ไม่ได้รับ/คืนแต้ม</span>`;
+        }
+
+        return `
+          <tr class="border-b border-slate-800/60 hover:bg-slate-900/40 text-xs text-slate-300">
+            <td class="py-2.5 px-3 font-mono text-slate-500">${idx + 1}</td>
+            <td class="py-2.5 px-3 text-slate-400 font-mono text-[11px]">${escapeHtml(log.dateStr || '')}</td>
+            <td class="py-2.5 px-3 font-bold text-white">${escapeHtml(log.memberName)}</td>
+            <td class="py-2.5 px-3">${escapeHtml(log.itemName)}</td>
+            <td class="py-2.5 px-3 font-mono font-bold text-amber-400">${log.cost ? log.cost.toLocaleString() : 0} PTS</td>
+            <td class="py-2.5 px-3">${statusBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderAdminStoreInventory() {
+      const container = document.getElementById('admin-store-items-list');
+      if (!container) return;
+
+      if (!storeRewards || storeRewards.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-500 py-4 text-center">ไม่มีรายการสินค้า</div>`;
+        return;
+      }
+
+      container.innerHTML = storeRewards.map(item => {
+        return `
+          <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-lg bg-slate-900 border border-slate-700/60 overflow-hidden flex items-center justify-center shrink-0">
+                <img src="${escapeHtml(item.image || '')}" alt="${escapeHtml(item.name)}" class="w-full h-full object-contain p-0.5" />
+              </div>
+              <div>
+                <h5 class="text-xs font-bold text-white">${escapeHtml(item.name)}</h5>
+                <p class="text-[11px] text-slate-400">ราคา: <span class="text-amber-400 font-mono font-bold">${item.cost} PTS</span> • สต็อก: <span class="text-emerald-400 font-mono font-bold">${item.stock}</span></p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="editStoreItemPrompt(${item.id})" class="px-2 py-1 rounded bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 text-xs">
+                <i class="fa-solid fa-pen-to-square"></i> แก้ไข
+              </button>
+              <button onclick="deleteStoreItem(${item.id})" class="px-2 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs">
+                <i class="fa-solid fa-trash-can"></i> ลบ
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleStoreImageUpload(file) {
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        showToast('กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'warning');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const rawBase64 = e.target.result;
+        compressImageBase64(rawBase64, 800, 0.75, (compressed) => {
+          uploadedStoreImageBase64 = compressed;
+          const previewImg = document.getElementById('store-img-preview');
+          const previewBox = document.getElementById('store-img-preview-box');
+          const dropzoneContent = document.getElementById('store-dropzone-content');
+          
+          if (previewImg) previewImg.src = compressed;
+          if (previewBox) previewBox.classList.remove('hidden');
+          if (dropzoneContent) dropzoneContent.classList.add('hidden');
+          showToast('โหลดรูปภาพสินค้าสำเร็จแล้ว', 'info');
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeStoreUploadedImage() {
+      uploadedStoreImageBase64 = null;
+      const previewImg = document.getElementById('store-img-preview');
+      const previewBox = document.getElementById('store-img-preview-box');
+      const dropzoneContent = document.getElementById('store-dropzone-content');
+      const fileInput = document.getElementById('store-img-file-input');
+
+      if (previewImg) previewImg.src = '';
+      if (previewBox) previewBox.classList.add('hidden');
+      if (dropzoneContent) dropzoneContent.classList.remove('hidden');
+      if (fileInput) fileInput.value = '';
+    }
+
+    function initRewardStoreDropzone() {
+      const dropzone = document.getElementById('store-img-dropzone');
+      if (!dropzone) return;
+
+      dropzone.ondragover = (e) => {
+        e.preventDefault();
+        dropzone.classList.add('border-amber-500', 'bg-amber-500/10');
+      };
+      dropzone.ondragleave = () => {
+        dropzone.classList.remove('border-amber-500', 'bg-amber-500/10');
+      };
+      dropzone.ondrop = (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-amber-500', 'bg-amber-500/10');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleStoreImageUpload(e.dataTransfer.files[0]);
+        }
+      };
+
+      window.addEventListener('paste', (e) => {
+        const storeModal = document.getElementById('guild-reward-store-modal');
+        if (!storeModal || storeModal.classList.contains('hidden')) return;
+        
+        const adminTab = document.getElementById('store-tab-admin');
+        if (!adminTab || adminTab.classList.contains('hidden')) return;
+
+        if (e.clipboardData && e.clipboardData.items) {
+          for (let i = 0; i < e.clipboardData.items.length; i++) {
+            const item = e.clipboardData.items[i];
+            if (item.type.indexOf('image') !== -1) {
+              const file = item.getAsFile();
+              handleStoreImageUpload(file);
+              break;
+            }
+          }
+        }
+      });
+    }
+
+    function saveNewStoreItem() {
+      if (!isAdmin) return;
+      const nameInput = document.getElementById('store-item-name');
+      const costInput = document.getElementById('store-item-cost');
+      const stockInput = document.getElementById('store-item-stock');
+      const descInput = document.getElementById('store-item-desc');
+
+      const name = nameInput ? nameInput.value.trim() : '';
+      const cost = costInput ? parseInt(costInput.value) : 0;
+      const stock = stockInput ? parseInt(stockInput.value) : 1;
+      const desc = descInput ? descInput.value.trim() : '';
+      const image = uploadedStoreImageBase64 || "https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=600&q=80";
+
+      if (!name) {
+        showToast('กรุณาระบุชื่อสินค้า', 'warning');
+        return;
+      }
+      if (isNaN(cost) || cost <= 0) {
+        showToast('กรุณาระบุราคาแต้มที่ถูกต้อง', 'warning');
+        return;
+      }
+
+      const newItem = {
+        id: Date.now(),
+        name: name,
+        cost: cost,
+        stock: isNaN(stock) ? 1 : stock,
+        desc: desc,
+        image: image
+      };
+
+      storeRewards.push(newItem);
+      saveStoreData();
+
+      // Reset form
+      if (nameInput) nameInput.value = '';
+      if (costInput) costInput.value = '100';
+      if (stockInput) stockInput.value = '5';
+      if (descInput) descInput.value = '';
+      removeStoreUploadedImage();
+
+      showToast(`เพิ่มสินค้า "${name}" ลงในร้านค้าเรียบร้อยแล้ว`, 'success');
+      renderAdminStoreInventory();
+      renderRewardStoreCatalog();
+    }
+
+    function editStoreItemPrompt(itemId) {
+      if (!isAdmin) return;
+      const item = storeRewards.find(x => x.id === itemId);
+      if (!item) return;
+
+      const newName = prompt('แก้ไขชื่อสินค้า:', item.name);
+      if (newName === null) return;
+      if (!newName.trim()) {
+        showToast('ชื่อสินค้าต้องไม่ว่างเปล่า', 'warning');
+        return;
+      }
+
+      const newCostStr = prompt('แก้ไขราคาแต้ม (PTS):', item.cost);
+      if (newCostStr === null) return;
+      const newCost = parseInt(newCostStr);
+      if (isNaN(newCost) || newCost <= 0) {
+        showToast('ราคาแต้มไม่ถูกต้อง', 'warning');
+        return;
+      }
+
+      const newStockStr = prompt('แก้ไขจำนวนสต็อกคงเหลือ:', item.stock);
+      if (newStockStr === null) return;
+      const newStock = parseInt(newStockStr);
+
+      const newDesc = prompt('แก้ไขคำอธิบายสินค้า:', item.desc || '');
+
+      item.name = newName.trim();
+      item.cost = newCost;
+      item.stock = isNaN(newStock) ? item.stock : newStock;
+      if (newDesc !== null) item.desc = newDesc.trim();
+
+      saveStoreData();
+      showToast(`อัพเดทสินค้า "${item.name}" สำเร็จ`, 'success');
+      renderAdminStoreInventory();
+      renderRewardStoreCatalog();
+    }
+
+    function deleteStoreItem(itemId) {
+      if (!isAdmin) return;
+      const item = storeRewards.find(x => x.id === itemId);
+      if (!item) return;
+
+      if (!confirm(`คุณต้องการลบสินค้า "${item.name}" ออกจากร้านค้าใช่หรือไม่?`)) return;
+
+      storeRewards = storeRewards.filter(x => x.id !== itemId);
+      saveStoreData();
+      showToast(`ลบสินค้า "${item.name}" เรียบร้อยแล้ว`, 'info');
+      renderAdminStoreInventory();
+      renderRewardStoreCatalog();
+    }
+
   </script>
 
   <!-- ================= Modal: สรุปคะแนน Top 10 (Export to Image) ================= -->
@@ -10177,6 +11240,277 @@
           </label>
         </div>
 
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= 🎁 Modal: ร้านค้าของรางวัลประจำกิลด์ & Showcase ================= -->
+  <div id="guild-reward-store-modal"
+    class="hidden fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-3 sm:p-4 backdrop-blur-md overflow-y-auto">
+    <div
+      class="apple-modal-box relative w-full max-w-4xl bg-[#090d18] border border-amber-500/30 rounded-2xl shadow-2xl p-4 sm:p-6 my-auto overflow-hidden flex flex-col max-h-[90vh]">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
+        <div class="flex items-center gap-3">
+          <div
+            class="h-10 w-10 rounded-xl bg-gradient-to-tr from-amber-500/20 via-orange-500/20 to-amber-600/30 border border-amber-400/40 text-amber-300 flex items-center justify-center text-lg shadow-inner">
+            <i class="fa-solid fa-gift"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base sm:text-lg font-bold text-white tracking-wide">ร้านค้าของรางวัล &amp; Showcase (Guild Store)</h3>
+              <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black uppercase font-mono">Monthly Shop</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">ใช้คะแนนสะสมกิจกรรมรอบเดือนแลกรับไอเทม หรือดูของรางวัลประจำกิลด์</p>
+          </div>
+        </div>
+        <button onclick="closeRewardStoreModal()"
+          class="text-slate-400 hover:text-white transition p-1.5 rounded-lg hover:bg-slate-800">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Monthly Cycle Notice Banner -->
+      <div class="mt-2 px-3 py-2 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300 flex items-center justify-between">
+        <span class="flex items-center gap-2"><i class="fa-solid fa-calendar-days text-amber-400 text-sm"></i> <span data-i18n="reward_month_cycle_notice">💡 คะแนนสะสมสำหรับรอบเดือนปัจจุบันเท่านั้น (รีเซ็ตทุกสิ้นเดือน ไม่สะสมข้ามเดือน)</span></span>
+      </div>
+
+      <!-- Navigation Tabs & Points Selector Bar -->
+      <div class="py-3 border-b border-slate-800/80 shrink-0 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 bg-slate-950/40 px-2 rounded-xl my-2">
+        <!-- Tabs -->
+        <div class="flex items-center gap-1.5 p-1 bg-slate-900/80 border border-slate-800 rounded-xl">
+          <button id="btn-store-tab-catalog" onclick="switchStoreTab('catalog')"
+            class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm flex items-center gap-1.5">
+            <i class="fa-solid fa-store text-xs"></i> แค็ตตาล็อกของรางวัล
+          </button>
+          <button id="btn-store-tab-history" onclick="switchStoreTab('history')"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white flex items-center gap-1.5">
+            <i class="fa-solid fa-receipt text-xs"></i> ประวัติการแลก
+          </button>
+          <button id="btn-store-tab-admin" onclick="switchStoreTab('admin')"
+            class="store-admin-only hidden px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white flex items-center gap-1.5">
+            <i class="fa-solid fa-boxes-stacked text-xs"></i> คลัง &amp; จัดการสินค้า (Admin)
+          </button>
+        </div>
+
+        <!-- User Points Bar -->
+        <div class="flex items-center gap-2.5 w-full md:w-auto">
+          <div class="w-full md:w-64">
+            <select id="store-member-select" onchange="onRewardMemberSelected()"
+              class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+              <option value="">-- กรุณาเลือกตัวละครของคุณ --</option>
+            </select>
+          </div>
+          <div id="store-user-points-badge" class="shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/35 opacity-50 transition-opacity">
+            <span class="text-[10px] text-amber-300/80 font-bold uppercase tracking-wider">แต้มคงเหลือ:</span>
+            <span id="store-user-points-val" class="font-mono font-black text-amber-300 text-xs sm:text-sm">0 PTS</span>
+            <span id="store-user-points-info" class="text-[10px] text-slate-400 hidden xl:inline"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 1: Catalog Grid -->
+      <div id="store-tab-catalog" class="flex-1 overflow-y-auto pr-1 py-2">
+        <div id="reward-catalog-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Tab 2: History Log -->
+      <div id="store-tab-history" class="hidden flex-1 overflow-y-auto pr-1 py-2">
+        <div class="bg-slate-950/80 border border-slate-800 rounded-2xl overflow-hidden shadow">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-900/90 text-slate-400 text-[11px] font-bold uppercase border-b border-slate-800">
+                <th class="py-2.5 px-3">#</th>
+                <th class="py-2.5 px-3">วัน-เวลา</th>
+                <th class="py-2.5 px-3">ชื่อสมาชิก</th>
+                <th class="py-2.5 px-3">ของรางวัล</th>
+                <th class="py-2.5 px-3">แต้มที่ใช้</th>
+                <th class="py-2.5 px-3">สถานะ</th>
+              </tr>
+            </thead>
+            <tbody id="store-history-tbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 3: Admin Inventory & Add Reward -->
+      <div id="store-tab-admin" class="hidden flex-1 overflow-y-auto pr-1 py-2 space-y-4">
+        <!-- Add Item Box -->
+        <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4">
+          <h4 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-plus text-amber-400"></i> เพิ่มของรางวัล / ไอเทมใหม่
+          </h4>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div>
+              <label class="block text-slate-400 font-medium mb-1">ชื่อของรางวัล / ไอเทม *</label>
+              <input type="text" id="store-item-name" placeholder="เช่น กล่องบอส x10, เงินรางวัล"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500" />
+            </div>
+            <div>
+              <label class="block text-slate-400 font-medium mb-1">ราคาแต้มที่ต้องใช้ (PTS) *</label>
+              <input type="number" id="store-item-cost" value="100" min="1"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500" />
+            </div>
+            <div>
+              <label class="block text-slate-400 font-medium mb-1">จำนวนสต็อกคงเหลือ *</label>
+              <input type="number" id="store-item-stock" value="5" min="0"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500" />
+            </div>
+          </div>
+
+          <div class="mt-3 text-xs">
+            <label class="block text-slate-400 font-medium mb-1">คำอธิบายรายละเอียดของรางวัล</label>
+            <input type="text" id="store-item-desc" placeholder="เช่น กล่องสุ่มอุปกรณ์ระดับสูง หรือรายละเอียดการแจก"
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500" />
+          </div>
+
+          <!-- Image Upload / Dropzone -->
+          <div class="mt-3 text-xs">
+            <label class="block text-slate-400 font-medium mb-1">รูปภาพตัวอย่างของรางวัล (ลากวาง / Ctrl+V ได้)</label>
+            <div id="store-img-dropzone"
+              class="relative border-2 border-dashed border-slate-700 hover:border-amber-500/60 rounded-xl p-4 text-center cursor-pointer transition-colors bg-slate-900/40">
+              
+              <div id="store-dropzone-content" class="space-y-1">
+                <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 mb-1"></i>
+                <p class="text-slate-300 font-semibold">ลากรูปภาพมาวาง หรือคลิกเพื่อเลือกไฟล์</p>
+                <p class="text-[11px] text-slate-500">รองรับ PNG, JPG, WebP หรือกด Ctrl+V เพื่อวางภาพได้ทันที</p>
+                <input type="file" id="store-img-file-input" accept="image/*" class="hidden" onchange="handleStoreImageUpload(this.files[0])" />
+              </div>
+
+              <!-- Preview Box -->
+              <div id="store-img-preview-box" class="hidden flex items-center justify-center gap-3">
+                <div class="h-20 w-32 bg-slate-950 border border-slate-700 rounded-lg overflow-hidden flex items-center justify-center">
+                  <img id="store-img-preview" src="" alt="Preview" class="w-full h-full object-contain p-1" />
+                </div>
+                <div class="text-left">
+                  <span class="text-emerald-400 font-semibold block text-xs">แนบรูปภาพแล้ว</span>
+                  <button type="button" onclick="removeStoreUploadedImage()" class="text-rose-400 hover:underline text-[11px] mt-1">
+                    <i class="fa-solid fa-trash-can text-[10px]"></i> ลบรูป
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 flex justify-end">
+            <button onclick="saveNewStoreItem()"
+              class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold shadow-sm">
+              <i class="fa-solid fa-plus"></i> เพิ่มสินค้าลงในระบบ
+            </button>
+          </div>
+        </div>
+
+        <!-- Inventory List -->
+        <div>
+          <h4 class="text-sm font-bold text-slate-300 mb-2">รายการสินค้าในระบบปัจจุบัน</h4>
+          <div id="admin-store-items-list" class="space-y-2">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= 🔍 Modal: Lightbox ขยายดูภาพของรางวัล ================= -->
+  <div id="reward-lightbox-modal"
+    class="hidden fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 backdrop-blur-md"
+    onclick="closeRewardLightbox()">
+    <div class="relative max-w-2xl w-full bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden p-4 shadow-2xl flex flex-col items-center"
+         onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between w-full pb-2 border-b border-slate-800 mb-3">
+        <h4 id="reward-lightbox-title" class="text-sm font-bold text-white">รูปภาพของรางวัล</h4>
+        <button onclick="closeRewardLightbox()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div class="w-full max-h-[70vh] flex items-center justify-center bg-slate-900/50 rounded-xl overflow-hidden p-2">
+        <img id="reward-lightbox-img" src="" alt="Reward Preview" class="max-w-full max-h-[65vh] object-contain rounded-lg shadow-lg" />
+      </div>
+      <p class="text-[11px] text-slate-400 mt-2">กด Esc หรือคลิกพื้นหลังเพื่อปิด</p>
+    </div>
+  </div>
+
+  <!-- ================= 👑 Modal: พิจารณาอนุมัติการแลกของรางวัล & จัดการส่งมอบ (Admin Reward Approval) ================= -->
+  <div id="reward-approval-modal"
+    class="hidden fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-3 sm:p-4 backdrop-blur-md overflow-y-auto">
+    <div
+      class="apple-modal-box relative w-full max-w-4xl bg-[#090d18] border border-amber-500/40 rounded-2xl shadow-2xl p-4 sm:p-6 my-auto overflow-hidden flex flex-col max-h-[92vh]">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
+        <div class="flex items-center gap-3">
+          <div
+            class="h-10 w-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-600/30 border border-amber-400/40 text-amber-300 flex items-center justify-center text-lg shadow-inner">
+            <i class="fa-solid fa-gift"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base sm:text-lg font-bold text-white tracking-wide" data-i18n="modal_reward_approval_title">อนุมัติการแลกของรางวัล &amp; จัดการส่งมอบ</h3>
+              <span id="reward-approval-count-badge" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black font-mono">0 รายการ</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5" data-i18n="modal_reward_approval_desc">ตรวจสอบ อนุมัติ สุ่มเลือกผู้โชคดีเมื่อคนแลกเกินสต็อก และยืนยันการส่งของในเกม</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <!-- ปุ่มรีเซ็ตคะแนนรอบเดือน (Admin Only) -->
+          <button onclick="resetMonthlyPointsAdmin()"
+            class="apple-btn px-3 py-1.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-700/60 text-rose-300 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm"
+            data-i18n="btn_reset_monthly_points">
+            <i class="fa-solid fa-rotate text-xs"></i> <span>🔄 รีเซ็ตคะแนนรอบเดือนใหม่ (สิ้นเดือน)</span>
+          </button>
+          
+          <button onclick="closeRewardApprovalModal()"
+            class="text-slate-400 hover:text-white transition p-1.5 rounded-lg hover:bg-slate-800">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Content Scrollable Area -->
+      <div class="flex-1 overflow-y-auto pr-1 py-3 space-y-5">
+        
+        <!-- Section 1: Pending & Random Draw -->
+        <div>
+          <div class="flex items-center justify-between mb-2.5">
+            <h4 class="text-xs sm:text-sm font-bold text-amber-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-clock text-amber-400"></i> คำขอแลกของรางวัลรอดำเนินการ (Pending Requests)
+            </h4>
+          </div>
+          <div id="reward-approval-pending-list" class="space-y-3">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Section 2: In-Game Delivery Queue -->
+        <div class="pt-3 border-t border-slate-800">
+          <div class="flex items-center justify-between mb-2.5">
+            <h4 class="text-xs sm:text-sm font-bold text-sky-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-truck-fast text-sky-400"></i> รายการชนะการสุ่ม / รอ Admin ส่งของในเกม (Pending Delivery)
+            </h4>
+          </div>
+          <div id="reward-approval-delivery-list" class="space-y-2.5">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Section 3: Processed History -->
+        <div class="pt-3 border-t border-slate-800">
+          <h4 class="text-xs font-bold text-slate-400 mb-2 flex items-center gap-1.5">
+            <i class="fa-solid fa-clock-rotate-left text-slate-500"></i> ประวัติการส่งมอบ &amp; ผลดำเนินการล่าสุด
+          </h4>
+          <div id="reward-approval-processed-list" class="space-y-1.5">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
       </div>
 
     </div>
