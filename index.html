@@ -7761,7 +7761,12 @@
       }
 
       const bossIndices = checkedBoxes.map(cb => parseInt(cb.value)).filter(n => !isNaN(n));
-      const bossNames = bossIndices.map(idx => ACTIVITIES[idx]?.shortName || `บอส #${idx + 1}`);
+      const bossNames = bossIndices.map(idx => {
+        const act = ACTIVITIES[idx];
+        if (!act) return `บอส #${idx + 1}`;
+        const dayLabel = getDayDisplayName(normalizeDay(act.day), currentLang);
+        return `${act.shortName || act.name} (${dayLabel} #${act.day})`;
+      });
 
       const appealItem = {
         id: Date.now(),
@@ -7840,7 +7845,17 @@
 
         pending.forEach(req => {
           const dateStr = new Date(req.requestedAt).toLocaleString(currentLang === 'th' ? 'th-TH' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-          const bossListStr = (req.bossNames || []).map(b => `<span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 border border-pink-500/30 text-[10px] font-bold">⚔️ ${escapeHtml(b)}</span>`).join(' ');
+          const bossListStr = (req.bossIndices && req.bossIndices.length > 0)
+            ? req.bossIndices.map(idx => {
+                const act = ACTIVITIES[idx];
+                if (!act) return `<span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 border border-pink-500/30 text-[10.5px] font-bold">⚔️ บอส #${idx + 1}</span>`;
+                const dayLabel = getDayDisplayName(normalizeDay(act.day), currentLang);
+                return `<span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 border border-pink-500/30 text-[10.5px] font-bold inline-flex items-center gap-1.5">
+                  <span>⚔️ ${escapeHtml(act.shortName || act.name)}</span>
+                  <span class="text-[9.5px] px-1.5 py-0.2 rounded bg-slate-900/90 text-amber-300 border border-slate-700 font-mono font-medium">${escapeHtml(dayLabel)} #${escapeHtml(act.day)}</span>
+                </span>`;
+              }).join(' ')
+            : (req.bossNames || []).map(b => `<span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 border border-pink-500/30 text-[10.5px] font-bold">⚔️ ${escapeHtml(b)}</span>`).join(' ');
 
           html += `
             <div class="bg-slate-950 border border-pink-500/30 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2 font-sarabun">
@@ -7877,7 +7892,14 @@
         processed.forEach(req => {
           const dateStr = new Date(req.processedAt || req.requestedAt).toLocaleString(currentLang === 'th' ? 'th-TH' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
           const isApproved = req.status === 'approved';
-          const bossListStr = (req.bossNames || []).join(', ');
+          const bossListStr = (req.bossIndices && req.bossIndices.length > 0)
+            ? req.bossIndices.map(idx => {
+                const act = ACTIVITIES[idx];
+                if (!act) return `บอส #${idx + 1}`;
+                const dayLabel = getDayDisplayName(normalizeDay(act.day), currentLang);
+                return `${act.shortName || act.name} (${dayLabel} #${act.day})`;
+              }).join(', ')
+            : (req.bossNames || []).join(', ');
 
           html += `
             <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-3 opacity-75 mb-1.5 font-sarabun">
@@ -7885,7 +7907,7 @@
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="font-semibold text-slate-300 text-xs truncate">${escapeHtml(req.characterName)}</span>
                   <span class="text-[10px] text-slate-400">(${escapeHtml(req.weekName || `Week ${req.weekNumber}`)})</span>
-                  <span class="text-[10.5px] text-slate-400 truncate max-w-[200px]">${escapeHtml(bossListStr)}</span>
+                  <span class="text-[10.5px] text-slate-400 truncate max-w-[220px]">${escapeHtml(bossListStr)}</span>
                 </div>
                 <div class="text-[10px] text-slate-500 mt-0.5">${dateStr} ${req.processedBy ? `• ${escapeHtml(req.processedBy)}` : ''}</div>
               </div>
