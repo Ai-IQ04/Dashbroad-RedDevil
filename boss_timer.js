@@ -305,18 +305,31 @@ function renderBossTimerCards() {
   }
 
   let html = '';
+  // Set of Guild Activity / Scoring Bosses
+  const GUILD_SCORING_BOSS_IDS = new Set([
+    'lucus', 'bahel', 'libitina', 'rakajeth', 'tumier', 'nevaeh', 'icaruthia', 'motti', 'guild_arena', 'camalia', 'world_boss'
+  ]);
+
   filtered.forEach(b => {
+    const isGuildActivity = GUILD_SCORING_BOSS_IDS.has(b.id) || (b.name && /lucus|bahel|libitina|rakajeth|tumier|neva|icarut|morti|motti|arena|camalia|world/i.test(b.name));
+    
+    // Boss Name Color & Size
+    const nameColorClass = isGuildActivity ? 'text-amber-400' : 'text-rose-500';
+    const typeBadge = isGuildActivity 
+      ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm flex items-center gap-1"><i class="fa-solid fa-star text-[7.5px] text-amber-400"></i> กิจกรรมกิลด์</span>`
+      : `<span class="px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-800/80 text-slate-400 border border-slate-700/60">บอสทั่วไป</span>`;
+
     let statusBadge = '';
-    let cardBorder = 'border-slate-800/80';
-    let cardBg = 'from-slate-900/90 to-slate-950/90';
+    let cardBorder = isGuildActivity ? 'border-amber-500/40' : 'border-slate-800/80';
+    let cardBg = isGuildActivity ? 'from-amber-950/20 via-slate-900/95 to-slate-950/95' : 'from-slate-900/90 to-slate-950/90';
 
     if (b.status === 'alive') {
-      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse flex items-center gap-1"><i class="fa-solid fa-circle text-[6px] text-rose-400"></i> เกิดแล้ว (ALIVE!)</span>`;
-      cardBorder = 'border-rose-500/50 shadow-rose-950/40';
+      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500/25 text-rose-300 border border-rose-500/50 animate-pulse flex items-center gap-1 shadow-md shadow-rose-950/40"><i class="fa-solid fa-circle text-[6px] text-rose-400"></i> เกิดแล้ว (ALIVE!)</span>`;
+      cardBorder = 'border-rose-500/60 shadow-rose-950/50';
       cardBg = 'from-rose-950/40 via-slate-900/90 to-slate-950/90';
     } else if (b.status === 'soon') {
-      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse flex items-center gap-1"><i class="fa-solid fa-clock text-[8px] text-amber-400"></i> ใกล้เกิด (&lt;30m)</span>`;
-      cardBorder = 'border-amber-500/50 shadow-amber-950/40';
+      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/25 text-amber-300 border border-amber-500/50 animate-pulse flex items-center gap-1 shadow-md shadow-amber-950/40"><i class="fa-solid fa-clock text-[8px] text-amber-400"></i> ใกล้เกิด (&lt;30m)</span>`;
+      cardBorder = 'border-amber-500/60 shadow-amber-950/50';
       cardBg = 'from-amber-950/30 via-slate-900/90 to-slate-950/90';
     } else if (b.status === 'cooldown') {
       statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30 flex items-center gap-1"><i class="fa-solid fa-hourglass-half text-[8px] text-sky-400"></i> รอเกิด</span>`;
@@ -329,65 +342,68 @@ function renderBossTimerCards() {
     const nextSpawnStr = b.nextSpawn ? formatDateTimeShort(b.nextSpawn) : (b.respawnType === 'interval' ? 'รอลงเวลาตาย' : '-');
 
     html += `
-      <div class="boss-card relative flex flex-col justify-between bg-gradient-to-b ${cardBg} border ${cardBorder} rounded-2xl p-3.5 shadow-lg backdrop-blur transition hover:scale-[1.01] hover:border-amber-400/60 duration-200">
+      <div class="boss-card relative flex flex-col justify-between bg-gradient-to-b ${cardBg} border ${cardBorder} rounded-2xl p-4 shadow-xl backdrop-blur transition hover:scale-[1.01] hover:border-amber-400/60 duration-200">
         <div>
-          <!-- Top Row: Name, Level, Status -->
-          <div class="flex items-start justify-between gap-2 mb-2">
-            <div>
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-800 text-amber-400 border border-slate-700">Lv.${b.level || '??'}</span>
-                <h4 class="text-sm font-extrabold text-white tracking-tight">${escapeHtml(b.name)}</h4>
-              </div>
-              <p class="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                <i class="fa-solid fa-location-dot text-slate-500 text-[10px]"></i>
-                <span class="truncate">${escapeHtml(b.map || 'ไม่ระบุแมพ')}</span>
-              </p>
-            </div>
-            <div class="shrink-0" id="boss-status-badge-${b.id}">
-              ${statusBadge}
+          <!-- Header Row: Level & Type Badge -->
+          <div class="flex items-center justify-between gap-2 mb-1.5">
+            <span class="text-[10.5px] font-mono font-bold px-2 py-0.5 rounded-lg bg-slate-900 text-amber-400 border border-slate-700/80 shadow-inner">Lv.${b.level || '??'}</span>
+            <div class="flex items-center gap-1.5">
+              ${typeBadge}
+              <div id="boss-status-badge-${b.id}">${statusBadge}</div>
             </div>
           </div>
 
+          <!-- Boss Name (Large, Bold & Color Coded) -->
+          <div class="mb-2">
+            <h4 class="text-base sm:text-lg font-black tracking-tight leading-snug ${nameColorClass}">
+              ${escapeHtml(b.name)}
+            </h4>
+            <p class="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+              <i class="fa-solid fa-location-dot text-slate-500 text-[10px]"></i>
+              <span class="truncate">${escapeHtml(b.map || 'ไม่ระบุแมพ')}</span>
+            </p>
+          </div>
+
           <!-- Countdown Big Box -->
-          <div class="my-2.5 p-2 rounded-xl bg-slate-950/70 border border-slate-800/80 text-center">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">นับถอยหลัง</span>
-            <div id="boss-cd-${b.id}" class="text-base sm:text-lg font-black font-mono tracking-wider ${b.status === 'alive' ? 'text-rose-400 animate-pulse' : b.status === 'soon' ? 'text-amber-300 animate-pulse' : b.status === 'cooldown' ? 'text-sky-300' : 'text-slate-500'}">
+          <div class="my-2.5 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/90 text-center shadow-inner">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">นับถอยหลัง</span>
+            <div id="boss-cd-${b.id}" class="text-lg sm:text-xl font-black font-mono tracking-wider ${b.status === 'alive' ? 'text-rose-400 animate-pulse' : b.status === 'soon' ? 'text-amber-300 animate-pulse' : b.status === 'cooldown' ? 'text-sky-300' : 'text-slate-500'}">
               ${countdownText}
             </div>
           </div>
 
           <!-- Metadata Grid -->
-          <div class="grid grid-cols-2 gap-1.5 text-[10.5px] text-slate-300 pt-1 border-t border-slate-800/60">
+          <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-300 pt-2 border-t border-slate-800/80">
             <div>
-              <span class="text-slate-500 block text-[9.5px]">ระยะเกิด:</span>
-              <span class="font-medium text-amber-300/90">${escapeHtml(b.respawnLabel)}</span>
+              <span class="text-slate-500 block text-[9.5px] font-medium">ระยะเกิด:</span>
+              <span class="font-semibold text-amber-300/90">${escapeHtml(b.respawnLabel)}</span>
             </div>
             <div>
-              <span class="text-slate-500 block text-[9.5px]">เกิดรอบถัดไป:</span>
-              <span id="boss-next-${b.id}" class="font-mono font-medium ${b.nextSpawn ? 'text-emerald-300' : 'text-slate-500'}">${nextSpawnStr}</span>
+              <span class="text-slate-500 block text-[9.5px] font-medium">เกิดรอบถัดไป:</span>
+              <span id="boss-next-${b.id}" class="font-mono font-bold ${b.nextSpawn ? 'text-emerald-300' : 'text-slate-500'}">${nextSpawnStr}</span>
             </div>
-            <div class="col-span-2 text-slate-400 flex items-center justify-between text-[10px]">
+            <div class="col-span-2 text-slate-400 flex items-center justify-between text-[10.5px] pt-1">
               <span>ตายล่าสุด: <strong class="font-mono text-slate-300">${lastDefeatedStr}</strong></span>
-              ${b.note ? `<span class="text-amber-400/80 truncate max-w-[120px]" title="${escapeHtml(b.note)}">ℹ️ ${escapeHtml(b.note)}</span>` : ''}
+              ${b.note ? `<span class="text-amber-400/80 truncate max-w-[130px]" title="${escapeHtml(b.note)}">ℹ️ ${escapeHtml(b.note)}</span>` : ''}
             </div>
           </div>
         </div>
 
         <!-- Action Buttons -->
-        <div class="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center gap-1.5">
+        <div class="mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center gap-1.5">
           <button onclick="recordBossKillNow('${b.id}')"
-            class="flex-1 apple-btn apple-btn-ruby inline-flex items-center justify-center gap-1 py-1.5 px-2 text-[11px] font-bold shadow-sm"
+            class="flex-1 apple-btn apple-btn-ruby inline-flex items-center justify-center gap-1.5 py-2 px-2.5 text-xs font-bold shadow-md shadow-rose-950/30"
             title="กดเมื่อบอสตายตอนนี้ทันที">
-            <i class="fa-solid fa-skull text-[10px]"></i>
+            <i class="fa-solid fa-skull text-[11px]"></i>
             <span>ตายตอนนี้</span>
           </button>
           <button onclick="openCustomKillModal('${b.id}')"
-            class="apple-btn apple-btn-slate inline-flex items-center justify-center p-1.5 text-xs font-semibold"
+            class="apple-btn apple-btn-slate inline-flex items-center justify-center p-2 text-xs font-semibold"
             title="ระบุเวลาตายย้อนหลัง">
             <i class="fa-solid fa-clock-rotate-left"></i>
           </button>
           <button onclick="openBossDropLogModal('${b.id}')"
-            class="apple-btn apple-btn-amber inline-flex items-center justify-center p-1.5 text-xs font-semibold"
+            class="apple-btn apple-btn-amber inline-flex items-center justify-center p-2 text-xs font-semibold"
             title="ดู / บันทึกประวัติของดรอป">
             <i class="fa-solid fa-gift"></i>
           </button>
