@@ -629,21 +629,6 @@
               class="flex items-center gap-1 bg-slate-900/90 border border-slate-800/90 rounded-full p-0.5 shadow-inner backdrop-blur">
               <!-- Render via renderWeekTabs() -->
             </div>
-
-            <!-- 🧭 สลับหน้าโมดูลหลัก: [ 🛡️ กิจกรรมกิลด์ ] | [ ⏱️ บอสไทม์เมอร์ ] -->
-            <div class="flex items-center p-0.5 bg-slate-900/90 border border-slate-800/90 rounded-full shadow-inner backdrop-blur ml-1">
-              <button id="nav-tab-scoring" onclick="switchAppModule('scoring')"
-                class="apple-btn px-2.5 py-0.5 rounded-full text-[10.5px] font-bold transition flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-md">
-                <i class="fa-solid fa-shield-halved text-[10px]"></i>
-                <span>กิจกรรมกิลด์</span>
-              </button>
-              <button id="nav-tab-boss-timer" onclick="switchAppModule('boss_timer')"
-                class="apple-btn px-2.5 py-0.5 rounded-full text-[10.5px] font-bold text-slate-400 hover:text-white hover:bg-slate-800/80 transition flex items-center gap-1">
-                <i class="fa-solid fa-stopwatch text-amber-400 text-[10px]"></i>
-                <span>บอสไทม์เมอร์</span>
-                <span id="badge-boss-alive-count" class="hidden px-1.5 py-0.2 rounded-full text-[8.5px] font-mono font-black bg-rose-600 text-white animate-pulse">0</span>
-              </button>
-            </div>
           </div>
           <div class="flex items-center gap-2 mt-1 flex-wrap">
             <p class="text-[11px] text-slate-400 leading-none flex items-center gap-1.5"><span
@@ -666,6 +651,21 @@
         </div>
       </div>
 
+      <!-- 🧭 แถบนำทางสลับโมดูลหลัก (Apple Pro Segmented Nav Control) วางเด่นกลาง Header -->
+      <div class="flex items-center p-1 bg-slate-900/90 border border-slate-700/80 rounded-2xl shadow-xl backdrop-blur-xl">
+        <button id="nav-tab-scoring" onclick="switchAppModule('scoring')"
+          class="apple-btn px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-orange-500/20">
+          <i class="fa-solid fa-shield-halved text-sm"></i>
+          <span>เช็คชื่อ & คะแนนกิลด์</span>
+        </button>
+        <button id="nav-tab-boss-timer" onclick="switchAppModule('boss_timer')"
+          class="apple-btn px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-2">
+          <i class="fa-solid fa-stopwatch text-amber-400 text-sm"></i>
+          <span>บอสไทม์เมอร์ (Boss Timer)</span>
+          <span id="badge-boss-alive-count" class="hidden px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-rose-600 text-white animate-pulse shadow-md">0</span>
+        </button>
+      </div>
+
       <!-- ส่วนควบคุมส่วนกลาง: จัดหมวดหมู่ 3 โซน Glass Capsules สไตล์ Apple macOS -->
       <div class="flex items-center gap-2.5 flex-wrap">
 
@@ -679,11 +679,13 @@
             <span>ร้านค้าของรางวัล (Shop)</span>
           </button>
 
-          <!-- ปุ่มเปิดดูตารางบอส (Boss Viewer) -->
-          <button onclick="openBossViewerModal()"
-            class="apple-btn apple-btn-ruby inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
-            <i class="fa-solid fa-dragon text-xs"></i>
-            <span data-i18n="btn_boss_viewer">Boss Viewer</span>
+          <!-- ปุ่มเปิดบอสไทม์เมอร์ (Boss Timer) -->
+          <button onclick="switchAppModule('boss_timer')"
+            class="apple-btn apple-btn-ruby inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold shadow-md shadow-rose-950/50 hover:scale-105 transition"
+            title="เปิดตารางเวลาบอสและนับเวลาถอยหลัง">
+            <i class="fa-solid fa-stopwatch text-xs text-amber-300 animate-pulse"></i>
+            <span>บอสไทม์เมอร์</span>
+            <span id="badge-boss-alive-count-hub" class="hidden px-1.5 py-0.2 rounded-full text-[9px] font-mono font-black bg-white text-rose-600">0</span>
           </button>
 
           <!-- ปุ่มเปิดดูสรุปคะแนนทุกอาทิตย์ -->

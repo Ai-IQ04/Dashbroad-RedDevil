@@ -242,14 +242,17 @@ function renderBossTimerCards() {
 
   // Update Badges
   const aliveBadge = document.getElementById('badge-boss-alive-count');
-  if (aliveBadge) {
-    if (aliveCount > 0) {
-      aliveBadge.textContent = aliveCount;
-      aliveBadge.classList.remove('hidden');
-    } else {
-      aliveBadge.classList.add('hidden');
+  const aliveBadgeHub = document.getElementById('badge-boss-alive-count-hub');
+  [aliveBadge, aliveBadgeHub].forEach(badge => {
+    if (badge) {
+      if (aliveCount > 0) {
+        badge.textContent = aliveCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
     }
-  }
+  });
 
   const statAlive = document.getElementById('stat-boss-alive-count');
   if (statAlive) statAlive.textContent = aliveCount;
