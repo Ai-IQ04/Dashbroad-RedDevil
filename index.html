@@ -5944,7 +5944,7 @@
       }
 
       const isSuper = (typeof SUPER_ADMIN_EMAIL !== 'undefined' && email === SUPER_ADMIN_EMAIL.toLowerCase());
-      const isAdminUser = isSuper || (adminUsers && adminUsers[email] && adminUsers[email].status === 'approved') || (Array.isArray(adminEmails) && adminEmails.map(x => x.toLowerCase()).includes(email));
+      const isAdminUser = isSuper || (adminUsers && adminUsers[email] && adminUsers[email].status === 'approved') || (Array.isArray(adminEmails) && adminEmails.map(x => x.toLowerCase()).includes(email)) || (Array.isArray(adminAccounts) && adminAccounts.some(a => a.email && a.email.toLowerCase() === email));
 
       if (!isAdminUser) {
         showToast('❌ อีเมลนี้ไม่มีสิทธิ์ Admin ในระบบ ไม่สามารถแก้ไขข้อมูลย้อนหลังได้', 'error');
@@ -6225,6 +6225,11 @@
           clearChecksBtn.classList.add('hidden');
           clearChecksBtn.classList.remove('inline-flex');
         }
+        const toggleLockBtn = document.getElementById('btn-toggle-week-lock');
+        if (toggleLockBtn) {
+          toggleLockBtn.classList.add('hidden');
+          toggleLockBtn.classList.remove('inline-flex');
+        }
         if (auditLogsBtn) {
           auditLogsBtn.classList.add('hidden');
           auditLogsBtn.classList.remove('inline-flex');
@@ -6240,6 +6245,8 @@
           indicatorText.textContent = t('status_readonly');
         }
       }
+
+      renderLockBanner();
 
       const adminHub = document.getElementById('admin-hub-container');
       if (adminHub) {
@@ -6305,12 +6312,775 @@
         input.type = 'text';
         btn.innerHTML = '<i class="fa-regular fa-eye-slash"></i>';
       } else {
-      input.type = 'password';
+        input.type = 'password';
         btn.innerHTML = '<i class="fa-regular fa-eye"></i>';
       }
     }
 
-    function toggleCheck(memberId, activityIndex) {
+    function openAdminEmailModal() {
+      const err = document.getElementById('admin-login-error');
+      if (err) err.classList.add('hidden');
+      const emailInput = document.getElementById('admin-email-input');
+      const passInput = document.getElementById('admin-password-input');
+      if (emailInput && currentAdminEmail) emailInput.value = currentAdminEmail;
+      if (passInput) passInput.value = '';
+      const modal = document.getElementById('admin-email-modal');
+      if (modal) modal.classList.remove('hidden');
+      if (emailInput) emailInput.focus();
+    }
+
+    function closeAdminEmailModal() {
+      const modal = document.getElementById('admin-email-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function handleAdminLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('admin-email-input').value.trim().toLowerCase();
+      const password = document.getElementById('admin-password-input').value;
+      const errorEl = document.getElementById('admin-login-error');
+
+      if (!email || !password) return;
+
+      const account = adminAccounts.find(a => a.email.toLowerCase() === email);
+      if (!account) {
+        if (errorEl) {
+          errorEl.textContent = 'ไม่พบอีเมลนี้ในระบบ Admin (หากต้องการเป็น Admin ให้กดปุ่มขอสมัครด้านล่าง)';
+          errorEl.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (account.password !== password) {
+        if (errorEl) {
+          errorEl.textContent = 'รหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง';
+          errorEl.classList.remove('hidden');
+        }
+        return;
+      }
+
+      // เข้าสู่ระบบสำเร็จ
+      currentAdminEmail = account.email;
+      isAdmin = true;
+      isSuperAdmin = account.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() || account.role === 'superadmin';
+      localStorage.setItem('guild_current_admin_email', account.email);
+      closeAdminEmailModal();
+      updateAdminUI();
+      showToast(isSuperAdmin ? 'เข้าสู่ระบบในฐานะ Super Admin สำเร็จ 👑' : `เข้าสู่ระบบในฐานะ Admin (${account.name || account.email}) สำเร็จ 🛡️`, 'success');
+    }
+
+    function openAdminRegisterModal() {
+      closeAdminEmailModal();
+      const modal = document.getElementById('admin-register-modal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeAdminRegisterModal() {
+      const modal = document.getElementById('admin-register-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function handleAdminRegisterRequest(e) {
+      e.preventDefault();
+      const name = document.getElementById('admin-reg-name-input').value.trim();
+      const email = document.getElementById('admin-reg-email-input').value.trim().toLowerCase();
+      const password = document.getElementById('admin-reg-password-input').value;
+
+      if (!name || !email || !password) return;
+
+      if (adminAccounts.some(a => a.email.toLowerCase() === email)) {
+        showToast('อีเมลนี้เป็น Admin ในระบบอยู่แล้ว สามารถเข้าสู่ระบบได้เลย', 'info');
+        closeAdminRegisterModal();
+        openAdminEmailModal();
+        return;
+      }
+
+      const existingReq = pendingAdminRequests.find(r => r.email.toLowerCase() === email && r.status === 'pending');
+      if (existingReq) {
+        existingReq.name = name;
+        existingReq.password = password;
+        existingReq.requestedAt = new Date().toISOString();
+        savePendingAdminRequests();
+        closeAdminRegisterModal();
+        showToast('อัปเดตคำขอสมัคร Admin ของคุณเรียบร้อยแล้ว รอ Super Admin อนุมัติ', 'success');
+        return;
+      }
+
+      pendingAdminRequests.push({
+        id: Date.now(),
+        name: name,
+        email: email,
+        password: password,
+        requestedAt: new Date().toISOString(),
+        status: 'pending'
+      });
+
+      savePendingAdminRequests();
+      closeAdminRegisterModal();
+      showToast('ส่งคำขอสมัครเป็น Admin เรียบร้อยแล้ว (รอ Super Admin อนุมัติ)', 'success');
+    }
+
+    // ================= Super Admin: จัดการอนุมัติ & รหัสผ่าน Admin =================
+    function openAdminApprovalModal() {
+      if (!isSuperAdmin) {
+        showToast('เฉพาะ Super Admin เท่านั้นที่สามารถจัดการ Admin ได้', 'warning');
+        return;
+      }
+      renderAdminApprovalList();
+      document.getElementById('admin-approval-modal').classList.remove('hidden');
+    }
+
+    function closeAdminApprovalModal() {
+      document.getElementById('admin-approval-modal').classList.add('hidden');
+    }
+
+    function renderAdminApprovalList() {
+      const container = document.getElementById('admin-approval-list');
+      const pending = pendingAdminRequests.filter(r => r.status === 'pending');
+      const superAdminAcc = adminAccounts.find(a => a.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) || DEFAULT_SUPER_ADMIN;
+      const approvedAdmins = adminAccounts.filter(a => a.email.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase());
+      const processed = pendingAdminRequests.filter(r => r.status !== 'pending').slice(0, 15);
+
+      let html = '';
+
+      // Super Admin card
+      html += `
+        <div class="bg-amber-950/30 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between gap-3 mb-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="h-9 w-9 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 text-base"><i class="fa-solid fa-crown"></i></div>
+            <div class="min-w-0">
+              <div class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                <span>Super Admin</span>
+                <span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-200 border border-amber-500/30 font-mono">สูงสุด</span>
+              </div>
+              <div class="text-[11px] text-slate-300 font-mono truncate">${escapeHtml(superAdminAcc.email)}</div>
+              <div class="text-[10px] text-slate-500 font-mono mt-0.5">รหัสผ่าน: <strong class="text-amber-200 font-bold">${escapeHtml(superAdminAcc.password || 'admin1234')}</strong></div>
+            </div>
+          </div>
+          <button onclick="changeAdminPasswordPrompt('${escapeHtml(superAdminAcc.email)}')"
+            class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-semibold transition shrink-0">
+            <i class="fa-solid fa-key mr-1"></i>เปลี่ยนรหัส
+          </button>
+        </div>
+      `;
+
+      // Pending requests
+      if (pending.length > 0) {
+        html += `<h4 class="text-xs font-bold text-amber-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+          <i class="fa-solid fa-hourglass-half"></i> ${t('pending_admin_title', { count: pending.length })}
+        </h4>`;
+        pending.forEach(req => {
+          const dateStr = new Date(req.requestedAt).toLocaleString(currentLang === 'th' ? 'th-TH' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+          html += `
+            <div class="bg-slate-950 border border-amber-500/30 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap mb-1">
+                  <span class="font-bold text-white text-sm">${escapeHtml(req.name || 'Admin')}</span>
+                  <span class="text-xs text-indigo-300 font-mono">(${escapeHtml(req.email)})</span>
+                </div>
+                <div class="text-[11px] text-slate-400 font-mono">รหัสผ่านที่ขอ: <strong class="text-amber-300">${escapeHtml(req.password || '-')}</strong></div>
+                <div class="text-[10px] text-slate-500 mt-1"><i class="fa-regular fa-clock mr-1"></i>${dateStr}</div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button onclick="approveAdminRequest(${req.id})" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow-sm">
+                  <i class="fa-solid fa-check mr-1"></i>${t('btn_approve')}
+                </button>
+                <button onclick="rejectAdminRequest(${req.id})" class="px-3 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 text-xs font-semibold transition">
+                  <i class="fa-solid fa-xmark mr-1"></i>${t('btn_reject')}
+                </button>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      // Approved admins
+      if (approvedAdmins.length > 0) {
+        html += `<h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mt-4 mb-2 flex items-center gap-2">
+          <i class="fa-solid fa-user-check"></i> ${t('approved_admin_title', { count: approvedAdmins.length })}
+        </h4>`;
+        approvedAdmins.forEach(acc => {
+          html += `
+            <div class="bg-slate-950/60 border border-emerald-500/20 rounded-xl p-2.5 flex items-center justify-between gap-3 mb-1.5">
+              <div class="flex items-center gap-2 flex-1 min-w-0">
+                <i class="fa-solid fa-circle-check text-emerald-400 text-xs shrink-0"></i>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <span class="font-bold text-white text-xs truncate">${escapeHtml(acc.name || 'Admin')}</span>
+                    <span class="text-[11px] text-slate-400 font-mono truncate">(${escapeHtml(acc.email)})</span>
+                  </div>
+                  <div class="text-[10px] text-slate-500 font-mono">รหัสผ่าน: <strong class="text-amber-300 font-mono">${escapeHtml(acc.password)}</strong></div>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button onclick="changeAdminPasswordPrompt('${escapeHtml(acc.email)}')" class="text-[11px] text-amber-300 hover:text-amber-200 px-2 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 transition" title="เปลี่ยนรหัสผ่าน">
+                  <i class="fa-solid fa-key mr-1"></i>เปลี่ยนรหัส
+                </button>
+                <button onclick="removeAdminAccount('${escapeHtml(acc.email)}')" class="text-[11px] text-rose-400 hover:text-rose-300 px-2 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 transition" title="ลบสิทธิ์ Admin">
+                  <i class="fa-solid fa-user-minus mr-1"></i>ลบ
+                </button>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      // History
+      if (processed.length > 0) {
+        html += `<h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-4 mb-2 flex items-center gap-2">
+          <i class="fa-solid fa-clock-rotate-left"></i> ประวัติคำขอ
+        </h4>`;
+        processed.forEach(req => {
+          const dateStr = new Date(req.processedAt || req.requestedAt).toLocaleString(currentLang === 'th' ? 'th-TH' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+          const isApproved = req.status === 'approved';
+          html += `
+            <div class="bg-slate-950/40 border border-slate-800 rounded-xl p-2 flex items-center justify-between gap-3 mb-1 opacity-60">
+              <div class="flex-1 min-w-0">
+                <span class="text-[11px] text-slate-300 font-mono truncate">${escapeHtml(req.email)}</span>
+                <span class="text-[10px] text-slate-500 ml-2">${dateStr}</span>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded font-semibold ${isApproved ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}">
+                ${isApproved ? t('approved_badge') : t('rejected_badge')}
+              </span>
+            </div>
+          `;
+        });
+      }
+
+      container.innerHTML = html;
+    }
+
+    function approveAdminRequest(requestId) {
+      const req = pendingAdminRequests.find(r => r.id === requestId);
+      if (!req) return;
+
+      const existingAcc = adminAccounts.find(a => a.email.toLowerCase() === req.email.toLowerCase());
+      if (existingAcc) {
+        existingAcc.password = req.password || existingAcc.password;
+        existingAcc.name = req.name || existingAcc.name;
+      } else {
+        adminAccounts.push({
+          email: req.email,
+          password: req.password || 'admin1234',
+          name: req.name || 'Admin',
+          role: 'admin'
+        });
+      }
+      saveAdminAccounts();
+
+      req.status = 'approved';
+      req.processedAt = new Date().toISOString();
+      savePendingAdminRequests();
+      renderAdminApprovalList();
+
+      addAuditLog(
+        'admin',
+        `อนุมัติคำขอ Admin สำหรับ "${req.email}"`,
+        `ชื่อ: ${req.name || '-'} | สิทธิ์: Admin`
+      );
+
+      showToast(`อนุมัติสิทธิ์ Admin ให้ "${req.email}" เรียบร้อยแล้ว`, 'success');
+    }
+
+    function rejectAdminRequest(requestId) {
+      const req = pendingAdminRequests.find(r => r.id === requestId);
+      if (!req) return;
+
+      req.status = 'rejected';
+      req.processedAt = new Date().toISOString();
+      savePendingAdminRequests();
+      renderAdminApprovalList();
+
+      addAuditLog(
+        'admin',
+        `ปฏิเสธคำขอ Admin ของ "${req.email}"`,
+        `ชื่อ: ${req.name || '-'}`
+      );
+
+      showToast(`ปฏิเสธคำขอของ "${req.email}" แล้ว`, 'info');
+    }
+
+    function changeAdminPasswordPrompt(email) {
+      const acc = adminAccounts.find(a => a.email.toLowerCase() === email.toLowerCase());
+      if (!acc) return;
+
+      const newPass = prompt(`กรอกรหัสผ่านใหม่สำหรับ "${acc.name || acc.email}" (ปัจจุบัน: ${acc.password || '-'}):`);
+      if (newPass === null) return;
+      const cleanPass = newPass.trim();
+      if (!cleanPass) {
+        showToast('รหัสผ่านไม่สามารถเว้นว่างได้', 'warning');
+        return;
+      }
+
+      acc.password = cleanPass;
+      saveAdminAccounts();
+      renderAdminApprovalList();
+
+      addAuditLog(
+        'admin',
+        `เปลี่ยนรหัสผ่านสำหรับ Admin "${acc.email}"`,
+        `เปลี่ยนรหัสผ่านสำเร็จโดย Super Admin`
+      );
+
+      showToast(`เปลี่ยนรหัสผ่านสำหรับ "${acc.email}" สำเร็จ`, 'success');
+    }
+
+    function removeAdminAccount(email) {
+      if (email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
+        showToast('ไม่สามารถลบบัญชี Super Admin ได้', 'warning');
+        return;
+      }
+      if (!isSuperAdmin) {
+        showToast('เฉพาะ Super Admin เท่านั้นที่สามารถลบสิทธิ์ได้', 'warning');
+        return;
+      }
+      if (!confirm(`ต้องการลบสิทธิ์ Admin ของ "${email}" ใช่หรือไม่?`)) return;
+      adminAccounts = adminAccounts.filter(a => a.email.toLowerCase() !== email.toLowerCase());
+      saveAdminAccounts();
+
+      addAuditLog(
+        'admin',
+        `ลบสิทธิ์ Admin ของ "${email}"`,
+        `ลบออกจากระบบโดย Super Admin`
+      );
+
+      showToast(`ลบสิทธิ์ Admin ของ "${email}" เรียบร้อยแล้ว`, 'info');
+      renderAdminApprovalList();
+    }
+    const removeAdminEmail = removeAdminAccount;
+
+    // ================= ระบบล้างข้อมูลการติ๊กถูก (Clear Checks System) =================
+    function openClearChecksModal(bypassLock = false) {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_reset'), 'warning');
+        openAdminEmailModal();
+        return;
+      }
+      if (!bypassLock && isWeekLocked(currentWeekNumber)) {
+        requestRetroactiveEditPermission(() => {
+          openClearChecksModal(true);
+        }, `ล้างข้อมูลการติ๊กถูก (${getWeekName(currentWeekNumber)})`);
+        return;
+      }
+      const modal = document.getElementById('clear-checks-modal');
+      const curLabel = document.getElementById('clear-checks-current-label');
+      if (curLabel) curLabel.textContent = `ล้างเฉพาะ ${getWeekName(currentWeekNumber)}`;
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeClearChecksModal() {
+      const modal = document.getElementById('clear-checks-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function handleConfirmClearChecks() {
+      if (!isAdmin) return;
+      const scope = document.querySelector('input[name="clear-scope"]:checked')?.value || 'current';
+
+      if (scope === 'current') {
+        members.forEach(m => {
+          ensureMemberWeeklyData(m);
+          m.checks = new Array(ACTIVITIES.length).fill(false);
+          m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
+        });
+
+        addAuditLog(
+          'clear',
+          `ล้างข้อมูลการติ๊กถูก (${getWeekName(currentWeekNumber)})`,
+          `ล้างเครื่องหมายถูกของสมาชิกทุกคน (${members.length} คน) เฉพาะ ${getWeekName(currentWeekNumber)}`
+        );
+
+        showToast(`ล้างการติ๊กถูกของ ${getWeekName(currentWeekNumber)} เรียบร้อยแล้ว (สมาชิกและ CP ยังคงอยู่ครบ)`, 'success');
+      } else {
+        members.forEach(m => {
+          ensureMemberWeeklyData(m);
+          for (let w = 1; w <= 4; w++) {
+            m.weeklyChecks[w] = new Array(ACTIVITIES.length).fill(false);
+          }
+          m.checks = new Array(ACTIVITIES.length).fill(false);
+        });
+
+        addAuditLog(
+          'clear',
+          `ล้างข้อมูลการติ๊กถูกทุกสัปดาห์ (1-4)`,
+          `ล้างเครื่องหมายถูกของสมาชิกทุกคน (${members.length} คน) ทุกสัปดาห์`
+        );
+
+        showToast('ล้างการติ๊กถูกของทุกสัปดาห์ (1-4) เรียบร้อยแล้ว (สมาชิกและ CP ยังคงอยู่ครบ)', 'success');
+      }
+
+      saveData();
+      renderTable();
+      updateKPIs();
+      closeClearChecksModal();
+    }
+
+    // ================= ระบบติ๊กถูก All ตามกิลด์ (Batch Guild Check-in) =================
+    function openBatchGuildCheckModal(bypassLock = false) {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_edit'), 'warning');
+        openAdminEmailModal();
+        return;
+      }
+      if (!bypassLock && isWeekLocked(currentWeekNumber)) {
+        requestRetroactiveEditPermission(() => {
+          openBatchGuildCheckModal(true);
+        }, `ติ๊กถูก All ตามกิลด์ (${getWeekName(currentWeekNumber)})`);
+        return;
+      }
+
+      const modal = document.getElementById('batch-guild-check-modal');
+      const guildSelect = document.getElementById('batch-guild-select');
+      const actSelect = document.getElementById('batch-activity-select');
+      const weekLabel = document.getElementById('batch-modal-week-label');
+
+      if (weekLabel) weekLabel.textContent = getWeekName(currentWeekNumber);
+
+      // Populate Guilds
+      if (guildSelect) {
+        let gHtml = '';
+        guildsList.forEach(g => {
+          const count = members.filter(m => m.guild === g.name).length;
+          gHtml += `<option value="${escapeHtml(g.name)}">${g.icon || '🛡️'} กิลด์ ${escapeHtml(g.name)} (${count} คน)</option>`;
+        });
+        gHtml += `<option value="all">🌐 ทุกกิลด์รวมกัน (${members.length} คน)</option>`;
+        guildSelect.innerHTML = gHtml;
+      }
+
+      // Populate Activities
+      if (actSelect) {
+        let aHtml = `<option value="all">✨ ทุกกิจกรรมบอสทั้งหมด (${ACTIVITIES.length} บอส)</option>`;
+        ACTIVITIES.forEach((act, idx) => {
+          aHtml += `<option value="${idx}">⚔️ [${escapeHtml(act.day || '-')}] ${escapeHtml(act.name || act.shortName)} (${act.weight || 0} คะแนน)</option>`;
+        });
+        actSelect.innerHTML = aHtml;
+      }
+
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeBatchGuildCheckModal() {
+      const modal = document.getElementById('batch-guild-check-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function handleConfirmBatchGuildCheck() {
+      if (!isAdmin) return;
+
+      const selectedGuild = document.getElementById('batch-guild-select')?.value || 'all';
+      const selectedActivity = document.getElementById('batch-activity-select')?.value || 'all';
+      const actionType = document.querySelector('input[name="batch-action"]:checked')?.value || 'check';
+      const isChecked = actionType === 'check';
+
+      let affectedCount = 0;
+
+      members.forEach(m => {
+        if (selectedGuild === 'all' || m.guild === selectedGuild) {
+          ensureMemberWeeklyData(m);
+          affectedCount++;
+
+          if (selectedActivity === 'all') {
+            m.checks = new Array(ACTIVITIES.length).fill(isChecked);
+            m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(isChecked);
+          } else {
+            const actIdx = parseInt(selectedActivity);
+            if (!isNaN(actIdx) && actIdx >= 0 && actIdx < ACTIVITIES.length) {
+              m.checks[actIdx] = isChecked;
+              if (!Array.isArray(m.weeklyChecks[currentWeekNumber])) {
+                m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
+              }
+              m.weeklyChecks[currentWeekNumber][actIdx] = isChecked;
+            }
+          }
+        }
+      });
+
+      saveData();
+      renderTable();
+      updateKPIs();
+      closeBatchGuildCheckModal();
+
+      const guildLabel = selectedGuild === 'all' ? 'ทุกกิลด์' : `กิลด์ ${selectedGuild}`;
+      const actLabel = selectedActivity === 'all' ? 'ทุกบอส' : (ACTIVITIES[parseInt(selectedActivity)]?.shortName || 'บอสที่เลือก');
+      const actionLabel = isChecked ? 'ติ๊กถูกทั้งหมด' : 'ยกเลิกติ๊กถูก';
+
+      addAuditLog(
+        'batch',
+        `${actionLabel} ให้ ${guildLabel}`,
+        `กิจกรรม: ${actLabel} | สมาชิกที่ได้รับผลกระทบ: ${affectedCount} คน | ${getWeekName(currentWeekNumber)}`
+      );
+
+      showToast(`${actionLabel} ให้ ${guildLabel} (${actLabel}) จำนวน ${affectedCount} คน เรียบร้อยแล้ว!`, 'success');
+    }
+
+    // ================= ระบบประวัติและบันทึกการแก้ไข (Audit Logs System) =================
+    let auditLogs = JSON.parse(localStorage.getItem('guild_audit_logs')) || [];
+
+    function saveAuditLogs() {
+      if (auditLogs.length > 250) {
+        auditLogs = auditLogs.slice(0, 250);
+      }
+      localStorage.setItem('guild_audit_logs', JSON.stringify(auditLogs));
+      if (fbDb) {
+        fbDb.ref('guild_app/audit_logs').set(auditLogs);
+      }
+    }
+
+    function addAuditLog(category, actionTitle, detail = '', targetMember = '') {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const dateStr = now.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+      const adminName = currentAdminEmail || 'Admin';
+
+      const logItem = {
+        id: Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        timestamp: Date.now(),
+        timeFormatted: `${timeStr} (${dateStr})`,
+        admin: adminName,
+        isSuper: isSuperAdmin,
+        category: category, // 'check', 'cp', 'member', 'batch', 'clear', 'guild', 'admin'
+        actionTitle: actionTitle,
+        detail: detail,
+        targetMember: targetMember,
+        weekNumber: currentWeekNumber,
+        weekName: getWeekName(currentWeekNumber)
+      };
+
+      auditLogs.unshift(logItem);
+      saveAuditLogs();
+      const modal = document.getElementById('audit-logs-modal');
+      if (modal && !modal.classList.contains('hidden')) {
+        renderAuditLogsList();
+      }
+    }
+
+    function openAuditLogsModal() {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_edit'), 'warning');
+        openAdminEmailModal();
+        return;
+      }
+      const modal = document.getElementById('audit-logs-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        renderAuditLogsList();
+      }
+    }
+
+    function closeAuditLogsModal() {
+      const modal = document.getElementById('audit-logs-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function renderAuditLogsList() {
+      const container = document.getElementById('audit-logs-list');
+      const countBadge = document.getElementById('audit-log-count-badge');
+      if (!container) return;
+
+      const search = (document.getElementById('audit-search-input')?.value || '').toLowerCase().trim();
+      const filterType = document.getElementById('audit-filter-type')?.value || 'all';
+      const filterWeek = document.getElementById('audit-filter-week')?.value || 'all';
+
+      let filtered = auditLogs.filter(log => {
+        const matchSearch = !search ||
+          (log.admin || '').toLowerCase().includes(search) ||
+          (log.actionTitle || '').toLowerCase().includes(search) ||
+          (log.detail || '').toLowerCase().includes(search) ||
+          (log.targetMember || '').toLowerCase().includes(search);
+
+        const matchType = (filterType === 'all') || (log.category === filterType);
+        const matchWeek = (filterWeek === 'all') || (String(log.weekNumber) === String(filterWeek));
+
+        return matchSearch && matchType && matchWeek;
+      });
+
+      if (countBadge) {
+        countBadge.textContent = `${filtered.length} / ${auditLogs.length} รายการ`;
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="py-12 text-center text-slate-500 font-sarabun">
+            <i class="fa-solid fa-clipboard-list text-3xl mb-2.5 block text-slate-600"></i>
+            <div class="text-xs font-semibold text-slate-400">ไม่พบประวัติการแก้ไขตามเงื่อนไขที่เลือก</div>
+            <div class="text-[11px] text-slate-500 mt-1">การกระทำของ Admin ทุกคนจะถูกบันทึกลงในนี้อัตโนมัติ</div>
+          </div>
+        `;
+        return;
+      }
+
+      const CATEGORY_META = {
+        check: { icon: 'fa-solid fa-circle-check', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30', label: 'เช็คชื่อ' },
+        cp: { icon: 'fa-solid fa-bolt', color: 'text-amber-400 bg-amber-500/10 border-amber-500/30', label: 'แก้ไข CP' },
+        member: { icon: 'fa-solid fa-user-pen', color: 'text-sky-400 bg-sky-500/10 border-sky-500/30', label: 'สมาชิก' },
+        batch: { icon: 'fa-solid fa-list-check', color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30', label: 'ติ๊กถูก All' },
+        clear: { icon: 'fa-solid fa-broom', color: 'text-rose-400 bg-rose-500/10 border-rose-500/30', label: 'ล้างข้อมูล' },
+        guild: { icon: 'fa-solid fa-shield-cat', color: 'text-teal-400 bg-teal-500/10 border-teal-500/30', label: 'กิลด์' },
+        admin: { icon: 'fa-solid fa-key', color: 'text-purple-400 bg-purple-500/10 border-purple-500/30', label: 'สิทธิ์ Admin' }
+      };
+
+      let html = '';
+      filtered.forEach(log => {
+        const meta = CATEGORY_META[log.category] || { icon: 'fa-solid fa-clock-rotate-left', color: 'text-slate-400 bg-slate-800 border-slate-700', label: 'ทั่วไป' };
+        const isSuper = log.isSuper || log.admin === SUPER_ADMIN_EMAIL;
+
+        html += `
+          <div class="bg-slate-900/90 hover:bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition font-sarabun">
+            <div class="flex items-start gap-3 min-w-0">
+              <div class="h-8 w-8 rounded-lg ${meta.color} border flex items-center justify-center shrink-0 mt-0.5 text-xs">
+                <i class="${meta.icon}"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-bold text-white text-xs sm:text-[13px]">${escapeHtml(log.actionTitle)}</span>
+                  <span class="text-[9.5px] px-1.5 py-0.5 rounded font-semibold border ${meta.color}">
+                    ${meta.label}
+                  </span>
+                  ${log.weekName ? `<span class="text-[9.5px] px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-semibold font-mono">${escapeHtml(log.weekName)}</span>` : ''}
+                </div>
+                ${log.detail ? `<div class="text-[11.5px] text-slate-300 mt-1 leading-snug break-words">${escapeHtml(log.detail)}</div>` : ''}
+                <div class="flex items-center gap-2 mt-1.5 text-[10.5px] text-slate-400 flex-wrap">
+                  <span class="inline-flex items-center gap-1 font-mono text-slate-300">
+                    <i class="fa-solid fa-user-shield text-[10px] ${isSuper ? 'text-amber-400' : 'text-emerald-400'}"></i>
+                    ${escapeHtml(log.admin)}
+                    ${isSuper ? '<span class="text-[8.5px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">SUPER</span>' : ''}
+                  </span>
+                  <span class="text-slate-600">•</span>
+                  <span class="font-mono text-slate-400"><i class="fa-regular fa-clock text-[9px] mr-1"></i>${escapeHtml(log.timeFormatted || '')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function handleClearAuditLogs() {
+      if (!isSuperAdmin) {
+        showToast('เฉพาะ Super Admin เท่านั้นที่สามารถล้างประวัติได้', 'warning');
+        return;
+      }
+      if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการล้างประวัติการแก้ไขทั้งหมด?\n\nข้อมูลประวัติจะไม่สามารถกู้คืนได้')) {
+        return;
+      }
+      auditLogs = [];
+      saveAuditLogs();
+      renderAuditLogsList();
+      showToast('ล้างประวัติการแก้ไขทั้งหมดเรียบร้อยแล้ว', 'info');
+    }
+
+    // Backward-compatible aliases
+    function openAdminPinModal() { openAdminEmailModal(); }
+    function closeAdminPinModal() { closeAdminEmailModal(); }
+    const handleAdminEmailLogin = handleAdminLogin;
+
+    // ================= การคำนวณคะแนน & KPIs =================
+    function calculateActiveCount(checks) {
+      return (checks || []).filter(Boolean).length;
+    }
+
+    function calculateTotalScore(checks) {
+      let score = 0;
+      ACTIVITIES.forEach((activity, index) => {
+        if (checks && checks[index]) score += activity.weight;
+      });
+      return score;
+    }
+
+    function calculatePenalty(checks) {
+      let penalty = 0;
+      ACTIVITIES.forEach((activity, index) => {
+        if (!checks || !checks[index]) penalty += activity.weight;
+      });
+      return penalty;
+    }
+
+    function isEligible(checks) {
+      return calculateActiveCount(checks) > 7; // ผ่านเกณฑ์เมื่อ > 7 ครั้ง
+    }
+
+    function updateKPIs() {
+      const total = members.length;
+
+      const eligibleCount = members.filter(m => isEligible(m.checks)).length;
+      const ineligibleCount = total - eligibleCount;
+      const eligibleRate = total > 0 ? ((eligibleCount / total) * 100).toFixed(1) : "0.0";
+
+      const totalCp = members.reduce((sum, m) => sum + (Number(m.cp) || 0), 0);
+      const avgCp = total > 0 ? Math.round(totalCp / total).toLocaleString() : "0";
+
+      const totalScoreSum = members.reduce((sum, m) => sum + calculateTotalScore(m.checks), 0);
+      const avgScore = total > 0 ? (totalScoreSum / total).toFixed(1) : "0.0";
+
+      const totalPenaltySum = members.reduce((sum, m) => sum + calculatePenalty(m.checks), 0);
+      const avgPenalty = total > 0 ? (totalPenaltySum / total).toFixed(1) : "0.0";
+
+      let topBossName = "-";
+      let maxAtt = -1;
+      ACTIVITIES.forEach((act, aIdx) => {
+        const att = members.filter(m => m.checks && m.checks[aIdx]).length;
+        if (att > maxAtt && att > 0) {
+          maxAtt = att;
+          topBossName = `${act.shortName} (${att} ${t('unit_people')})`;
+        }
+      });
+
+      document.getElementById('kpi-total-members').textContent = total;
+      const splitEl = document.getElementById('kpi-guild-split');
+      if (splitEl) {
+        const splits = guildsList.map(g => `${g.icon || '🛡️'}${members.filter(m => m.guild === g.name).length}`);
+        splitEl.textContent = `(${splits.join(' / ')})`;
+      }
+      document.getElementById('kpi-avg-cp').textContent = avgCp;
+      document.getElementById('kpi-eligible-members').textContent = eligibleCount;
+      document.getElementById('kpi-eligible-rate').textContent = `(${eligibleRate}%)`;
+      document.getElementById('kpi-eligible-bar').style.width = `${eligibleRate}%`;
+      document.getElementById('kpi-ineligible-members').textContent = ineligibleCount;
+      document.getElementById('kpi-avg-penalty').textContent = `${avgPenalty}%`;
+      document.getElementById('kpi-avg-score').textContent = avgScore;
+      document.getElementById('kpi-top-boss').textContent = topBossName;
+    }
+
+    // ================= คลิกเช็คชื่อ (เฉพาะ Admin พร้อมระบบ Double Click & ป้องกันยกเลิกหลัง 5 นาที) =================
+    let lastCheckTapTracker = {};
+    let checkSingleTapTimeout = null;
+
+    function handleCheckClick(memberId, activityIndex, event) {
+      if (event) {
+        event.stopPropagation();
+      }
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_check'), "warning");
+        openAdminEmailModal();
+        return;
+      }
+
+      const key = `${memberId}_${activityIndex}`;
+      const now = Date.now();
+      const lastTap = lastCheckTapTracker[key] || 0;
+      const DOUBLE_TAP_THRESHOLD_MS = 450;
+
+      if ((now - lastTap) <= DOUBLE_TAP_THRESHOLD_MS && (now - lastTap) > 0) {
+        // Double Click / Double Tap สำเร็จ!
+        lastCheckTapTracker[key] = 0;
+        if (checkSingleTapTimeout) {
+          clearTimeout(checkSingleTapTimeout);
+          checkSingleTapTimeout = null;
+        }
+        toggleCheck(memberId, activityIndex);
+      } else {
+        // Tap ครั้งที่ 1 (รอคลิกครั้งที่ 2 ภายใน 450ms)
+        lastCheckTapTracker[key] = now;
+        if (checkSingleTapTimeout) clearTimeout(checkSingleTapTimeout);
+        checkSingleTapTimeout = setTimeout(() => {
+          lastCheckTapTracker[key] = 0;
+        }, DOUBLE_TAP_THRESHOLD_MS + 50);
+      }
+    }
+
+    function toggleCheck(memberId, activityIndex, bypassLock = false) {
       if (!isAdmin) {
         showToast(t('toast_need_admin_check'), "warning");
         openAdminEmailModal();
@@ -6319,22 +7089,14 @@
       const member = members.find(m => m.id === memberId);
       if (!member) return;
 
-      const act = ACTIVITIES[activityIndex];
-      const actName = act ? (act.shortName || act.name) : `บอส #${activityIndex + 1}`;
-
-      if (isWeekLocked(currentWeekNumber)) {
+      if (!bypassLock && isWeekLocked(currentWeekNumber)) {
+        const act = ACTIVITIES[activityIndex];
+        const actName = act ? (act.shortName || act.name) : `บอส #${activityIndex + 1}`;
         requestRetroactiveEditPermission(() => {
-          performToggleCheck(memberId, activityIndex);
+          toggleCheck(memberId, activityIndex, true);
         }, `แก้ไขการเช็คชื่อบอส "${actName}" ของ "${member.characterName}" (${getWeekName(currentWeekNumber)})`);
         return;
       }
-
-      performToggleCheck(memberId, activityIndex);
-    }
-
-    function performToggleCheck(memberId, activityIndex) {
-      const member = members.find(m => m.id === memberId);
-      if (!member) return;
 
       ensureMemberWeeklyData(member);
       if (!Array.isArray(member.checks)) member.checks = [];
@@ -6394,10 +7156,9 @@
 
       saveData();
       renderTable();
-      updateKPIs();
     }
 
-    function toggleAllChecks(memberId) {
+    function toggleAllChecks(memberId, bypassLock = false) {
       if (!isAdmin) {
         showToast(t('toast_need_admin_check'), "warning");
         openAdminEmailModal();
@@ -6406,19 +7167,12 @@
       const member = members.find(m => m.id === memberId);
       if (!member) return;
 
-      if (isWeekLocked(currentWeekNumber)) {
+      if (!bypassLock && isWeekLocked(currentWeekNumber)) {
         requestRetroactiveEditPermission(() => {
-          performToggleAllChecks(memberId);
+          toggleAllChecks(memberId, true);
         }, `ติ๊กถูก All/ล้างติ๊ก ของ "${member.characterName}" (${getWeekName(currentWeekNumber)})`);
         return;
       }
-
-      performToggleAllChecks(memberId);
-    }
-
-    function performToggleAllChecks(memberId) {
-      const member = members.find(m => m.id === memberId);
-      if (!member) return;
 
       ensureMemberWeeklyData(member);
       if (!Array.isArray(member.checks)) member.checks = [];
@@ -6452,151 +7206,7 @@
 
       saveData();
       renderTable();
-      updateKPIs();
       showToast(allChecked ? t('toast_checks_cleared') : t('toast_checks_all'), "success");
-    }
-
-    function openEditMemberModal(id) {
-      if (!isAdmin) {
-        showToast(t('toast_need_admin_edit'), "warning");
-        openAdminEmailModal();
-        return;
-      }
-      const member = members.find(m => m.id === id);
-      if (!member) return;
-
-      if (isWeekLocked(currentWeekNumber)) {
-        requestRetroactiveEditPermission(() => {
-          performOpenEditMemberModal(id);
-        }, `แก้ไขข้อมูลสมาชิก "${member.characterName}" (${getWeekName(currentWeekNumber)})`);
-        return;
-      }
-
-      performOpenEditMemberModal(id);
-    }
-
-    function performOpenEditMemberModal(id) {
-      const member = members.find(m => m.id === id);
-      if (!member) return;
-
-      populateGuildSelects();
-      document.getElementById('modal-member-title').innerHTML = `<i class="fa-regular fa-pen-to-square text-amber-400"></i><span>${t('modal_edit_title', { name: escapeHtml(member.characterName) })}</span>`;
-      document.getElementById('edit-member-id').value = member.id;
-      document.getElementById('new-char-name').value = member.characterName || "";
-      document.getElementById('new-guild').value = member.guild || (guildsList[0] ? guildsList[0].name : "RedDevil");
-      document.getElementById('new-cp').value = member.cp || "";
-      document.getElementById('new-email').value = member.email || "";
-      document.getElementById('add-member-modal').classList.remove('hidden');
-      document.getElementById('new-char-name').focus();
-    }
-
-    function closeAddMemberModal() {
-      document.getElementById('add-member-modal').classList.add('hidden');
-    }
-
-    function handleSaveMember(e) {
-      e.preventDefault();
-      const editId = document.getElementById('edit-member-id').value;
-      const charName = document.getElementById('new-char-name').value.trim();
-      const guild = document.getElementById('new-guild').value;
-      const cp = parseInt(document.getElementById('new-cp').value) || 0;
-      const email = document.getElementById('new-email').value.trim();
-
-      if (!charName) return;
-
-      if (editId) {
-        // แก้ไข
-        const member = members.find(m => m.id == editId);
-        if (member) {
-          ensureMemberWeeklyData(member);
-          member.characterName = charName;
-          member.guild = guild;
-          member.cp = cp;
-          member.weeklyCp[currentWeekNumber] = cp;
-          member.email = email;
-
-          addAuditLog(
-            'member',
-            `แก้ไขข้อมูลสมาชิก "${charName}"`,
-            `กิลด์: ${guild} | CP: ${cp.toLocaleString()} | อีเมล: ${email || '-'}`,
-            charName
-          );
-
-          showToast(t('toast_member_updated', { name: charName }), "success");
-        }
-      } else {
-        // เพิ่มใหม่
-        const newMember = {
-          id: Date.now(),
-          characterName: charName,
-          guild: guild,
-          email: email,
-          cp: cp,
-          weeklyCp: { 1: cp, 2: cp, 3: cp, 4: cp },
-          checks: new Array(ACTIVITIES.length).fill(false),
-          weeklyChecks: {
-            1: new Array(ACTIVITIES.length).fill(false),
-            2: new Array(ACTIVITIES.length).fill(false),
-            3: new Array(ACTIVITIES.length).fill(false),
-            4: new Array(ACTIVITIES.length).fill(false)
-          }
-        };
-        members.unshift(newMember);
-
-        addAuditLog(
-          'member',
-          `เพิ่มสมาชิกใหม่ "${charName}"`,
-          `กิลด์: ${guild} | CP: ${cp.toLocaleString()} | อีเมล: ${email || '-'}`,
-          charName
-        );
-
-        showToast(t('toast_member_added', { name: charName }), "success");
-      }
-
-      saveData();
-      renderTable();
-      closeAddMemberModal();
-    }
-
-    function deleteMember(id) {
-      if (!isAdmin) {
-        showToast(t('toast_need_admin_edit'), "warning");
-        openAdminEmailModal();
-        return;
-      }
-      const member = members.find(m => m.id === id);
-      if (!member) return;
-
-      if (isWeekLocked(currentWeekNumber)) {
-        requestRetroactiveEditPermission(() => {
-          performDeleteMember(id);
-        }, `ลบสมาชิก "${member.characterName}" (${getWeekName(currentWeekNumber)})`);
-        return;
-      }
-
-      performDeleteMember(id);
-    }
-
-    function performDeleteMember(id) {
-      const member = members.find(m => m.id === id);
-      if (!member) return;
-
-      if (!confirm(t('confirm_delete_member', { name: member.characterName }))) return;
-
-      const deletedName = member.characterName;
-      members = members.filter(m => m.id !== id);
-
-      addAuditLog(
-        'member',
-        `ลบสมาชิก "${deletedName}"`,
-        `กิลด์: ${member.guild || '-'} | ลบออกจากระบบ`,
-        deletedName
-      );
-
-      saveData();
-      renderTable();
-      updateKPIs();
-      showToast(t('toast_member_deleted', { name: deletedName }), "info");
     }
 
     // ================= ระบบจัดการกิจกรรมบอส (Boss Activity Manager) =================
@@ -6756,16 +7366,6 @@
 
       if (!name || !shortName) return;
 
-      if (isWeekLocked(currentWeekNumber)) {
-        requestRetroactiveEditPermission(() => {
-          performSaveActivity(editIndexStr, name, shortName, day, weight);
-        }, `แก้ไขกิจกรรมบอส "${shortName}" (${getWeekName(currentWeekNumber)})`);
-        return;
-      }
-      performSaveActivity(editIndexStr, name, shortName, day, weight);
-    }
-
-    function performSaveActivity(editIndexStr, name, shortName, day, weight) {
       if (editIndexStr !== "") {
         // แก้ไขบอสเดิม
         const editIndex = parseInt(editIndexStr);
@@ -6808,19 +7408,6 @@
       const editIndexStr = document.getElementById('edit-activity-index').value;
       if (editIndexStr === "") return;
       const editIndex = parseInt(editIndexStr);
-      const act = ACTIVITIES[editIndex];
-      if (!act) return;
-
-      if (isWeekLocked(currentWeekNumber)) {
-        requestRetroactiveEditPermission(() => {
-          performDeleteActivity(editIndex);
-        }, `ลบกิจกรรมบอส "${act.shortName}" (${getWeekName(currentWeekNumber)})`);
-        return;
-      }
-      performDeleteActivity(editIndex);
-    }
-
-    function performDeleteActivity(editIndex) {
       const act = ACTIVITIES[editIndex];
       if (!act) return;
 
@@ -7139,7 +7726,7 @@
     }
 
     // ================= ระบบแก้ไข CP ด่วน (Quick Edit CP) =================
-    function openQuickEditCpModal(memberId) {
+    function openQuickEditCpModal(memberId, bypassLock = false) {
       if (!isAdmin) {
         showToast(t('toast_need_admin_edit'), 'warning');
         openAdminEmailModal();
@@ -7148,19 +7735,12 @@
       const member = members.find(m => m.id === memberId);
       if (!member) return;
 
-      if (isWeekLocked(currentWeekNumber)) {
+      if (!bypassLock && isWeekLocked(currentWeekNumber)) {
         requestRetroactiveEditPermission(() => {
-          performOpenQuickEditCpModal(memberId);
+          openQuickEditCpModal(memberId, true);
         }, `แก้ไข CP ของ "${member.characterName}" (${getWeekName(currentWeekNumber)})`);
         return;
       }
-
-      performOpenQuickEditCpModal(memberId);
-    }
-
-    function performOpenQuickEditCpModal(memberId) {
-      const member = members.find(m => m.id === memberId);
-      if (!member) return;
 
       ensureMemberWeeklyData(member);
       const modal = document.getElementById('quick-edit-cp-modal');
@@ -7210,7 +7790,7 @@
     }
 
     // ================= ระบบแก้ไขชื่อและข้อมูลสมาชิกด่วน (Quick Edit Member Name) =================
-    function openQuickEditNameModal(memberId) {
+    function openQuickEditNameModal(memberId, bypassLock = false) {
       if (!isAdmin) {
         showToast(t('toast_need_admin_edit'), 'warning');
         openAdminEmailModal();
@@ -7219,19 +7799,12 @@
       const member = members.find(m => m.id === memberId);
       if (!member) return;
 
-      if (isWeekLocked(currentWeekNumber)) {
+      if (!bypassLock && isWeekLocked(currentWeekNumber)) {
         requestRetroactiveEditPermission(() => {
-          performOpenQuickEditNameModal(memberId);
+          openQuickEditNameModal(memberId, true);
         }, `แก้ไขชื่อ/กิลด์ ของ "${member.characterName}"`);
         return;
       }
-
-      performOpenQuickEditNameModal(memberId);
-    }
-
-    function performOpenQuickEditNameModal(memberId) {
-      const member = members.find(m => m.id === memberId);
-      if (!member) return;
 
       populateGuildSelects();
       const modal = document.getElementById('quick-edit-name-modal');
@@ -7575,7 +8148,7 @@
       document.getElementById('new-char-name').focus();
     }
 
-    function openEditMemberModal(id) {
+    function openEditMemberModal(id, bypassLock = false) {
       if (!isAdmin) {
         showToast(t('toast_need_admin_edit'), "warning");
         openAdminEmailModal();
@@ -7583,6 +8156,13 @@
       }
       const member = members.find(m => m.id === id);
       if (!member) return;
+
+      if (!bypassLock && isWeekLocked(currentWeekNumber)) {
+        requestRetroactiveEditPermission(() => {
+          openEditMemberModal(id, true);
+        }, `แก้ไขข้อมูลสมาชิก "${member.characterName}" (${getWeekName(currentWeekNumber)})`);
+        return;
+      }
 
       populateGuildSelects();
       document.getElementById('modal-member-title').innerHTML = `<i class="fa-regular fa-pen-to-square text-amber-400"></i><span>${t('modal_edit_title', { name: escapeHtml(member.characterName) })}</span>`;
@@ -7663,7 +8243,7 @@
       closeAddMemberModal();
     }
 
-    function deleteMember(id) {
+    function deleteMember(id, bypassLock = false) {
       if (!isAdmin) {
         showToast(t('toast_need_admin_delete'), "warning");
         openAdminEmailModal();
@@ -7671,6 +8251,14 @@
       }
       const member = members.find(m => m.id === id);
       const name = member ? member.characterName : 'Member';
+
+      if (!bypassLock && isWeekLocked(currentWeekNumber)) {
+        requestRetroactiveEditPermission(() => {
+          deleteMember(id, true);
+        }, `ลบสมาชิก "${name}" (${getWeekName(currentWeekNumber)})`);
+        return;
+      }
+
       if (confirm(t('confirm_delete_member', { name }))) {
         members = members.filter(m => m.id !== id);
 
