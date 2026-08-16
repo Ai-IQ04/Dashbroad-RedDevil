@@ -310,6 +310,30 @@ function renderBossTimerCards() {
     'lucus', 'bahel', 'libitina', 'rakajeth', 'tumier', 'nevaeh', 'icaruthia', 'motti', 'guild_arena', 'camalia', 'world_boss'
   ]);
 
+  const isAdminActive = (typeof isAdmin !== 'undefined' && isAdmin);
+
+  // Sync toolbar admin controls
+  const maintBtn = document.getElementById('btn-boss-maint-top');
+  const pasteHint = document.getElementById('boss-paste-hint');
+  if (maintBtn) {
+    if (isAdminActive) {
+      maintBtn.classList.remove('hidden');
+      maintBtn.classList.add('inline-flex');
+    } else {
+      maintBtn.classList.add('hidden');
+      maintBtn.classList.remove('inline-flex');
+    }
+  }
+  if (pasteHint) {
+    if (isAdminActive) {
+      pasteHint.classList.remove('hidden');
+      pasteHint.classList.add('md:inline');
+    } else {
+      pasteHint.classList.add('hidden');
+      pasteHint.classList.remove('md:inline');
+    }
+  }
+
   filtered.forEach(b => {
     const isGuildActivity = GUILD_SCORING_BOSS_IDS.has(b.id) || (b.name && /lucus|bahel|libitina|rakajeth|tumier|neva|icarut|morti|motti|arena|camalia|world/i.test(b.name));
     
@@ -340,6 +364,42 @@ function renderBossTimerCards() {
     const countdownText = formatCountdown(b.diffMs, b.status);
     const lastDefeatedStr = b.timer.defeatedTime ? formatDateTimeShort(new Date(b.timer.defeatedTime)) : '-';
     const nextSpawnStr = b.nextSpawn ? formatDateTimeShort(b.nextSpawn) : (b.respawnType === 'interval' ? 'รอลงเวลาตาย' : '-');
+
+    // Action Buttons: Admin gets full controls; Member gets View Drop Log only
+    let actionButtonsHtml = '';
+    if (isAdminActive) {
+      actionButtonsHtml = `
+        <div class="mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center gap-1.5">
+          <button onclick="recordBossKillNow('${b.id}')"
+            class="flex-1 apple-btn apple-btn-ruby inline-flex items-center justify-center gap-1.5 py-2 px-2.5 text-xs font-bold shadow-md shadow-rose-950/30"
+            title="กดเมื่อบอสตายตอนนี้ทันที">
+            <i class="fa-solid fa-skull text-[11px]"></i>
+            <span>ตายตอนนี้</span>
+          </button>
+          <button onclick="openCustomKillModal('${b.id}')"
+            class="apple-btn apple-btn-slate inline-flex items-center justify-center p-2 text-xs font-semibold"
+            title="ระบุเวลาตายย้อนหลัง">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </button>
+          <button onclick="openBossDropLogModal('${b.id}')"
+            class="apple-btn apple-btn-amber inline-flex items-center justify-center p-2 text-xs font-semibold"
+            title="ดู / บันทึกประวัติของดรอป">
+            <i class="fa-solid fa-gift"></i>
+          </button>
+        </div>
+      `;
+    } else {
+      actionButtonsHtml = `
+        <div class="mt-3 pt-2.5 border-t border-slate-800/80">
+          <button onclick="openBossDropLogModal('${b.id}')"
+            class="w-full apple-btn apple-btn-slate inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-semibold text-slate-300 hover:text-white"
+            title="ดูประวัติไอเทมดรอปของบอสตัวนี้">
+            <i class="fa-solid fa-gift text-amber-400 text-xs"></i>
+            <span>ดูประวัติไอเทมดรอป</span>
+          </button>
+        </div>
+      `;
+    }
 
     html += `
       <div class="boss-card relative flex flex-col justify-between bg-gradient-to-b ${cardBg} border ${cardBorder} rounded-2xl p-4 shadow-xl backdrop-blur transition hover:scale-[1.01] hover:border-amber-400/60 duration-200">
@@ -389,25 +449,8 @@ function renderBossTimerCards() {
           </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center gap-1.5">
-          <button onclick="recordBossKillNow('${b.id}')"
-            class="flex-1 apple-btn apple-btn-ruby inline-flex items-center justify-center gap-1.5 py-2 px-2.5 text-xs font-bold shadow-md shadow-rose-950/30"
-            title="กดเมื่อบอสตายตอนนี้ทันที">
-            <i class="fa-solid fa-skull text-[11px]"></i>
-            <span>ตายตอนนี้</span>
-          </button>
-          <button onclick="openCustomKillModal('${b.id}')"
-            class="apple-btn apple-btn-slate inline-flex items-center justify-center p-2 text-xs font-semibold"
-            title="ระบุเวลาตายย้อนหลัง">
-            <i class="fa-solid fa-clock-rotate-left"></i>
-          </button>
-          <button onclick="openBossDropLogModal('${b.id}')"
-            class="apple-btn apple-btn-amber inline-flex items-center justify-center p-2 text-xs font-semibold"
-            title="ดู / บันทึกประวัติของดรอป">
-            <i class="fa-solid fa-gift"></i>
-          </button>
-        </div>
+        <!-- Action Buttons (Role-based) -->
+        ${actionButtonsHtml}
       </div>
     `;
   });

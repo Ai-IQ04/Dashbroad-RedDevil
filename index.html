@@ -679,15 +679,6 @@
             <span>ร้านค้าของรางวัล (Shop)</span>
           </button>
 
-          <!-- ปุ่มเปิดบอสไทม์เมอร์ (Boss Timer) -->
-          <button onclick="switchAppModule('boss_timer')"
-            class="apple-btn apple-btn-ruby inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold shadow-md shadow-rose-950/50 hover:scale-105 transition"
-            title="เปิดตารางเวลาบอสและนับเวลาถอยหลัง">
-            <i class="fa-solid fa-stopwatch text-xs text-amber-300 animate-pulse"></i>
-            <span>บอสไทม์เมอร์</span>
-            <span id="badge-boss-alive-count-hub" class="hidden px-1.5 py-0.2 rounded-full text-[9px] font-mono font-black bg-white text-rose-600">0</span>
-          </button>
-
           <!-- ปุ่มเปิดดูสรุปคะแนนทุกอาทิตย์ -->
           <button onclick="openWeeklyHistoryModal()"
             class="apple-btn apple-btn-sapphire inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
@@ -1223,8 +1214,8 @@
           </button>
         </div>
 
-        <button onclick="openMaintenanceModal()"
-          class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold shadow-sm"
+        <button id="btn-boss-maint-top" onclick="openMaintenanceModal()"
+          class="hidden apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold shadow-sm"
           title="รีเซ็ตเวลาบอสทั้งหมดพร้อมกันหลังเซิร์ฟเวอร์เปิด (คำนวณตามคอลัมน์ E)">
           <i class="fa-solid fa-wrench"></i>
           <span>หลังเปิดเซิร์ฟ (Maintenance)</span>
@@ -1246,7 +1237,7 @@
             placeholder="ค้นหาชื่อบอส, แมพ, เลเวล..."
             class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-7 pr-2.5 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition" />
         </div>
-        <span class="hidden md:inline text-[10.5px] text-slate-400 bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg">
+        <span id="boss-paste-hint" class="hidden text-[10.5px] text-slate-400 bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg">
           💡 กด <kbd class="font-mono text-amber-400 font-bold">Ctrl + V</kbd> เพื่อวางรูปภาพ Log ให้ AI สแกน
         </span>
       </div>
@@ -6516,6 +6507,7 @@
       }
 
       if (typeof updateStoreAdminControls === 'function') updateStoreAdminControls();
+      if (typeof renderBossTimerCards === 'function') renderBossTimerCards();
       renderWeekTabs();
       updateCpPendingBadge();
       updateAppealPendingBadge();
