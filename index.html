@@ -629,6 +629,21 @@
               class="flex items-center gap-1 bg-slate-900/90 border border-slate-800/90 rounded-full p-0.5 shadow-inner backdrop-blur">
               <!-- Render via renderWeekTabs() -->
             </div>
+
+            <!-- 🧭 สลับหน้าโมดูลหลัก: [ 🛡️ กิจกรรมกิลด์ ] | [ ⏱️ บอสไทม์เมอร์ ] -->
+            <div class="flex items-center p-0.5 bg-slate-900/90 border border-slate-800/90 rounded-full shadow-inner backdrop-blur ml-1">
+              <button id="nav-tab-scoring" onclick="switchAppModule('scoring')"
+                class="apple-btn px-2.5 py-0.5 rounded-full text-[10.5px] font-bold transition flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-md">
+                <i class="fa-solid fa-shield-halved text-[10px]"></i>
+                <span>กิจกรรมกิลด์</span>
+              </button>
+              <button id="nav-tab-boss-timer" onclick="switchAppModule('boss_timer')"
+                class="apple-btn px-2.5 py-0.5 rounded-full text-[10.5px] font-bold text-slate-400 hover:text-white hover:bg-slate-800/80 transition flex items-center gap-1">
+                <i class="fa-solid fa-stopwatch text-amber-400 text-[10px]"></i>
+                <span>บอสไทม์เมอร์</span>
+                <span id="badge-boss-alive-count" class="hidden px-1.5 py-0.2 rounded-full text-[8.5px] font-mono font-black bg-rose-600 text-white animate-pulse">0</span>
+              </button>
+            </div>
           </div>
           <div class="flex items-center gap-2 mt-1 flex-wrap">
             <p class="text-[11px] text-slate-400 leading-none flex items-center gap-1.5"><span
@@ -850,8 +865,10 @@
     </div>
   </header>
 
-  <!-- ================= แดชบอร์ดสรุปผลด้านบน (Top Summary Dashboard - Apple Glass Cards) ================= -->
-  <section class="bg-slate-950/60 border-b border-slate-800/80 px-3 sm:px-5 py-3 shrink-0 backdrop-blur-md">
+  <!-- ================= โมดูลที่ 1: กิจกรรมและคะแนนกิลด์ (Guild Scoring Module) ================= -->
+  <div id="scoring-module-container" class="flex-1 flex flex-col min-h-0">
+    <!-- ================= แดชบอร์ดสรุปผลด้านบน (Top Summary Dashboard - Apple Glass Cards) ================= -->
+    <section class="bg-slate-950/60 border-b border-slate-800/80 px-3 sm:px-5 py-3 shrink-0 backdrop-blur-md">
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
 
       <!-- การ์ด 1: สมาชิก & พลังรบเฉลี่ย -->
@@ -1104,6 +1121,144 @@
 
     </div>
   </main>
+</div> <!-- /#scoring-module-container -->
+
+  <!-- ================= โมดูลที่ 2: บอสไทม์เมอร์ & นับถอยหลัง (Boss Timer Dashboard) ================= -->
+  <div id="boss-timer-module-container" class="hidden flex-1 flex flex-col min-h-0 bg-transparent overflow-hidden animate-apple-content">
+
+    <!-- แดชบอร์ดสรุปสถิติบอส (Top Boss Summary Stats) -->
+    <section class="bg-slate-950/60 border-b border-slate-800/80 px-3 sm:px-5 py-2.5 shrink-0 backdrop-blur-md">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+
+        <!-- การ์ด 1: บอสที่เกิดแล้ว (Alive Now) -->
+        <div class="apple-kpi-card apple-kpi-rose p-2.5 sm:p-3 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-bold text-rose-300 uppercase tracking-wider block">บอสเกิดแล้ว (ALIVE!)</span>
+            <div class="flex items-baseline gap-1.5 mt-0.5">
+              <span id="stat-boss-alive-count" class="text-xl sm:text-2xl font-black font-mono text-rose-400">0</span>
+              <span class="text-[10px] text-slate-400">ตัว</span>
+            </div>
+          </div>
+          <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 flex items-center justify-center text-sm border border-rose-500/30">
+            <i class="fa-solid fa-skull animate-bounce"></i>
+          </div>
+        </div>
+
+        <!-- การ์ด 2: บอสใกล้เกิดใน 30 นาที (Spawning Soon) -->
+        <div class="apple-kpi-card apple-kpi-amber p-2.5 sm:p-3 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-bold text-amber-300 uppercase tracking-wider block">ใกล้เกิด (&lt;30 นาที)</span>
+            <div class="flex items-baseline gap-1.5 mt-0.5">
+              <span id="stat-boss-soon-count" class="text-xl sm:text-2xl font-black font-mono text-amber-300">0</span>
+              <span class="text-[10px] text-slate-400">ตัว</span>
+            </div>
+          </div>
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-sm border border-amber-500/30">
+            <i class="fa-solid fa-hourglass-start animate-pulse"></i>
+          </div>
+        </div>
+
+        <!-- การ์ด 3: บอสทั้งหมดในระบบ -->
+        <div class="apple-kpi-card apple-kpi-blue p-2.5 sm:p-3 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-bold text-sky-300 uppercase tracking-wider block">บอสทั้งหมดในระบบ</span>
+            <div class="flex items-baseline gap-1.5 mt-0.5">
+              <span id="stat-boss-total-count" class="text-xl sm:text-2xl font-black font-mono text-sky-300">45</span>
+              <span class="text-[10px] text-slate-400">ตัว</span>
+            </div>
+          </div>
+          <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-300 flex items-center justify-center text-sm border border-sky-500/30">
+            <i class="fa-solid fa-dragon"></i>
+          </div>
+        </div>
+
+        <!-- การ์ด 4: ปลั๊กอิน AI OCR & เสียงแจ้งเตือน -->
+        <div class="apple-kpi-card apple-kpi-gold p-2.5 sm:p-3 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-bold text-amber-300 uppercase tracking-wider block">ระบบช่วยเหลือ</span>
+            <div class="flex items-center gap-2 mt-1">
+              <button onclick="document.getElementById('boss-file-input').click()"
+                class="apple-btn apple-btn-amber px-2 py-0.5 text-[10px] font-bold rounded-lg flex items-center gap-1 shadow-sm">
+                <i class="fa-solid fa-camera"></i> <span>สแกนรูป</span>
+              </button>
+              <button onclick="toggleBossSound()"
+                class="apple-btn apple-btn-slate px-2 py-0.5 text-[10px] font-bold rounded-lg flex items-center gap-1"
+                title="เปิด/ปิดเสียงเตือน">
+                <i id="btn-boss-sound-icon" class="fa-solid fa-volume-high text-emerald-400"></i>
+              </button>
+            </div>
+          </div>
+          <input type="file" id="boss-file-input" accept="image/*" class="hidden" onchange="if(this.files[0]) processImageForBossOCR(this.files[0])" />
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-sm border border-amber-500/30">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- แถบควบคุมตัวกรอง และ ค้นหาบอส -->
+    <div class="bg-slate-950/50 border-b border-slate-800/80 px-3 sm:px-5 py-2 shrink-0 flex items-center justify-between gap-2.5 flex-wrap">
+      
+      <!-- Filter Tabs -->
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <div class="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-0.5 text-xs font-semibold">
+          <button onclick="currentBossFilter='all'; renderBossTimerCards(); document.querySelectorAll('.boss-filter-btn').forEach(b=>b.className='boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition'); this.className='boss-filter-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition';"
+            class="boss-filter-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition">
+            ทั้งหมด
+          </button>
+          <button onclick="currentBossFilter='alive'; renderBossTimerCards(); document.querySelectorAll('.boss-filter-btn').forEach(b=>b.className='boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition'); this.className='boss-filter-btn px-2.5 py-1 rounded-lg bg-rose-500 text-white font-bold transition';"
+            class="boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition">
+            🔴 เกิดแล้ว
+          </button>
+          <button onclick="currentBossFilter='soon'; renderBossTimerCards(); document.querySelectorAll('.boss-filter-btn').forEach(b=>b.className='boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition'); this.className='boss-filter-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition';"
+            class="boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition">
+            🟡 ใกล้เกิด (&lt;30m)
+          </button>
+          <button onclick="currentBossFilter='cooldown'; renderBossTimerCards(); document.querySelectorAll('.boss-filter-btn').forEach(b=>b.className='boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition'); this.className='boss-filter-btn px-2.5 py-1 rounded-lg bg-sky-500 text-slate-950 font-bold transition';"
+            class="boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition">
+            ⏳ รอเกิด
+          </button>
+        </div>
+
+        <button onclick="syncBossFromGoogleSheet()"
+          class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm"
+          title="ดึงเวลาบอสตายล่าสุดจาก Google Sheets (Boss Time)">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span>ซิงค์ข้อมูลชีต</span>
+        </button>
+
+        <button onclick="openBossDropLogModal('')"
+          class="apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm"
+          title="ดูประวัติไอเทมดรอปทั้งหมด">
+          <i class="fa-solid fa-gift text-amber-400"></i>
+          <span>ประวัติดรอป</span>
+        </button>
+      </div>
+
+      <!-- Search & Paste Hint -->
+      <div class="flex items-center gap-2">
+        <div class="relative w-44 sm:w-60">
+          <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+          <input type="text" id="boss-search-input" oninput="currentBossSearch=this.value; renderBossTimerCards();"
+            placeholder="ค้นหาชื่อบอส, แมพ, เลเวล..."
+            class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-7 pr-2.5 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition" />
+        </div>
+        <span class="hidden md:inline text-[10.5px] text-slate-400 bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg">
+          💡 กด <kbd class="font-mono text-amber-400 font-bold">Ctrl + V</kbd> เพื่อวางรูปภาพ Log ให้ AI สแกน
+        </span>
+      </div>
+
+    </div>
+
+    <!-- บอสการ์ด Grid Container (เลื่อนได้) -->
+    <div class="flex-1 overflow-y-auto p-3 sm:p-4">
+      <div id="boss-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-3.5">
+        <!-- Render via boss_timer.js -->
+      </div>
+    </div>
+
+  </div>
 
   <!-- ================= หน้าต่างป๊อปอัป: แก้ไขชื่อสัปดาห์ (Edit Week Name Modal) ================= -->
   <div id="edit-week-name-modal"
@@ -13398,6 +13553,142 @@
     </div>
   </div>
 
+  <!-- ================= หน้าต่างระบุเวลาตายบอส (Custom Kill Modal) ================= -->
+  <div id="boss-custom-kill-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-4 animate-fade-in">
+    <div class="w-full max-w-md bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl relative">
+      <button type="button" onclick="closeCustomKillModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="flex items-center gap-2.5 mb-4 text-amber-400">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-lg border border-amber-500/30">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+        </div>
+        <div>
+          <h3 id="boss-custom-kill-title" class="text-sm font-bold text-white">ระบุเวลาตายของบอส</h3>
+          <p class="text-[11px] text-slate-400">ระบบจะคำนวณเวลาเกิดครั้งถัดไปให้อัตโนมัติ</p>
+        </div>
+      </div>
+      <form onsubmit="handleSaveCustomKill(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">วันที่บอสตาย:</label>
+          <input type="date" id="boss-custom-kill-date" required
+            class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-amber-400 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">เวลาที่บอสตาย (HH:MM):</label>
+          <input type="time" id="boss-custom-kill-time" required
+            class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-amber-400 focus:outline-none font-mono" />
+        </div>
+        <div class="flex items-center gap-2 pt-2">
+          <button type="button" onclick="closeCustomKillModal()" class="w-1/3 py-2 px-3 bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl">ยกเลิก</button>
+          <button type="submit" class="flex-1 py-2 px-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-check"></i> <span>บันทึกเวลา</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= หน้าต่างประวัติของดรอป (Boss Drop Log Modal) ================= -->
+  <div id="boss-drop-log-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-4 animate-fade-in">
+    <div class="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl relative flex flex-col max-h-[85vh]">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2.5 text-amber-400">
+          <i class="fa-solid fa-gift text-lg"></i>
+          <h3 id="boss-drop-log-title" class="text-sm font-bold text-white">ประวัติไอเทมดรอป</h3>
+        </div>
+        <button type="button" onclick="closeBossDropLogModal()" class="text-slate-400 hover:text-white p-1.5">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div id="boss-drop-log-list" class="flex-1 overflow-y-auto my-3 space-y-2.5 pr-1">
+        <!-- Rendered by JS -->
+      </div>
+      <div class="pt-2 text-right">
+        <button type="button" onclick="closeBossDropLogModal()" class="py-2 px-4 bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl">ปิด</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= หน้าต่างสแกน Log ภาพแคปด้วย AI (Boss AI OCR Modal) ================= -->
+  <div id="boss-ai-ocr-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-4 animate-fade-in">
+    <div class="w-full max-w-lg bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-amber-500/50 rounded-3xl p-6 shadow-2xl relative animate-scale-up max-h-[90vh] flex flex-col">
+      
+      <button type="button" onclick="closeBossAiOcrModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="flex items-center gap-2.5 pb-3 border-b border-slate-800 shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 flex items-center justify-center text-lg shadow-md">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-white">สแกนภาพแคป Log ในเกม (AI Vision OCR)</h3>
+          <p class="text-[11px] text-slate-400">อ่านชื่อบอส เวลาตาย และไอเทมดรอปอัตโนมัติ</p>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto py-3 space-y-3">
+        <!-- Preview Image Box -->
+        <div class="border border-slate-800 bg-slate-950 rounded-2xl overflow-hidden text-center p-2">
+          <img id="ocr-image-preview" src="" alt="OCR Preview" class="max-h-44 mx-auto object-contain rounded-lg hidden" />
+          <div id="ocr-progress-status" class="py-3 text-xs text-amber-300 font-medium"></div>
+        </div>
+
+        <!-- OCR Extracted Form -->
+        <form id="ocr-result-form" onsubmit="handleConfirmOcrSave(event)" class="space-y-3 hidden">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">บอสที่ตรวจพบ / เลือกบอส:</label>
+            <select id="ocr-boss-select" required
+              class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-amber-400 focus:outline-none font-semibold">
+              <!-- Filled by JS -->
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1">วันที่ตาย:</label>
+              <input type="date" id="ocr-kill-date" required
+                class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-amber-400 focus:outline-none font-mono" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1">เวลาตาย:</label>
+              <input type="time" id="ocr-kill-time" required
+                class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-amber-400 focus:outline-none font-mono" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">ไอเทมที่ดรอป (แยกบรรทัดละ 1 ชิ้น):</label>
+            <textarea id="ocr-drop-items" rows="3" placeholder="เช่น กล่องบอส x5&#10;หินอัปเกรด x10"
+              class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-amber-400 focus:outline-none font-mono"></textarea>
+          </div>
+
+          <div class="flex items-center gap-2 pt-2">
+            <button type="button" onclick="closeBossAiOcrModal()" class="w-1/3 py-2.5 px-3 bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl">ยกเลิก</button>
+            <button type="submit" class="flex-1 py-2.5 px-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-check"></i> <span>ยืนยันบันทึกเวลา & ของดรอป</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tesseract.js & Boss Timer Script -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="boss_timer.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof initBossTimerModule === 'function') {
+        initBossTimerModule();
+      }
+    });
+  </script>
 </body>
 
 </html>
