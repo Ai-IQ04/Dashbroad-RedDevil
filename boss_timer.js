@@ -711,6 +711,107 @@ async function processImageForBossOCR(file) {
   }
 }
 
+// Smart Thai Text Normalizer and Drop Log Cleaner
+function normalizeAndCleanThaiDropLog(rawText) {
+  if (!rawText) return { normalizedText: '', bossMatch: null, timeMatch: null, dateMatch: null, items: [] };
+
+  // 1. Text Normalization: Fix broken Thai vowels, floating spaces, tone marks
+  let normalized = rawText
+    // Fix broken common Thai words in logs
+    .replace(/ได[\s_]*รับ/g, 'ได้รับ')
+    .replace(/แห[\s_]*ง/g, 'แห่ง')
+    .replace(/ท[\s_]*เส[\s_]*อมทราม/g, 'ที่เสื่อมทราม')
+    .replace(/เส[\s_]*อมทราม/g, 'เสื่อมทราม')
+    .replace(/ห[\s_]*นอ[\s_]*ปเกรด/g, 'หินอัปเกรด')
+    .replace(/หนอัปเกรด/g, 'หินอัปเกรด')
+    .replace(/อ[\s_]*ปเกรด/g, 'อัปเกรด')
+    .replace(/เคร[\s_]*องประดับ/g, 'เครื่องประดับ')
+    .replace(/ต[\s_]*างห[\s_]*/g, 'ต่างหู')
+    .replace(/ผ[\s_]*าโพก/g, 'ผ้าโพก')
+    .replace(/ศ[\s_]*รษะ/g, 'ศีรษะ')
+    .replace(/ห[\s_]*บเขาอ[\s_]*ลาน/g, 'หุบเขาอูลาน')
+    .replace(/หุบเขาอ[\s_]*ลาน/g, 'หุบเขาอูลาน')
+    .replace(/ไข่ต[\s_]*น/g, 'ไข่ตุ๋น')
+    .replace(/ไข่ตุน/g, 'ไข่ตุ๋น')
+    .replace(/เกราะแห[\s_]*ง/g, 'เกราะแห่ง')
+    .replace(/อาว[\s_]*ธ/g, 'อาวุธ')
+    .replace(/แหวนแห[\s_]*ง/g, 'แหวนแห่ง')
+    .replace(/สร[\s_]*อยคอ/g, 'สร้อยคอ')
+    .replace(/เข[\s_]*มขัด/g, 'เข็มขัด')
+    .replace(/ถ[\s_]*งมือ/g, 'ถุงมือ')
+    .replace(/รองเท[\s_]*า/g, 'รองเท้า')
+    .replace(/ช[\s_]*นส[\s_]*วน/g, 'ชิ้นส่วน')
+    .replace(/กล[\s_]*อง/g, 'กล่อง');
+
+  // 2. Detect Date (DD/MM) & Time (HH:MM)
+  let extractedDate = null;
+  let extractedTime = null;
+
+  const dateTimeMatch = normalized.match(/(\d{1,2})[\/.-](\d{1,2})(?:\s+(\d{1,2})[:.](\d{2}))?/);
+  if (dateTimeMatch) {
+    const d = dateTimeMatch[1].padStart(2, '0');
+    const m = dateTimeMatch[2].padStart(2, '0');
+    const currentYear = new Date().getFullYear();
+    extractedDate = `${currentYear}-${m}-${d}`;
+    if (dateTimeMatch[3] && dateTimeMatch[4]) {
+      extractedTime = `${dateTimeMatch[3].padStart(2, '0')}:${dateTimeMatch[4].padStart(2, '0')}`;
+    }
+  }
+
+  const timeStampMatch = normalized.match(/\[?(\d{1,2})[:.](\d{2})\]?/);
+  if (timeStampMatch && !extractedTime) {
+    extractedTime = `${timeStampMatch[1].padStart(2, '0')}:${timeStampMatch[2].padStart(2, '0')}`;
+  }
+
+  // 3. Detect Boss
+  let matchedBoss = null;
+  const lower = normalized.toLowerCase();
+  for (const b of bossList) {
+    if (lower.includes(b.name.toLowerCase()) || (b.map && lower.includes(b.map.toLowerCase()))) {
+      matchedBoss = b;
+      break;
+    }
+  }
+
+  // 4. Extract Clean Drop Items with Receiver
+  const lines = normalized.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const items = [];
+
+  // Regex to match: [03:21]ไข่ตุ๋นได้รับไอเทมผ้าโพกศีรษะแห่งความศรัทธาที่เสื่อมทราม จากหุบเขาอูลาน
+  const itemLineRegex = /(?:\[\d{1,2}[:.]\d{2}\]\s*)?(.*?)\s*(?:ได[\s_]*รับ|ได้รับ)ไอเทม\s*(.*?)(?:\s*(?:จาก|in)\s*.*)?$/i;
+
+  for (let line of lines) {
+    const match = line.match(itemLineRegex);
+    if (match) {
+      let player = match[1].replace(/\[\d{1,2}[:.]\d{2}\]/g, '').trim();
+      let itemName = match[2].trim();
+
+      // Clean up common suffix or count (e.g. 4อัน -> x4)
+      itemName = itemName.replace(/(\d+)\s*อัน/g, 'x$1').replace(/(\d+)\s*ea/gi, 'x$1');
+
+      if (player) {
+        items.push(`${itemName} (ผู้รับ: ${player})`);
+      } else {
+        items.push(itemName);
+      }
+    } else {
+      // Fallback for clean item lines
+      const isHeaderOrMeta = line.toLowerCase().includes('ego') || line.toLowerCase().includes('บันทึกโดย') || line.length < 4;
+      if (!isHeaderOrMeta && !line.startsWith('[') && !line.includes('จาก')) {
+        items.push(line);
+      }
+    }
+  }
+
+  return {
+    normalizedText: normalized,
+    bossMatch: matchedBoss,
+    dateMatch: extractedDate,
+    timeMatch: extractedTime,
+    items: items
+  };
+}
+
 // Parse OCR Text
 function parseOCRTextAndPopulateModal(rawText) {
   const statusEl = document.getElementById('ocr-progress-status');
@@ -728,43 +829,31 @@ function parseOCRTextAndPopulateModal(rawText) {
     bossSelect.innerHTML = bossList.map(b => `<option value="${b.id}">${escapeHtml(b.name)} (Lv.${b.level} - ${escapeHtml(b.map)})</option>`).join('');
   }
 
-  // 1. Fuzzy Match Boss Name
-  const lowerText = rawText.toLowerCase();
-  let matchedBoss = null;
-  for (const b of bossList) {
-    if (lowerText.includes(b.name.toLowerCase()) || lowerText.includes((b.map || '').toLowerCase())) {
-      matchedBoss = b;
-      break;
-    }
+  const parsed = normalizeAndCleanThaiDropLog(rawText);
+
+  // 1. Set Boss
+  if (parsed.bossMatch && bossSelect) {
+    bossSelect.value = parsed.bossMatch.id;
   }
 
-  if (matchedBoss && bossSelect) {
-    bossSelect.value = matchedBoss.id;
-  }
-
-  // 2. Extract Time (HH:MM or HH.MM)
-  const timeMatch = rawText.match(/\b([01]?[0-9]|2[0-3])[:.]([0-5][0-9])\b/);
+  // 2. Set Date & Time
   const now = new Date();
   const pad = n => String(n).padStart(2, '0');
-
-  if (dateInput) dateInput.value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  if (dateInput) {
+    dateInput.value = parsed.dateMatch || `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  }
   if (timeInput) {
-    if (timeMatch) {
-      timeInput.value = `${pad(timeMatch[1])}:${pad(timeMatch[2])}`;
-    } else {
-      timeInput.value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    }
+    timeInput.value = parsed.timeMatch || `${pad(now.getHours())}:${pad(now.getMinutes())}`;
   }
 
-  // 3. Extract Drop Items
-  const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 2);
-  const dropLines = lines.filter(l => {
-    const low = l.toLowerCase();
-    return !low.includes('defeat') && !low.includes('boss') && !low.includes('level') && !low.includes('guild');
-  });
-
+  // 3. Set Clean Items
   if (itemsText) {
-    itemsText.value = dropLines.slice(0, 8).join('\n');
+    if (parsed.items.length > 0) {
+      itemsText.value = parsed.items.join('\n');
+    } else {
+      // Fallback
+      itemsText.value = rawText.split('\n').filter(l => l.trim().length > 3).slice(0, 5).join('\n');
+    }
   }
 }
 
@@ -810,7 +899,7 @@ function handleConfirmOcrSave(e) {
   }
 
   closeBossAiOcrModal();
-  showToast(`📸 บันทึกเวลาและไอเทมดรอปของ "${boss.name}" สำเร็จ!`, 'success');
+  showToast(`📸 บันทึกเวลาและไอเทมดรอปของ "${boss ? boss.name : bossId}" สำเร็จ!`, 'success');
 }
 
 function closeBossAiOcrModal() {
@@ -834,15 +923,27 @@ function openBossDropLogModal(bossId) {
       list.innerHTML = `<div class="p-6 text-center text-slate-500 text-xs">ยังไม่มีบันทึกไอเทมดรอปสำหรับบอสตัวนี้</div>`;
     } else {
       list.innerHTML = logs.map(l => `
-        <div class="p-3 bg-slate-900/80 border border-slate-800 rounded-xl space-y-1.5">
-          <div class="flex items-center justify-between text-xs">
-            <span class="font-bold text-amber-300">${escapeHtml(l.bossName)}</span>
-            <span class="font-mono text-[10.5px] text-slate-400">${formatDateTimeShort(new Date(l.killTime))}</span>
+        <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl space-y-2 shadow-sm">
+          <div class="flex items-center justify-between text-xs pb-1.5 border-b border-slate-800/80">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+              <span class="font-bold text-amber-300 text-sm">${escapeHtml(l.bossName)}</span>
+            </div>
+            <span class="font-mono text-[11px] text-slate-400 px-2 py-0.5 rounded-full bg-slate-950 border border-slate-800">
+              <i class="fa-regular fa-clock text-[9px] mr-1"></i>${formatDateTimeShort(new Date(l.killTime))}
+            </span>
           </div>
-          <div class="space-y-0.5">
-            ${l.items.map(item => `<div class="text-[11px] text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-gem text-amber-400 text-[9px]"></i> <span>${escapeHtml(item)}</span></div>`).join('')}
+          <div class="space-y-1.5">
+            ${l.items.map(item => `
+              <div class="text-xs text-slate-200 bg-slate-950/80 border border-slate-800/90 rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-2 shadow-inner">
+                <span class="flex items-center gap-1.5 text-white font-medium">
+                  <i class="fa-solid fa-gem text-amber-400 text-[10px]"></i>
+                  <span>${escapeHtml(item)}</span>
+                </span>
+              </div>
+            `).join('')}
           </div>
-          <div class="text-[10px] text-slate-500 text-right">บันทึกโดย: ${escapeHtml(l.recordedBy || 'Admin')}</div>
+          <div class="text-[10px] text-slate-500 text-right pt-1">บันทึกโดย: <span class="font-mono text-slate-400">${escapeHtml(l.recordedBy || 'Admin')}</span></div>
         </div>
       `).join('');
     }
