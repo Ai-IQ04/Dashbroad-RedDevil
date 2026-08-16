@@ -1681,6 +1681,39 @@
             class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500 font-mono">
         </div>
 
+        <!-- แนบรูปภาพสกรีนช็อต CP (Full Screen) -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
+            <span data-i18n="label_cp_screenshot">📸 แนบรูปภาพสกรีนช็อต CP (Full Screen) *</span>
+            <span class="text-[10px] text-amber-400 font-normal" data-i18n="hint_cp_screenshot">ลากวาง / Ctrl+V ได้</span>
+          </label>
+          
+          <div id="cp-screenshot-dropzone" onclick="document.getElementById('cp-screenshot-file-input').click()"
+            class="group relative border-2 border-dashed border-slate-700 hover:border-amber-500/80 bg-slate-950/70 hover:bg-amber-500/5 rounded-2xl p-3 sm:p-4 text-center cursor-pointer transition-all duration-200">
+            <input type="file" id="cp-screenshot-file-input" accept="image/*" class="hidden" onchange="handleCpFileSelect(event)">
+            
+            <div id="cp-dropzone-placeholder" class="py-2 flex flex-col items-center justify-center">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+              </div>
+              <p class="text-xs font-semibold text-slate-200" data-i18n="dropzone_title">ลากรูปภาพมาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</p>
+              <p class="text-[10.5px] text-slate-500 mt-0.5" data-i18n="dropzone_sub">รองรับไฟล์ PNG, JPG หรือกดวางภาพ (Ctrl+V)</p>
+            </div>
+
+            <div id="cp-dropzone-preview" class="hidden relative">
+              <img id="cp-preview-img" src="" alt="Screenshot Preview" class="max-h-36 mx-auto rounded-lg border border-slate-700 shadow-md object-contain">
+              <div class="mt-2 flex items-center justify-center gap-2">
+                <span class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                  <i class="fa-solid fa-circle-check"></i> <span data-i18n="screenshot_ready">แนบรูปภาพเรียบร้อย</span>
+                </span>
+                <button type="button" onclick="event.stopPropagation(); removeCpScreenshot();" class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] hover:bg-rose-500/30 transition">
+                  <i class="fa-solid fa-trash-can mr-1"></i><span data-i18n="btn_remove_img">ลบรูป</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800/80">
           <button type="button" onclick="closeCpUpdateRequestModal()"
             class="apple-btn apple-btn-slate px-4 py-2 rounded-xl text-slate-300 text-xs"
@@ -1693,6 +1726,33 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ================= หน้าต่างป๊อปอัป: ดูรูปภาพเต็มจอ (Full Screen Image Lightbox) ================= -->
+  <div id="image-lightbox-modal"
+    class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-2 sm:p-6 hidden">
+    
+    <div class="w-full max-w-5xl flex items-center justify-between mb-2 px-2">
+      <div class="flex items-center gap-2">
+        <span class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 font-sarabun" id="lightbox-title">
+          <i class="fa-solid fa-image text-amber-400"></i> ภาพสกรีนช็อตยืนยัน CP
+        </span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="closeImageLightbox()"
+          class="h-8 w-8 rounded-full bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center text-sm transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="relative w-full max-w-5xl max-h-[82vh] flex items-center justify-center overflow-auto rounded-2xl border border-slate-800 bg-slate-950/80 p-1 sm:p-2 shadow-2xl">
+      <img id="lightbox-img" src="" alt="Full Screen Screenshot" class="max-w-full max-h-[78vh] rounded-xl object-contain shadow-lg">
+    </div>
+    
+    <div class="text-[11px] text-slate-400 mt-2 font-sarabun text-center" data-i18n="lightbox_hint">
+      กด Esc หรือคลิกปุ่มกากบาทเพื่อปิดหน้าต่าง
     </div>
   </div>
 
@@ -4387,7 +4447,17 @@
         "toast_appeal_approved": "อนุมัติและติ๊กถูกบอสให้ \"{name}\" เรียบร้อยแล้ว!",
         "toast_appeal_rejected": "ปฏิเสธคำขออุทธรณ์ของ \"{name}\" แล้ว",
         "toast_appeal_history_cleared": "ล้างประวัติคำขออุทธรณ์เรียบร้อยแล้ว",
-        "confirm_clear_appeal_history": "ต้องการล้างประวัติคำขออุทธรณ์ที่ดำเนินการเสร็จสิ้นแล้วใช่หรือไม่?"
+        "confirm_clear_appeal_history": "ต้องการล้างประวัติคำขออุทธรณ์ที่ดำเนินการเสร็จสิ้นแล้วใช่หรือไม่?",
+        "label_cp_screenshot": "📸 แนบรูปภาพสกรีนช็อต CP (Full Screen) *",
+        "hint_cp_screenshot": "ลากวาง / Ctrl+V ได้",
+        "dropzone_title": "ลากรูปภาพมาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์",
+        "dropzone_sub": "รองรับไฟล์ PNG, JPG หรือกดวางภาพ (Ctrl+V)",
+        "screenshot_ready": "แนบรูปภาพเรียบร้อย",
+        "btn_remove_img": "ลบรูป",
+        "lightbox_title": "ภาพสกรีนช็อตยืนยัน CP",
+        "lightbox_hint": "กด Esc หรือคลิกปุ่มกากบาทเพื่อปิดหน้าต่าง",
+        "toast_screenshot_required": "กรุณาแนบรูปภาพสกรีนช็อตยืนยันค่า CP ด้วยครับ",
+        "toast_screenshot_pasted": "วางภาพสกรีนช็อต (Ctrl+V) เรียบร้อยแล้ว!"
       },
       "en": {
         "btn_top10_summary": "Top 10 Summary",
@@ -4694,7 +4764,17 @@
         "toast_appeal_approved": "Approved and checked attendance for \"{name}\"!",
         "toast_appeal_rejected": "Rejected attendance appeal for \"{name}\"",
         "toast_appeal_history_cleared": "Cleared attendance appeals history.",
-        "confirm_clear_appeal_history": "Are you sure you want to clear all processed appeal history?"
+        "confirm_clear_appeal_history": "Are you sure you want to clear all processed appeal history?",
+        "label_cp_screenshot": "📸 Attach CP Screenshot (Full Screen) *",
+        "hint_cp_screenshot": "Drag & Drop / Ctrl+V",
+        "dropzone_title": "Drag & drop screenshot here, or click to browse",
+        "dropzone_sub": "Supports PNG, JPG, or Paste (Ctrl+V)",
+        "screenshot_ready": "Screenshot attached",
+        "btn_remove_img": "Remove",
+        "lightbox_title": "CP Verification Screenshot",
+        "lightbox_hint": "Press Esc or click X to close full screen view",
+        "toast_screenshot_required": "Please attach a full-screen screenshot to verify your CP value.",
+        "toast_screenshot_pasted": "Screenshot pasted (Ctrl+V) successfully!"
       }
     };
 
@@ -7388,6 +7468,136 @@
     }
 
     // ================= ระบบขออัพเดท CP (CP Update Request System) =================
+    let currentCpScreenshotBase64 = null;
+
+    function handleCpFileSelect(event) {
+      const file = event.target.files && event.target.files[0];
+      if (file) {
+        handleCpImageFile(file);
+      }
+    }
+
+    function handleCpImageFile(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        showToast('กรุณาเลือกไฟล์รูปภาพที่ถูกต้อง (PNG, JPG, WebP)', 'warning');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+          const maxDim = 1280;
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          currentCpScreenshotBase64 = canvas.toDataURL('image/jpeg', 0.82);
+
+          const previewImg = document.getElementById('cp-preview-img');
+          const placeholder = document.getElementById('cp-dropzone-placeholder');
+          const previewBox = document.getElementById('cp-dropzone-preview');
+
+          if (previewImg) previewImg.src = currentCpScreenshotBase64;
+          if (placeholder) placeholder.classList.add('hidden');
+          if (previewBox) previewBox.classList.remove('hidden');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeCpScreenshot() {
+      currentCpScreenshotBase64 = null;
+      const fileInput = document.getElementById('cp-screenshot-file-input');
+      const placeholder = document.getElementById('cp-dropzone-placeholder');
+      const previewBox = document.getElementById('cp-dropzone-preview');
+      const previewImg = document.getElementById('cp-preview-img');
+
+      if (fileInput) fileInput.value = '';
+      if (previewImg) previewImg.src = '';
+      if (placeholder) placeholder.classList.remove('hidden');
+      if (previewBox) previewBox.classList.add('hidden');
+    }
+
+    function initCpDropzone() {
+      const dropzone = document.getElementById('cp-screenshot-dropzone');
+      if (!dropzone) return;
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add('border-amber-400', 'bg-amber-500/10');
+        }, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove('border-amber-400', 'bg-amber-500/10');
+        }, false);
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files.length > 0) {
+          handleCpImageFile(files[0]);
+        }
+      }, false);
+
+      // รองรับการกดวางภาพ (Ctrl+V) ทันทีที่เปิดหน้าต่างขออัพเดท CP
+      window.addEventListener('paste', (e) => {
+        const cpModal = document.getElementById('cp-update-modal');
+        if (cpModal && !cpModal.classList.contains('hidden')) {
+          const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+          for (let index in items) {
+            const item = items[index];
+            if (item.kind === 'file' && item.type.startsWith('image/')) {
+              const blob = item.getAsFile();
+              handleCpImageFile(blob);
+              showToast(t('toast_screenshot_pasted', 'วางภาพสกรีนช็อตเรียบร้อย!'), 'info');
+              break;
+            }
+          }
+        }
+      });
+    }
+
+    function openImageLightbox(imgSrc, title) {
+      const modal = document.getElementById('image-lightbox-modal');
+      const img = document.getElementById('lightbox-img');
+      const titleEl = document.getElementById('lightbox-title');
+      if (!modal || !img) return;
+
+      img.src = imgSrc;
+      if (titleEl) {
+        titleEl.innerHTML = `<i class="fa-solid fa-image text-amber-400"></i> ${escapeHtml(title)} - ${t('lightbox_title', 'ภาพสกรีนช็อตยืนยัน CP')}`;
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function closeImageLightbox() {
+      const modal = document.getElementById('image-lightbox-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
     function savePendingCpRequests() {
       localStorage.setItem('guild_pending_cp', JSON.stringify(pendingCpRequests));
       updateCpPendingBadge();
@@ -7432,6 +7642,7 @@
 
       document.getElementById('cp-update-current').textContent = '-';
       document.getElementById('cp-update-new-value').value = '';
+      removeCpScreenshot();
       document.getElementById('cp-update-modal').classList.remove('hidden');
 
       select.onchange = function () {
@@ -7442,6 +7653,7 @@
 
     function closeCpUpdateRequestModal() {
       document.getElementById('cp-update-modal').classList.add('hidden');
+      removeCpScreenshot();
     }
 
     function handleCpUpdateRequest(e) {
@@ -7459,11 +7671,17 @@
         return;
       }
 
+      if (!currentCpScreenshotBase64) {
+        showToast(t('toast_screenshot_required', 'กรุณาแนบรูปภาพสกรีนช็อตยืนยันค่า CP ด้วยครับ'), 'warning');
+        return;
+      }
+
       // อัพเดทคำขอที่มีอยู่แล้ว (ถ้ามี)
       const existing = pendingCpRequests.find(r => r.memberId === memberId && r.status === 'pending');
       if (existing) {
         existing.newCp = newCp;
         existing.oldCp = member.cp || 0;
+        existing.screenshot = currentCpScreenshotBase64;
         existing.weekNumber = currentWeekNumber;
         existing.requestedAt = new Date().toISOString();
         savePendingCpRequests();
@@ -7480,6 +7698,7 @@
         weekNumber: currentWeekNumber,
         oldCp: member.cp || 0,
         newCp: newCp,
+        screenshot: currentCpScreenshotBase64,
         requestedAt: new Date().toISOString(),
         status: 'pending'
       });
@@ -7536,28 +7755,45 @@
           const reqWeek = req.weekNumber ? ` (${getWeekName(req.weekNumber)})` : '';
 
           html += `
-            <div class="bg-slate-950 border border-amber-500/30 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1.5 flex-wrap">
-                  <span class="font-bold text-white text-sm truncate">${escapeHtml(req.characterName)}</span>
-                  <span class="text-[9px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${isRed ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
-            }">${isRed ? '🔴 Red' : '🔵 Blue'}</span>
-                  <span class="text-[9px] px-1.5 py-0.5 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">${escapeHtml(reqWeek)}</span>
+            <div class="bg-slate-950 border border-amber-500/30 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2 font-sarabun">
+              <div class="flex items-start gap-3 flex-1 min-w-0">
+                ${req.screenshot ? `
+                  <button type="button" onclick="openImageLightbox('${req.screenshot}', '${escapeHtml(req.characterName)}')"
+                    class="relative group shrink-0 rounded-xl overflow-hidden border border-amber-500/40 hover:border-amber-400 shadow-md transition"
+                    title="${t('lightbox_title', 'คลิกดูรูปเต็มจอ')}">
+                    <img src="${req.screenshot}" alt="Screenshot" class="w-14 h-14 object-cover">
+                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs transition">
+                      <i class="fa-solid fa-magnifying-glass-plus"></i>
+                    </div>
+                  </button>
+                ` : `
+                  <div class="w-14 h-14 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600 text-xs shrink-0" title="ไม่มีรูปภาพ">
+                    <i class="fa-regular fa-image"></i>
+                  </div>
+                `}
+
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-1 flex-wrap">
+                    <span class="font-bold text-white text-sm truncate">${escapeHtml(req.characterName)}</span>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${isRed ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+              }">${isRed ? '🔴 Red' : '🔵 Blue'}</span>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">${escapeHtml(reqWeek)}</span>
+                  </div>
+                  <div class="flex items-center gap-2 text-xs font-mono">
+                    <span class="text-slate-400">${t('old_cp_label')} <strong class="text-white">${Number(req.oldCp).toLocaleString()}</strong></span>
+                    <i class="fa-solid fa-arrow-right text-[10px] text-slate-600"></i>
+                    <span class="text-amber-300">${t('new_cp_label')} <strong>${Number(req.newCp).toLocaleString()}</strong></span>
+                    <span class="${cpDiffColor} text-[10px] font-bold">(${cpDiffStr})</span>
+                  </div>
+                  <div class="text-[10px] text-slate-500 mt-1"><i class="fa-regular fa-clock mr-1"></i>${t('submitted_at_label')} ${dateStr}</div>
                 </div>
-                <div class="flex items-center gap-3 text-xs font-mono">
-                  <span class="text-slate-400">${t('old_cp_label')} <strong class="text-white">${Number(req.oldCp).toLocaleString()}</strong></span>
-                  <i class="fa-solid fa-arrow-right text-[10px] text-slate-600"></i>
-                  <span class="text-amber-300">${t('new_cp_label')} <strong>${Number(req.newCp).toLocaleString()}</strong></span>
-                  <span class="${cpDiffColor} text-[10px] font-bold">(${cpDiffStr})</span>
-                </div>
-                <div class="text-[10px] text-slate-500 mt-1.5"><i class="fa-regular fa-clock mr-1"></i>${t('submitted_at_label')} ${dateStr}</div>
               </div>
-              <div class="flex items-center gap-1.5 shrink-0">
-                <button onclick="approveCpRequest(${req.id})" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow-sm" title="${t('btn_approve')}">
-                  <i class="fa-solid fa-check mr-1"></i>${t('btn_approve')}
+              <div class="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                <button onclick="approveCpRequest(${req.id})" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow-sm flex items-center gap-1" title="${t('btn_approve')}">
+                  <i class="fa-solid fa-check"></i>${t('btn_approve')}
                 </button>
-                <button onclick="rejectCpRequest(${req.id})" class="px-3 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 text-xs font-semibold transition" title="${t('btn_reject')}">
-                  <i class="fa-solid fa-xmark mr-1"></i>${t('btn_reject')}
+                <button onclick="rejectCpRequest(${req.id})" class="px-3.5 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 text-xs font-semibold transition flex items-center gap-1" title="${t('btn_reject')}">
+                  <i class="fa-solid fa-xmark"></i>${t('btn_reject')}
                 </button>
               </div>
             </div>
@@ -9097,6 +9333,7 @@
         closeAuditLogsModal();
         closeAppealRequestModal();
         closeAppealApprovalModal();
+        closeImageLightbox();
       }
     });
 
@@ -9110,6 +9347,7 @@
       updateAdminUI();
       updateKPIs();
       updateCpPendingBadge();
+      initCpDropzone();
       initFirebaseSync();
       // ซิงค์ข้อมูลบอสเบื้องหลังทันทีเมื่อเปิดเว็บ
       syncBossDataFromSheet(true);
