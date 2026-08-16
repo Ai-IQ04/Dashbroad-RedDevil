@@ -269,7 +269,9 @@ function parseRegistrationMessage(message) {
   const cleanLine = (str) => {
     if (!str) return '';
     return str
-      .replace(/^[\s\u2500-\u257F\u200B└L\-\|:`*]+/, '')
+      .replace(/^[\s\u2500-\u257F\u200B└L\-\|/:`*]+/, '')
+      .replace(/^CharacterName[*:\s/]+/i, '')
+      .replace(/^ชื่อตัวละคร[*:\s/]+/i, '')
       .replace(/[`*]/g, '')
       .trim();
   };
@@ -280,15 +282,15 @@ function parseRegistrationMessage(message) {
       const m = content.match(reg);
       if (m && m[1]) {
         const cleaned = cleanLine(m[1]);
-        if (cleaned && !keywords.some(k => cleaned.toLowerCase().includes(k.toLowerCase()))) {
+        if (cleaned && !keywords.some(k => cleaned.toLowerCase() === k.toLowerCase())) {
           return cleaned;
         }
       }
-      const sameLineReg = new RegExp('(?:' + kw + ')[:\\s*]+([^\\n\\r]+)', 'i');
+      const sameLineReg = new RegExp('(?:' + kw + ')[*\\s:/]+([^\\n\\r]+)', 'i');
       const m2 = content.match(sameLineReg);
       if (m2 && m2[1]) {
         const cleaned2 = cleanLine(m2[1]);
-        if (cleaned2 && !keywords.some(k => cleaned2.toLowerCase().includes(k.toLowerCase()))) {
+        if (cleaned2 && !keywords.some(k => cleaned2.toLowerCase() === k.toLowerCase())) {
           return cleaned2;
         }
       }
