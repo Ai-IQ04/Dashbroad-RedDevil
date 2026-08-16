@@ -625,18 +625,9 @@
               Guild Activity & Scoring
             </h1>
             <!-- 4-Week Capsule Tabs (แสดง 4 สัปดาห์ & แก้ไขชื่อได้) -->
-            <div class="flex items-center gap-1.5">
-              <div id="week-tabs-bar"
-                class="flex items-center gap-1 bg-slate-900/90 border border-slate-800/90 rounded-full p-0.5 shadow-inner backdrop-blur">
-                <!-- Render via renderWeekTabs() -->
-              </div>
-              <!-- ปุ่ม ปิดรอบ / ปลดล็อกสัปดาห์ (เฉพาะ Admin) -->
-              <button id="btn-toggle-week-lock" onclick="toggleLockCurrentWeek()"
-                class="hidden apple-btn inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-full transition shadow-sm"
-                title="คลิกเพื่อปิดรอบหรือปลดล็อกสัปดาห์นี้">
-                <i id="btn-toggle-week-lock-icon" class="fa-solid fa-lock text-[9px]"></i>
-                <span id="btn-toggle-week-lock-text">ปิดรอบ</span>
-              </button>
+            <div id="week-tabs-bar"
+              class="flex items-center gap-1 bg-slate-900/90 border border-slate-800/90 rounded-full p-0.5 shadow-inner backdrop-blur">
+              <!-- Render via renderWeekTabs() -->
             </div>
           </div>
           <div class="flex items-center gap-2 mt-1 flex-wrap">
@@ -1042,12 +1033,12 @@
         <option value="name-asc" data-i18n="sort_name_asc">ชื่อตัวละคร (ก-ฮ / A-Z)</option>
       </select>
 
-      <!-- ปุ่มบันทึกปิดรอบสัปดาห์ (เฉพาะ Admin) -->
-      <button id="btn-archive-week" onclick="openArchiveWeekModal()"
+      <!-- ปุ่มบันทึกปิดรอบสัปดาห์ / ปลดล็อกสัปดาห์ (เฉพาะ Admin) -->
+      <button id="btn-archive-week" onclick="toggleLockCurrentWeek()"
         class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm"
-        title="บันทึกคะแนนสัปดาห์นี้และเริ่มสัปดาห์ใหม่">
-        <i class="fa-solid fa-box-archive text-[10px]"></i>
-        <span data-i18n="btn_archive_week">ปิดรอบสัปดาห์</span>
+        title="คลิกเพื่อปิดรอบหรือปลดล็อกสัปดาห์นี้">
+        <i id="btn-archive-week-icon" class="fa-solid fa-lock text-[10px]"></i>
+        <span id="btn-archive-week-text" data-i18n="btn_archive_week">ปิดรอบสัปดาห์</span>
       </button>
     </div>
   </div>
@@ -5859,9 +5850,9 @@
       const banner = document.getElementById('locked-week-banner');
       const bannerWeekName = document.getElementById('locked-banner-week-name');
       const bannerUnlockBtn = document.getElementById('btn-banner-unlock');
-      const lockBtn = document.getElementById('btn-toggle-week-lock');
-      const lockBtnIcon = document.getElementById('btn-toggle-week-lock-icon');
-      const lockBtnText = document.getElementById('btn-toggle-week-lock-text');
+      const archiveBtn = document.getElementById('btn-archive-week');
+      const archiveBtnIcon = document.getElementById('btn-archive-week-icon');
+      const archiveBtnText = document.getElementById('btn-archive-week-text');
 
       const isLocked = isWeekLocked(currentWeekNumber);
 
@@ -5882,15 +5873,24 @@
         }
       }
 
-      if (lockBtn && lockBtnIcon && lockBtnText) {
-        if (isLocked) {
-          lockBtn.className = "apple-btn bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-full transition shadow-sm";
-          lockBtnIcon.className = "fa-solid fa-lock-open text-[9px] text-emerald-400";
-          lockBtnText.textContent = "ปลดล็อกรอบ";
+      if (archiveBtn) {
+        if (isAdmin) {
+          archiveBtn.classList.remove('hidden');
+          archiveBtn.classList.add('inline-flex');
+          if (isLocked) {
+            archiveBtn.className = "apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm";
+            if (archiveBtnIcon) archiveBtnIcon.className = "fa-solid fa-lock-open text-[10px]";
+            if (archiveBtnText) archiveBtnText.textContent = "ปลดล็อกสัปดาห์";
+            archiveBtn.title = `คลิกเพื่อปลดล็อก ${getWeekName(currentWeekNumber)}`;
+          } else {
+            archiveBtn.className = "apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm";
+            if (archiveBtnIcon) archiveBtnIcon.className = "fa-solid fa-lock text-[10px]";
+            if (archiveBtnText) archiveBtnText.textContent = "ปิดรอบสัปดาห์";
+            archiveBtn.title = `คลิกเพื่อปิดรอบ ${getWeekName(currentWeekNumber)}`;
+          }
         } else {
-          lockBtn.className = "apple-btn bg-amber-950/80 hover:bg-amber-900 border border-amber-500/50 text-amber-300 inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-full transition shadow-sm";
-          lockBtnIcon.className = "fa-solid fa-lock text-[9px] text-amber-400";
-          lockBtnText.textContent = "ปิดรอบ";
+          archiveBtn.classList.add('hidden');
+          archiveBtn.classList.remove('inline-flex');
         }
       }
     }
@@ -6162,11 +6162,6 @@
           clearChecksBtn.classList.remove('hidden');
           clearChecksBtn.classList.add('inline-flex');
         }
-        const toggleLockBtn = document.getElementById('btn-toggle-week-lock');
-        if (toggleLockBtn) {
-          toggleLockBtn.classList.remove('hidden');
-          toggleLockBtn.classList.add('inline-flex');
-        }
         if (auditLogsBtn) {
           auditLogsBtn.classList.remove('hidden');
           auditLogsBtn.classList.add('inline-flex');
@@ -6224,11 +6219,6 @@
         if (clearChecksBtn) {
           clearChecksBtn.classList.add('hidden');
           clearChecksBtn.classList.remove('inline-flex');
-        }
-        const toggleLockBtn = document.getElementById('btn-toggle-week-lock');
-        if (toggleLockBtn) {
-          toggleLockBtn.classList.add('hidden');
-          toggleLockBtn.classList.remove('inline-flex');
         }
         if (auditLogsBtn) {
           auditLogsBtn.classList.add('hidden');
