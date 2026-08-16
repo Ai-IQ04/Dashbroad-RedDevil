@@ -6787,6 +6787,14 @@
           delete member.weeklyCheckTimestamps[currentWeekNumber][activityIndex];
         }
       } else {
+        // กำลังจะ "ติ๊กถูก"
+        // ถ้าเป็นการเริ่มติ๊กบอสครั้งแรกของตัวละครนี้ในสัปดาห์ปัจจุบัน ให้ถามยืนยันชื่อตัวละครก่อนเสมอ
+        const hasAnyChecks = Array.isArray(member.checks) && member.checks.some(Boolean);
+        if (!hasAnyChecks) {
+          const confirmed = confirm(`🛡️ ยืนยันการเริ่มเช็คชื่อ?\n\nคุณกำลังจะเริ่มเช็คชื่อให้ตัวละคร:\n👉 "${member.characterName}" (${member.guild || '-'})\n\nกิจกรรม: "${actName}" (${getWeekName(currentWeekNumber)})\n\nกรุณาตรวจสอบชื่อตัวละครให้ถูกต้อง ต้องการเริ่มเช็คชื่อใช่หรือไม่?`);
+          if (!confirmed) return;
+        }
+
         // ติ๊กถูกใหม่ -> บันทึกเวลาปัจจุบัน
         member.checks[activityIndex] = true;
         if (member.weeklyChecks && Array.isArray(member.weeklyChecks[currentWeekNumber])) {
