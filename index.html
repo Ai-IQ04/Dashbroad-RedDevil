@@ -5796,20 +5796,28 @@
 
     function renderDiscordActiveBadgeHtml(member) {
       const verified = getDiscordVerifiedData(member);
-      if (!verified) return '';
+      if (!verified) {
+        return `
+          <span class="inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded-full bg-zinc-900/80 border border-zinc-800 text-[9.5px] font-medium text-zinc-500 select-none opacity-60"
+                title="ยังไม่ได้ลงทะเบียนใน Discord">
+            <span class="w-1.5 h-1.5 rounded-full bg-zinc-600"></span>
+            <span class="font-mono text-[9px]">Offline</span>
+          </span>
+        `;
+      }
 
       const emailStr = verified.email || member.email || '';
       const uidStr = verified.uid || verified.inGameMemberNo || '';
-      const tooltip = `✅ ยืนยันใน Discord แล้ว\nอีเมล: ${emailStr}${uidStr ? `\nUID: ${uidStr}` : ''}\nชื่อตัวละคร: ${verified.characterName || member.characterName}`;
+      const tooltip = `✅ ยืนยันใน Discord แล้ว\nอีเมล: ${emailStr}${uidStr ? `\nUID: ${uidStr}` : ''}\nชื่อตัวละคร: ${verified.characterName || member.characterName}\nชื่อ Discord: ${verified.discordTag || verified.discordName || '-'}`;
 
       return `
-        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-[9px] font-bold text-emerald-300 shadow-sm shrink-0 whitespace-nowrap cursor-help transition hover:bg-emerald-500/25 select-none"
+        <span class="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-[9.5px] font-bold text-emerald-300 shadow-sm shadow-emerald-500/10 cursor-help transition hover:bg-emerald-500/25 select-none"
               title="${escapeHtml(tooltip)}">
           <span class="relative flex h-2 w-2">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span class="font-mono uppercase tracking-wider">Active</span>
+          <span class="font-mono tracking-wider font-bold">Active</span>
         </span>
       `;
     }
@@ -7010,6 +7018,13 @@
               <span>${t('col_char_guild')}</span>
             </div>
           </th>
+          <!-- สถานะ Discord -->
+          <th class="py-2 px-1 font-bold text-center w-16 sm:w-20 text-indigo-300 border-r border-slate-800/80" data-tooltip="สถานะการลงทะเบียนใน Discord">
+            <div class="flex items-center justify-center gap-1">
+              <i class="fa-brands fa-discord text-indigo-400 text-[11px]"></i>
+              <span>Discord</span>
+            </div>
+          </th>
           <th class="py-2 px-1 font-bold text-center w-14 sm:w-16 text-amber-300 border-r border-slate-800/80" data-tooltip="${t('tooltip_cp_sort')}">
             <div class="flex items-center justify-center gap-1">
               <i class="fa-solid fa-bolt text-[10px] text-amber-400"></i>
@@ -7201,7 +7216,7 @@
       document.getElementById('footer-count').textContent = filteredMembers.length;
 
       if (filteredMembers.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${8 + ACTIVITIES.length}" class="py-12 text-center text-slate-500 font-medium"><i class="fa-solid fa-user-slash mr-2"></i>${t('no_members_found')}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${9 + ACTIVITIES.length}" class="py-12 text-center text-slate-500 font-medium"><i class="fa-solid fa-user-slash mr-2"></i>${t('no_members_found')}</td></tr>`;
         return;
       }
 
@@ -7252,11 +7267,15 @@
                   ${isAdmin ? '<i class="fa-solid fa-pen text-[9px] opacity-0 group-hover/name:opacity-100 text-sky-400 transition ml-1"></i>' : ''}
                 </span>
                 ${renderGuildBadgeHtml(member.guild)}
-                ${renderDiscordActiveBadgeHtml(member)}
               </div>
               <div class="text-[10px] text-zinc-500 truncate max-w-[220px] leading-tight mt-0.5 font-mono" title="${safeEmail}">
                 ${safeEmail || '-'}
               </div>
+            </td>
+
+            <!-- สถานะ Discord -->
+            <td class="py-1.5 px-1 text-center border-r border-zinc-800/80">
+              ${renderDiscordActiveBadgeHtml(member)}
             </td>
 
             <!-- CP พลังรบ (จัดอันดับตาม CP & คลิกแก้ไขได้ในโหมด Admin) -->
