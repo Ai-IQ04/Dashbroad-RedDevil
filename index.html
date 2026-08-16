@@ -10378,13 +10378,20 @@
       }
       if (!m) return { wScores: [0, 0, 0, 0], baseTotal: 0, bonusPoints: 0, total: 0 };
 
+      if (typeof ensureMemberWeeklyData === 'function') {
+        ensureMemberWeeklyData(m);
+      }
+
       const wScores = [0, 0, 0, 0];
       let baseTotal = 0;
 
       for (let w = 1; w <= 4; w++) {
         let checksArr = null;
-        if (w === currentWeekNumber && Array.isArray(m.checks)) {
-          checksArr = m.checks;
+        if (w === currentWeekNumber) {
+          checksArr = Array.isArray(m.checks) ? m.checks : (m.weeklyChecks && m.weeklyChecks[w]);
+          if (Array.isArray(m.checks) && m.weeklyChecks) {
+            m.weeklyChecks[w] = [...m.checks];
+          }
         } else if (m.weeklyChecks && Array.isArray(m.weeklyChecks[w])) {
           checksArr = m.weeklyChecks[w];
         }
@@ -10394,6 +10401,12 @@
           wScores[w - 1] = s;
           baseTotal += s;
         }
+      }
+
+      // If checks gave 0 but member has a recorded score field, fallback to it for display
+      if (baseTotal === 0 && Number(m.score) > 0) {
+        baseTotal = Number(m.score);
+        wScores[0] = baseTotal;
       }
 
       const bonusPoints = Number(m.bonusPoints) || 0;
@@ -11628,23 +11641,38 @@
       if (!m) return;
 
       m.bonusPoints = 0;
+      if (typeof ensureMemberWeeklyData === 'function') {
+        ensureMemberWeeklyData(m);
+      }
+
+      // Auto sync the store dropdown
+      const storeSelect = document.getElementById('store-member-select');
+      if (storeSelect) {
+        storeSelect.value = charName;
+      }
+
       saveData();
+      saveStoreData();
 
       addAuditLog(
         'points_reset',
-        `รีเซ็ตแต้มพิเศษของ "${charName}" กลับเป็น 0 (แต้มจริงตามกิจกรรม)`,
+        `รีเซ็ตแต้มพิเศษของ "${charName}" กลับเป็น 0 (คำนวณแต้มจริงตามตารางกิจกรรมใหม่)`,
         `โดย: ${currentAdminEmail}`,
         charName
       );
 
-      showToast(`รีเซ็ตแต้มพิเศษของ ${charName} กลับเป็น 0 (คืนค่าแต้มจริง) สำเร็จแล้ว`, 'success');
+      showToast(`รีเซ็ตแต้มพิเศษของ ${charName} กลับเป็น 0 (คำนวณแต้มจริงใหม่แล้ว)`, 'success');
       const inputEl = document.getElementById('admin-points-input');
       if (inputEl) inputEl.value = 0;
-      onAdminPointsMemberChange();
-      onRewardMemberSelected();
+      
       populateRewardMemberSelect();
       populateAdminPointsMemberSelect();
+      if (storeSelect) storeSelect.value = charName;
+      onRewardMemberSelected();
+      onAdminPointsMemberChange();
       renderRewardStoreCatalog();
+      renderTable();
+      updateKPIs();
     }
 
     function cancelMemberTestOrdersAndRefund(targetCharName) {
@@ -11660,6 +11688,9 @@
 
       // 1. รีเซ็ตแต้มพิเศษกลับเป็น 0
       m.bonusPoints = 0;
+      if (typeof ensureMemberWeeklyData === 'function') {
+        ensureMemberWeeklyData(m);
+      }
 
       // 2. ล้างคำขอแลกของรางวัลที่รอดำเนินการ (Pending) ของสมาชิกคนนี้ เพื่อคืนแต้มจริง
       let removedCount = 0;
@@ -11676,26 +11707,36 @@
         });
       }
 
+      // Auto sync the store dropdown
+      const storeSelect = document.getElementById('store-member-select');
+      if (storeSelect) {
+        storeSelect.value = charName;
+      }
+
       saveData();
       saveStoreData();
 
       addAuditLog(
         'test_orders_cleared',
-        `ยกเลิกคำขอแลกทดสอบของ "${charName}" (${removedCount} รายการ, คืน ${refundedPoints} PTS) และรีเซ็ตแต้มพิเศษกลับเป็น 0`,
+        `ยกเลิกคำขอแลกทดสอบของ "${charName}" (${removedCount} รายการ, คืน ${refundedPoints} PTS) และคำนวณแต้มจริงใหม่`,
         `โดย: ${currentAdminEmail}`,
         charName
       );
 
-      showToast(`ยกเลิกคำขอทดสอบของ ${charName} สำเร็จ (${removedCount} รายการ) คืนแต้มปกติเรียบร้อยแล้ว`, 'success');
+      showToast(`ยกเลิกคำขอทดสอบของ ${charName} สำเร็จ (${removedCount} รายการ) คำนวณแต้มจริงใหม่เรียบร้อยแล้ว`, 'success');
       const inputEl = document.getElementById('admin-points-input');
       if (inputEl) inputEl.value = 0;
-      onAdminPointsMemberChange();
-      onRewardMemberSelected();
+
       populateRewardMemberSelect();
       populateAdminPointsMemberSelect();
+      if (storeSelect) storeSelect.value = charName;
+      onRewardMemberSelected();
+      onAdminPointsMemberChange();
       renderRewardStoreCatalog();
       renderRewardApprovalList();
       renderStoreHistoryTable();
+      renderTable();
+      updateKPIs();
     }
 
     function cancelAllTestOrdersAndRefundAll() {
