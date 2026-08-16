@@ -10512,6 +10512,12 @@
         if (btnCatalog) {
           btnCatalog.className = "apple-btn apple-btn-gold px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md";
         }
+        const storeSelect = document.getElementById('store-member-select');
+        const adminSelect = document.getElementById('admin-points-member-select');
+        if (storeSelect && adminSelect && adminSelect.value && (!storeSelect.value || storeSelect.value === '')) {
+          storeSelect.value = adminSelect.value;
+          onRewardMemberSelected();
+        }
         renderRewardStoreCatalog();
       } else if (tab === 'history') {
         if (historyTab) historyTab.classList.remove('hidden');
@@ -10525,6 +10531,12 @@
           btnAdmin.className = "apple-btn apple-btn-teal px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md";
         }
         populateAdminPointsMemberSelect();
+        const storeSelect = document.getElementById('store-member-select');
+        const adminSelect = document.getElementById('admin-points-member-select');
+        if (storeSelect && adminSelect && storeSelect.value) {
+          adminSelect.value = storeSelect.value;
+          onAdminPointsMemberChange();
+        }
         renderAdminStoreInventory();
       }
     }
@@ -11597,22 +11609,28 @@
 
     function saveAdminMemberBonusPoints() {
       if (!isAdmin) return;
-      const select = document.getElementById('admin-points-member-select');
+      const adminSelect = document.getElementById('admin-points-member-select');
+      const storeSelect = document.getElementById('store-member-select');
       const inputEl = document.getElementById('admin-points-input');
       const reasonEl = document.getElementById('admin-points-reason');
-      const charName = select ? select.value : '';
+      
+      const charName = (adminSelect && adminSelect.value) || (storeSelect && storeSelect.value) || '';
       if (!charName) {
         showToast('กรุณาเลือกตัวละครก่อนบันทึกแต้ม', 'warning');
         return;
       }
       const m = members.find(x => (x.characterName || x.name) === charName);
-      if (!m) return;
+      if (!m) {
+        showToast('ไม่พบข้อมูลตัวละครนี้ในระบบ', 'warning');
+        return;
+      }
 
       const pts = Math.max(0, parseInt(inputEl.value, 10) || 0);
       const reason = (reasonEl ? reasonEl.value : '').trim() || 'ปรับแต้มพิเศษ / ทดสอบระบบ';
 
       m.bonusPoints = pts;
       saveData();
+      saveStoreData();
 
       addAuditLog(
         'points_adjust',
@@ -11622,33 +11640,40 @@
       );
 
       showToast(`บันทึกแต้มพิเศษให้ ${charName} เป็น ${pts} PTS เรียบร้อยแล้ว`, 'success');
-      onAdminPointsMemberChange();
-      onRewardMemberSelected();
+      
+      // Sync dropdowns
+      if (adminSelect) adminSelect.value = charName;
+      if (storeSelect) storeSelect.value = charName;
+
       populateRewardMemberSelect();
       populateAdminPointsMemberSelect();
+      if (storeSelect) storeSelect.value = charName;
+      if (adminSelect) adminSelect.value = charName;
+
+      onAdminPointsMemberChange();
+      onRewardMemberSelected();
       renderRewardStoreCatalog();
     }
 
     function resetAdminMemberBonusPoints() {
       if (!isAdmin) return;
-      const select = document.getElementById('admin-points-member-select');
-      const charName = select ? select.value : '';
+      const adminSelect = document.getElementById('admin-points-member-select');
+      const storeSelect = document.getElementById('store-member-select');
+      const charName = (adminSelect && adminSelect.value) || (storeSelect && storeSelect.value) || '';
+      
       if (!charName) {
         showToast('กรุณาเลือกตัวละครก่อนรีเซ็ต', 'warning');
         return;
       }
       const m = members.find(x => (x.characterName || x.name) === charName);
-      if (!m) return;
+      if (!m) {
+        showToast('ไม่พบข้อมูลตัวละครนี้ในระบบ', 'warning');
+        return;
+      }
 
       m.bonusPoints = 0;
       if (typeof ensureMemberWeeklyData === 'function') {
         ensureMemberWeeklyData(m);
-      }
-
-      // Auto sync the store dropdown
-      const storeSelect = document.getElementById('store-member-select');
-      if (storeSelect) {
-        storeSelect.value = charName;
       }
 
       saveData();
@@ -11665,9 +11690,15 @@
       const inputEl = document.getElementById('admin-points-input');
       if (inputEl) inputEl.value = 0;
       
+      // Sync dropdowns
+      if (adminSelect) adminSelect.value = charName;
+      if (storeSelect) storeSelect.value = charName;
+
       populateRewardMemberSelect();
       populateAdminPointsMemberSelect();
       if (storeSelect) storeSelect.value = charName;
+      if (adminSelect) adminSelect.value = charName;
+
       onRewardMemberSelected();
       onAdminPointsMemberChange();
       renderRewardStoreCatalog();
@@ -11677,14 +11708,19 @@
 
     function cancelMemberTestOrdersAndRefund(targetCharName) {
       if (!isAdmin) return;
-      const select = document.getElementById('admin-points-member-select');
-      const charName = targetCharName || (select ? select.value : '');
+      const adminSelect = document.getElementById('admin-points-member-select');
+      const storeSelect = document.getElementById('store-member-select');
+      const charName = targetCharName || (adminSelect && adminSelect.value) || (storeSelect && storeSelect.value) || '';
+      
       if (!charName) {
         showToast('กรุณาเลือกตัวละครที่ต้องการยกเลิกคำขอทดสอบ', 'warning');
         return;
       }
       const m = members.find(x => (x.characterName || x.name) === charName);
-      if (!m) return;
+      if (!m) {
+        showToast('ไม่พบข้อมูลตัวละครนี้ในระบบ', 'warning');
+        return;
+      }
 
       // 1. รีเซ็ตแต้มพิเศษกลับเป็น 0
       m.bonusPoints = 0;
@@ -11692,25 +11728,19 @@
         ensureMemberWeeklyData(m);
       }
 
-      // 2. ล้างคำขอแลกของรางวัลที่รอดำเนินการ (Pending) ของสมาชิกคนนี้ เพื่อคืนแต้มจริง
+      // 2. ล้างคำขอแลกและประวัติของรางวัลทั้งหมดของสมาชิกคนนี้ (เพื่อคืนแต้มจริงทั้งหมด 100%)
       let removedCount = 0;
       let refundedPoints = 0;
 
       if (Array.isArray(storeRewardLogs)) {
         storeRewardLogs = storeRewardLogs.filter(log => {
-          if (log.memberName === charName && (log.status === 'pending' || log.status === 'won_pending_delivery' || !log.status)) {
+          if (log.memberName === charName) {
             removedCount++;
             refundedPoints += (log.cost || 0);
-            return false; // ลบคำขอทดสอบออก
+            return false; // ลบรายการของคนนี้ออกทั้งหมด
           }
           return true;
         });
-      }
-
-      // Auto sync the store dropdown
-      const storeSelect = document.getElementById('store-member-select');
-      if (storeSelect) {
-        storeSelect.value = charName;
       }
 
       saveData();
@@ -11718,18 +11748,24 @@
 
       addAuditLog(
         'test_orders_cleared',
-        `ยกเลิกคำขอแลกทดสอบของ "${charName}" (${removedCount} รายการ, คืน ${refundedPoints} PTS) และคำนวณแต้มจริงใหม่`,
+        `ยกเลิกคำขอแลกและประวัติทดสอบของ "${charName}" (${removedCount} รายการ, คืน ${refundedPoints} PTS) และคำนวณแต้มจริงใหม่`,
         `โดย: ${currentAdminEmail}`,
         charName
       );
 
-      showToast(`ยกเลิกคำขอทดสอบของ ${charName} สำเร็จ (${removedCount} รายการ) คำนวณแต้มจริงใหม่เรียบร้อยแล้ว`, 'success');
+      showToast(`ล้างรายการทดสอบของ ${charName} เรียบร้อย (${removedCount} รายการ) คืนแต้มจริงสำเร็จ!`, 'success');
       const inputEl = document.getElementById('admin-points-input');
       if (inputEl) inputEl.value = 0;
+
+      // Sync dropdowns
+      if (adminSelect) adminSelect.value = charName;
+      if (storeSelect) storeSelect.value = charName;
 
       populateRewardMemberSelect();
       populateAdminPointsMemberSelect();
       if (storeSelect) storeSelect.value = charName;
+      if (adminSelect) adminSelect.value = charName;
+
       onRewardMemberSelected();
       onAdminPointsMemberChange();
       renderRewardStoreCatalog();
