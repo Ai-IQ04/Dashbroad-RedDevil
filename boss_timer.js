@@ -536,17 +536,25 @@ function updateCountdowns() {
   });
 }
 
-// Update Upcoming Boss in Main Header
+// Update Upcoming Boss in Main Header / Toolbar Widget
 function updateUpcomingBossWidget() {
-  const widget = document.getElementById('upcoming-boss-text');
-  if (!widget) return;
+  const nameEl = document.getElementById('widget-boss-name');
+  const locEl = document.getElementById('widget-boss-loc');
+  const timerTextEl = document.getElementById('widget-boss-timer-text');
+  const timerBadgeEl = document.getElementById('widget-boss-timer');
+  const genericTextWidget = document.getElementById('upcoming-boss-text');
 
   const now = new Date();
   const recordedBosses = [];
 
   bossList.forEach(b => {
     const timer = bossTimerData[b.id] || {};
-    const nextSpawn = timer.customNextSpawn ? new Date(timer.customNextSpawn) : calculateNextSpawnDate(b, timer.defeatedTime);
+    let nextSpawn = null;
+    if (timer.customNextSpawn) {
+      nextSpawn = new Date(timer.customNextSpawn);
+    } else {
+      nextSpawn = calculateNextSpawnDate(b, timer.defeatedTime);
+    }
     if (nextSpawn && !isNaN(nextSpawn.getTime())) {
       const diffMs = nextSpawn.getTime() - now.getTime();
       recordedBosses.push({ boss: b, nextSpawn, diffMs });
@@ -554,7 +562,10 @@ function updateUpcomingBossWidget() {
   });
 
   if (recordedBosses.length === 0) {
-    widget.innerHTML = `<span class="text-slate-400">⏱️ บอสไทม์เมอร์ (พร้อมใช้งาน)</span>`;
+    if (nameEl) nameEl.textContent = 'ยังไม่มีข้อมูลบอส';
+    if (locEl) locEl.textContent = 'คลิกเพื่อดูไทม์เมอร์';
+    if (timerTextEl) timerTextEl.textContent = '--:--:--';
+    if (genericTextWidget) genericTextWidget.innerHTML = `<span class="text-slate-400">⏱️ บอสไทม์เมอร์ (พร้อมใช้งาน)</span>`;
     return;
   }
 
@@ -562,12 +573,40 @@ function updateUpcomingBossWidget() {
   recordedBosses.sort((a, b) => a.diffMs - b.diffMs);
   const nearest = recordedBosses[0];
 
-  if (nearest.diffMs <= 0) {
-    widget.innerHTML = `<span class="text-rose-400 font-bold animate-pulse">🔴 ${escapeHtml(nearest.boss.name)} เกิดแล้ว!</span>`;
-  } else if (nearest.diffMs <= 30 * 60 * 1000) {
-    widget.innerHTML = `<span class="text-amber-300 font-bold animate-pulse">🟡 ${escapeHtml(nearest.boss.name)} ใน ${formatCountdown(nearest.diffMs, 'soon')}</span>`;
-  } else {
-    widget.innerHTML = `<span class="text-slate-300">⏳ บอสถัดไป: <strong>${escapeHtml(nearest.boss.name)}</strong> (${formatCountdown(nearest.diffMs, 'cooldown')})</span>`;
+  if (nameEl) {
+    nameEl.textContent = `${nearest.boss.name}${nearest.boss.level ? ` (Lv.${nearest.boss.level})` : ''}`;
+  }
+  if (locEl) {
+    locEl.textContent = nearest.boss.location ? `• ${nearest.boss.location}` : '';
+  }
+
+  if (timerTextEl) {
+    if (nearest.diffMs <= 0) {
+      timerTextEl.textContent = 'เกิดแล้ว!';
+      if (timerBadgeEl) {
+        timerBadgeEl.className = "flex items-center gap-1.5 font-mono font-black text-white bg-rose-600 border border-rose-400 px-2.5 py-0.5 rounded-full text-xs shadow-inner animate-pulse";
+      }
+    } else if (nearest.diffMs <= 30 * 60 * 1000) {
+      timerTextEl.textContent = formatCountdown(nearest.diffMs, 'soon');
+      if (timerBadgeEl) {
+        timerBadgeEl.className = "flex items-center gap-1.5 font-mono font-black text-amber-300 bg-slate-900/95 border border-amber-500/50 px-2.5 py-0.5 rounded-full text-xs shadow-inner shadow-amber-500/20 animate-pulse";
+      }
+    } else {
+      timerTextEl.textContent = formatCountdown(nearest.diffMs, 'cooldown');
+      if (timerBadgeEl) {
+        timerBadgeEl.className = "flex items-center gap-1.5 font-mono font-black text-amber-300 bg-slate-900/95 border border-amber-500/50 px-2.5 py-0.5 rounded-full text-xs shadow-inner shadow-amber-500/20";
+      }
+    }
+  }
+
+  if (genericTextWidget) {
+    if (nearest.diffMs <= 0) {
+      genericTextWidget.innerHTML = `<span class="text-rose-400 font-bold animate-pulse">🔴 ${escapeHtml(nearest.boss.name)} เกิดแล้ว!</span>`;
+    } else if (nearest.diffMs <= 30 * 60 * 1000) {
+      genericTextWidget.innerHTML = `<span class="text-amber-300 font-bold animate-pulse">🟡 ${escapeHtml(nearest.boss.name)} ใน ${formatCountdown(nearest.diffMs, 'soon')}</span>`;
+    } else {
+      genericTextWidget.innerHTML = `<span class="text-slate-300">⏳ บอสถัดไป: <strong>${escapeHtml(nearest.boss.name)}</strong> (${formatCountdown(nearest.diffMs, 'cooldown')})</span>`;
+    }
   }
 }
 
