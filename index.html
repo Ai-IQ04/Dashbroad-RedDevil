@@ -574,6 +574,13 @@
               class="hidden px-1.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
           </button>
 
+          <!-- ปุ่มจัดการคลังสินค้า/เพิ่มรางวัล (เฉพาะ Admin) -->
+          <button id="btn-manage-rewards" onclick="openRewardStoreAdminModal()"
+            class="hidden apple-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40">
+            <i class="fa-solid fa-boxes-stacked text-amber-400 text-xs"></i>
+            <span data-i18n="btn_manage_rewards">คลังของรางวัล</span>
+          </button>
+
           <!-- ปุ่มจัดการ Admin (เฉพาะ Super Admin) -->
           <button id="btn-manage-admins" onclick="openAdminApprovalModal()"
             class="hidden apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold shadow-sm">
@@ -4538,7 +4545,22 @@
         "confirm_reset_monthly_points": "คุณแน่ใจหรือไม่ว่าต้องการรีเซ็ตคะแนนกิจกรรมของสมาชิกทุกคนเพื่อเริ่มรอบเดือนใหม่? (ประวัติรอบเดิมจะถูกเก็บไว้)",
         "toast_monthly_points_reset": "รีเซ็ตคะแนนรอบเดือนใหม่เรียบร้อยแล้ว!",
         "toast_item_drawn_success": "สุ่มผู้โชคดีสำหรับไอเทม \"{item}\" เรียบร้อย ({count} ท่าน) พร้อมคืนแต้มให้ผู้ที่ไม่ได้รับเลือก",
-        "toast_marked_delivered": "บันทึกการส่งของในเกมให้ \"{name}\" เรียบร้อยแล้ว!"
+        "toast_marked_delivered": "บันทึกการส่งของในเกมให้ \"{name}\" เรียบร้อยแล้ว!",
+        "btn_manage_rewards": "คลังของรางวัล",
+        "btn_open_store_admin": "➕ เพิ่ม/จัดการสินค้า",
+        "modal_pin_title": "🔒 ยืนยันรหัส PIN 4 หลัก",
+        "modal_pin_set_title": "🔒 ตั้งรหัส PIN 4 หลักประจำตัวละคร",
+        "pin_label_enter": "กรุณากรอกรหัส PIN 4 หลักของตัวละคร {name}:",
+        "pin_label_set": "ตั้งรหัส PIN 4 หลักสำหรับตัวละคร {name}:",
+        "pin_label_confirm": "ยืนยันรหัส PIN อีกครั้ง:",
+        "pin_hint_first_time": "💡 ตั้งรหัสเพียงครั้งเดียวเพื่อป้องกันผู้อื่นแอบอ้างนำแต้มของคุณไปใช้",
+        "btn_confirm_pin": "ยืนยันรหัส PIN",
+        "btn_set_pin": "บันทึกรหัส PIN & ส่งคำขอ",
+        "toast_pin_invalid": "รหัส PIN ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง",
+        "toast_pin_mismatch": "รหัส PIN ทั้งสองช่องไม่ตรงกัน",
+        "toast_pin_must_be_4_digits": "รหัส PIN ต้องเป็นตัวเลข 4 หลักเท่านั้น",
+        "toast_pin_reset_success": "รีเซ็ตรหัส PIN ของ \"{name}\" เรียบร้อยแล้ว สมาชิกสามารถตั้งรหัสใหม่ได้ทันที",
+        "btn_reset_pin": "รีเซ็ต PIN"
       },
       "en": {
         "btn_top10_summary": "Top 10 Summary",
@@ -4870,7 +4892,22 @@
         "confirm_reset_monthly_points": "Are you sure you want to reset all members' monthly points for a new month? (History will be archived)",
         "toast_monthly_points_reset": "Monthly points cycle reset successfully!",
         "toast_item_drawn_success": "Random draw for \"{item}\" completed ({count} winners). Points refunded to non-winners.",
-        "toast_marked_delivered": "Marked item as delivered in-game to \"{name}\"!"
+        "toast_marked_delivered": "Marked item as delivered in-game to \"{name}\"!",
+        "btn_manage_rewards": "Manage Rewards",
+        "btn_open_store_admin": "➕ Add/Manage Items",
+        "modal_pin_title": "🔒 4-Digit PIN Verification",
+        "modal_pin_set_title": "🔒 Set 4-Digit Character PIN",
+        "pin_label_enter": "Enter 4-digit PIN for character {name}:",
+        "pin_label_set": "Set a 4-digit PIN for character {name}:",
+        "pin_label_confirm": "Confirm 4-digit PIN:",
+        "pin_hint_first_time": "💡 Set once to prevent unauthorized use of your points",
+        "btn_confirm_pin": "Confirm PIN",
+        "btn_set_pin": "Save PIN & Submit",
+        "toast_pin_invalid": "Invalid PIN. Please try again.",
+        "toast_pin_mismatch": "PINs do not match.",
+        "toast_pin_must_be_4_digits": "PIN must be exactly 4 digits.",
+        "toast_pin_reset_success": "Reset PIN for \"{name}\" successfully. Member can now set a new PIN.",
+        "btn_reset_pin": "Reset PIN"
       }
     };
 
@@ -5360,7 +5397,16 @@
         }
       });
 
-      // 13. ระบบ Real-Time Online Presence (ตรวจจับและนับจำนวนคนออนไลน์สด)
+      // 13. ดักฟังรหัส PIN ประจำตัวละคร (Member PINs)
+      fbDb.ref('guild_app/member_pins').on('value', snapshot => {
+        const val = snapshot.val();
+        if (val && typeof val === 'object') {
+          memberPins = val;
+          localStorage.setItem('guild_member_pins', JSON.stringify(memberPins));
+        }
+      });
+
+      // 14. ระบบ Real-Time Online Presence (ตรวจจับและนับจำนวนคนออนไลน์สด)
       try {
         const userSessionId = 'user_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
         const myPresenceRef = fbDb.ref('guild_app/presence/' + userSessionId);
@@ -5626,6 +5672,18 @@
         }
       }
 
+      const manageRewardsBtn = document.getElementById('btn-manage-rewards');
+      if (manageRewardsBtn) {
+        if (isAdmin) {
+          manageRewardsBtn.classList.remove('hidden');
+          manageRewardsBtn.classList.add('inline-flex');
+        } else {
+          manageRewardsBtn.classList.add('hidden');
+          manageRewardsBtn.classList.remove('inline-flex');
+        }
+      }
+
+      if (typeof updateStoreAdminControls === 'function') updateStoreAdminControls();
       renderWeekTabs();
       updateCpPendingBadge();
       updateAppealPendingBadge();
@@ -9623,6 +9681,7 @@
         closeRewardStoreModal();
         closeRewardLightbox();
         closeRewardApprovalModal();
+        closePinModal();
       }
     });
 
@@ -10136,7 +10195,9 @@
 
     let storeRewards = JSON.parse(localStorage.getItem('guild_reward_store_items')) || DEFAULT_STORE_REWARDS;
     let storeRewardLogs = JSON.parse(localStorage.getItem('guild_reward_store_logs')) || [];
+    let memberPins = JSON.parse(localStorage.getItem('guild_member_pins')) || {};
     let uploadedStoreImageBase64 = null;
+    let activePinContext = null;
 
     function saveStoreData() {
       localStorage.setItem('guild_reward_store_items', JSON.stringify(storeRewards));
@@ -10147,6 +10208,22 @@
         fbDb.ref('guild_app/reward_store_items').set(storeRewards);
         fbDb.ref('guild_app/reward_store_logs').set(storeRewardLogs);
       }
+    }
+
+    function saveMemberPins() {
+      localStorage.setItem('guild_member_pins', JSON.stringify(memberPins));
+      if (fbDb) {
+        fbDb.ref('guild_app/member_pins').set(memberPins);
+      }
+    }
+
+    function openRewardStoreAdminModal() {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_edit'), 'warning');
+        return;
+      }
+      openRewardStoreModal();
+      switchStoreTab('admin');
     }
 
     function updateRewardPendingBadge() {
@@ -10161,23 +10238,50 @@
       }
     }
 
-    // คำนวณแต้มสะสมในรอบเดือนปัจจุบัน (4 สัปดาห์ - ไม่สะสมข้ามเดือน)
-    function getMemberMonthlyScore(m) {
-      if (!m) return 0;
-      let total = m.score || 0;
-      if (Array.isArray(m.history)) {
-        m.history.forEach(h => {
-          total += (h.score || 0);
-        });
+    // คำนวณแต้มสะสมในรอบเดือนปัจจุบันแยกรายบุคคล (รวม 4 สัปดาห์: W1 - W4)
+    function getMemberWeeklyBreakdown(m) {
+      if (!m) return { wScores: [0, 0, 0, 0], total: 0 };
+      if (typeof m === 'string') {
+        m = members.find(x => (x.characterName || x.name) === m);
       }
-      return total;
+      if (!m) return { wScores: [0, 0, 0, 0], total: 0 };
+
+      const wScores = [0, 0, 0, 0];
+      let total = 0;
+
+      for (let w = 1; w <= 4; w++) {
+        let checksArr = null;
+        if (w === currentWeekNumber && Array.isArray(m.checks)) {
+          checksArr = m.checks;
+        } else if (m.weeklyChecks && Array.isArray(m.weeklyChecks[w])) {
+          checksArr = m.weeklyChecks[w];
+        }
+
+        if (Array.isArray(checksArr)) {
+          const s = calculateTotalScore(checksArr);
+          wScores[w - 1] = s;
+          total += s;
+        }
+      }
+
+      return { wScores, total };
+    }
+
+    function getMemberMonthlyScore(m) {
+      const breakdown = getMemberWeeklyBreakdown(m);
+      return breakdown.total;
     }
 
     function getMemberAvailablePoints(m) {
       if (!m) return 0;
+      if (typeof m === 'string') {
+        m = members.find(x => (x.characterName || x.name) === m);
+      }
+      if (!m) return 0;
+      const charName = m.characterName || m.name || '';
       const totalScore = getMemberMonthlyScore(m);
       const spentOrReserved = (storeRewardLogs || [])
-        .filter(l => l.memberName === m.name && (l.status === 'approved' || l.status === 'won_pending_delivery' || l.status === 'delivered' || l.status === 'pending' || !l.status))
+        .filter(l => l.memberName === charName && (l.status === 'approved' || l.status === 'won_pending_delivery' || l.status === 'delivered' || l.status === 'pending' || !l.status))
         .reduce((sum, l) => sum + (l.cost || 0), 0);
       return Math.max(0, totalScore - spentOrReserved);
     }
@@ -10285,15 +10389,22 @@
       const currentVal = select.value;
       select.innerHTML = '<option value="">-- กรุณาเลือกตัวละครของคุณเพื่อตรวจสอบแต้ม --</option>';
 
-      const sortedMembers = [...members].sort((a, b) => a.name.localeCompare(b.name));
+      const sortedMembers = [...members].sort((a, b) => {
+        const nameA = a.characterName || a.name || '';
+        const nameB = b.characterName || b.name || '';
+        return nameA.localeCompare(nameB, currentLang === 'th' ? 'th' : 'en');
+      });
+
       sortedMembers.forEach(m => {
+        const charName = m.characterName || m.name || '';
+        if (!charName) return;
         const opt = document.createElement('option');
-        opt.value = m.name;
-        opt.textContent = `${m.name} (${m.guild || 'Guild'}) - CP ${m.cp ? m.cp.toLocaleString() : 0}`;
+        opt.value = charName;
+        opt.textContent = `${charName} (${m.guild || 'Guild'}) - CP ${m.cp ? Number(m.cp).toLocaleString() : 0}`;
         select.appendChild(opt);
       });
 
-      if (currentVal && members.some(m => m.name === currentVal)) {
+      if (currentVal && members.some(m => (m.characterName || m.name) === currentVal)) {
         select.value = currentVal;
       }
       onRewardMemberSelected();
@@ -10307,16 +10418,19 @@
       if (!select || !pointEl) return;
 
       const memberName = select.value;
-      const m = members.find(x => x.name === memberName);
+      const m = members.find(x => (x.characterName || x.name) === memberName);
 
       if (m) {
+        const charName = m.characterName || m.name || '';
         const available = getMemberAvailablePoints(m);
-        const monthlyTotal = getMemberMonthlyScore(m);
-        const pendingCount = (storeRewardLogs || []).filter(l => l.memberName === m.name && (l.status === 'pending' || l.status === 'won_pending_delivery')).length;
+        const breakdown = getMemberWeeklyBreakdown(m);
+        const monthlyTotal = breakdown.total;
+        const pendingCount = (storeRewardLogs || []).filter(l => l.memberName === charName && (l.status === 'pending' || l.status === 'won_pending_delivery')).length;
         
         pointEl.textContent = `${available.toLocaleString()} PTS`;
         if (infoEl) {
-          infoEl.textContent = `(แต้มเดือนนี้: ${monthlyTotal} PTS${pendingCount > 0 ? ` • รอดำเนินการ ${pendingCount} รายการ` : ''})`;
+          const breakdownText = `W1:${breakdown.wScores[0]} | W2:${breakdown.wScores[1]} | W3:${breakdown.wScores[2]} | W4:${breakdown.wScores[3]}`;
+          infoEl.textContent = `(${breakdownText} ➔ รวมเดือนนี้: ${monthlyTotal} PTS${pendingCount > 0 ? ` • รอสุ่ม/ส่งของ ${pendingCount} รายการ` : ''})`;
         }
         if (badge) badge.classList.remove('opacity-50');
       } else {
@@ -10333,8 +10447,9 @@
 
       const select = document.getElementById('store-member-select');
       const memberName = select ? select.value : '';
-      const m = members.find(x => x.name === memberName);
+      const m = members.find(x => (x.characterName || x.name) === memberName);
       const availablePoints = m ? getMemberAvailablePoints(m) : 0;
+      const charName = m ? (m.characterName || m.name) : '';
 
       if (!storeRewards || storeRewards.length === 0) {
         grid.innerHTML = `
@@ -10351,7 +10466,7 @@
         const pendingCount = itemRequests.length;
         const isOutOfStock = item.stock <= 0;
         const canRedeem = m && availablePoints >= item.cost && !isOutOfStock;
-        const alreadyRequested = m && itemRequests.some(l => l.memberName === m.name);
+        const alreadyRequested = m && itemRequests.some(l => l.memberName === charName);
 
         return `
           <div class="bg-[#0b101d] border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-between hover:border-amber-500/40 transition-all duration-200 group shadow-lg">
@@ -10425,7 +10540,7 @@
         return;
       }
 
-      const m = members.find(x => x.name === memberName);
+      const m = members.find(x => (x.characterName || x.name) === memberName);
       if (!m) return;
 
       const available = getMemberAvailablePoints(m);
@@ -10439,8 +10554,118 @@
         return;
       }
 
+      const charName = m.characterName || m.name;
+      // ตรวจสอบระบบ PIN ป้องกันแอบอ้างตัวละคร
+      if (!memberPins[charName]) {
+        openPinModal('set', itemId, m);
+      } else {
+        openPinModal('verify', itemId, m);
+      }
+    }
+
+    // =================================================================
+    // 🔒 ระบบ Modal รหัส PIN 4 หลัก ป้องกันการแอบอ้างแลกของรางวัล
+    // =================================================================
+
+    function openPinModal(mode, itemId, member) {
+      activePinContext = { mode, itemId, member };
+      const modal = document.getElementById('member-pin-modal');
+      const titleEl = document.getElementById('member-pin-modal-title');
+      const subtitleEl = document.getElementById('member-pin-modal-subtitle');
+      const labelEl = document.getElementById('member-pin-label');
+      const pinInput = document.getElementById('member-pin-input');
+      const confirmBox = document.getElementById('member-pin-confirm-box');
+      const confirmInput = document.getElementById('member-pin-confirm-input');
+      const submitBtn = document.getElementById('btn-member-pin-submit');
+      const hintBox = document.getElementById('member-pin-hint-box');
+
+      if (!modal || !pinInput) return;
+
+      pinInput.value = '';
+      if (confirmInput) confirmInput.value = '';
+
+      const charName = member.characterName || member.name;
+
+      if (mode === 'set') {
+        if (titleEl) titleEl.textContent = t('modal_pin_set_title');
+        if (subtitleEl) subtitleEl.textContent = `ตั้งรหัส PIN 4 หลักเพื่อปกป้องคะแนนของตัวละคร "${charName}"`;
+        if (labelEl) labelEl.textContent = t('pin_label_set', { name: charName });
+        if (confirmBox) confirmBox.classList.remove('hidden');
+        if (hintBox) hintBox.classList.remove('hidden');
+        if (submitBtn) submitBtn.innerHTML = `<i class="fa-solid fa-key"></i> <span>${t('btn_set_pin')}</span>`;
+      } else {
+        if (titleEl) titleEl.textContent = t('modal_pin_title');
+        if (subtitleEl) subtitleEl.textContent = `ยืนยันความเป็นเจ้าของตัวละคร "${charName}"`;
+        if (labelEl) labelEl.textContent = t('pin_label_enter', { name: charName });
+        if (confirmBox) confirmBox.classList.add('hidden');
+        if (hintBox) hintBox.classList.add('hidden');
+        if (submitBtn) submitBtn.innerHTML = `<i class="fa-solid fa-lock-open"></i> <span>${t('btn_confirm_pin')}</span>`;
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => pinInput.focus(), 150);
+    }
+
+    function closePinModal() {
+      const modal = document.getElementById('member-pin-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+      activePinContext = null;
+    }
+
+    function submitPinForm(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (!activePinContext) return;
+      const { mode, itemId, member } = activePinContext;
+      const pinInput = document.getElementById('member-pin-input');
+      const confirmInput = document.getElementById('member-pin-confirm-input');
+      const pin = pinInput ? pinInput.value.trim() : '';
+      const charName = member.characterName || member.name;
+
+      if (!/^\d{4}$/.test(pin)) {
+        showToast(t('toast_pin_must_be_4_digits'), 'warning');
+        if (pinInput) pinInput.focus();
+        return;
+      }
+
+      if (mode === 'set') {
+        const confirmPin = confirmInput ? confirmInput.value.trim() : '';
+        if (pin !== confirmPin) {
+          showToast(t('toast_pin_mismatch'), 'error');
+          if (confirmInput) confirmInput.focus();
+          return;
+        }
+
+        memberPins[charName] = pin;
+        saveMemberPins();
+        showToast(`ตั้งรหัส PIN 4 หลักของ "${charName}" สำเร็จ!`, 'success');
+      } else {
+        if (memberPins[charName] !== pin) {
+          showToast(t('toast_pin_invalid'), 'error');
+          if (pinInput) {
+            pinInput.value = '';
+            pinInput.focus();
+          }
+          return;
+        }
+      }
+
+      const itemToRedeem = itemId;
+      const memberToRedeem = member;
+      closePinModal();
+      proceedWithRedemption(itemToRedeem, memberToRedeem);
+    }
+
+    function proceedWithRedemption(itemId, m) {
+      const item = storeRewards.find(x => x.id === itemId);
+      if (!item || !m) return;
+
+      const charName = m.characterName || m.name;
       const pendingForThis = (storeRewardLogs || []).filter(l => l.itemId === item.id && l.status === 'pending').length;
-      let confirmMsg = `ยืนยันการส่งคำขอแลก "${item.name}"\nโดยใช้แต้มของ "${m.name}" จำนวน ${item.cost} PTS หรือไม่?`;
+      let confirmMsg = `ยืนยันการส่งคำขอแลก "${item.name}"\nโดยใช้แต้มของ "${charName}" จำนวน ${item.cost} PTS หรือไม่?`;
       if (pendingForThis >= item.stock) {
         confirmMsg += `\n\n⚠️ มีผู้ขอแลกแล้ว ${pendingForThis} คน (เกินสต็อก ${item.stock} ชิ้น)\nระบบจะสุ่มผู้โชคดีและคืนแต้มให้อัตโนมัติหากไม่ได้รับเลือก`;
       }
@@ -10452,7 +10677,7 @@
         itemId: item.id,
         itemName: item.name,
         cost: item.cost,
-        memberName: m.name,
+        memberName: charName,
         guild: m.guild || 'Guild',
         timestamp: Date.now(),
         dateStr: new Date().toLocaleString('th-TH'),
@@ -10464,11 +10689,29 @@
       saveStoreData();
 
       if (typeof recordAuditLog === 'function') {
-        recordAuditLog('REWARD_REQUEST', `ส่งคำขอแลกของรางวัล "${item.name}" (ใช้ ${item.cost} PTS) ให้ตัวละคร "${m.name}"`);
+        recordAuditLog('REWARD_REQUEST', `ส่งคำขอแลกของรางวัล "${item.name}" (ใช้ ${item.cost} PTS) ให้ตัวละคร "${charName}" (ยืนยัน PIN ถูกต้อง)`);
       }
 
       showToast(`ส่งคำขอแลก "${item.name}" เรียบร้อยแล้ว! รอดำเนินการสุ่ม/อนุมัติจาก Admin`, 'success');
       onRewardMemberSelected();
+      renderRewardApprovalList();
+    }
+
+    function resetMemberPinAdmin(charName) {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_edit'), 'warning');
+        return;
+      }
+      if (!confirm(`คุณต้องการรีเซ็ตรหัส PIN ของตัวละคร "${charName}" ใช่หรือไม่?\n(สมาชิกจะสามารถตั้งรหัส PIN ใหม่ได้ทันทีเมื่อกดแลกครั้งต่อไป)`)) return;
+
+      delete memberPins[charName];
+      saveMemberPins();
+
+      if (typeof recordAuditLog === 'function') {
+        recordAuditLog('PIN_RESET', `รีเซ็ตรหัส PIN ของตัวละคร "${charName}" โดย ${currentAdminEmail}`);
+      }
+
+      showToast(t('toast_pin_reset_success', { name: charName }), 'success');
       renderRewardApprovalList();
     }
 
@@ -10566,9 +10809,10 @@
               <!-- List of Members in this Item Group -->
               <div class="space-y-2">
                 ${reqs.map(req => {
-                  const m = members.find(x => x.name === req.memberName);
+                  const m = members.find(x => (x.characterName || x.name) === req.memberName);
                   const mScore = m ? getMemberMonthlyScore(m) : 0;
-                  const cpVal = m && m.cp ? m.cp.toLocaleString() : '0';
+                  const cpVal = m && m.cp ? Number(m.cp).toLocaleString() : '0';
+                  const hasPin = Boolean(memberPins[req.memberName]);
                   return `
                     <div class="bg-slate-900/80 border border-slate-800/80 rounded-xl p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                       <div class="flex items-center gap-2.5">
@@ -10578,6 +10822,9 @@
                             <span class="font-bold text-white">${escapeHtml(req.memberName)}</span>
                             <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">${escapeHtml(req.guild || 'Guild')}</span>
                             <span class="text-[10px] text-amber-300 font-mono">CP: ${cpVal}</span>
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-mono ${hasPin ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-500'}">
+                              <i class="fa-solid fa-lock text-[8px]"></i> ${hasPin ? 'PIN Active' : 'No PIN'}
+                            </span>
                           </div>
                           <p class="text-[11px] text-slate-400 mt-0.5 font-mono">
                             แต้มเดือนนี้: <span class="text-emerald-400 font-bold">${mScore} PTS</span> • เวลาขอ: ${escapeHtml(req.dateStr || '')}
@@ -10586,13 +10833,20 @@
                       </div>
 
                       <div class="flex items-center gap-1.5 self-end sm:self-center">
+                        ${hasPin ? `
+                          <button onclick="resetMemberPinAdmin('${escapeHtml(req.memberName)}')"
+                            class="px-2 py-1 text-[10px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-amber-300 rounded-lg border border-slate-700 transition"
+                            title="รีเซ็ต PIN หากสมาชิกแจ้งลืมรหัส">
+                            <i class="fa-solid fa-key text-[9px]"></i> รีเซ็ต PIN
+                          </button>
+                        ` : ''}
                         <button onclick="approveRewardRedemption('${req.id}')"
                           class="px-2.5 py-1 text-[11px] font-bold bg-emerald-600/90 hover:bg-emerald-500 text-white rounded-lg">
-                          <i class="fa-solid fa-check"></i> อนุมัติเดี่ยว
+                          <i class="fa-solid fa-check"></i> อนุมัติ
                         </button>
                         <button onclick="rejectRewardRedemption('${req.id}')"
                           class="px-2.5 py-1 text-[11px] font-semibold bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-lg">
-                          <i class="fa-solid fa-xmark"></i> ปฏิเสธ (คืนแต้ม)
+                          <i class="fa-solid fa-xmark"></i> ปฏิเสธ
                         </button>
                       </div>
                     </div>
@@ -11461,6 +11715,13 @@
         </div>
         
         <div class="flex items-center gap-2">
+          <!-- ปุ่มเปิดคลัง/เพิ่มสินค้า (Admin Only) -->
+          <button onclick="openRewardStoreAdminModal()"
+            class="apple-btn px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm"
+            data-i18n="btn_open_store_admin">
+            <i class="fa-solid fa-boxes-stacked text-xs"></i> <span>➕ เพิ่ม/จัดการสินค้า</span>
+          </button>
+
           <!-- ปุ่มรีเซ็ตคะแนนรอบเดือน (Admin Only) -->
           <button onclick="resetMonthlyPointsAdmin()"
             class="apple-btn px-3 py-1.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-700/60 text-rose-300 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm"
@@ -11512,6 +11773,67 @@
           </div>
         </div>
       </div>
+
+    </div>
+  </div>
+
+  <!-- ================= 🔒 Modal: ยืนยัน / ตั้งรหัส PIN 4 หลักประจำตัวละคร ================= -->
+  <div id="member-pin-modal"
+    class="hidden fixed inset-0 z-[70] bg-black/85 flex items-center justify-center p-3 sm:p-4 backdrop-blur-md overflow-y-auto"
+    onclick="closePinModal()">
+    <div
+      class="apple-modal-box relative w-full max-w-md bg-[#090d18] border border-amber-500/40 rounded-3xl shadow-2xl p-5 sm:p-6 my-auto overflow-hidden text-center flex flex-col items-center"
+      onclick="event.stopPropagation()">
+
+      <!-- Icon -->
+      <div
+        class="h-14 w-14 rounded-2xl bg-gradient-to-tr from-amber-500/20 via-orange-500/20 to-amber-600/30 border border-amber-400/40 text-amber-300 flex items-center justify-center text-2xl mb-3 shadow-inner">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+
+      <!-- Title & Subtitle -->
+      <h3 id="member-pin-modal-title" class="text-base sm:text-lg font-bold text-white tracking-wide">
+        🔒 ยืนยันรหัส PIN 4 หลัก
+      </h3>
+      <p id="member-pin-modal-subtitle" class="text-xs text-slate-400 mt-1 max-w-xs leading-relaxed">
+        กรุณากรอกรหัส PIN เพื่อยืนยันสิทธิ์ในการใช้แต้มแลกของรางวัล
+      </p>
+
+      <!-- Hint Box for first time setup -->
+      <div id="member-pin-hint-box" class="hidden mt-3 px-3 py-2 bg-amber-500/10 border border-amber-500/25 rounded-xl text-left w-full text-xs text-amber-300 flex items-start gap-2">
+        <i class="fa-solid fa-lightbulb text-amber-400 text-sm mt-0.5 shrink-0"></i>
+        <span>ตั้งรหัส PIN 4 หลักครั้งแรกสำหรับตัวละครนี้ เพื่อป้องกันสมาชิกท่านอื่นนำแต้มของคุณไปแลก</span>
+      </div>
+
+      <!-- PIN Form -->
+      <form onsubmit="submitPinForm(event)" class="w-full mt-4 space-y-4">
+        <div>
+          <label id="member-pin-label" class="block text-xs font-semibold text-slate-300 text-left mb-1.5">
+            รหัส PIN 4 หลัก:
+          </label>
+          <input type="password" id="member-pin-input" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="••••" required
+            class="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 text-amber-300 font-mono text-2xl text-center tracking-[0.5em] rounded-2xl py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition shadow-inner" />
+        </div>
+
+        <div id="member-pin-confirm-box" class="hidden text-left">
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5" data-i18n="pin_label_confirm">
+            ยืนยันรหัส PIN อีกครั้ง:
+          </label>
+          <input type="password" id="member-pin-confirm-input" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="••••"
+            class="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 text-amber-300 font-mono text-2xl text-center tracking-[0.5em] rounded-2xl py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition shadow-inner" />
+        </div>
+
+        <div class="flex items-center gap-2 pt-2">
+          <button type="button" onclick="closePinModal()"
+            class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">
+            ยกเลิก
+          </button>
+          <button type="submit" id="btn-member-pin-submit"
+            class="flex-1 py-2.5 px-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-500/20 active:scale-95 transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-lock-open"></i> <span>ยืนยันรหัส PIN</span>
+          </button>
+        </div>
+      </form>
 
     </div>
   </div>
