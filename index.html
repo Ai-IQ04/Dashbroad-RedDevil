@@ -58,15 +58,23 @@
   </script>
 
   <style>
-    body, html, input, button, select, textarea {
+    body,
+    html,
+    input,
+    button,
+    select,
+    textarea {
       font-family: 'Sarabun', 'Prompt', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
+
     .font-sarabun {
       font-family: 'Sarabun', sans-serif !important;
     }
+
     .font-mono {
       font-family: 'JetBrains Mono', 'Inter', monospace !important;
     }
+
     /* Mobile Optimizations & Touch Response */
     * {
       -webkit-tap-highlight-color: transparent;
@@ -509,6 +517,13 @@
           <span data-i18n="btn_request_cp">ขออัพเดท CP</span>
         </button>
 
+        <!-- ปุ่มยื่นอุทธรณ์เช็คชื่อ (ทุกคนเห็น) -->
+        <button onclick="openAppealRequestModal()"
+          class="apple-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white border border-pink-400/30">
+          <i class="fa-solid fa-bullhorn text-pink-200 text-[11px]"></i>
+          <span data-i18n="btn_appeal_request">ยื่นอุทธรณ์</span>
+        </button>
+
         <!-- ปุ่มอนุมัติ CP (เฉพาะ Admin) -->
         <button id="btn-approve-cp" onclick="openCpApprovalModal()"
           class="hidden apple-btn apple-btn-purple inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm relative">
@@ -518,32 +533,41 @@
             class="hidden absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[9px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow px-1 animate-pulse">0</span>
         </button>
 
+        <!-- ปุ่มอนุมัติอุทธรณ์เช็คชื่อ (เฉพาะ Admin) -->
+        <button id="btn-approve-appeals" onclick="openAppealApprovalModal()"
+          class="hidden apple-btn apple-btn-rose inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm relative">
+          <i class="fa-solid fa-clipboard-question text-rose-400 text-[11px]"></i>
+          <span data-i18n="btn_appeal_approval">อุทธรณ์เช็คชื่อ</span>
+          <span id="appeal-pending-badge"
+            class="hidden absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[9px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow px-1 animate-pulse">0</span>
+        </button>
+
         <!-- ปุ่มจัดการกิลด์ (เฉพาะ Admin) -->
         <button id="btn-manage-guilds" onclick="openGuildManagerModal()"
           class="hidden apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm">
           <i class="fa-solid fa-shield-cat text-emerald-400 text-[11px]"></i>
-          <span>จัดการกิลด์</span>
+          <span data-i18n="btn_manage_guilds">จัดการกิลด์</span>
         </button>
 
         <!-- ปุ่มติ๊ก All ตามกิลด์ (เฉพาะ Admin) -->
         <button id="btn-batch-guild-check" onclick="openBatchGuildCheckModal()"
           class="hidden apple-btn apple-btn-indigo inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm">
           <i class="fa-solid fa-list-check text-indigo-400 text-[11px]"></i>
-          <span>ติ๊ก All ตามกิลด์</span>
+          <span data-i18n="btn_batch_guild_check">ติ๊ก All ตามกิลด์</span>
         </button>
 
         <!-- ปุ่มล้างข้อมูลการติ๊กถูก (เฉพาะ Admin) -->
         <button id="btn-clear-checks" onclick="openClearChecksModal()"
           class="hidden apple-btn apple-btn-rose inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm">
           <i class="fa-solid fa-broom text-rose-400 text-[11px]"></i>
-          <span>ล้างการติ๊กถูก</span>
+          <span data-i18n="btn_clear_checks">ล้างการติ๊กถูก</span>
         </button>
 
         <!-- ปุ่มประวัติการแก้ไข Audit Logs (เฉพาะ Admin) -->
         <button id="btn-audit-logs" onclick="openAuditLogsModal()"
           class="hidden apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm text-slate-300 hover:text-amber-300">
           <i class="fa-solid fa-clock-rotate-left text-amber-400 text-[11px]"></i>
-          <span>ประวัติแก้ไข</span>
+          <span data-i18n="btn_audit_logs">ประวัติแก้ไข</span>
         </button>
 
         <!-- ปุ่มจัดการ Admin (เฉพาะ Super Admin) -->
@@ -875,8 +899,7 @@
         <input type="hidden" id="quick-cp-member-id" value="">
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1.5">ค่าพลัง CP ใหม่</label>
-          <input type="number" id="quick-cp-input" required min="0" max="999999999"
-            placeholder="เช่น 5500000"
+          <input type="number" id="quick-cp-input" required min="0" max="999999999" placeholder="เช่น 5500000"
             class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 font-mono transition">
           <p class="text-[10px] text-slate-500 mt-1">จะบันทึกลงในสัปดาห์ที่กำลังเปิดดูอยู่</p>
         </div>
@@ -920,8 +943,7 @@
         <input type="hidden" id="quick-name-member-id" value="">
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1.5">ชื่อตัวละครใหม่</label>
-          <input type="text" id="quick-name-input" required maxlength="30"
-            placeholder="ชื่อตัวละครในเกม"
+          <input type="text" id="quick-name-input" required maxlength="30" placeholder="ชื่อตัวละครในเกม"
             class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-base font-sarabun font-bold focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition">
         </div>
 
@@ -983,8 +1005,7 @@
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block text-[10.5px] font-semibold text-slate-400 mb-1">ชื่อกิลด์</label>
-              <input type="text" id="new-guild-name-input" required maxlength="25"
-                placeholder="เช่น GreenDevil"
+              <input type="text" id="new-guild-name-input" required maxlength="25" placeholder="เช่น GreenDevil"
                 class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500 font-bold transition">
             </div>
             <div>
@@ -1036,8 +1057,7 @@
         <input type="hidden" id="rename-guild-old-name" value="">
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1.5">ชื่อกิลด์ใหม่</label>
-          <input type="text" id="rename-guild-new-name" required maxlength="25"
-            placeholder="ชื่อกิลด์ใหม่"
+          <input type="text" id="rename-guild-new-name" required maxlength="25" placeholder="ชื่อกิลด์ใหม่"
             class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-amber-500 font-bold transition">
           <p class="text-[10px] text-slate-500 mt-1">สมาชิกในกิลด์นี้จะถูกอัปเดตชื่อกิลด์ใหม่โดยอัตโนมัติ</p>
         </div>
@@ -1113,14 +1133,16 @@
         <div>
           <label class="block font-semibold text-slate-200 mb-1.5">3. รูปแบบการดำเนินการ *</label>
           <div class="grid grid-cols-2 gap-2">
-            <label class="flex items-center gap-2 p-2.5 bg-slate-900/80 border border-emerald-500/30 rounded-xl cursor-pointer hover:border-emerald-500/60 transition">
+            <label
+              class="flex items-center gap-2 p-2.5 bg-slate-900/80 border border-emerald-500/30 rounded-xl cursor-pointer hover:border-emerald-500/60 transition">
               <input type="radio" name="batch-action" value="check" checked class="accent-emerald-500">
               <div>
                 <div class="font-bold text-emerald-300 text-xs">✅ ติ๊กถูกทั้งหมด</div>
                 <div class="text-[10px] text-slate-400">เข้าร่วมกิจกรรม</div>
               </div>
             </label>
-            <label class="flex items-center gap-2 p-2.5 bg-slate-900/80 border border-rose-500/30 rounded-xl cursor-pointer hover:border-rose-500/60 transition">
+            <label
+              class="flex items-center gap-2 p-2.5 bg-slate-900/80 border border-rose-500/30 rounded-xl cursor-pointer hover:border-rose-500/60 transition">
               <input type="radio" name="batch-action" value="uncheck" class="accent-rose-500">
               <div>
                 <div class="font-bold text-rose-300 text-xs">❌ ยกเลิกติ๊กถูก</div>
@@ -1130,9 +1152,11 @@
           </div>
         </div>
 
-        <div class="bg-indigo-950/20 border border-indigo-500/30 rounded-xl p-2.5 text-indigo-300 text-[11px] leading-relaxed">
+        <div
+          class="bg-indigo-950/20 border border-indigo-500/30 rounded-xl p-2.5 text-indigo-300 text-[11px] leading-relaxed">
           <i class="fa-solid fa-circle-info mr-1 text-indigo-400"></i>
-          ระบบจะดำเนินการกับสมาชิกใน <span id="batch-modal-week-label" class="font-bold text-white">สัปดาห์ปัจจุบัน</span> และซิงค์ข้อมูลให้ทุกคนทันที
+          ระบบจะดำเนินการกับสมาชิกใน <span id="batch-modal-week-label"
+            class="font-bold text-white">สัปดาห์ปัจจุบัน</span> และซิงค์ข้อมูลให้ทุกคนทันที
         </div>
       </div>
 
@@ -1164,7 +1188,9 @@
           <div>
             <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
               <span>ประวัติและบันทึกการแก้ไข (Audit Logs)</span>
-              <span id="audit-log-count-badge" class="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-300 font-mono font-bold">0 รายการ</span>
+              <span id="audit-log-count-badge"
+                class="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-300 font-mono font-bold">0
+                รายการ</span>
             </h3>
             <p class="text-xs text-slate-400">บันทึกประวัติการกระทำของ Admin ทุกคนแบบเรียลไทม์</p>
           </div>
@@ -1179,7 +1205,8 @@
         <div class="flex flex-1 items-center gap-2 min-w-[240px]">
           <div class="relative flex-1">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-            <input type="text" id="audit-search-input" oninput="renderAuditLogsList()" placeholder="ค้นหาชื่อแอดมิน, สมาชิก หรือรายละเอียด..."
+            <input type="text" id="audit-search-input" oninput="renderAuditLogsList()"
+              placeholder="ค้นหาชื่อแอดมิน, สมาชิก หรือรายละเอียด..."
               class="w-full pl-8 pr-3 py-1.5 bg-slate-900 border border-slate-700 text-xs rounded-xl text-white focus:outline-none focus:border-amber-500 font-sarabun">
           </div>
           <select id="audit-filter-type" onchange="renderAuditLogsList()"
@@ -1204,10 +1231,14 @@
         </div>
 
         <div class="flex items-center gap-1.5">
-          <button onclick="renderAuditLogsList()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition" title="รีเฟรชประวัติ">
+          <button onclick="renderAuditLogsList()"
+            class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition"
+            title="รีเฟรชประวัติ">
             <i class="fa-solid fa-rotate text-xs"></i>
           </button>
-          <button id="btn-clear-audit-logs" onclick="handleClearAuditLogs()" class="hidden px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs transition" title="ล้างประวัติ (เฉพาะ Super Admin)">
+          <button id="btn-clear-audit-logs" onclick="handleClearAuditLogs()"
+            class="hidden px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs transition"
+            title="ล้างประวัติ (เฉพาะ Super Admin)">
             <i class="fa-solid fa-trash-can text-xs mr-1"></i>ล้างประวัติ
           </button>
         </div>
@@ -1220,9 +1251,11 @@
         </div>
       </div>
 
-      <div class="p-3 border-t border-slate-800 bg-slate-900/60 flex items-center justify-between text-xs text-slate-400">
+      <div
+        class="p-3 border-t border-slate-800 bg-slate-900/60 flex items-center justify-between text-xs text-slate-400">
         <span class="text-[11px]">ซิงค์ข้อมูลกับ Cloud Realtime อัตโนมัติ (เก็บบันทึกสูงสุด 250 รายการล่าสุด)</span>
-        <button onclick="closeAuditLogsModal()" class="apple-btn apple-btn-slate px-4 py-1.5 rounded-xl text-slate-300 text-xs font-semibold">
+        <button onclick="closeAuditLogsModal()"
+          class="apple-btn apple-btn-slate px-4 py-1.5 rounded-xl text-slate-300 text-xs font-semibold">
           ปิด
         </button>
       </div>
@@ -1251,21 +1284,25 @@
       </div>
 
       <div class="space-y-3 text-xs text-slate-300">
-        <div class="bg-rose-950/20 border border-rose-500/30 rounded-xl p-3 text-rose-300 text-[11.5px] leading-relaxed">
+        <div
+          class="bg-rose-950/20 border border-rose-500/30 rounded-xl p-3 text-rose-300 text-[11.5px] leading-relaxed">
           <i class="fa-solid fa-circle-info mr-1.5 text-rose-400"></i>
-          <strong>ข้อควรระวัง:</strong> การล้างข้อมูลจะนำเครื่องหมายถูก (Attendance) ออกทั้งหมด แต่<strong>รายชื่อสมาชิก, กิลด์ และค่าพลัง CP จะยังคงอยู่ครบถ้วน</strong>
+          <strong>ข้อควรระวัง:</strong> การล้างข้อมูลจะนำเครื่องหมายถูก (Attendance) ออกทั้งหมด
+          แต่<strong>รายชื่อสมาชิก, กิลด์ และค่าพลัง CP จะยังคงอยู่ครบถ้วน</strong>
         </div>
 
         <div class="space-y-2 pt-1">
           <label class="block font-semibold text-slate-200">เลือกขอบเขตที่ต้องการล้าง:</label>
-          <label class="flex items-center gap-2.5 p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl cursor-pointer hover:border-slate-700 transition">
+          <label
+            class="flex items-center gap-2.5 p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl cursor-pointer hover:border-slate-700 transition">
             <input type="radio" name="clear-scope" value="current" checked class="accent-rose-500">
             <div>
               <div class="font-bold text-white text-xs" id="clear-checks-current-label">ล้างเฉพาะสัปดาห์ปัจจุบัน</div>
               <div class="text-[10px] text-slate-400">ล้างเฉพาะการติ๊กถูกของสัปดาห์ที่กำลังเปิดอยู่</div>
             </div>
           </label>
-          <label class="flex items-center gap-2.5 p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl cursor-pointer hover:border-slate-700 transition">
+          <label
+            class="flex items-center gap-2.5 p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl cursor-pointer hover:border-slate-700 transition">
             <input type="radio" name="clear-scope" value="all" class="accent-rose-500">
             <div>
               <div class="font-bold text-white text-xs">ล้างทุกสัปดาห์ (สัปดาห์ที่ 1 - 4)</div>
@@ -1694,6 +1731,120 @@
         <button onclick="closeCpApprovalModal()"
           class="apple-btn apple-btn-slate px-4 py-1.5 rounded-xl text-slate-300 text-xs"
           data-i18n="btn_close">ปิดหน้าต่าง</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= หน้าต่างป๊อปอัป: สมาชิกยื่นอุทธรณ์การเช็คชื่อ (Attendance Appeal Request Modal) ================= -->
+  <div id="appeal-request-modal"
+    class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 hidden">
+    <div
+      class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl overflow-hidden apple-modal-box font-sarabun">
+
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div class="flex items-center gap-2.5">
+          <div
+            class="h-9 w-9 rounded-xl bg-pink-500/20 text-pink-400 border border-pink-500/30 flex items-center justify-center text-base">
+            <i class="fa-solid fa-bullhorn"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white" data-i18n="modal_appeal_title">ยื่นอุทธรณ์การเช็คชื่อบอส</h3>
+            <p class="text-xs text-slate-400" data-i18n="modal_appeal_desc">สำหรับสมาชิกที่ลงกิจกรรมแต่ยังไม่ถูกติ๊กชื่อ</p>
+          </div>
+        </div>
+        <button onclick="closeAppealRequestModal()" class="text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleSubmitAppeal(event)" class="p-4 space-y-3.5 flex-1 overflow-y-auto">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="appeal_step1_label">1. เลือกตัวละครของคุณ *</label>
+          <select id="appeal-member-select" required onchange="populateAppealBossCheckboxes()"
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-pink-500 cursor-pointer font-sarabun font-bold">
+            <!-- Populated by JS -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="appeal_step2_label">2. เลือกสัปดาห์ที่ต้องการอุทธรณ์ *</label>
+          <select id="appeal-week-select" onchange="populateAppealBossCheckboxes()"
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-pink-500 cursor-pointer font-mono">
+            <!-- Populated by JS -->
+          </select>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-semibold text-slate-300" data-i18n="appeal_step3_label">3. เลือกบอสที่เข้าร่วมแต่ยังไม่ถูกติ๊ก *</label>
+            <span class="text-[10px] text-pink-400 font-medium" data-i18n="appeal_step3_sub">เลือกได้มากกว่า 1 บอส</span>
+          </div>
+          <div id="appeal-bosses-list" class="max-h-48 overflow-y-auto space-y-1.5 p-2 bg-slate-950/80 border border-slate-800 rounded-xl">
+            <!-- Populated with checkboxes by JS -->
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1" data-i18n="appeal_step4_label">4. หมายเหตุ / รายละเอียดเพิ่มเติม (ถ้ามี)</label>
+          <textarea id="appeal-reason-input" rows="2" maxlength="200" placeholder="เช่น ลงรอบ 19:30 น. อยู่ตี้ 3 ครับ"
+            data-i18n-placeholder="appeal_step4_placeholder"
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-pink-500"></textarea>
+        </div>
+
+        <div class="bg-pink-950/20 border border-pink-500/30 rounded-xl p-2.5 text-pink-300 text-[11px] leading-relaxed">
+          <i class="fa-solid fa-circle-info mr-1 text-pink-400"></i>
+          <span data-i18n="appeal_info_notice">เมื่อส่งคำขอแล้ว แอดมินจะได้รับแจ้งเตือนและตรวจสอบเพื่ออนุมัติการเช็คชื่อให้โดยเร็วครับ</span>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeAppealRequestModal()"
+            class="apple-btn apple-btn-slate px-4 py-2 rounded-xl text-slate-300 text-xs font-semibold" data-i18n="btn_cancel">ยกเลิก</button>
+          <button type="submit"
+            class="apple-btn bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 px-4 py-2 rounded-xl text-white font-bold text-xs shadow-lg shadow-rose-600/20 flex items-center gap-1.5">
+            <i class="fa-solid fa-paper-plane text-[10px]"></i>
+            <span data-i18n="btn_submit_appeal">ส่งคำขออุทธรณ์</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= หน้าต่างป๊อปอัป: Admin พิจารณาคำขออุทธรณ์เช็คชื่อ (Appeal Approval Modal) ================= -->
+  <div id="appeal-approval-modal"
+    class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 hidden">
+    <div
+      class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden apple-modal-box font-sarabun">
+
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div class="flex items-center gap-2.5">
+          <div
+            class="h-9 w-9 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center text-base">
+            <i class="fa-solid fa-clipboard-question"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <span data-i18n="modal_appeal_admin_title">พิจารณาคำขออุทธรณ์เช็คชื่อ</span>
+              <span id="appeal-count-badge" class="px-2 py-0.5 rounded-full text-[10px] bg-rose-500/20 text-rose-300 font-mono font-bold">0 คำขอ</span>
+            </h3>
+            <p class="text-xs text-slate-400" data-i18n="modal_appeal_admin_desc">ตรวจสอบและอนุมัติการเช็คชื่อย้อนหลังให้สมาชิก</p>
+          </div>
+        </div>
+        <button onclick="closeAppealApprovalModal()" class="text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5">
+        <div id="appeal-approval-list" class="space-y-3">
+          <!-- Dynamic content rendered by JS -->
+        </div>
+      </div>
+
+      <div class="p-3 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between">
+        <button onclick="clearAppealHistory()"
+          class="apple-btn apple-btn-slate px-3 py-1.5 rounded-xl text-slate-400 text-[10px]" data-i18n="btn_clear_appeal_history">ล้างประวัติที่ดำเนินการแล้ว</button>
+        <button onclick="closeAppealApprovalModal()"
+          class="apple-btn apple-btn-slate px-4 py-1.5 rounded-xl text-slate-300 text-xs font-semibold" data-i18n="btn_close">ปิดหน้าต่าง</button>
       </div>
     </div>
   </div>
@@ -4193,7 +4344,50 @@
         "boss_col_time": "เวลาเกิด (+7 BKK)",
         "boss_col_timer": "นับถอยหลัง Real-Time",
         "boss_col_last": "เวลาตายล่าสุด",
-        "boss_unspecified_loc": "ไม่ระบุสถานที่"
+        "boss_unspecified_loc": "ไม่ระบุสถานที่",
+        "btn_appeal_request": "ยื่นอุทธรณ์",
+        "btn_appeal_approval": "อุทธรณ์เช็คชื่อ",
+        "btn_manage_guilds": "จัดการกิลด์",
+        "btn_batch_guild_check": "ติ๊ก All ตามกิลด์",
+        "btn_clear_checks": "ล้างการติ๊กถูก",
+        "btn_audit_logs": "ประวัติแก้ไข",
+        "modal_appeal_title": "ยื่นอุทธรณ์การเช็คชื่อบอส",
+        "modal_appeal_desc": "สำหรับสมาชิกที่ลงกิจกรรมแต่ยังไม่ถูกติ๊กชื่อ",
+        "appeal_step1_label": "1. เลือกตัวละครของคุณ *",
+        "appeal_step2_label": "2. เลือกสัปดาห์ที่ต้องการอุทธรณ์ *",
+        "appeal_step3_label": "3. เลือกบอสที่เข้าร่วมแต่ยังไม่ถูกติ๊ก *",
+        "appeal_step3_sub": "เลือกได้มากกว่า 1 บอส",
+        "appeal_step4_label": "4. หมายเหตุ / รายละเอียดเพิ่มเติม (ถ้ามี)",
+        "appeal_step4_placeholder": "เช่น ลงรอบ 19:30 น. อยู่ตี้ 3 ครับ",
+        "appeal_info_notice": "เมื่อส่งคำขอแล้ว แอดมินจะได้รับแจ้งเตือนและตรวจสอบเพื่ออนุมัติการเช็คชื่อให้โดยเร็วครับ",
+        "btn_submit_appeal": "ส่งคำขออุทธรณ์",
+        "modal_appeal_admin_title": "พิจารณาคำขออุทธรณ์เช็คชื่อ",
+        "modal_appeal_admin_desc": "ตรวจสอบและอนุมัติการเช็คชื่อย้อนหลังให้สมาชิก",
+        "appeal_pending_title": "คำขอรอดำเนินการ ({count} คำขอ)",
+        "appeal_processed_title": "ประวัติที่ดำเนินการแล้ว ({count} รายการ)",
+        "appeal_no_data": "ไม่มีคำขออุทธรณ์ในขณะนี้",
+        "appeal_no_data_desc": "เมื่อสมาชิกยื่นอุทธรณ์การเช็คชื่อ คำขอจะแสดงในหน้านี้",
+        "btn_approve_and_check": "อนุมัติและติ๊กให้",
+        "btn_clear_appeal_history": "ล้างประวัติที่ดำเนินการแล้ว",
+        "modal_audit_title": "ประวัติการแก้ไขข้อมูล (Audit Logs)",
+        "modal_audit_desc": "บันทึกประวัติการเปลี่ยนแปลงทุกอย่างในระบบแบบ Real-time เพื่อความโปร่งใส",
+        "audit_filter_all": "ทุกหมวดหมู่",
+        "audit_no_logs": "ยังไม่มีประวัติการแก้ไข",
+        "btn_clear_audit_logs": "ล้างประวัติ Logs",
+        "modal_batch_title": "ติ๊ก All การเช็คชื่อตามกิลด์",
+        "modal_batch_desc": "ติ๊กถูกบอสให้สมาชิกทุกคนในกิลด์ที่เลือกพร้อมกันในคลิกเดียว",
+        "label_select_guild_batch": "เลือกกิลด์เป้าหมาย:",
+        "label_select_boss_batch": "เลือกกิจกรรม / บอส:",
+        "btn_batch_check_all": "ติ๊กถูกทุกคน (Check All)",
+        "btn_batch_uncheck_all": "ยกเลิกติ๊กทุกคน (Uncheck All)",
+        "modal_clear_checks_title": "ล้างข้อมูลการติ๊กถูก",
+        "modal_clear_checks_desc": "เลือกล้างการติ๊กถูกตามกิลด์หรือล้างทั้งหมดในสัปดาห์ปัจจุบัน",
+        "btn_clear_all_guilds": "ล้างทุกกิลด์ในสัปดาห์นี้",
+        "toast_appeal_sent": "ส่งคำขออุทธรณ์สำหรับ \"{name}\" เรียบร้อยแล้ว! แอดมินจะตรวจสอบให้ครับ",
+        "toast_appeal_approved": "อนุมัติและติ๊กถูกบอสให้ \"{name}\" เรียบร้อยแล้ว!",
+        "toast_appeal_rejected": "ปฏิเสธคำขออุทธรณ์ของ \"{name}\" แล้ว",
+        "toast_appeal_history_cleared": "ล้างประวัติคำขออุทธรณ์เรียบร้อยแล้ว",
+        "confirm_clear_appeal_history": "ต้องการล้างประวัติคำขออุทธรณ์ที่ดำเนินการเสร็จสิ้นแล้วใช่หรือไม่?"
       },
       "en": {
         "btn_top10_summary": "Top 10 Summary",
@@ -4457,7 +4651,50 @@
         "boss_col_time": "Respawn Time (+7 BKK)",
         "boss_col_timer": "Live Countdown",
         "boss_col_last": "Last Defeated",
-        "boss_unspecified_loc": "Unspecified Location"
+        "boss_unspecified_loc": "Unspecified Location",
+        "btn_appeal_request": "Appeal",
+        "btn_appeal_approval": "Appeals",
+        "btn_manage_guilds": "Manage Guilds",
+        "btn_batch_guild_check": "Batch Guild Check",
+        "btn_clear_checks": "Clear Checks",
+        "btn_audit_logs": "Audit Logs",
+        "modal_appeal_title": "Submit Attendance Appeal",
+        "modal_appeal_desc": "For members who attended boss events but have not been checked in yet",
+        "appeal_step1_label": "1. Select Your Character *",
+        "appeal_step2_label": "2. Select Week to Appeal *",
+        "appeal_step3_label": "3. Select Missed Boss Events *",
+        "appeal_step3_sub": "You can select multiple bosses",
+        "appeal_step4_label": "4. Additional Details / Reason (Optional)",
+        "appeal_step4_placeholder": "e.g. Attended 19:30 party #3",
+        "appeal_info_notice": "Once submitted, Admins will receive a notification and verify your attendance soon.",
+        "btn_submit_appeal": "Submit Appeal Request",
+        "modal_appeal_admin_title": "Review Attendance Appeals",
+        "modal_appeal_admin_desc": "Review and back-credit boss attendance checks for guild members",
+        "appeal_pending_title": "Pending Appeals ({count} items)",
+        "appeal_processed_title": "Processed History ({count} items)",
+        "appeal_no_data": "No attendance appeals at this moment",
+        "appeal_no_data_desc": "When members submit attendance appeals, they will appear here.",
+        "btn_approve_and_check": "Approve & Check",
+        "btn_clear_appeal_history": "Clear Processed History",
+        "modal_audit_title": "System Audit Logs & History",
+        "modal_audit_desc": "Real-time timeline tracking all changes made across the guild for complete transparency",
+        "audit_filter_all": "All Categories",
+        "audit_no_logs": "No audit logs recorded yet",
+        "btn_clear_audit_logs": "Clear Audit Logs",
+        "modal_batch_title": "Batch Attendance Check by Guild",
+        "modal_batch_desc": "Check or uncheck boss attendance for all members of a guild in one click",
+        "label_select_guild_batch": "Select Target Guild:",
+        "label_select_boss_batch": "Select Boss Activity:",
+        "btn_batch_check_all": "Check All Members",
+        "btn_batch_uncheck_all": "Uncheck All Members",
+        "modal_clear_checks_title": "Clear Attendance Checks",
+        "modal_clear_checks_desc": "Clear attendance checks by specific guild or for all guilds in current week",
+        "btn_clear_all_guilds": "Clear All Guilds (Current Week)",
+        "toast_appeal_sent": "Attendance appeal for \"{name}\" submitted successfully! Admins will review soon.",
+        "toast_appeal_approved": "Approved and checked attendance for \"{name}\"!",
+        "toast_appeal_rejected": "Rejected attendance appeal for \"{name}\"",
+        "toast_appeal_history_cleared": "Cleared attendance appeals history.",
+        "confirm_clear_appeal_history": "Are you sure you want to clear all processed appeal history?"
       }
     };
 
@@ -4516,6 +4753,12 @@
       }
       if (!document.getElementById('cp-approval-modal').classList.contains('hidden')) {
         renderCpApprovalList();
+      }
+      if (!document.getElementById('appeal-approval-modal').classList.contains('hidden')) {
+        renderAppealApprovalList();
+      }
+      if (!document.getElementById('audit-logs-modal').classList.contains('hidden')) {
+        renderAuditLogsList();
       }
       showToast(currentLang === 'th' ? 'เปลี่ยนภาษาเป็น: ภาษาไทย' : 'Language switched to: English', 'info');
     }
@@ -4888,6 +5131,24 @@
           }
         }
       });
+
+      // 10. ดักฟังคำขออุทธรณ์เช็คชื่อ (Attendance Appeals)
+      fbDb.ref('guild_app/attendance_appeals').on('value', snapshot => {
+        const val = snapshot.val();
+        if (Array.isArray(val)) {
+          attendanceAppeals = val;
+        } else if (val && typeof val === 'object') {
+          attendanceAppeals = Object.values(val);
+        } else {
+          attendanceAppeals = [];
+        }
+        localStorage.setItem('guild_attendance_appeals', JSON.stringify(attendanceAppeals));
+        updateAppealPendingBadge();
+        const appealModal = document.getElementById('appeal-approval-modal');
+        if (appealModal && !appealModal.classList.contains('hidden')) {
+          renderAppealApprovalList();
+        }
+      });
     }
 
     // ================= ระบบจัดการ 4 สัปดาห์ & เปลี่ยนชื่อสัปดาห์ =================
@@ -5084,6 +5345,7 @@
 
       renderWeekTabs();
       updateCpPendingBadge();
+      updateAppealPendingBadge();
       renderTable();
     }
 
@@ -7374,6 +7636,347 @@
       showToast(t('toast_cp_history_cleared'), 'info');
     }
 
+    // ================= ระบบอุทธรณ์การเช็คชื่อ (Attendance Appeal System) =================
+    let attendanceAppeals = JSON.parse(localStorage.getItem('guild_attendance_appeals')) || [];
+
+    function saveAttendanceAppeals() {
+      localStorage.setItem('guild_attendance_appeals', JSON.stringify(attendanceAppeals));
+      updateAppealPendingBadge();
+      if (fbDb) {
+        fbDb.ref('guild_app/attendance_appeals').set(attendanceAppeals);
+      }
+    }
+
+    function updateAppealPendingBadge() {
+      const pending = attendanceAppeals.filter(r => r.status === 'pending');
+      const badge = document.getElementById('appeal-pending-badge');
+      const countBadge = document.getElementById('appeal-count-badge');
+      const btn = document.getElementById('btn-approve-appeals');
+
+      if (badge) {
+        badge.textContent = pending.length;
+        if (pending.length > 0) {
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      }
+
+      if (countBadge) {
+        countBadge.textContent = `${pending.length} คำขอ`;
+      }
+
+      if (btn) {
+        if (isAdmin) {
+          btn.classList.remove('hidden');
+          btn.classList.add('inline-flex');
+        } else {
+          btn.classList.add('hidden');
+          btn.classList.remove('inline-flex');
+        }
+      }
+    }
+
+    function openAppealRequestModal() {
+      const memberSelect = document.getElementById('appeal-member-select');
+      const weekSelect = document.getElementById('appeal-week-select');
+      const reasonInput = document.getElementById('appeal-reason-input');
+
+      // Populate Members
+      const sortedMembers = [...members].sort((a, b) => (a.characterName || '').localeCompare(b.characterName || '', currentLang === 'th' ? 'th' : 'en'));
+      memberSelect.innerHTML = `<option value="">-- เลือกตัวละครของคุณ --</option>` +
+        sortedMembers.map(m => `<option value="${m.id}">${escapeHtml(m.characterName)} (${escapeHtml(m.guild)})</option>`).join('');
+
+      // Populate Weeks
+      let wHtml = '';
+      for (let w = 1; w <= 4; w++) {
+        const isCurrent = (w === currentWeekNumber);
+        wHtml += `<option value="${w}" ${isCurrent ? 'selected' : ''}>${escapeHtml(getWeekName(w))}${isCurrent ? ' (สัปดาห์ปัจจุบัน)' : ''}</option>`;
+      }
+      weekSelect.innerHTML = wHtml;
+
+      if (reasonInput) reasonInput.value = '';
+      populateAppealBossCheckboxes();
+
+      document.getElementById('appeal-request-modal').classList.remove('hidden');
+    }
+
+    function closeAppealRequestModal() {
+      document.getElementById('appeal-request-modal').classList.add('hidden');
+    }
+
+    function populateAppealBossCheckboxes() {
+      const container = document.getElementById('appeal-bosses-list');
+      const memberId = parseInt(document.getElementById('appeal-member-select')?.value);
+      const weekNumber = parseInt(document.getElementById('appeal-week-select')?.value) || currentWeekNumber;
+      if (!container) return;
+
+      const member = members.find(m => m.id === memberId);
+      const weeklyChecks = (member && member.weeklyChecks && member.weeklyChecks[weekNumber]) || (member ? member.checks : []);
+
+      let html = '';
+      ACTIVITIES.forEach((act, idx) => {
+        const isAlreadyChecked = weeklyChecks && weeklyChecks[idx] === true;
+        const dayLabel = getDayDisplayName(normalizeDay(act.day), currentLang);
+
+        html += `
+          <label class="flex items-center justify-between p-2 rounded-lg bg-slate-900/90 border border-slate-800 hover:border-pink-500/50 cursor-pointer transition ${isAlreadyChecked ? 'opacity-50' : ''}">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <input type="checkbox" name="appeal-boss" value="${idx}" ${isAlreadyChecked ? 'disabled' : ''}
+                class="accent-pink-500 rounded w-4 h-4 cursor-pointer">
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-bold">${escapeHtml(dayLabel)}</span>
+                  <span class="font-bold text-white text-xs truncate">${escapeHtml(act.name || act.shortName)}</span>
+                </div>
+                <div class="text-[10px] text-slate-400 font-mono">คะแนนหัก: ${act.weight}%</div>
+              </div>
+            </div>
+            ${isAlreadyChecked ? '<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold shrink-0">✅ ติ๊กแล้ว</span>' : ''}
+          </label>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function handleSubmitAppeal(e) {
+      e.preventDefault();
+      const memberId = parseInt(document.getElementById('appeal-member-select').value);
+      const weekNumber = parseInt(document.getElementById('appeal-week-select').value) || currentWeekNumber;
+      const reason = document.getElementById('appeal-reason-input').value.trim();
+
+      if (!memberId) {
+        showToast('กรุณาเลือกตัวละครของคุณ', 'warning');
+        return;
+      }
+
+      const member = members.find(m => m.id === memberId);
+      if (!member) return;
+
+      const checkedBoxes = Array.from(document.querySelectorAll('input[name="appeal-boss"]:checked'));
+      if (checkedBoxes.length === 0) {
+        showToast('กรุณาเลือกบอสที่ต้องการอุทธรณ์อย่างน้อย 1 ตัว', 'warning');
+        return;
+      }
+
+      const bossIndices = checkedBoxes.map(cb => parseInt(cb.value)).filter(n => !isNaN(n));
+      const bossNames = bossIndices.map(idx => ACTIVITIES[idx]?.shortName || `บอส #${idx + 1}`);
+
+      const appealItem = {
+        id: Date.now(),
+        memberId: member.id,
+        characterName: member.characterName,
+        guild: member.guild,
+        weekNumber: weekNumber,
+        weekName: getWeekName(weekNumber),
+        bossIndices: bossIndices,
+        bossNames: bossNames,
+        reason: reason,
+        requestedAt: new Date().toISOString(),
+        status: 'pending'
+      };
+
+      attendanceAppeals.unshift(appealItem);
+      saveAttendanceAppeals();
+      closeAppealRequestModal();
+
+      if (typeof addAuditLog === 'function') {
+        addAuditLog(
+          'check',
+          `ยื่นคำขออุทธรณ์เช็คชื่อ: "${member.characterName}"`,
+          `บอส: ${bossNames.join(', ')} | สัปดาห์: ${getWeekName(weekNumber)}${reason ? ` | เหตุผล: ${reason}` : ''}`,
+          member.characterName
+        );
+      }
+
+      showToast(`ส่งคำขออุทธรณ์สำหรับ "${member.characterName}" เรียบร้อยแล้ว! แอดมินจะตรวจสอบให้ครับ`, 'success');
+    }
+
+    // ================= ฝั่ง Admin: พิจารณาคำขออุทธรณ์ =================
+    function openAppealApprovalModal() {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_edit'), 'warning');
+        openAdminEmailModal();
+        return;
+      }
+      renderAppealApprovalList();
+      document.getElementById('appeal-approval-modal').classList.remove('hidden');
+    }
+
+    function closeAppealApprovalModal() {
+      document.getElementById('appeal-approval-modal').classList.add('hidden');
+    }
+
+    function renderAppealApprovalList() {
+      const container = document.getElementById('appeal-approval-list');
+      const countBadge = document.getElementById('appeal-count-badge');
+      if (!container) return;
+
+      const pending = attendanceAppeals.filter(r => r.status === 'pending');
+      const processed = attendanceAppeals.filter(r => r.status !== 'pending').slice(0, 25);
+
+      if (countBadge) {
+        countBadge.textContent = `${pending.length} ${t('unit_people', 'คำขอ')}`;
+      }
+
+      if (pending.length === 0 && processed.length === 0) {
+        container.innerHTML = `
+          <div class="py-12 text-center text-slate-500 font-sarabun">
+            <i class="fa-solid fa-inbox text-3xl mb-3 block text-slate-600"></i>
+            <p class="font-medium text-slate-300">${t('appeal_no_data')}</p>
+            <p class="text-xs mt-1 text-slate-500">${t('appeal_no_data_desc')}</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+
+      if (pending.length > 0) {
+        html += `<h4 class="text-xs font-bold text-rose-300 uppercase tracking-wider mb-2 flex items-center gap-2 font-sarabun">
+          <i class="fa-solid fa-hourglass-half text-rose-400"></i> ${t('appeal_pending_title', { count: pending.length })}
+        </h4>`;
+
+        pending.forEach(req => {
+          const dateStr = new Date(req.requestedAt).toLocaleString(currentLang === 'th' ? 'th-TH' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+          const bossListStr = (req.bossNames || []).map(b => `<span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 border border-pink-500/30 text-[10px] font-bold">⚔️ ${escapeHtml(b)}</span>`).join(' ');
+
+          html += `
+            <div class="bg-slate-950 border border-pink-500/30 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2 font-sarabun">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <span class="font-bold text-white text-sm truncate">${escapeHtml(req.characterName)}</span>
+                  ${renderGuildBadgeHtml(req.guild)}
+                  <span class="text-[9.5px] px-1.5 py-0.5 rounded font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold">${escapeHtml(req.weekName || `Week ${req.weekNumber}`)}</span>
+                </div>
+                <div class="flex items-center gap-1.5 flex-wrap my-1.5">
+                  ${bossListStr}
+                </div>
+                ${req.reason ? `<div class="text-[11.5px] text-slate-300 mt-1 bg-slate-900/60 p-2 rounded-lg border border-slate-800"><i class="fa-solid fa-comment-dots mr-1 text-slate-400"></i>${escapeHtml(req.reason)}</div>` : ''}
+                <div class="text-[10px] text-slate-500 mt-1.5"><i class="fa-regular fa-clock mr-1"></i>${t('submitted_at_label')} ${dateStr}</div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button onclick="approveAppeal(${req.id})" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-md shadow-emerald-600/20 flex items-center gap-1">
+                  <i class="fa-solid fa-check"></i>${t('btn_approve_and_check')}
+                </button>
+                <button onclick="rejectAppeal(${req.id})" class="px-3.5 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 text-xs font-semibold transition flex items-center gap-1">
+                  <i class="fa-solid fa-xmark"></i>${t('btn_reject')}
+                </button>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      if (processed.length > 0) {
+        html += `<h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-4 mb-2 flex items-center gap-2 font-sarabun">
+          <i class="fa-solid fa-clock-rotate-left"></i> ${t('appeal_processed_title', { count: processed.length })}
+        </h4>`;
+
+        processed.forEach(req => {
+          const dateStr = new Date(req.processedAt || req.requestedAt).toLocaleString(currentLang === 'th' ? 'th-TH' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+          const isApproved = req.status === 'approved';
+          const bossListStr = (req.bossNames || []).join(', ');
+
+          html += `
+            <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-3 opacity-75 mb-1.5 font-sarabun">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-semibold text-slate-300 text-xs truncate">${escapeHtml(req.characterName)}</span>
+                  <span class="text-[10px] text-slate-400">(${escapeHtml(req.weekName || `Week ${req.weekNumber}`)})</span>
+                  <span class="text-[10.5px] text-slate-400 truncate max-w-[200px]">${escapeHtml(bossListStr)}</span>
+                </div>
+                <div class="text-[10px] text-slate-500 mt-0.5">${dateStr} ${req.processedBy ? `• ${escapeHtml(req.processedBy)}` : ''}</div>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded font-semibold shrink-0 ${isApproved ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'}">
+                ${isApproved ? t('approved_badge') : t('rejected_badge')}
+              </span>
+            </div>
+          `;
+        });
+      }
+
+      container.innerHTML = html;
+    }
+
+    function approveAppeal(appealId) {
+      const req = attendanceAppeals.find(r => r.id === appealId);
+      if (!req) return;
+
+      const member = members.find(m => m.id === req.memberId);
+      if (member) {
+        ensureMemberWeeklyData(member);
+        const targetWeek = req.weekNumber || currentWeekNumber;
+
+        if (!Array.isArray(member.weeklyChecks[targetWeek])) {
+          member.weeklyChecks[targetWeek] = new Array(ACTIVITIES.length).fill(false);
+        }
+
+        (req.bossIndices || []).forEach(idx => {
+          if (idx >= 0 && idx < ACTIVITIES.length) {
+            member.weeklyChecks[targetWeek][idx] = true;
+            if (targetWeek === currentWeekNumber) {
+              if (!Array.isArray(member.checks)) member.checks = new Array(ACTIVITIES.length).fill(false);
+              member.checks[idx] = true;
+            }
+          }
+        });
+
+        saveData();
+        renderTable();
+        updateKPIs();
+      }
+
+      req.status = 'approved';
+      req.processedAt = new Date().toISOString();
+      req.processedBy = currentAdminEmail || 'Admin';
+      saveAttendanceAppeals();
+      renderAppealApprovalList();
+
+      const bossStr = (req.bossNames || []).join(', ');
+      if (typeof addAuditLog === 'function') {
+        addAuditLog(
+          'check',
+          `อนุมัติอุทธรณ์เช็คชื่อ: "${req.characterName}"`,
+          `บอส: ${bossStr} | สัปดาห์: ${req.weekName || `สัปดาห์ที่ ${req.weekNumber}`}`,
+          req.characterName
+        );
+      }
+
+      showToast(t('toast_appeal_approved', { name: req.characterName }), 'success');
+    }
+
+    function rejectAppeal(appealId) {
+      const req = attendanceAppeals.find(r => r.id === appealId);
+      if (!req) return;
+
+      req.status = 'rejected';
+      req.processedAt = new Date().toISOString();
+      req.processedBy = currentAdminEmail || 'Admin';
+      saveAttendanceAppeals();
+      renderAppealApprovalList();
+
+      if (typeof addAuditLog === 'function') {
+        addAuditLog(
+          'check',
+          `ปฏิเสธคำขออุทธรณ์เช็คชื่อ: "${req.characterName}"`,
+          `บอส: ${(req.bossNames || []).join(', ')} | สัปดาห์: ${req.weekName || `สัปดาห์ที่ ${req.weekNumber}`}`,
+          req.characterName
+        );
+      }
+
+      showToast(t('toast_appeal_rejected', { name: req.characterName }), 'info');
+    }
+
+    function clearAppealHistory() {
+      if (!confirm(t('confirm_clear_appeal_history'))) return;
+      attendanceAppeals = attendanceAppeals.filter(r => r.status === 'pending');
+      saveAttendanceAppeals();
+      renderAppealApprovalList();
+      showToast(t('toast_appeal_history_cleared'), 'info');
+    }
+
     // ================= ระบบ Boss Viewer & Timer (อ้างอิงจาก Sheet Overview) =================
     const GOOGLE_SHEET_OVERVIEW_CSV_URL = "https://docs.google.com/spreadsheets/d/1azAI2SA9Z8a0mFSeqktU6UGLhLQuRerx3PmrGRskxrE/gviz/tq?tqx=out:csv&gid=2100289944";
 
@@ -8470,6 +9073,8 @@
         closeClearChecksModal();
         closeBatchGuildCheckModal();
         closeAuditLogsModal();
+        closeAppealRequestModal();
+        closeAppealApprovalModal();
       }
     });
 
@@ -8716,28 +9321,58 @@
     }
 
     function exportBackupJSON() {
-      const backupData = {
-        app: "Guild Activity & Scoring System",
-        version: "2.0",
-        exportedAt: new Date().toISOString(),
-        currentWeekNumber: currentWeekNumber,
-        members: members,
-        activities: ACTIVITIES,
-        weeklyArchives: weeklyArchives,
-        bosses: bosses,
-        adminEmails: adminEmails,
-        cpRequests: cpRequests
-      };
+      try {
+        const backupData = {
+          app: "Guild Activity & Scoring System",
+          version: "2.1",
+          exportedAt: new Date().toISOString(),
+          currentWeekNumber: currentWeekNumber,
+          weekNames: weekNames,
+          members: members,
+          guildsList: guildsList,
+          activities: ACTIVITIES,
+          weeklyArchives: weeklyArchives,
+          adminAccounts: adminAccounts,
+          pendingAdminRequests: pendingAdminRequests,
+          pendingCpRequests: pendingCpRequests,
+          attendanceAppeals: attendanceAppeals,
+          auditLogs: auditLogs
+        };
 
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `Guild_Backup_Week${currentWeekNumber}_${new Date().toISOString().slice(0, 10)}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
+        const jsonString = JSON.stringify(backupData, null, 2);
+        const blob = new Blob([jsonString], { type: "application/json;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
 
-      showToast(t('toast_backup_exported'), 'success');
+        const now = new Date();
+        const dateStr = now.toISOString().slice(0, 10);
+        const timeStr = `${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}`;
+        const fileName = `Guild_Backup_W${currentWeekNumber}_${dateStr}_${timeStr}.json`;
+
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.href = url;
+        downloadAnchor.download = fileName;
+        downloadAnchor.style.display = 'none';
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+
+        setTimeout(() => {
+          document.body.removeChild(downloadAnchor);
+          URL.revokeObjectURL(url);
+        }, 1000);
+
+        if (typeof addAuditLog === 'function') {
+          addAuditLog(
+            'clear',
+            `ส่งออกไฟล์สำรองข้อมูล (JSON Backup)`,
+            `บันทึกข้อมูลสมาชิก ${members.length} คน, กิลด์ ${guildsList.length} กิลด์ | ${getWeekName(currentWeekNumber)}`
+          );
+        }
+
+        showToast(t('toast_backup_exported', 'ส่งออกไฟล์สำรองข้อมูล (.JSON) เรียบร้อยแล้ว'), 'success');
+      } catch (err) {
+        console.error("Export JSON Error:", err);
+        showToast('เกิดข้อผิดพลาดในการสำรองข้อมูล: ' + err.message, 'error');
+      }
     }
 
     function handleImportJSON(event) {
@@ -8755,38 +9390,72 @@
         try {
           const imported = JSON.parse(e.target.result);
           if (!imported || !Array.isArray(imported.members)) {
-            showToast(t('toast_restore_invalid'), 'error');
+            showToast(t('toast_restore_invalid', 'ไฟล์สำรองข้อมูลไม่ถูกต้อง'), 'error');
             return;
           }
 
-          if (confirm(`พบข้อมูลสมาชิก ${imported.members.length} คนในไฟล์สำรอง ต้องการกู้คืนทับข้อมูลปัจจุบันหรือไม่?`)) {
+          const memberCount = imported.members.length;
+          if (confirm(`พบข้อมูลสมาชิก ${memberCount} คนในไฟล์สำรอง\n\nต้องการกู้คืนข้อมูลทับข้อมูลปัจจุบันและซิงค์ขึ้นระบบทั้งหมดใช่หรือไม่?`)) {
             members = imported.members;
+            members.forEach(ensureMemberWeeklyData);
             localStorage.setItem('guild_members_data', JSON.stringify(members));
 
-            if (Array.isArray(imported.activities)) {
-              ACTIVITIES = imported.activities;
-              localStorage.setItem('guild_activities_data', JSON.stringify(ACTIVITIES));
+            if (Array.isArray(imported.guildsList) && imported.guildsList.length > 0) {
+              guildsList = imported.guildsList;
+              saveGuildsList();
+              populateGuildSelects();
             }
+
+            if (imported.weekNames && typeof imported.weekNames === 'object') {
+              weekNames = imported.weekNames;
+              saveWeekNames();
+            }
+
+            if (Array.isArray(imported.activities) && imported.activities.length > 0) {
+              ACTIVITIES = imported.activities;
+              saveActivities();
+            }
+
             if (Array.isArray(imported.weeklyArchives)) {
               weeklyArchives = imported.weeklyArchives;
-              localStorage.setItem('guild_weekly_archives', JSON.stringify(weeklyArchives));
+              localStorage.setItem('guild_weekly_history', JSON.stringify(weeklyArchives));
             }
+
+            if (Array.isArray(imported.auditLogs)) {
+              auditLogs = imported.auditLogs;
+              saveAuditLogs();
+            }
+
+            if (Array.isArray(imported.attendanceAppeals)) {
+              attendanceAppeals = imported.attendanceAppeals;
+              saveAttendanceAppeals();
+            }
+
             if (imported.currentWeekNumber) {
               currentWeekNumber = imported.currentWeekNumber;
               localStorage.setItem('guild_current_week', currentWeekNumber);
-              const label = document.getElementById('current-week-label');
-              if (label) label.textContent = t('current_week', { week: currentWeekNumber });
             }
 
+            saveData();
             renderTableHeader();
+            renderWeekTabs();
             renderTable();
             updateKPIs();
             closeBackupRestoreModal();
+
+            if (typeof addAuditLog === 'function') {
+              addAuditLog(
+                'clear',
+                `กู้คืนข้อมูลจากไฟล์สำรอง (JSON Restore)`,
+                `กู้คืนสมาชิก ${members.length} คน | ${getWeekName(currentWeekNumber)}`
+              );
+            }
+
             showToast(t('toast_restore_success', { count: members.length }), 'success');
           }
         } catch (err) {
           console.error('Import JSON parse error:', err);
-          showToast(t('toast_restore_invalid'), 'error');
+          showToast(t('toast_restore_invalid', 'ไม่สามารถอ่านไฟล์ JSON ได้ กรุณาตรวจสอบไฟล์'), 'error');
         }
       };
       reader.readAsText(file);
