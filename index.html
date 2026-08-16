@@ -10486,30 +10486,26 @@
 
       [btnCatalog, btnHistory, btnAdmin].forEach(b => {
         if (b) {
-          b.classList.remove('bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
-          b.classList.add('text-slate-400');
+          b.className = "apple-btn bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm";
         }
       });
 
       if (tab === 'catalog') {
         if (catalogTab) catalogTab.classList.remove('hidden');
         if (btnCatalog) {
-          btnCatalog.classList.add('bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
-          btnCatalog.classList.remove('text-slate-400');
+          btnCatalog.className = "apple-btn apple-btn-gold px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md";
         }
         renderRewardStoreCatalog();
       } else if (tab === 'history') {
         if (historyTab) historyTab.classList.remove('hidden');
         if (btnHistory) {
-          btnHistory.classList.add('bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
-          btnHistory.classList.remove('text-slate-400');
+          btnHistory.className = "apple-btn apple-btn-sapphire px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md";
         }
         renderStoreHistoryTable();
       } else if (tab === 'admin') {
         if (adminTab) adminTab.classList.remove('hidden');
         if (btnAdmin) {
-          btnAdmin.classList.add('bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
-          btnAdmin.classList.remove('text-slate-400');
+          btnAdmin.className = "apple-btn apple-btn-teal px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md";
         }
         renderAdminStoreInventory();
       }
@@ -10564,11 +10560,17 @@
           const breakdownText = `W1:${breakdown.wScores[0]} | W2:${breakdown.wScores[1]} | W3:${breakdown.wScores[2]} | W4:${breakdown.wScores[3]}`;
           infoEl.textContent = `(${breakdownText} ➔ รวมเดือนนี้: ${monthlyTotal} PTS${pendingCount > 0 ? ` • รอสุ่ม/ส่งของ ${pendingCount} รายการ` : ''})`;
         }
-        if (badge) badge.classList.remove('opacity-50');
+        if (badge) {
+          badge.classList.remove('opacity-50');
+          badge.className = "shrink-0 flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-orange-500/20 border border-amber-400/60 shadow-lg shadow-amber-500/20 transition-all";
+        }
       } else {
         pointEl.textContent = '0 PTS';
         if (infoEl) infoEl.textContent = '(เลือกตัวละครเพื่อคำนวณแต้มเดือนนี้)';
-        if (badge) badge.classList.add('opacity-50');
+        if (badge) {
+          badge.classList.add('opacity-50');
+          badge.className = "shrink-0 flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-slate-900 border border-slate-700/60 opacity-50 transition-all";
+        }
       }
       renderRewardStoreCatalog();
     }
@@ -10585,9 +10587,12 @@
 
       if (!storeRewards || storeRewards.length === 0) {
         grid.innerHTML = `
-          <div class="col-span-full py-12 text-center text-slate-500">
-            <i class="fa-solid fa-box-open text-4xl mb-3 opacity-40"></i>
-            <p class="text-sm font-medium">ยังไม่มีสินค้าในร้านค้าของรางวัล</p>
+          <div class="col-span-full py-16 text-center text-slate-500">
+            <div class="w-16 h-16 rounded-2xl bg-slate-900/80 border border-slate-800 text-slate-600 flex items-center justify-center text-3xl mx-auto mb-3">
+              <i class="fa-solid fa-box-open opacity-40"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-400">ยังไม่มีสินค้าในร้านค้าของรางวัล</p>
+            <p class="text-xs text-slate-600 mt-1">แอดมินสามารถเพิ่มของรางวัลได้ที่แท็บ 'คลัง & จัดการสินค้า'</p>
           </div>
         `;
         return;
@@ -10601,56 +10606,56 @@
         const alreadyRequested = m && itemRequests.some(l => l.memberName === charName);
 
         return `
-          <div class="bg-[#0b101d] border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-between hover:border-amber-500/40 transition-all duration-200 group shadow-lg">
+          <div class="bg-gradient-to-b from-slate-900/90 via-[#0b101e]/90 to-slate-950 border border-slate-800/90 hover:border-amber-500/50 rounded-3xl p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-amber-500/10 group shadow-lg">
             <div>
-              <div class="relative w-full aspect-video rounded-xl bg-slate-950 border border-slate-800/60 overflow-hidden flex items-center justify-center cursor-pointer group/img"
+              <div class="relative w-full aspect-video rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden flex items-center justify-center cursor-pointer group/img"
                    onclick="openRewardLightbox('${escapeHtml(item.image || '')}', '${escapeHtml(item.name)}')">
                 <img src="${escapeHtml(item.image || 'https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=600&q=80')}" 
                      alt="${escapeHtml(item.name)}" 
-                     class="w-full h-full object-contain p-1.5 transition-transform duration-300 group-hover/img:scale-105"
+                     class="w-full h-full object-contain p-2 transition-transform duration-300 group-hover/img:scale-105"
                      loading="lazy" />
-                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                  <span class="px-2 py-1 rounded bg-black/70 text-white text-[11px] font-semibold flex items-center gap-1">
-                    <i class="fa-solid fa-magnifying-glass-plus text-amber-400"></i> ดูภาพขยาย
+                <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-xs">
+                  <span class="apple-btn apple-btn-gold px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-lg">
+                    <i class="fa-solid fa-magnifying-glass-plus text-xs"></i> ดูภาพขยาย
                   </span>
                 </div>
                 ${isOutOfStock ? `
-                  <div class="absolute top-2 right-2 px-2 py-0.5 rounded bg-rose-600/90 text-white text-[10px] font-black uppercase tracking-wider shadow">
+                  <div class="absolute top-2.5 right-2.5 px-3 py-1 rounded-full bg-rose-600/95 text-white text-[10px] font-black uppercase tracking-wider shadow-lg border border-rose-400/50 animate-pulse">
                     สินค้าหมด (Out of Stock)
                   </div>
                 ` : `
-                  <div class="absolute top-2 right-2 px-2 py-0.5 rounded bg-slate-900/90 backdrop-blur-sm border border-slate-700 text-slate-300 text-[10px] font-mono flex items-center gap-1.5">
-                    <span>สต็อก: <strong class="text-amber-400">${item.stock}</strong></span>
+                  <div class="absolute top-2.5 right-2.5 px-3 py-1 rounded-full bg-slate-900/95 backdrop-blur-md border border-amber-400/50 text-amber-300 text-[10.5px] font-mono font-bold flex items-center gap-1.5 shadow-md">
+                    <span>สต็อก: <strong class="text-white">${item.stock}</strong></span>
                     ${pendingCount > 0 ? `<span class="text-rose-400 font-bold">• รอสุ่ม ${pendingCount} คน</span>` : ''}
                   </div>
                 `}
               </div>
 
-              <div class="mt-3">
-                <h4 class="text-sm font-bold text-white group-hover:text-amber-300 transition-colors line-clamp-1">${escapeHtml(item.name)}</h4>
-                <p class="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">${escapeHtml(item.desc || 'ไม่มีคำอธิบาย')}</p>
+              <div class="mt-3.5">
+                <h4 class="text-sm font-extrabold text-white group-hover:text-amber-300 transition-colors line-clamp-1">${escapeHtml(item.name)}</h4>
+                <p class="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed font-normal">${escapeHtml(item.desc || 'ไม่มีคำอธิบาย')}</p>
                 ${pendingCount > item.stock ? `
-                  <div class="mt-2 px-2 py-1 rounded bg-amber-500/10 border border-amber-500/25 text-[11px] text-amber-300 flex items-center gap-1">
+                  <div class="mt-2.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-[11px] text-amber-300 font-medium flex items-center gap-1.5 shadow-inner">
                     <i class="fa-solid fa-dice text-amber-400"></i> มีคนขอแลกเกินสต็อก (ระบบจะสุ่มเมื่อปิดรอบ)
                   </div>
                 ` : ''}
               </div>
             </div>
 
-            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+            <div class="mt-4 pt-3.5 border-t border-slate-800/80 flex items-center justify-between gap-2">
               <div class="flex flex-col">
-                <span class="text-[10px] text-slate-500 font-medium">ราคาแต้มรอบเดือน</span>
-                <span class="text-sm font-black text-amber-400 font-mono flex items-center gap-1">
-                  <i class="fa-solid fa-coins text-xs"></i> ${item.cost.toLocaleString()} PTS
+                <span class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">ราคาแต้มรอบเดือน</span>
+                <span class="text-sm sm:text-base font-black text-amber-400 font-mono flex items-center gap-1.5 drop-shadow">
+                  <i class="fa-solid fa-coins text-xs text-amber-400"></i> ${item.cost.toLocaleString()} PTS
                 </span>
               </div>
 
               <button onclick="requestRedeemRewardItem(${item.id})" 
                       ${!canRedeem ? 'disabled' : ''}
-                      class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 ${
+                      class="apple-btn px-4 py-2 rounded-xl text-xs font-black transition-all shadow-md flex items-center gap-1.5 ${
                         canRedeem 
-                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 hover:shadow-amber-500/20 active:scale-95' 
-                          : 'bg-slate-800/80 text-slate-500 cursor-not-allowed border border-slate-700/50'
+                          ? 'apple-btn-gold text-slate-950' 
+                          : 'bg-slate-900 text-slate-500 cursor-not-allowed border border-slate-800 opacity-60'
                       }">
                 <i class="fa-solid fa-gift text-[11px]"></i>
                 <span>${!m ? 'เลือกตัวละคร' : isOutOfStock ? 'หมด' : alreadyRequested ? 'ส่งคำขอแล้ว' : availablePoints < item.cost ? 'แต้มไม่พอ' : 'ส่งคำขอแลก'}</span>
@@ -11268,28 +11273,32 @@
       if (!container) return;
 
       if (!storeRewards || storeRewards.length === 0) {
-        container.innerHTML = `<div class="text-xs text-slate-500 py-4 text-center">ไม่มีรายการสินค้า</div>`;
+        container.innerHTML = `<div class="text-xs text-slate-500 py-6 text-center font-medium">ไม่มีรายการสินค้าในระบบ</div>`;
         return;
       }
 
       container.innerHTML = storeRewards.map(item => {
         return `
-          <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-lg bg-slate-900 border border-slate-700/60 overflow-hidden flex items-center justify-center shrink-0">
-                <img src="${escapeHtml(item.image || '')}" alt="${escapeHtml(item.name)}" class="w-full h-full object-contain p-0.5" />
+          <div class="bg-gradient-to-r from-slate-900/90 via-slate-950/90 to-slate-900/90 border border-slate-800 hover:border-amber-500/40 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-md transition-all">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              <div class="w-12 h-12 rounded-xl bg-slate-950 border border-slate-700/60 overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
+                <img src="${escapeHtml(item.image || '')}" alt="${escapeHtml(item.name)}" class="w-full h-full object-contain p-1" />
               </div>
-              <div>
-                <h5 class="text-xs font-bold text-white">${escapeHtml(item.name)}</h5>
-                <p class="text-[11px] text-slate-400">ราคา: <span class="text-amber-400 font-mono font-bold">${item.cost} PTS</span> • สต็อก: <span class="text-emerald-400 font-mono font-bold">${item.stock}</span></p>
+              <div class="min-w-0 flex-1">
+                <h5 class="text-xs font-bold text-white truncate">${escapeHtml(item.name)}</h5>
+                <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap font-mono">
+                  <span>ราคา: <strong class="text-amber-400 font-bold">${item.cost.toLocaleString()} PTS</strong></span>
+                  <span class="text-slate-600">•</span>
+                  <span>สต็อก: <strong class="text-emerald-400 font-bold">${item.stock}</strong></span>
+                </p>
               </div>
             </div>
-            <div class="flex items-center gap-1.5">
-              <button onclick="editStoreItemPrompt(${item.id})" class="px-2 py-1 rounded bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 text-xs">
-                <i class="fa-solid fa-pen-to-square"></i> แก้ไข
+            <div class="flex items-center gap-2 shrink-0">
+              <button onclick="editStoreItemPrompt(${item.id})" class="apple-btn apple-btn-sapphire px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm">
+                <i class="fa-solid fa-pen-to-square text-[10px]"></i> <span>แก้ไข</span>
               </button>
-              <button onclick="deleteStoreItem(${item.id})" class="px-2 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs">
-                <i class="fa-solid fa-trash-can"></i> ลบ
+              <button onclick="deleteStoreItem(${item.id})" class="apple-btn apple-btn-ruby px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm">
+                <i class="fa-solid fa-trash-can text-[10px]"></i> <span>ลบ</span>
               </button>
             </div>
           </div>
@@ -11676,50 +11685,58 @@
 
   <!-- ================= 🎁 Modal: ร้านค้าของรางวัลประจำกิลด์ & Showcase ================= -->
   <div id="guild-reward-store-modal"
-    class="hidden fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-3 sm:p-4 backdrop-blur-md overflow-y-auto">
+    class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-3 sm:p-4 backdrop-blur-md overflow-y-auto">
     <div
-      class="apple-modal-box relative w-full max-w-4xl bg-[#090d18] border border-amber-500/30 rounded-2xl shadow-2xl p-4 sm:p-6 my-auto overflow-hidden flex flex-col max-h-[90vh]">
+      class="apple-modal-box relative w-full max-w-4xl bg-slate-950/95 border border-amber-500/40 rounded-3xl shadow-[0_0_50px_rgba(245,158,11,0.15)] p-4 sm:p-6 my-auto overflow-hidden flex flex-col max-h-[90vh]">
 
       <!-- Header -->
-      <div class="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
-        <div class="flex items-center gap-3">
+      <div class="flex items-center justify-between pb-3.5 border-b border-slate-800/80 shrink-0">
+        <div class="flex items-center gap-3.5">
           <div
-            class="h-10 w-10 rounded-xl bg-gradient-to-tr from-amber-500/20 via-orange-500/20 to-amber-600/30 border border-amber-400/40 text-amber-300 flex items-center justify-center text-lg shadow-inner">
-            <i class="fa-solid fa-gift"></i>
+            class="h-11 w-11 rounded-2xl bg-gradient-to-tr from-amber-400 via-amber-500 to-orange-500 text-slate-950 flex items-center justify-center text-xl shadow-lg shadow-amber-500/30 border border-amber-200/60 shrink-0">
+            <i class="fa-solid fa-gift filter drop-shadow"></i>
           </div>
           <div>
-            <div class="flex items-center gap-2">
-              <h3 class="text-base sm:text-lg font-bold text-white tracking-wide">ร้านค้าของรางวัล &amp; Showcase (Guild Store)</h3>
-              <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black uppercase font-mono">Monthly Shop</span>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="text-base sm:text-lg font-extrabold bg-gradient-to-r from-white via-amber-100 to-amber-300 bg-clip-text text-transparent tracking-wide">
+                ร้านค้าของรางวัล &amp; Showcase (Guild Store)
+              </h3>
+              <span class="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-400/50 text-[10px] font-black uppercase font-mono shadow-sm">
+                Monthly Shop
+              </span>
             </div>
             <p class="text-xs text-slate-400 mt-0.5">ใช้คะแนนสะสมกิจกรรมรอบเดือนแลกรับไอเทม หรือดูของรางวัลประจำกิลด์</p>
           </div>
         </div>
         <button onclick="closeRewardStoreModal()"
-          class="text-slate-400 hover:text-white transition p-1.5 rounded-lg hover:bg-slate-800">
-          <i class="fa-solid fa-xmark text-xl"></i>
+          class="apple-btn bg-slate-900/90 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-500/50 text-slate-400 hover:text-rose-300 p-2 rounded-xl transition-colors shadow-sm"
+          title="Close / ปิด">
+          <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
       <!-- Monthly Cycle Notice Banner -->
-      <div class="mt-2 px-3 py-2 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300 flex items-center justify-between">
-        <span class="flex items-center gap-2"><i class="fa-solid fa-calendar-days text-amber-400 text-sm"></i> <span data-i18n="reward_month_cycle_notice">💡 คะแนนสะสมสำหรับรอบเดือนปัจจุบันเท่านั้น (รีเซ็ตทุกสิ้นเดือน ไม่สะสมข้ามเดือน)</span></span>
+      <div class="mt-2.5 px-3.5 py-2 bg-gradient-to-r from-amber-950/70 via-slate-950/90 to-amber-950/70 border border-amber-500/40 rounded-2xl text-xs text-amber-200 shadow-inner flex items-center justify-between">
+        <span class="flex items-center gap-2">
+          <i class="fa-solid fa-calendar-days text-amber-400 text-sm animate-pulse"></i> 
+          <span data-i18n="reward_month_cycle_notice">💡 คะแนนสะสมสำหรับรอบเดือนปัจจุบันเท่านั้น (รีเซ็ตทุกสิ้นเดือน ไม่สะสมข้ามเดือน)</span>
+        </span>
       </div>
 
       <!-- Navigation Tabs & Points Selector Bar -->
-      <div class="py-3 border-b border-slate-800/80 shrink-0 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 bg-slate-950/40 px-2 rounded-xl my-2">
+      <div class="py-3 border-b border-slate-800/80 shrink-0 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 bg-slate-950/60 px-3 rounded-2xl my-2.5 border border-slate-800/60">
         <!-- Tabs -->
-        <div class="flex items-center gap-1.5 p-1 bg-slate-900/80 border border-slate-800 rounded-xl">
+        <div class="flex items-center gap-1.5 p-1 bg-slate-900/90 border border-slate-800 rounded-2xl backdrop-blur-md">
           <button id="btn-store-tab-catalog" onclick="switchStoreTab('catalog')"
-            class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm flex items-center gap-1.5">
+            class="apple-btn apple-btn-gold px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md">
             <i class="fa-solid fa-store text-xs"></i> แค็ตตาล็อกของรางวัล
           </button>
           <button id="btn-store-tab-history" onclick="switchStoreTab('history')"
-            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white flex items-center gap-1.5">
+            class="apple-btn bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
             <i class="fa-solid fa-receipt text-xs"></i> ประวัติการแลก
           </button>
           <button id="btn-store-tab-admin" onclick="switchStoreTab('admin')"
-            class="store-admin-only hidden px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white flex items-center gap-1.5">
+            class="store-admin-only hidden apple-btn bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
             <i class="fa-solid fa-boxes-stacked text-xs"></i> คลัง &amp; จัดการสินค้า (Admin)
           </button>
         </div>
@@ -11728,14 +11745,14 @@
         <div class="flex items-center gap-2.5 w-full md:w-auto">
           <div class="w-full md:w-64">
             <select id="store-member-select" onchange="onRewardMemberSelected()"
-              class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+              class="w-full bg-slate-900/95 border border-amber-500/40 hover:border-amber-400 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-100 focus:outline-none focus:border-amber-400 shadow-inner cursor-pointer">
               <option value="">-- กรุณาเลือกตัวละครของคุณ --</option>
             </select>
           </div>
-          <div id="store-user-points-badge" class="shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/35 opacity-50 transition-opacity">
-            <span class="text-[10px] text-amber-300/80 font-bold uppercase tracking-wider">แต้มคงเหลือ:</span>
-            <span id="store-user-points-val" class="font-mono font-black text-amber-300 text-xs sm:text-sm">0 PTS</span>
-            <span id="store-user-points-info" class="text-[10px] text-slate-400 hidden xl:inline"></span>
+          <div id="store-user-points-badge" class="shrink-0 flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-slate-900 border border-slate-700/60 opacity-50 transition-all">
+            <span class="text-[10px] text-amber-300/90 font-extrabold uppercase tracking-wider">แต้มคงเหลือ:</span>
+            <span id="store-user-points-val" class="font-mono font-black text-amber-300 text-xs sm:text-sm drop-shadow">0 PTS</span>
+            <span id="store-user-points-info" class="text-[10.5px] text-amber-200/70 hidden xl:inline font-mono"></span>
           </div>
         </div>
       </div>
