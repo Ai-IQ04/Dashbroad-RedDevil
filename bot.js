@@ -12,7 +12,7 @@
  * ==============================================================================
  */
 
-const { Client, GatewayIntentBits, Partials, EmbedBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -21,6 +21,7 @@ let CONFIG = {
   DISCORD_BOT_TOKEN: '',
   REGISTRATION_CHANNEL_ID: '',
   BOSS_ALERT_CHANNEL_ID: '1538638951089180742',
+  MENTION_TAG: '@Member',
   FIREBASE_DB_URL: 'https://reddevil-f229e-default-rtdb.asia-southeast1.firebasedatabase.app'
 };
 
@@ -168,7 +169,9 @@ async function checkAndSendBossAlerts() {
       const timeHHmm = `${spawnHour}:${spawnMin}`;
 
       const bossDisplayName = `${boss.level || '??'}, ${boss.name.toUpperCase()}`;
-      const mentionText = CONFIG.MENTION_TAG || '@Notification';
+      const mentionText = CONFIG.MENTION_TAG || '@Member';
+      const logoPath = path.join(__dirname, 'assets', 'lordnine_logo.png');
+      const hasLogo = fs.existsSync(logoPath);
 
       // 🟡 1. แจ้งเตือนก่อนเกิด 5 นาที (เมื่อเหลือ 0 ถึง 5 นาที)
       if (diffMs > 0 && diffMs <= 5 * 60 * 1000) {
@@ -184,7 +187,16 @@ async function checkAndSendBossAlerts() {
             .setFooter({ text: '🛡️ LORD NINE SYSTEM' })
             .setTimestamp(nextSpawn);
 
-          await channel.send({ content: mentionText, embeds: [embed5m] });
+          if (hasLogo) {
+            embed5m.setThumbnail('attachment://lordnine_logo.png');
+          }
+
+          const sendPayload = { content: mentionText, embeds: [embed5m] };
+          if (hasLogo) {
+            sendPayload.files = [new AttachmentBuilder(logoPath, { name: 'lordnine_logo.png' })];
+          }
+
+          await channel.send(sendPayload);
           console.log(`📢 [ส่งแจ้งเตือน 5 นาที • Lord Nine Style] ${boss.name} ในห้อง ${channel.name || CONFIG.BOSS_ALERT_CHANNEL_ID}`);
         }
       }
@@ -203,7 +215,16 @@ async function checkAndSendBossAlerts() {
             .setFooter({ text: '🛡️ LORD NINE SYSTEM' })
             .setTimestamp(now);
 
-          await channel.send({ content: mentionText, embeds: [embedSpawned] });
+          if (hasLogo) {
+            embedSpawned.setThumbnail('attachment://lordnine_logo.png');
+          }
+
+          const sendPayload = { content: mentionText, embeds: [embedSpawned] };
+          if (hasLogo) {
+            sendPayload.files = [new AttachmentBuilder(logoPath, { name: 'lordnine_logo.png' })];
+          }
+
+          await channel.send(sendPayload);
           console.log(`🚨 [ส่งแจ้งเตือนบอสเกิดแล้ว! • Lord Nine Style] ${boss.name} ในห้อง ${channel.name || CONFIG.BOSS_ALERT_CHANNEL_ID}`);
         }
       }
