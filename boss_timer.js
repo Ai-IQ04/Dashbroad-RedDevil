@@ -3,6 +3,15 @@
  * Completely decoupled from guild scoring logic.
  */
 
+// i18n helper for Boss Timer
+function tBoss(key, fallback) {
+  if (typeof window.t === 'function') {
+    const val = window.t(key);
+    if (val && val !== key) return val;
+  }
+  return fallback || key;
+}
+
 // Global state for Boss Timer
 let bossList = [];
 let bossTimerData = {}; // { [bossId]: { defeatedTime: ISOString, defeatedBy: string, nextSpawnTime: ISOString } }
@@ -234,13 +243,15 @@ function renderBossTimerCards() {
       }
     }
 
+    const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
+    const hrUnit = isEn ? ' hrs' : ' ชม.';
     return {
       ...boss,
       timer,
       nextSpawn,
       status,
       diffMs,
-      respawnLabel: boss.respawnType === 'interval' ? (boss.intervalHours + ' ชม.') : (boss.scheduleText || 'Fixed')
+      respawnLabel: boss.respawnType === 'interval' ? (boss.intervalHours + hrUnit) : (boss.scheduleText || 'Fixed')
     };
   });
 
@@ -298,10 +309,13 @@ function renderBossTimerCards() {
   });
 
   if (filtered.length === 0) {
+    const emptyMsg = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en')
+      ? 'No bosses found matching your search criteria'
+      : 'ไม่พบบอสที่ตรงกับเงื่อนไขการค้นหา';
     container.innerHTML = `
       <div class="col-span-full py-12 text-center text-slate-500">
         <i class="fa-solid fa-dragon text-4xl mb-2 text-slate-700"></i>
-        <p class="text-xs">ไม่พบบอสที่ตรงกับเงื่อนไขการค้นหา</p>
+        <p class="text-xs">${emptyMsg}</p>
       </div>
     `;
     return;
@@ -343,30 +357,30 @@ function renderBossTimerCards() {
     // Boss Name Color & Size
     const nameColorClass = isGuildActivity ? 'text-amber-400' : 'text-rose-500';
     const typeBadge = isGuildActivity 
-      ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm flex items-center gap-1"><i class="fa-solid fa-star text-[7.5px] text-amber-400"></i> กิจกรรมกิลด์</span>`
-      : `<span class="px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-800/80 text-slate-400 border border-slate-700/60">บอสทั่วไป</span>`;
+      ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm flex items-center gap-1"><i class="fa-solid fa-star text-[7.5px] text-amber-400"></i> ${tBoss('boss_tag_guild', 'กิจกรรมกิลด์')}</span>`
+      : `<span class="px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-800/80 text-slate-400 border border-slate-700/60">${tBoss('boss_tag_field', 'บอสทั่วไป')}</span>`;
 
     let statusBadge = '';
     let cardBorder = isGuildActivity ? 'border-amber-500/40' : 'border-slate-800/80';
     let cardBg = isGuildActivity ? 'from-amber-950/20 via-slate-900/95 to-slate-950/95' : 'from-slate-900/90 to-slate-950/90';
 
     if (b.status === 'alive') {
-      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500/25 text-rose-300 border border-rose-500/50 animate-pulse flex items-center gap-1 shadow-md shadow-rose-950/40"><i class="fa-solid fa-circle text-[6px] text-rose-400"></i> เกิดแล้ว (ALIVE!)</span>`;
+      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500/25 text-rose-300 border border-rose-500/50 animate-pulse flex items-center gap-1 shadow-md shadow-rose-950/40"><i class="fa-solid fa-circle text-[6px] text-rose-400"></i> ${tBoss('boss_status_spawned', 'เกิดแล้ว (ALIVE!)')}</span>`;
       cardBorder = 'border-rose-500/60 shadow-rose-950/50';
       cardBg = 'from-rose-950/40 via-slate-900/90 to-slate-950/90';
     } else if (b.status === 'soon') {
-      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/25 text-amber-300 border border-amber-500/50 animate-pulse flex items-center gap-1 shadow-md shadow-amber-950/40"><i class="fa-solid fa-clock text-[8px] text-amber-400"></i> ใกล้เกิด (&lt;30m)</span>`;
+      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/25 text-amber-300 border border-amber-500/50 animate-pulse flex items-center gap-1 shadow-md shadow-amber-950/40"><i class="fa-solid fa-clock text-[8px] text-amber-400"></i> ${tBoss('boss_status_soon', 'ใกล้เกิด (<30m)')}</span>`;
       cardBorder = 'border-amber-500/60 shadow-amber-950/50';
       cardBg = 'from-amber-950/30 via-slate-900/90 to-slate-950/90';
     } else if (b.status === 'cooldown') {
-      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30 flex items-center gap-1"><i class="fa-solid fa-hourglass-half text-[8px] text-sky-400"></i> รอเกิด</span>`;
+      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30 flex items-center gap-1"><i class="fa-solid fa-hourglass-half text-[8px] text-sky-400"></i> ${tBoss('boss_status_cooldown', 'รอเกิด')}</span>`;
     } else {
-      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-800/90 text-slate-400 border border-slate-700">⚪ ยังไม่ลงเวลา</span>`;
+      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-800/90 text-slate-400 border border-slate-700">⚪ ${tBoss('boss_status_unrecorded', 'ยังไม่ลงเวลา')}</span>`;
     }
 
     const countdownText = formatCountdown(b.diffMs, b.status);
     const lastDefeatedStr = b.timer.defeatedTime ? formatDateTimeShort(new Date(b.timer.defeatedTime)) : '-';
-    const nextSpawnStr = b.nextSpawn ? formatDateTimeShort(b.nextSpawn) : (b.respawnType === 'interval' ? 'รอลงเวลาตาย' : '-');
+    const nextSpawnStr = b.nextSpawn ? formatDateTimeShort(b.nextSpawn) : (b.respawnType === 'interval' ? tBoss('boss_wait_record', 'รอลงเวลาตาย') : '-');
 
     // Action Buttons: Admin gets full controls; Member gets View Drop Log only
     let actionButtonsHtml = '';
@@ -375,18 +389,18 @@ function renderBossTimerCards() {
         <div class="mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center gap-1.5">
           <button onclick="recordBossKillNow('${b.id}')"
             class="flex-1 apple-btn apple-btn-ruby inline-flex items-center justify-center gap-1.5 py-2 px-2.5 text-xs font-bold shadow-md shadow-rose-950/30"
-            title="กดเมื่อบอสตายตอนนี้ทันที">
+            title="${tBoss('btn_record_kill_now', 'กดเมื่อบอสตายตอนนี้ทันที')}">
             <i class="fa-solid fa-skull text-[11px]"></i>
-            <span>ตายตอนนี้</span>
+            <span>${tBoss('btn_record_kill_now', 'ตายตอนนี้')}</span>
           </button>
           <button onclick="openCustomKillModal('${b.id}')"
             class="apple-btn apple-btn-slate inline-flex items-center justify-center p-2 text-xs font-semibold"
-            title="ระบุเวลาตายย้อนหลัง">
+            title="${tBoss('btn_custom_time', 'ระบุเวลาตายย้อนหลัง')}">
             <i class="fa-solid fa-clock-rotate-left"></i>
           </button>
           <button onclick="openBossDropLogModal('${b.id}')"
             class="apple-btn apple-btn-amber inline-flex items-center justify-center p-2 text-xs font-semibold"
-            title="ดู / บันทึกประวัติของดรอป">
+            title="${tBoss('btn_drop_logs', 'ดู / บันทึกประวัติของดรอป')}">
             <i class="fa-solid fa-gift"></i>
           </button>
         </div>
@@ -396,9 +410,9 @@ function renderBossTimerCards() {
         <div class="mt-3 pt-2.5 border-t border-slate-800/80">
           <button onclick="openBossDropLogModal('${b.id}')"
             class="w-full apple-btn apple-btn-slate inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-semibold text-slate-300 hover:text-white"
-            title="ดูประวัติไอเทมดรอปของบอสตัวนี้">
+            title="${tBoss('btn_drop_logs', 'ดูประวัติไอเทมดรอปของบอสตัวนี้')}">
             <i class="fa-solid fa-gift text-amber-400 text-xs"></i>
-            <span>ดูประวัติไอเทมดรอป</span>
+            <span>${tBoss('btn_drop_logs', 'ดูประวัติไอเทมดรอป')}</span>
           </button>
         </div>
       `;
@@ -423,13 +437,13 @@ function renderBossTimerCards() {
             </h4>
             <p class="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
               <i class="fa-solid fa-location-dot text-slate-500 text-[10px]"></i>
-              <span class="truncate">${escapeHtml(b.map || 'ไม่ระบุแมพ')}</span>
+              <span class="truncate">${escapeHtml(b.map || (isEn ? 'Unassigned map' : 'ไม่ระบุแมพ'))}</span>
             </p>
           </div>
 
           <!-- Countdown Big Box -->
           <div class="my-2.5 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/90 text-center shadow-inner">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">นับถอยหลัง</span>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">${tBoss('boss_countdown_label', 'นับถอยหลัง')}</span>
             <div id="boss-cd-${b.id}" class="text-lg sm:text-xl font-black font-mono tracking-wider ${b.status === 'alive' ? 'text-rose-400 animate-pulse' : b.status === 'soon' ? 'text-amber-300 animate-pulse' : b.status === 'cooldown' ? 'text-sky-300' : 'text-slate-500'}">
               ${countdownText}
             </div>
@@ -438,15 +452,15 @@ function renderBossTimerCards() {
           <!-- Metadata Grid -->
           <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-300 pt-2 border-t border-slate-800/80">
             <div>
-              <span class="text-slate-500 block text-[9.5px] font-medium">ระยะเกิด:</span>
+              <span class="text-slate-500 block text-[9.5px] font-medium">${tBoss('boss_respawn_cycle_label', 'ระยะเกิด:')}</span>
               <span class="font-semibold text-amber-300/90">${escapeHtml(b.respawnLabel)}</span>
             </div>
             <div>
-              <span class="text-slate-500 block text-[9.5px] font-medium">เกิดรอบถัดไป:</span>
+              <span class="text-slate-500 block text-[9.5px] font-medium">${tBoss('boss_respawn_time_label', 'เกิดรอบถัดไป:')}</span>
               <span id="boss-next-${b.id}" class="font-mono font-bold ${b.nextSpawn ? 'text-emerald-300' : 'text-slate-500'}">${nextSpawnStr}</span>
             </div>
             <div class="col-span-2 text-slate-400 flex items-center justify-between text-[10.5px] pt-1">
-              <span>ตายล่าสุด: <strong class="font-mono text-slate-300">${lastDefeatedStr}</strong></span>
+              <span>${tBoss('boss_defeated_time_label', 'ตายล่าสุด:')} <strong class="font-mono text-slate-300">${lastDefeatedStr}</strong></span>
               ${b.note ? `<span class="text-amber-400/80 truncate max-w-[130px]" title="${escapeHtml(b.note)}">ℹ️ ${escapeHtml(b.note)}</span>` : ''}
             </div>
           </div>
@@ -483,8 +497,10 @@ function formatCountdown(diffMs, status) {
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
 
+  const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
+  const dUnit = isEn ? 'd ' : 'ว ';
   if (d > 0) {
-    return `${d}ว ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    return `${d}${dUnit}${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   }
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
@@ -561,11 +577,13 @@ function updateUpcomingBossWidget() {
     }
   });
 
+  const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
+
   if (recordedBosses.length === 0) {
-    if (nameEl) nameEl.textContent = 'ยังไม่มีข้อมูลบอส';
-    if (locEl) locEl.textContent = 'คลิกเพื่อดูไทม์เมอร์';
+    if (nameEl) nameEl.textContent = isEn ? 'No Boss Timers' : 'ยังไม่มีข้อมูลบอส';
+    if (locEl) locEl.textContent = isEn ? 'Click to open timer' : 'คลิกเพื่อดูไทม์เมอร์';
     if (timerTextEl) timerTextEl.textContent = '--:--:--';
-    if (genericTextWidget) genericTextWidget.innerHTML = `<span class="text-slate-400">⏱️ บอสไทม์เมอร์ (พร้อมใช้งาน)</span>`;
+    if (genericTextWidget) genericTextWidget.innerHTML = `<span class="text-slate-400">⏱️ ${isEn ? 'Boss Timer (Ready)' : 'บอสไทม์เมอร์ (พร้อมใช้งาน)'}</span>`;
     return;
   }
 
@@ -582,7 +600,7 @@ function updateUpcomingBossWidget() {
 
   if (timerTextEl) {
     if (nearest.diffMs <= 0) {
-      timerTextEl.textContent = 'เกิดแล้ว!';
+      timerTextEl.textContent = isEn ? 'SPAWNED!' : 'เกิดแล้ว!';
       if (timerBadgeEl) {
         timerBadgeEl.className = "flex items-center gap-1.5 font-mono font-black text-white bg-rose-600 border border-rose-400 px-2.5 py-0.5 rounded-full text-xs shadow-inner animate-pulse";
       }
@@ -601,11 +619,11 @@ function updateUpcomingBossWidget() {
 
   if (genericTextWidget) {
     if (nearest.diffMs <= 0) {
-      genericTextWidget.innerHTML = `<span class="text-rose-400 font-bold animate-pulse">🔴 ${escapeHtml(nearest.boss.name)} เกิดแล้ว!</span>`;
+      genericTextWidget.innerHTML = `<span class="text-rose-400 font-bold animate-pulse">🔴 ${escapeHtml(nearest.boss.name)} ${isEn ? 'SPAWNED!' : 'เกิดแล้ว!'}</span>`;
     } else if (nearest.diffMs <= 30 * 60 * 1000) {
-      genericTextWidget.innerHTML = `<span class="text-amber-300 font-bold animate-pulse">🟡 ${escapeHtml(nearest.boss.name)} ใน ${formatCountdown(nearest.diffMs, 'soon')}</span>`;
+      genericTextWidget.innerHTML = `<span class="text-amber-300 font-bold animate-pulse">🟡 ${escapeHtml(nearest.boss.name)} ${isEn ? 'in' : 'ใน'} ${formatCountdown(nearest.diffMs, 'soon')}</span>`;
     } else {
-      genericTextWidget.innerHTML = `<span class="text-slate-300">⏳ บอสถัดไป: <strong>${escapeHtml(nearest.boss.name)}</strong> (${formatCountdown(nearest.diffMs, 'cooldown')})</span>`;
+      genericTextWidget.innerHTML = `<span class="text-slate-300">⏳ ${isEn ? 'Next Boss:' : 'บอสถัดไป:'} <strong>${escapeHtml(nearest.boss.name)}</strong> (${formatCountdown(nearest.diffMs, 'cooldown')})</span>`;
     }
   }
 }
