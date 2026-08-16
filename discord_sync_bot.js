@@ -92,22 +92,46 @@ function parseRegistrationMessage(message) {
 
   if (!content) return null;
 
-  // Pattern การดึงข้อมูลแบบแม่นยำ
-  const emailMatch = content.match(/(?:อีเมล์|อีเมล|Email|E-mail)[*:\s\u200B\n└L\-\|]*`?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})`?/i)
-    || content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
+  // ฟังก์ชันล้างอักขระกิ่งไม้ด้านหน้าและ markdown
+  const cleanLine = (str) => {
+    if (!str) return '';
+    return str
+      .replace(/^[\s\u2500-\u257F\u200B└L\-\|:`*]+/, '')
+      .replace(/[`*]/g, '')
+      .trim();
+  };
 
-  const charNameMatch = content.match(/(?:ชื่อตัวละคร|CharacterName|Character Name)[*:\s\u200B\n└L\-\|]+`?([^\n\r`*]+)`?/i);
-  const guildMatch = content.match(/(?:กิลด์|Guild)[*:\s\u200B\n└L\-\|]+`?([^\n\r`*]+)`?/i);
-  const uidMatch = content.match(/(?:UID สมาชิก|UID|InGameMemberNo|MemberNo)[*:\s\u200B\n└L\-\|]+`?([0-9]+)`?/i);
-  const walletMatch = content.match(/(?:WalletUSDT|Wallet|กระเป๋า)[*:\s\u200B\n└L\-\|]+`?(0x[a-fA-F0-9]{40})`?/i);
+  const extractVal = (keywords) => {
+    for (const kw of keywords) {
+      const reg = new RegExp('(?:' + kw + ')[^\\n\\r]*[\\n\\r]+([^\\n\\r]+)', 'i');
+      const m = content.match(reg);
+      if (m && m[1]) {
+        const cleaned = cleanLine(m[1]);
+        if (cleaned && !keywords.some(k => cleaned.toLowerCase().includes(k.toLowerCase()))) {
+          return cleaned;
+        }
+      }
+      const sameLineReg = new RegExp('(?:' + kw + ')[:\\s*]+([^\\n\\r]+)', 'i');
+      const m2 = content.match(sameLineReg);
+      if (m2 && m2[1]) {
+        const cleaned2 = cleanLine(m2[1]);
+        if (cleaned2 && !keywords.some(k => cleaned2.toLowerCase().includes(k.toLowerCase()))) {
+          return cleaned2;
+        }
+      }
+    }
+    return '';
+  };
+
+  const emailMatch = content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
+  const email = emailMatch ? emailMatch[1].replace(/[`*_\s]/g, '').trim() : '';
+
+  const characterName = extractVal(['ชื่อตัวละคร', 'CharacterName', 'Character Name']);
+  const guild = extractVal(['กิลด์', 'Guild']);
+  const uid = extractVal(['UID สมาชิก', 'InGameMemberNo', 'UID', 'MemberNo']);
+  const wallet = extractVal(['WalletUSDT', 'Wallet', 'กระเป๋า']);
 
   const discordUser = message.author;
-
-  const email = emailMatch ? emailMatch[1].replace(/[`*_\s]/g, '').trim() : '';
-  const characterName = charNameMatch ? charNameMatch[1].replace(/[`*_\s]/g, '').trim() : '';
-  const guild = guildMatch ? guildMatch[1].replace(/[`*_\s]/g, '').trim() : '';
-  const uid = uidMatch ? uidMatch[1].replace(/[`*_\s]/g, '').trim() : '';
-  const wallet = walletMatch ? walletMatch[1].replace(/[`*_\s]/g, '').trim() : '';
 
   if (!email && !characterName) {
     return null;
