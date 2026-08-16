@@ -539,6 +539,13 @@
           <span>ล้างการติ๊กถูก</span>
         </button>
 
+        <!-- ปุ่มประวัติการแก้ไข Audit Logs (เฉพาะ Admin) -->
+        <button id="btn-audit-logs" onclick="openAuditLogsModal()"
+          class="hidden apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm text-slate-300 hover:text-amber-300">
+          <i class="fa-solid fa-clock-rotate-left text-amber-400 text-[11px]"></i>
+          <span>ประวัติแก้ไข</span>
+        </button>
+
         <!-- ปุ่มจัดการ Admin (เฉพาะ Super Admin) -->
         <button id="btn-manage-admins" onclick="openAdminApprovalModal()"
           class="hidden apple-btn apple-btn-rose inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm relative">
@@ -1137,6 +1144,86 @@
         <button type="button" onclick="handleConfirmBatchGuildCheck()"
           class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/20 transition">
           <i class="fa-solid fa-bolt mr-1"></i>ดำเนินการทันที
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= หน้าต่างป๊อปอัป: ประวัติการแก้ไข (Audit Logs Modal) ================= -->
+  <div id="audit-logs-modal"
+    class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 hidden">
+    <div
+      class="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden apple-modal-box">
+
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90">
+        <div class="flex items-center gap-2.5">
+          <div
+            class="h-9 w-9 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-base">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+              <span>ประวัติและบันทึกการแก้ไข (Audit Logs)</span>
+              <span id="audit-log-count-badge" class="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-300 font-mono font-bold">0 รายการ</span>
+            </h3>
+            <p class="text-xs text-slate-400">บันทึกประวัติการกระทำของ Admin ทุกคนแบบเรียลไทม์</p>
+          </div>
+        </div>
+        <button onclick="closeAuditLogsModal()" class="text-slate-400 hover:text-white p-1 rounded-lg transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Filters & Search Toolbar -->
+      <div class="p-3 border-b border-slate-800/80 bg-slate-950/60 flex flex-wrap gap-2 items-center justify-between">
+        <div class="flex flex-1 items-center gap-2 min-w-[240px]">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input type="text" id="audit-search-input" oninput="renderAuditLogsList()" placeholder="ค้นหาชื่อแอดมิน, สมาชิก หรือรายละเอียด..."
+              class="w-full pl-8 pr-3 py-1.5 bg-slate-900 border border-slate-700 text-xs rounded-xl text-white focus:outline-none focus:border-amber-500 font-sarabun">
+          </div>
+          <select id="audit-filter-type" onchange="renderAuditLogsList()"
+            class="bg-slate-900 border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-white focus:outline-none focus:border-amber-500">
+            <option value="all">📂 ทุกประเภท</option>
+            <option value="check">✅ เช็คชื่อ / ติ๊กถูก</option>
+            <option value="cp">⚡ แก้ไขค่าพลัง CP</option>
+            <option value="member">👤 ข้อมูลสมาชิก</option>
+            <option value="batch">📋 ติ๊กถูก All ตามกิลด์</option>
+            <option value="clear">🧹 ล้างข้อมูล</option>
+            <option value="guild">🛡️ จัดการกิลด์</option>
+            <option value="admin">🔑 สิทธิ์ Admin</option>
+          </select>
+          <select id="audit-filter-week" onchange="renderAuditLogsList()"
+            class="bg-slate-900 border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-white focus:outline-none focus:border-amber-500">
+            <option value="all">🗓️ ทุกสัปดาห์</option>
+            <option value="1">สัปดาห์ที่ 1</option>
+            <option value="2">สัปดาห์ที่ 2</option>
+            <option value="3">สัปดาห์ที่ 3</option>
+            <option value="4">สัปดาห์ที่ 4</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <button onclick="renderAuditLogsList()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition" title="รีเฟรชประวัติ">
+            <i class="fa-solid fa-rotate text-xs"></i>
+          </button>
+          <button id="btn-clear-audit-logs" onclick="handleClearAuditLogs()" class="hidden px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs transition" title="ล้างประวัติ (เฉพาะ Super Admin)">
+            <i class="fa-solid fa-trash-can text-xs mr-1"></i>ล้างประวัติ
+          </button>
+        </div>
+      </div>
+
+      <!-- Logs Timeline List -->
+      <div class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2">
+        <div id="audit-logs-list" class="space-y-2">
+          <!-- Dynamic logs rendered via JS -->
+        </div>
+      </div>
+
+      <div class="p-3 border-t border-slate-800 bg-slate-900/60 flex items-center justify-between text-xs text-slate-400">
+        <span class="text-[11px]">ซิงค์ข้อมูลกับ Cloud Realtime อัตโนมัติ (เก็บบันทึกสูงสุด 250 รายการล่าสุด)</span>
+        <button onclick="closeAuditLogsModal()" class="apple-btn apple-btn-slate px-4 py-1.5 rounded-xl text-slate-300 text-xs font-semibold">
+          ปิด
         </button>
       </div>
     </div>
@@ -4788,6 +4875,19 @@
           }
         }
       });
+
+      // 9. ดักฟังประวัติการแก้ไข Audit Logs
+      fbDb.ref('guild_app/audit_logs').on('value', snapshot => {
+        const val = snapshot.val();
+        if (Array.isArray(val)) {
+          auditLogs = val;
+          localStorage.setItem('guild_audit_logs', JSON.stringify(auditLogs));
+          const logModal = document.getElementById('audit-logs-modal');
+          if (logModal && !logModal.classList.contains('hidden')) {
+            renderAuditLogsList();
+          }
+        }
+      });
     }
 
     // ================= ระบบจัดการ 4 สัปดาห์ & เปลี่ยนชื่อสัปดาห์ =================
@@ -4883,6 +4983,8 @@
       const manageGuildsBtn = document.getElementById('btn-manage-guilds');
       const clearChecksBtn = document.getElementById('btn-clear-checks');
       const batchCheckBtn = document.getElementById('btn-batch-guild-check');
+      const auditLogsBtn = document.getElementById('btn-audit-logs');
+      const clearAuditLogsBtn = document.getElementById('btn-clear-audit-logs');
 
       // อัพเดทสถานะ Super Admin
       isSuperAdmin = currentAdminEmail === SUPER_ADMIN_EMAIL;
@@ -4909,6 +5011,19 @@
         if (clearChecksBtn) {
           clearChecksBtn.classList.remove('hidden');
           clearChecksBtn.classList.add('inline-flex');
+        }
+        if (auditLogsBtn) {
+          auditLogsBtn.classList.remove('hidden');
+          auditLogsBtn.classList.add('inline-flex');
+        }
+        if (clearAuditLogsBtn) {
+          if (isSuperAdmin) {
+            clearAuditLogsBtn.classList.remove('hidden');
+            clearAuditLogsBtn.classList.add('inline-flex');
+          } else {
+            clearAuditLogsBtn.classList.add('hidden');
+            clearAuditLogsBtn.classList.remove('inline-flex');
+          }
         }
 
         if (indicatorText) {
@@ -4950,6 +5065,14 @@
         if (clearChecksBtn) {
           clearChecksBtn.classList.add('hidden');
           clearChecksBtn.classList.remove('inline-flex');
+        }
+        if (auditLogsBtn) {
+          auditLogsBtn.classList.add('hidden');
+          auditLogsBtn.classList.remove('inline-flex');
+        }
+        if (clearAuditLogsBtn) {
+          clearAuditLogsBtn.classList.add('hidden');
+          clearAuditLogsBtn.classList.remove('inline-flex');
         }
         if (manageAdminBtn) { manageAdminBtn.classList.add('hidden'); manageAdminBtn.classList.remove('inline-flex'); }
 
@@ -5258,6 +5381,13 @@
       req.processedAt = new Date().toISOString();
       savePendingAdminRequests();
       renderAdminApprovalList();
+
+      addAuditLog(
+        'admin',
+        `อนุมัติคำขอ Admin สำหรับ "${req.email}"`,
+        `ชื่อ: ${req.name || '-'} | สิทธิ์: Admin`
+      );
+
       showToast(`อนุมัติสิทธิ์ Admin ให้ "${req.email}" เรียบร้อยแล้ว`, 'success');
     }
 
@@ -5269,6 +5399,13 @@
       req.processedAt = new Date().toISOString();
       savePendingAdminRequests();
       renderAdminApprovalList();
+
+      addAuditLog(
+        'admin',
+        `ปฏิเสธคำขอ Admin ของ "${req.email}"`,
+        `ชื่อ: ${req.name || '-'}`
+      );
+
       showToast(`ปฏิเสธคำขอของ "${req.email}" แล้ว`, 'info');
     }
 
@@ -5287,6 +5424,13 @@
       acc.password = cleanPass;
       saveAdminAccounts();
       renderAdminApprovalList();
+
+      addAuditLog(
+        'admin',
+        `เปลี่ยนรหัสผ่านสำหรับ Admin "${acc.email}"`,
+        `เปลี่ยนรหัสผ่านสำเร็จโดย Super Admin`
+      );
+
       showToast(`เปลี่ยนรหัสผ่านสำหรับ "${acc.email}" สำเร็จ`, 'success');
     }
 
@@ -5302,6 +5446,13 @@
       if (!confirm(`ต้องการลบสิทธิ์ Admin ของ "${email}" ใช่หรือไม่?`)) return;
       adminAccounts = adminAccounts.filter(a => a.email.toLowerCase() !== email.toLowerCase());
       saveAdminAccounts();
+
+      addAuditLog(
+        'admin',
+        `ลบสิทธิ์ Admin ของ "${email}"`,
+        `ลบออกจากระบบโดย Super Admin`
+      );
+
       showToast(`ลบสิทธิ์ Admin ของ "${email}" เรียบร้อยแล้ว`, 'info');
       renderAdminApprovalList();
     }
@@ -5335,6 +5486,13 @@
           m.checks = new Array(ACTIVITIES.length).fill(false);
           m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
         });
+
+        addAuditLog(
+          'clear',
+          `ล้างข้อมูลการติ๊กถูก (${getWeekName(currentWeekNumber)})`,
+          `ล้างเครื่องหมายถูกของสมาชิกทุกคน (${members.length} คน) เฉพาะ ${getWeekName(currentWeekNumber)}`
+        );
+
         showToast(`ล้างการติ๊กถูกของ ${getWeekName(currentWeekNumber)} เรียบร้อยแล้ว (สมาชิกและ CP ยังคงอยู่ครบ)`, 'success');
       } else {
         members.forEach(m => {
@@ -5344,6 +5502,13 @@
           }
           m.checks = new Array(ACTIVITIES.length).fill(false);
         });
+
+        addAuditLog(
+          'clear',
+          `ล้างข้อมูลการติ๊กถูกทุกสัปดาห์ (1-4)`,
+          `ล้างเครื่องหมายถูกของสมาชิกทุกคน (${members.length} คน) ทุกสัปดาห์`
+        );
+
         showToast('ล้างการติ๊กถูกของทุกสัปดาห์ (1-4) เรียบร้อยแล้ว (สมาชิกและ CP ยังคงอยู่ครบ)', 'success');
       }
 
@@ -5436,7 +5601,171 @@
       const actLabel = selectedActivity === 'all' ? 'ทุกบอส' : (ACTIVITIES[parseInt(selectedActivity)]?.shortName || 'บอสที่เลือก');
       const actionLabel = isChecked ? 'ติ๊กถูกทั้งหมด' : 'ยกเลิกติ๊กถูก';
 
+      addAuditLog(
+        'batch',
+        `${actionLabel} ให้ ${guildLabel}`,
+        `กิจกรรม: ${actLabel} | สมาชิกที่ได้รับผลกระทบ: ${affectedCount} คน | ${getWeekName(currentWeekNumber)}`
+      );
+
       showToast(`${actionLabel} ให้ ${guildLabel} (${actLabel}) จำนวน ${affectedCount} คน เรียบร้อยแล้ว!`, 'success');
+    }
+
+    // ================= ระบบประวัติและบันทึกการแก้ไข (Audit Logs System) =================
+    let auditLogs = JSON.parse(localStorage.getItem('guild_audit_logs')) || [];
+
+    function saveAuditLogs() {
+      if (auditLogs.length > 250) {
+        auditLogs = auditLogs.slice(0, 250);
+      }
+      localStorage.setItem('guild_audit_logs', JSON.stringify(auditLogs));
+      if (fbDb) {
+        fbDb.ref('guild_app/audit_logs').set(auditLogs);
+      }
+    }
+
+    function addAuditLog(category, actionTitle, detail = '', targetMember = '') {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const dateStr = now.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+      const adminName = currentAdminEmail || 'Admin';
+
+      const logItem = {
+        id: Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        timestamp: Date.now(),
+        timeFormatted: `${timeStr} (${dateStr})`,
+        admin: adminName,
+        isSuper: isSuperAdmin,
+        category: category, // 'check', 'cp', 'member', 'batch', 'clear', 'guild', 'admin'
+        actionTitle: actionTitle,
+        detail: detail,
+        targetMember: targetMember,
+        weekNumber: currentWeekNumber,
+        weekName: getWeekName(currentWeekNumber)
+      };
+
+      auditLogs.unshift(logItem);
+      saveAuditLogs();
+      const modal = document.getElementById('audit-logs-modal');
+      if (modal && !modal.classList.contains('hidden')) {
+        renderAuditLogsList();
+      }
+    }
+
+    function openAuditLogsModal() {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_edit'), 'warning');
+        openAdminEmailModal();
+        return;
+      }
+      const modal = document.getElementById('audit-logs-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        renderAuditLogsList();
+      }
+    }
+
+    function closeAuditLogsModal() {
+      const modal = document.getElementById('audit-logs-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function renderAuditLogsList() {
+      const container = document.getElementById('audit-logs-list');
+      const countBadge = document.getElementById('audit-log-count-badge');
+      if (!container) return;
+
+      const search = (document.getElementById('audit-search-input')?.value || '').toLowerCase().trim();
+      const filterType = document.getElementById('audit-filter-type')?.value || 'all';
+      const filterWeek = document.getElementById('audit-filter-week')?.value || 'all';
+
+      let filtered = auditLogs.filter(log => {
+        const matchSearch = !search ||
+          (log.admin || '').toLowerCase().includes(search) ||
+          (log.actionTitle || '').toLowerCase().includes(search) ||
+          (log.detail || '').toLowerCase().includes(search) ||
+          (log.targetMember || '').toLowerCase().includes(search);
+
+        const matchType = (filterType === 'all') || (log.category === filterType);
+        const matchWeek = (filterWeek === 'all') || (String(log.weekNumber) === String(filterWeek));
+
+        return matchSearch && matchType && matchWeek;
+      });
+
+      if (countBadge) {
+        countBadge.textContent = `${filtered.length} / ${auditLogs.length} รายการ`;
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="py-12 text-center text-slate-500 font-sarabun">
+            <i class="fa-solid fa-clipboard-list text-3xl mb-2.5 block text-slate-600"></i>
+            <div class="text-xs font-semibold text-slate-400">ไม่พบประวัติการแก้ไขตามเงื่อนไขที่เลือก</div>
+            <div class="text-[11px] text-slate-500 mt-1">การกระทำของ Admin ทุกคนจะถูกบันทึกลงในนี้อัตโนมัติ</div>
+          </div>
+        `;
+        return;
+      }
+
+      const CATEGORY_META = {
+        check: { icon: 'fa-solid fa-circle-check', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30', label: 'เช็คชื่อ' },
+        cp: { icon: 'fa-solid fa-bolt', color: 'text-amber-400 bg-amber-500/10 border-amber-500/30', label: 'แก้ไข CP' },
+        member: { icon: 'fa-solid fa-user-pen', color: 'text-sky-400 bg-sky-500/10 border-sky-500/30', label: 'สมาชิก' },
+        batch: { icon: 'fa-solid fa-list-check', color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30', label: 'ติ๊กถูก All' },
+        clear: { icon: 'fa-solid fa-broom', color: 'text-rose-400 bg-rose-500/10 border-rose-500/30', label: 'ล้างข้อมูล' },
+        guild: { icon: 'fa-solid fa-shield-cat', color: 'text-teal-400 bg-teal-500/10 border-teal-500/30', label: 'กิลด์' },
+        admin: { icon: 'fa-solid fa-key', color: 'text-purple-400 bg-purple-500/10 border-purple-500/30', label: 'สิทธิ์ Admin' }
+      };
+
+      let html = '';
+      filtered.forEach(log => {
+        const meta = CATEGORY_META[log.category] || { icon: 'fa-solid fa-clock-rotate-left', color: 'text-slate-400 bg-slate-800 border-slate-700', label: 'ทั่วไป' };
+        const isSuper = log.isSuper || log.admin === SUPER_ADMIN_EMAIL;
+
+        html += `
+          <div class="bg-slate-900/90 hover:bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition font-sarabun">
+            <div class="flex items-start gap-3 min-w-0">
+              <div class="h-8 w-8 rounded-lg ${meta.color} border flex items-center justify-center shrink-0 mt-0.5 text-xs">
+                <i class="${meta.icon}"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-bold text-white text-xs sm:text-[13px]">${escapeHtml(log.actionTitle)}</span>
+                  <span class="text-[9.5px] px-1.5 py-0.5 rounded font-semibold border ${meta.color}">
+                    ${meta.label}
+                  </span>
+                  ${log.weekName ? `<span class="text-[9.5px] px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-semibold font-mono">${escapeHtml(log.weekName)}</span>` : ''}
+                </div>
+                ${log.detail ? `<div class="text-[11.5px] text-slate-300 mt-1 leading-snug break-words">${escapeHtml(log.detail)}</div>` : ''}
+                <div class="flex items-center gap-2 mt-1.5 text-[10.5px] text-slate-400 flex-wrap">
+                  <span class="inline-flex items-center gap-1 font-mono text-slate-300">
+                    <i class="fa-solid fa-user-shield text-[10px] ${isSuper ? 'text-amber-400' : 'text-emerald-400'}"></i>
+                    ${escapeHtml(log.admin)}
+                    ${isSuper ? '<span class="text-[8.5px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">SUPER</span>' : ''}
+                  </span>
+                  <span class="text-slate-600">•</span>
+                  <span class="font-mono text-slate-400"><i class="fa-regular fa-clock text-[9px] mr-1"></i>${escapeHtml(log.timeFormatted || '')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function handleClearAuditLogs() {
+      if (!isSuperAdmin) {
+        showToast('เฉพาะ Super Admin เท่านั้นที่สามารถล้างประวัติได้', 'warning');
+        return;
+      }
+      if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการล้างประวัติการแก้ไขทั้งหมด?\n\nข้อมูลประวัติจะไม่สามารถกู้คืนได้')) {
+        return;
+      }
+      auditLogs = [];
+      saveAuditLogs();
+      renderAuditLogsList();
+      showToast('ล้างประวัติการแก้ไขทั้งหมดเรียบร้อยแล้ว', 'info');
     }
 
     // Backward-compatible aliases
@@ -5522,6 +5851,18 @@
       if (member) {
         if (!Array.isArray(member.checks)) member.checks = [];
         member.checks[activityIndex] = !member.checks[activityIndex];
+        const isChecked = member.checks[activityIndex];
+        const act = ACTIVITIES[activityIndex];
+        const actName = act ? (act.shortName || act.name) : `บอส #${activityIndex + 1}`;
+        const actionStr = isChecked ? `ติ๊กถูกบอส "${actName}"` : `ยกเลิกติ๊กถูกบอส "${actName}"`;
+
+        addAuditLog(
+          'check',
+          `${actionStr} ให้ "${member.characterName}"`,
+          `กิลด์: ${member.guild || '-'} | สัปดาห์: ${getWeekName(currentWeekNumber)} | บอส: ${actName}`,
+          member.characterName
+        );
+
         saveData();
         renderTable();
       }
@@ -5542,6 +5883,15 @@
         } else {
           member.checks = new Array(ACTIVITIES.length).fill(true);
         }
+
+        const actionStr = allChecked ? `ยกเลิกติ๊กถูกทุกบอส` : `ติ๊กถูกทุกบอส (All)`;
+        addAuditLog(
+          'check',
+          `${actionStr} ให้ "${member.characterName}"`,
+          `กิลด์: ${member.guild || '-'} | สัปดาห์: ${getWeekName(currentWeekNumber)}`,
+          member.characterName
+        );
+
         saveData();
         renderTable();
         showToast(allChecked ? t('toast_checks_cleared') : t('toast_checks_all'), "success");
@@ -6057,9 +6407,18 @@
       const member = members.find(m => m.id === memberId);
       if (!member) return;
 
+      const oldCp = (member.weeklyCp && member.weeklyCp[currentWeekNumber]) || member.cp || 0;
       ensureMemberWeeklyData(member);
       member.cp = newCp;
       member.weeklyCp[currentWeekNumber] = newCp;
+
+      addAuditLog(
+        'cp',
+        `แก้ไข CP ของ "${member.characterName}"`,
+        `จาก ${Number(oldCp).toLocaleString()} ➔ ${newCp.toLocaleString()} | สัปดาห์: ${getWeekName(currentWeekNumber)}`,
+        member.characterName
+      );
+
       saveData();
       renderTable();
       closeQuickEditCpModal();
@@ -6107,8 +6466,26 @@
       if (!member) return;
 
       const oldName = member.characterName;
+      const oldGuild = member.guild;
       member.characterName = newName;
       member.guild = newGuild;
+
+      let detailStr = '';
+      if (oldName !== newName && oldGuild !== newGuild) {
+        detailStr = `เปลี่ยนชื่อจาก "${oldName}" ➔ "${newName}" และย้ายกิลด์จาก "${oldGuild}" ➔ "${newGuild}"`;
+      } else if (oldName !== newName) {
+        detailStr = `เปลี่ยนชื่อจาก "${oldName}" ➔ "${newName}" (กิลด์: ${newGuild})`;
+      } else {
+        detailStr = `ย้ายกิลด์ของ "${newName}" จาก "${oldGuild}" ➔ "${newGuild}"`;
+      }
+
+      addAuditLog(
+        'member',
+        `แก้ไขข้อมูลของ "${newName}"`,
+        detailStr,
+        newName
+      );
+
       saveData();
       renderTable();
       updateKPIs();
@@ -6254,6 +6631,12 @@
         icon: icon
       });
 
+      addAuditLog(
+        'guild',
+        `สร้างกิลด์ใหม่ "${name}"`,
+        `ไอคอน: ${icon} | โทนสี: ${color}`
+      );
+
       saveGuildsList();
       populateGuildSelects();
       renderGuildManagerList();
@@ -6319,6 +6702,12 @@
         saveData();
       }
 
+      addAuditLog(
+        'guild',
+        `แก้ไขกิลด์ "${oldName}" ➔ "${newName}"`,
+        `สีกิลด์ใหม่: ${newColor} | ไอคอน: ${icon}`
+      );
+
       saveGuildsList();
       populateGuildSelects();
       renderGuildManagerList();
@@ -6355,6 +6744,13 @@
       }
 
       guildsList = guildsList.filter(g => g.name !== guildName);
+
+      addAuditLog(
+        'guild',
+        `ลบกิลด์ "${guildName}"`,
+        count > 0 ? `ย้ายสมาชิกจำนวน ${count} คนไปยังกิลด์ "${targetGuildName}"` : 'กิลด์ไม่มีสมาชิก'
+      );
+
       saveGuildsList();
       populateGuildSelects();
       renderGuildManagerList();
@@ -6425,6 +6821,14 @@
           member.cp = cp;
           member.weeklyCp[currentWeekNumber] = cp;
           member.email = email;
+
+          addAuditLog(
+            'member',
+            `แก้ไขข้อมูลสมาชิก "${charName}"`,
+            `กิลด์: ${guild} | CP: ${cp.toLocaleString()} | อีเมล: ${email || '-'}`,
+            charName
+          );
+
           showToast(t('toast_member_updated', { name: charName }), "success");
         }
       } else {
@@ -6445,6 +6849,14 @@
           }
         };
         members.unshift(newMember);
+
+        addAuditLog(
+          'member',
+          `เพิ่มสมาชิกใหม่ "${charName}"`,
+          `กิลด์: ${guild} | CP: ${cp.toLocaleString()} | อีเมล: ${email || '-'}`,
+          charName
+        );
+
         showToast(t('toast_member_added', { name: charName }), "success");
       }
 
@@ -6463,6 +6875,14 @@
       const name = member ? member.characterName : 'Member';
       if (confirm(t('confirm_delete_member', { name }))) {
         members = members.filter(m => m.id !== id);
+
+        addAuditLog(
+          'member',
+          `ลบสมาชิก "${name}"`,
+          `กิลด์เดิม: ${member ? member.guild : '-'} | CP: ${member ? Number(member.cp).toLocaleString() : 0}`,
+          name
+        );
+
         saveData();
         renderTable();
         showToast(t('toast_member_deleted', { name }), "info");
@@ -8049,6 +8469,7 @@
         closeRenameGuildModal();
         closeClearChecksModal();
         closeBatchGuildCheckModal();
+        closeAuditLogsModal();
       }
     });
 
