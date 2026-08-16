@@ -115,31 +115,31 @@ function switchAppModule(moduleName) {
   }
 }
 
-// Calculate Next Spawn Date (Returns null if not recorded)
+// Calculate Next Spawn Date
 function calculateNextSpawnDate(boss, defeatedDateStr) {
-  if (!defeatedDateStr) return null; // Unrecorded -> Do NOT show countdown
+  const now = new Date();
 
-  const defDate = new Date(defeatedDateStr);
-  if (isNaN(defDate.getTime())) return null;
-
+  // 1. Interval bosses require recorded defeat time
   if (boss.respawnType === 'interval') {
+    if (!defeatedDateStr) return null; // Unrecorded -> Do NOT show countdown
+    const defDate = new Date(defeatedDateStr);
+    if (isNaN(defDate.getTime())) return null;
     const nextSpawn = new Date(defDate.getTime() + (boss.intervalHours * 3600 * 1000));
     return nextSpawn;
   }
 
+  // 2. Fixed schedule bosses calculate next upcoming spawn automatically
   if (boss.respawnType === 'fixed' && Array.isArray(boss.fixedTimes)) {
-    // Find next upcoming occurrence after the recorded kill date
-    const baseDate = defDate;
     let nearest = null;
     for (let offset = 0; offset <= 7; offset++) {
-      const checkDate = new Date(baseDate.getTime() + offset * 24 * 3600 * 1000);
+      const checkDate = new Date(now.getTime() + offset * 24 * 3600 * 1000);
       const dayOfWeek = checkDate.getDay(); // 0 = Sun, 1 = Mon ...
 
       for (const ft of boss.fixedTimes) {
         if (ft.days.includes(dayOfWeek)) {
           const [h, m] = ft.time.split(':').map(Number);
           const candidate = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate(), h, m, 0, 0);
-          if (candidate > baseDate) {
+          if (candidate > now) {
             if (!nearest || candidate < nearest) {
               nearest = candidate;
             }
