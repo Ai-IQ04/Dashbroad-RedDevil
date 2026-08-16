@@ -5755,6 +5755,64 @@
       } catch (err) {
         console.warn('Presence setup warning:', err);
       }
+
+      // 15. ดักฟังข้อมูลสมาชิกที่ยืนยันตัวตนใน Discord (Discord Verified Members)
+      fbDb.ref('guild_app/discord_verified').on('value', snapshot => {
+        const val = snapshot.val();
+        if (val && typeof val === 'object') {
+          discordVerifiedMembers = val;
+          localStorage.setItem('guild_discord_verified', JSON.stringify(discordVerifiedMembers));
+        } else {
+          discordVerifiedMembers = {};
+          localStorage.setItem('guild_discord_verified', JSON.stringify({}));
+        }
+        renderTable();
+      });
+    }
+
+    let discordVerifiedMembers = JSON.parse(localStorage.getItem('guild_discord_verified')) || {};
+
+    function getDiscordVerifiedData(member) {
+      if (!member || !discordVerifiedMembers || typeof discordVerifiedMembers !== 'object') return null;
+
+      const memEmail = (member.email || '').trim().toLowerCase();
+      const memName = (member.characterName || member.name || '').trim().toLowerCase();
+
+      // ค้นหาตาม email หรือ characterName
+      const entries = Object.values(discordVerifiedMembers);
+      for (const item of entries) {
+        if (!item || typeof item !== 'object') continue;
+        const itemEmail = (item.email || '').trim().toLowerCase();
+        const itemName = (item.characterName || item.name || '').trim().toLowerCase();
+
+        if (memEmail && itemEmail && memEmail === itemEmail) {
+          return item;
+        }
+        if (memName && itemName && memName === itemName) {
+          return item;
+        }
+      }
+      return null;
+    }
+
+    function renderDiscordActiveBadgeHtml(member) {
+      const verified = getDiscordVerifiedData(member);
+      if (!verified) return '';
+
+      const emailStr = verified.email || member.email || '';
+      const uidStr = verified.uid || verified.inGameMemberNo || '';
+      const tooltip = `✅ Discord Active Verified (สมาชิกยืนยันใน Discord แล้ว)\nอีเมล: ${emailStr}${uidStr ? `\nUID: ${uidStr}` : ''}\nชื่อ Discord: ${verified.discordTag || verified.discordName || verified.discordId || 'ยืนยันแล้ว'}`;
+
+      return `
+        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-[9px] font-bold text-emerald-300 shadow-sm shrink-0 whitespace-nowrap cursor-help transition hover:bg-emerald-500/25 select-none"
+              title="${escapeHtml(tooltip)}">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span class="font-mono uppercase tracking-wider">Active</span>
+        </span>
+      `;
     }
 
     // ================= ระบบจัดการ 4 สัปดาห์ & เปลี่ยนชื่อสัปดาห์ =================
@@ -7195,6 +7253,7 @@
                   ${isAdmin ? '<i class="fa-solid fa-pen text-[9px] opacity-0 group-hover/name:opacity-100 text-sky-400 transition ml-1"></i>' : ''}
                 </span>
                 ${renderGuildBadgeHtml(member.guild)}
+                ${renderDiscordActiveBadgeHtml(member)}
                 ${(() => {
             const bList = getMemberAchievementBadges(member, members, currentLang);
             if (bList.length === 0) return '';
