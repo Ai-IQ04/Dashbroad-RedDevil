@@ -169,6 +169,14 @@ function switchAppModule(moduleName) {
     if (tabBoss) {
       tabBoss.className = "apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-2 active:scale-95";
     }
+
+    if (typeof renderTableHeader === 'function') renderTableHeader();
+    if (typeof renderTable === 'function') renderTable();
+  }
+
+  // Update contextual Admin UI indicator and buttons
+  if (typeof updateAdminUI === 'function') {
+    updateAdminUI();
   }
 }
 
