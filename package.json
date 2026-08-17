@@ -1,4 +1,11 @@
 {
+  "name": "reddevil-bot",
+  "version": "1.0.0",
+  "description": "Discord Sync & Boss Alert Bot for RedDevil",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
   "dependencies": {
     "discord.js": "^14.27.0"
   }
