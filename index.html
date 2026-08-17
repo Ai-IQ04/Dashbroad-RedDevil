@@ -811,6 +811,13 @@
               <span data-i18n="btn_manage_guilds">จัดการกิลด์</span>
             </button>
 
+            <button id="btn-ai-squad-check" onclick="openAiSquadCheckModal()"
+              class="hidden apple-btn apple-btn-sapphire inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
+              title="สแกนรูปภาพจัดการชุมนุมในเกมเพื่อติ๊กคะแนนบอสให้อัตโนมัติด้วย AI">
+              <i class="fa-solid fa-camera-retro text-xs text-indigo-300"></i>
+              <span>สแกนชุมนุม (AI)</span>
+            </button>
+
             <button id="btn-batch-guild-check" onclick="openBatchGuildCheckModal()"
               class="hidden apple-btn apple-btn-ocean inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
               <i class="fa-solid fa-list-check text-xs"></i>
@@ -6314,6 +6321,16 @@
             manageGuildsBtn.classList.remove('inline-flex');
           }
         }
+        const aiSquadCheckBtn = document.getElementById('btn-ai-squad-check');
+        if (aiSquadCheckBtn) {
+          if (isFullAdmin) {
+            aiSquadCheckBtn.classList.remove('hidden');
+            aiSquadCheckBtn.classList.add('inline-flex');
+          } else {
+            aiSquadCheckBtn.classList.add('hidden');
+            aiSquadCheckBtn.classList.remove('inline-flex');
+          }
+        }
         if (batchCheckBtn) {
           if (isFullAdmin) {
             batchCheckBtn.classList.remove('hidden');
@@ -6389,6 +6406,11 @@
         if (manageGuildsBtn) {
           manageGuildsBtn.classList.add('hidden');
           manageGuildsBtn.classList.remove('inline-flex');
+        }
+        const aiSquadCheckBtn = document.getElementById('btn-ai-squad-check');
+        if (aiSquadCheckBtn) {
+          aiSquadCheckBtn.classList.add('hidden');
+          aiSquadCheckBtn.classList.remove('inline-flex');
         }
         if (batchCheckBtn) {
           batchCheckBtn.classList.add('hidden');
@@ -7057,6 +7079,349 @@
 
       showToast(`${actionLabel} ให้ ${guildLabel} (${actLabel}) จำนวน ${affectedCount} คน เรียบร้อยแล้ว!`, 'success');
     }
+
+    // ================= 📸 ระบบ AI สแกนรูปจัดการชุมนุมเพื่อติ๊กคะแนนบอส (AI Squad Attendance Scanner) =================
+    let detectedSquadData = { squads: [], allMembers: [], matchedMembers: [] };
+
+    function openAiSquadCheckModal() {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_edit'), 'warning');
+        openAdminEmailModal();
+        return;
+      }
+
+      // Populate activities dropdown
+      const actSelect = document.getElementById('squad-check-activity-select');
+      if (actSelect && Array.isArray(ACTIVITIES)) {
+        let html = '';
+        ACTIVITIES.forEach((act, idx) => {
+          html += `<option value="${idx}">⚔️ ${escapeHtml(act.name)} (${escapeHtml(act.shortName || '')})</option>`;
+        });
+        actSelect.innerHTML = html;
+      }
+
+      resetSquadImageScan();
+      const modal = document.getElementById('ai-squad-check-modal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeAiSquadCheckModal() {
+      const modal = document.getElementById('ai-squad-check-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function resetSquadImageScan() {
+      const dropzonePrompt = document.getElementById('squad-dropzone-prompt');
+      const previewBox = document.getElementById('squad-image-preview-box');
+      const previewImg = document.getElementById('squad-image-preview');
+      const statusEl = document.getElementById('squad-ai-status');
+      const resultsContainer = document.getElementById('squad-results-container');
+      const fileInput = document.getElementById('squad-image-file-input');
+      const confirmBtn = document.getElementById('btn-confirm-squad-check');
+
+      if (dropzonePrompt) dropzonePrompt.classList.remove('hidden');
+      if (previewBox) previewBox.classList.add('hidden');
+      if (previewImg) previewImg.src = '';
+      if (statusEl) statusEl.classList.add('hidden');
+      if (resultsContainer) resultsContainer.classList.add('hidden');
+      if (fileInput) fileInput.value = '';
+      if (confirmBtn) {
+        confirmBtn.disabled = true;
+        const confirmBtnText = confirmBtn.querySelector('#btn-confirm-squad-check-text');
+        if (confirmBtnText) confirmBtnText.textContent = 'ยืนยันติ๊กถูกให้สมาชิก (0 คน)';
+      }
+      detectedSquadData = { squads: [], allMembers: [], matchedMembers: [] };
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function handleSquadFileSelect(file) {
+      if (!file) return;
+      processSquadImageWithGemini(file);
+    }
+
+    async function processSquadImageWithGemini(file) {
+      const dropzonePrompt = document.getElementById('squad-dropzone-prompt');
+      const previewBox = document.getElementById('squad-image-preview-box');
+      const previewImg = document.getElementById('squad-image-preview');
+      const statusEl = document.getElementById('squad-ai-status');
+      const resultsContainer = document.getElementById('squad-results-container');
+
+      if (previewImg) {
+        previewImg.src = URL.createObjectURL(file);
+        if (previewBox) previewBox.classList.remove('hidden');
+        if (dropzonePrompt) dropzonePrompt.classList.add('hidden');
+      }
+
+      const apiKey = localStorage.getItem('guild_boss_gemini_api_key') || (typeof bossGeminiApiKey !== 'undefined' ? bossGeminiApiKey : '');
+      if (!apiKey) {
+        if (statusEl) {
+          statusEl.innerHTML = `<span class="text-amber-300 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> ยังไม่ได้ตั้งค่า Google Gemini API Key กรุณาให้ Super Admin ใส่ Key ในเมนู 'ตั้งค่า Discord / Sheets' ก่อนใช้งาน</span>`;
+          statusEl.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (statusEl) {
+        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400 mr-1.5"></i> กำลังส่งภาพให้ Google Gemini AI สแกนรายชื่อสมาชิกในหน่วยชุมนุม 1-4...`;
+        statusEl.classList.remove('hidden');
+      }
+      if (resultsContainer) resultsContainer.classList.add('hidden');
+
+      try {
+        const base64DataUrl = await fileToBase64(file);
+        const base64Str = base64DataUrl.split(',')[1];
+        const mimeType = file.type || 'image/png';
+
+        const memberRoster = members.map(m => m.name).join(', ');
+
+        const prompt = `You are a high-precision OCR and character name extractor for the MMORPG 'LORD NINE' (LORDNINE / ลอร์ดไนน์).
+Examine this screenshot of the in-game squad / assembly management window titled 'จัดการชุมนุม' (Squad Management).
+
+Guild member roster for reference and fuzzy spelling matching:
+${memberRoster}
+
+Tasks:
+1. Identify each squad unit (หน่วย 1, หน่วย 2, หน่วย 3, หน่วย 4, etc. shown with blue/cyan numbers on the left).
+2. Extract all character names placed in each squad slot (including Chinese, Japanese, and special characters like yn官, Hanchirisu改善, Birkenstockツ, Starix死, etc.).
+3. Match each detected character name against the guild roster if a matching member exists.
+
+Output strictly valid JSON with no markdown wrapping:
+{
+  "squads": [
+    {
+      "squadNumber": 1,
+      "members": ["ไข่นวย", "yn官", "Hanchirisu改善", "xCOACH", "Starix死"]
+    },
+    {
+      "squadNumber": 2,
+      "members": ["SenjuNo2", "ไข่ล่อ", "Mindgame", "Heuristics", "ไข่มอส"]
+    }
+  ],
+  "allMembers": ["name1", "name2"]
+}`;
+
+        const payload = {
+          contents: [
+            {
+              parts: [
+                { text: prompt },
+                {
+                  inlineData: {
+                    mimeType: mimeType,
+                    data: base64Str
+                  }
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.1,
+            responseMimeType: "application/json"
+          }
+        };
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Gemini API error (${res.status}): ${errText}`);
+        }
+
+        const jsonRes = await res.json();
+        const textOutput = jsonRes?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!textOutput) throw new Error('No response content from Gemini');
+
+        const cleanJsonStr = textOutput.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/```$/, '').trim();
+        const parsedData = JSON.parse(cleanJsonStr);
+
+        renderSquadScanResults(parsedData);
+      } catch (err) {
+        console.error('Squad Scan Error:', err);
+        if (statusEl) {
+          statusEl.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i> เกิดข้อผิดพลาดในการสแกนรูปภาพ: ${escapeHtml(err.message || 'โปรดลองอีกครั้ง')}</span>`;
+        }
+      }
+    }
+
+    function renderSquadScanResults(data) {
+      const statusEl = document.getElementById('squad-ai-status');
+      const resultsContainer = document.getElementById('squad-results-container');
+      const listContainer = document.getElementById('squad-members-list');
+      const summaryBadge = document.getElementById('squad-summary-badge');
+      const confirmBtn = document.getElementById('btn-confirm-squad-check');
+      const confirmBtnText = document.getElementById('btn-confirm-squad-check-text');
+
+      if (statusEl) statusEl.classList.add('hidden');
+      if (resultsContainer) resultsContainer.classList.remove('hidden');
+
+      const squads = Array.isArray(data.squads) ? data.squads : [];
+      let totalFound = 0;
+      let matchedCount = 0;
+      const matchedMemberList = [];
+
+      let html = '';
+
+      squads.forEach((sq, sqIdx) => {
+        const sqNum = sq.squadNumber || (sqIdx + 1);
+        const sqMembers = Array.isArray(sq.members) ? sq.members : [];
+        if (sqMembers.length === 0) return;
+
+        html += `
+          <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold">
+              <span class="text-indigo-300 flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[11px] font-mono border border-indigo-500/30">${sqNum}</span>
+                <span>หน่วยชุมนุมที่ ${sqNum}</span>
+              </span>
+              <span class="text-[10px] text-slate-400 font-mono">${sqMembers.length} คน</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+        `;
+
+        sqMembers.forEach(rawName => {
+          totalFound++;
+          const cleanName = String(rawName).trim();
+          
+          // Match with members in guild
+          const guildMember = members.find(m => 
+            m.name.toLowerCase() === cleanName.toLowerCase() ||
+            m.name.replace(/\s+/g, '') === cleanName.replace(/\s+/g, '')
+          );
+
+          const isMatched = !!guildMember;
+          if (isMatched) {
+            matchedCount++;
+            matchedMemberList.push(guildMember);
+          }
+
+          const badgeClass = isMatched 
+            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25' 
+            : 'bg-slate-800 text-slate-400 border-slate-700 opacity-60';
+
+          const icon = isMatched 
+            ? '<i class="fa-solid fa-circle-check text-emerald-400 text-[10px]"></i>' 
+            : '<i class="fa-solid fa-circle-question text-slate-500 text-[10px]"></i>';
+
+          const guildTag = isMatched 
+            ? `<span class="text-[8.5px] px-1 rounded bg-slate-900 text-slate-400 font-mono">${escapeHtml(guildMember.guild || '')}</span>` 
+            : '<span class="text-[8.5px] text-rose-400">ไม่พบในกิลด์</span>';
+
+          html += `
+            <div class="px-2.5 py-1.5 rounded-xl border ${badgeClass} flex items-center justify-between gap-1 text-[11.5px] transition">
+              <span class="flex items-center gap-1.5 truncate font-medium">
+                ${icon}
+                <span class="truncate text-white font-bold">${escapeHtml(cleanName)}</span>
+              </span>
+              ${guildTag}
+            </div>
+          `;
+        });
+
+        html += `
+            </div>
+          </div>
+        `;
+      });
+
+      if (listContainer) listContainer.innerHTML = html;
+
+      detectedSquadData.matchedMembers = matchedMemberList;
+
+      if (summaryBadge) {
+        summaryBadge.textContent = `พบในกิลด์ ${matchedCount} / ${totalFound} คน`;
+      }
+
+      if (confirmBtn) {
+        confirmBtn.disabled = matchedCount === 0;
+      }
+      if (confirmBtnText) {
+        confirmBtnText.textContent = `ยืนยันติ๊กถูกให้สมาชิก (${matchedCount} คน)`;
+      }
+    }
+
+    function confirmAiSquadAttendanceCheck() {
+      if (!isAdmin) return;
+
+      const actSelect = document.getElementById('squad-check-activity-select');
+      const actIdx = actSelect ? parseInt(actSelect.value) : 0;
+      if (isNaN(actIdx) || actIdx < 0 || actIdx >= ACTIVITIES.length) {
+        showToast('กรุณาเลือกกิจกรรม/บอสที่ถูกต้อง', 'warning');
+        return;
+      }
+
+      const matchedList = detectedSquadData.matchedMembers || [];
+      if (matchedList.length === 0) {
+        showToast('ไม่พบสมาชิกในกิลด์ที่ตรงกับรูปภาพ', 'warning');
+        return;
+      }
+
+      let affectedCount = 0;
+      matchedList.forEach(target => {
+        const m = members.find(mem => mem.name === target.name);
+        if (m) {
+          ensureMemberWeeklyData(m);
+          m.checks[actIdx] = true;
+          if (!Array.isArray(m.weeklyChecks[currentWeekNumber])) {
+            m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
+          }
+          m.weeklyChecks[currentWeekNumber][actIdx] = true;
+          affectedCount++;
+        }
+      });
+
+      saveData();
+      renderTable();
+      updateKPIs();
+      closeAiSquadCheckModal();
+
+      const actName = ACTIVITIES[actIdx]?.name || ACTIVITIES[actIdx]?.shortName || 'กิจกรรม';
+
+      addAuditLog(
+        'batch',
+        `AI สแกนรูปชุมนุมติ๊กบอส: ${actName}`,
+        `สแกนจากรูปภาพจัดการชุมนุม | ติ๊กถูกสำเร็จ: ${affectedCount} คน | ${getWeekName(currentWeekNumber)}`
+      );
+
+      showToast(`📸 AI ติ๊กถูกบอส "${actName}" ให้สมาชิก ${affectedCount} คน เรียบร้อยแล้ว! 🎉`, 'success');
+    }
+
+    // Global Paste Listener for AI Squad Attendance Check (when in Scoring Module)
+    window.addEventListener('paste', e => {
+      const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+      if (!items) return;
+
+      let imageFile = null;
+      for (const item of items) {
+        if (item.type && item.type.startsWith('image/')) {
+          imageFile = item.getAsFile();
+          break;
+        }
+      }
+
+      if (imageFile) {
+        const squadModal = document.getElementById('ai-squad-check-modal');
+        const isSquadModalOpen = squadModal && !squadModal.classList.contains('hidden');
+        const isViewingScoring = typeof activeAppModule === 'undefined' || activeAppModule === 'scoring';
+
+        if (isAdmin && (isSquadModalOpen || isViewingScoring)) {
+          e.preventDefault();
+          if (!isSquadModalOpen) openAiSquadCheckModal();
+          processSquadImageWithGemini(imageFile);
+        }
+      }
+    });
 
     // ================= ระบบประวัติและบันทึกการแก้ไข (Audit Logs System) =================
     let auditLogs = JSON.parse(localStorage.getItem('guild_audit_logs')) || [];
@@ -12868,6 +13233,102 @@
           <!-- Rendered via JS -->
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ================= 📸 หน้าต่าง AI สแกนรูปจัดการชุมนุมติ๊กชื่อบอส ================= -->
+  <div id="ai-squad-check-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md hidden p-4 animate-fade-in">
+    <div class="w-full max-w-2xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-indigo-500/50 rounded-3xl p-5 sm:p-6 shadow-2xl relative animate-scale-up max-h-[92vh] flex flex-col font-sarabun">
+      <button type="button" onclick="closeAiSquadCheckModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <!-- Header -->
+      <div class="flex items-center gap-3 pb-3 border-b border-slate-800 shrink-0">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center text-xl border border-indigo-400/40 shadow-md">
+          <i class="fa-solid fa-camera-retro"></i>
+        </div>
+        <div>
+          <h3 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
+            <span>AI สแกนรูป "จัดการชุมนุม" ติ๊กคะแนนบอส</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/40">Gemini Vision 99.9%</span>
+          </h3>
+          <p class="text-[11px] text-slate-400">แคปรูปหน้าต่างจัดการชุมนุมในเกมแล้วกด Ctrl + V เพื่อสแกนและติ๊กถูกบอสให้ทุกคนใน 1 วินาที</p>
+        </div>
+      </div>
+
+      <!-- Body Scrollable -->
+      <div class="flex-1 overflow-y-auto py-3 space-y-3.5 pr-1 text-xs">
+        
+        <!-- Step 1: Select Boss / Activity -->
+        <div class="p-3.5 bg-slate-950/80 border border-slate-800 rounded-2xl space-y-2">
+          <label class="block text-xs font-bold text-indigo-300">
+            <i class="fa-solid fa-dragon mr-1"></i> 1. เลือกกิจกรรม / บอสที่ต้องการติ๊กคะแนน:
+          </label>
+          <select id="squad-check-activity-select"
+            class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-indigo-400 focus:outline-none">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+
+        <!-- Step 2: Image Dropzone & Paste Area -->
+        <div class="p-3.5 bg-slate-950/80 border border-dashed border-indigo-500/40 hover:border-indigo-400 rounded-2xl text-center relative cursor-pointer group transition"
+          id="squad-image-dropzone" onclick="document.getElementById('squad-image-file-input').click()">
+          <input type="file" id="squad-image-file-input" accept="image/*" class="hidden" onchange="handleSquadFileSelect(this.files[0])" />
+          
+          <div id="squad-dropzone-prompt" class="py-4 space-y-2">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <div class="text-xs font-bold text-white">กดคลิกเพื่อเลือกรูปภาพ หรือกด <span class="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 rounded-md font-mono">Ctrl + V</span> เพื่อวางภาพ</div>
+            <div class="text-[11px] text-slate-400">รองรับรูปภาพหน้าจอ "จัดการชุมนุม" (หน่วย 1, 2, 3, 4)</div>
+          </div>
+
+          <div id="squad-image-preview-box" class="hidden relative max-h-48 rounded-xl overflow-hidden border border-slate-700 mx-auto">
+            <img id="squad-image-preview" class="max-h-48 w-full object-contain bg-slate-950" />
+            <button type="button" onclick="event.stopPropagation(); resetSquadImageScan();" class="absolute top-2 right-2 px-2 py-1 bg-black/80 hover:bg-black text-rose-300 rounded-lg text-[10px] border border-rose-500/40">
+              <i class="fa-solid fa-rotate-left mr-1"></i>เปลี่ยนรูป
+            </button>
+          </div>
+        </div>
+
+        <!-- Status indicator -->
+        <div id="squad-ai-status" class="hidden py-3 px-4 rounded-xl bg-purple-950/40 border border-purple-500/30 text-purple-300 text-xs text-center font-medium">
+          <i class="fa-solid fa-wand-magic-sparkles fa-spin mr-1.5"></i> กำลังส่งภาพให้ Google Gemini AI สแกนรายชื่อสมาชิก...
+        </div>
+
+        <!-- Step 3: Detected Members Grid -->
+        <div id="squad-results-container" class="hidden space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="font-bold text-slate-200 text-xs flex items-center gap-1.5">
+              <i class="fa-solid fa-users text-indigo-400"></i>
+              <span>รายชื่อที่ตรวจพบจากรูปภาพ:</span>
+            </div>
+            <div id="squad-summary-badge" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+              พบสมาชิก 0 คน
+            </div>
+          </div>
+
+          <!-- Squads Grid List -->
+          <div id="squad-members-list" class="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="flex items-center gap-2 pt-3 border-t border-slate-800 shrink-0">
+        <button type="button" onclick="closeAiSquadCheckModal()" class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition text-xs">
+          ยกเลิก
+        </button>
+        <button type="button" id="btn-confirm-squad-check" onclick="confirmAiSquadAttendanceCheck()" disabled
+          class="flex-1 py-2.5 px-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500 hover:from-indigo-400 hover:to-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-500/25 active:scale-95 transition flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-check"></i> <span id="btn-confirm-squad-check-text">ยืนยันติ๊กถูกให้สมาชิก (0 คน)</span>
+        </button>
+      </div>
+
     </div>
   </div>
 
