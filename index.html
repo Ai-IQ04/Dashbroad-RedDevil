@@ -728,15 +728,6 @@
         <!-- 👥 Member Hub (ร้านค้า, สรุปคะแนน, Top 10, ขอ CP, อุทธรณ์) -->
         <div id="member-hub-container"
           class="flex items-center gap-1.5 p-1 bg-slate-950/80 border border-slate-800/90 rounded-2xl backdrop-blur-md shadow-sm flex-wrap">
-          <!-- 🤖 ปุ่มซิงค์ข้อมูล Discord (แสดงเฉพาะหน้าเช็คชื่อ) -->
-          <button type="button" onclick="triggerDiscordBotSync()"
-            class="apple-btn bg-indigo-950/90 hover:bg-indigo-900 border border-indigo-500/60 text-indigo-200 hover:text-white inline-flex items-center gap-2 px-3 py-1.5 text-xs shadow-sm font-bold rounded-xl"
-            title="กดเพื่อสั่งให้บอทซิงค์รายชื่อสมาชิก Discord ทันที">
-            <span id="discord-bot-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
-            <i id="discord-sync-icon" class="fa-brands fa-discord text-indigo-400 text-xs shrink-0"></i>
-            <span id="discord-bot-status-text">ซิงค์ดิส (34 คน)</span>
-          </button>
-
           <!-- 🎁 ปุ่มเปิดร้านค้าของรางวัล & Showcase -->
           <button type="button" onclick="openRewardStoreModal()"
             class="apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm">
@@ -882,6 +873,15 @@
               title="สำรองหรือกู้คืนข้อมูลกิลด์ (Backup & Restore)">
               <i class="fa-solid fa-floppy-disk text-xs"></i>
               <span data-i18n="btn_backup_restore">สำรอง</span>
+            </button>
+
+            <!-- 🤖 ปุ่มซิงค์ข้อมูล Discord (เฉพาะ Admin) -->
+            <button id="btn-admin-discord-sync" onclick="triggerDiscordBotSync()"
+              class="apple-btn bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/60 text-indigo-200 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm font-bold"
+              title="สั่งให้บอทซิงค์รายชื่อสมาชิก Discord ทันที">
+              <span id="discord-bot-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+              <i id="discord-sync-icon" class="fa-brands fa-discord text-indigo-400 text-xs shrink-0"></i>
+              <span id="discord-bot-status-text">ซิงค์ดิส (34 คน)</span>
             </button>
           </div>
 
