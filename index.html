@@ -875,13 +875,13 @@
               <span data-i18n="btn_backup_restore">สำรอง</span>
             </button>
 
-            <!-- 🤖 ปุ่มซิงค์ข้อมูล Discord (เฉพาะ Admin) -->
-            <button id="btn-admin-discord-sync" onclick="triggerDiscordBotSync()"
-              class="apple-btn bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/60 text-indigo-200 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm font-bold"
-              title="สั่งให้บอทซิงค์รายชื่อสมาชิก Discord ทันที">
+            <!-- 🤖 ปุ่มซิงค์ & ตรวจสอบการลงทะเบียน Discord (เฉพาะ Admin) -->
+            <button id="btn-admin-discord-sync" onclick="openDiscordRegistrationsModal()"
+              class="apple-btn bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/60 text-indigo-200 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm font-bold cursor-pointer"
+              title="คลิกเพื่อดูรายชื่อที่ลงทะเบียนจาก Discord และตรวจสอบก่อนเพิ่มเข้าตาราง">
               <span id="discord-bot-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
               <i id="discord-sync-icon" class="fa-brands fa-discord text-indigo-400 text-xs shrink-0"></i>
-              <span id="discord-bot-status-text">ซิงค์ดิส (34 คน)</span>
+              <span id="discord-bot-status-text">คิวลงทะเบียนดิส</span>
             </button>
           </div>
 
@@ -6040,7 +6040,211 @@
       setTimeout(() => {
         if (icon) icon.className = 'fa-brands fa-discord text-indigo-400 text-xs';
         if (typeof renderTable === 'function') renderTable();
+        if (typeof renderDiscordRegistrationsList === 'function') renderDiscordRegistrationsList();
       }, 2500);
+    }
+
+    // ================= ระบบตรวจสอบการลงทะเบียนจาก Discord (Discord Registrations Queue) =================
+    let currentDiscordRegFilter = 'all';
+
+    function openDiscordRegistrationsModal() {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_edit'), 'warning');
+        openAdminEmailModal();
+        return;
+      }
+      renderDiscordRegistrationsList();
+      const modal = document.getElementById('discord-registrations-modal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeDiscordRegistrationsModal() {
+      const modal = document.getElementById('discord-registrations-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function setDiscordRegFilter(filterType) {
+      currentDiscordRegFilter = filterType;
+      
+      const btnAll = document.getElementById('btn-dreg-filter-all');
+      const btnPending = document.getElementById('btn-dreg-filter-pending');
+      const btnInTable = document.getElementById('btn-dreg-filter-intable');
+
+      if (btnAll) btnAll.className = filterType === 'all' ? 'px-2.5 py-1 rounded-lg bg-indigo-600 text-white transition' : 'px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition';
+      if (btnPending) btnPending.className = filterType === 'pending' ? 'px-2.5 py-1 rounded-lg bg-amber-600 text-white transition' : 'px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition';
+      if (btnInTable) btnInTable.className = filterType === 'in_table' ? 'px-2.5 py-1 rounded-lg bg-emerald-600 text-white transition' : 'px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition';
+
+      renderDiscordRegistrationsList();
+    }
+
+    function renderDiscordRegistrationsList() {
+      const container = document.getElementById('discord-registrations-list');
+      const badge = document.getElementById('discord-reg-count-badge');
+      const searchInput = document.getElementById('discord-reg-search-input');
+      const searchTerm = (searchInput ? searchInput.value : '').trim().toLowerCase();
+
+      if (!container) return;
+
+      const regKeys = Object.keys(discordVerifiedMembers || {});
+      if (badge) badge.textContent = `${regKeys.length} คน`;
+
+      if (regKeys.length === 0) {
+        container.innerHTML = `
+          <div class="py-12 text-center text-slate-500">
+            <i class="fa-brands fa-discord text-3xl mb-2 text-slate-600"></i>
+            <p class="text-sm font-semibold">ยังไม่มีข้อมูลการลงทะเบียนจาก Discord</p>
+            <p class="text-xs text-slate-400 mt-1">ให้เปิดรันบอท (start_bot.bat) เพื่อสแกนห้องลงทะเบียนใน Discord</p>
+          </div>
+        `;
+        return;
+      }
+
+      let items = regKeys.map(k => {
+        const item = discordVerifiedMembers[k];
+        const charName = (item.characterName || item.name || '').trim();
+        const isInTable = members.some(m => (m.characterName || m.name || '').trim().toLowerCase() === charName.toLowerCase());
+        return {
+          key: k,
+          ...item,
+          charName: charName,
+          isInTable: isInTable
+        };
+      });
+
+      // Search filtering
+      if (searchTerm) {
+        items = items.filter(it => {
+          const matchName = it.charName.toLowerCase().includes(searchTerm);
+          const matchEmail = (it.email || '').toLowerCase().includes(searchTerm);
+          const matchDiscord = (it.discordTag || it.discordName || '').toLowerCase().includes(searchTerm);
+          const matchUid = (it.uid || '').toLowerCase().includes(searchTerm);
+          const matchGuild = (it.guild || '').toLowerCase().includes(searchTerm);
+          return matchName || matchEmail || matchDiscord || matchUid || matchGuild;
+        });
+      }
+
+      // Tab filtering
+      if (currentDiscordRegFilter === 'pending') {
+        items = items.filter(it => !it.isInTable);
+      } else if (currentDiscordRegFilter === 'in_table') {
+        items = items.filter(it => it.isInTable);
+      }
+
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="py-8 text-center text-slate-500">
+            <i class="fa-solid fa-filter text-xl mb-1 text-slate-600"></i>
+            <p class="text-xs">ไม่พบข้อมูลที่ตรงกับเงื่อนไขการค้นหา/ตัวกรอง</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      items.forEach(it => {
+        const dateStr = it.registeredAt ? new Date(it.registeredAt).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-';
+        const guildColor = it.guild === 'RedDevil' ? 'text-rose-400 border-rose-500/40 bg-rose-950/30' : (it.guild === 'BlueDevil' ? 'text-sky-400 border-sky-500/40 bg-sky-950/30' : 'text-slate-300 border-slate-700 bg-slate-800');
+
+        html += `
+          <div class="bg-slate-950/90 border ${it.isInTable ? 'border-slate-800' : 'border-amber-500/40'} rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 flex-wrap transition hover:border-indigo-500/50">
+            <div class="flex items-center gap-3 min-w-[220px]">
+              <div class="w-10 h-10 rounded-xl bg-slate-900 border ${it.isInTable ? 'border-emerald-500/40 text-emerald-400' : 'border-amber-500/40 text-amber-300'} flex items-center justify-center font-black text-sm shrink-0">
+                ${it.isInTable ? '✅' : '🎮'}
+              </div>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-extrabold text-white text-sm">${escapeHtml(it.charName)}</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${guildColor}">${escapeHtml(it.guild || 'RedDevil')}</span>
+                  ${it.isInTable 
+                    ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40">🟢 อยู่ในตารางกิลด์แล้ว</span>'
+                    : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">🟡 รอตรวจในเกม</span>'
+                  }
+                </div>
+                <div class="flex items-center gap-2.5 text-[11px] text-slate-400 mt-1 flex-wrap font-mono">
+                  <span><i class="fa-brands fa-discord text-indigo-400"></i> ${escapeHtml(it.discordTag || it.discordName || 'Discord')}</span>
+                  ${it.uid && it.uid !== '-' ? `<span><i class="fa-solid fa-id-card text-amber-400"></i> UID: ${escapeHtml(it.uid)}</span>` : ''}
+                  ${it.email && it.email !== '-' ? `<span><i class="fa-solid fa-envelope text-sky-400"></i> ${escapeHtml(it.email)}</span>` : ''}
+                  <span class="text-slate-500"><i class="fa-regular fa-clock"></i> ${dateStr}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+              ${it.isInTable ? `
+                <span class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 border border-slate-800 text-xs font-semibold flex items-center gap-1">
+                  <i class="fa-solid fa-check text-emerald-400"></i> พร้อมใช้งาน
+                </span>
+              ` : `
+                <button onclick="importDiscordMemberToGuildTable('${escapeHtml(it.key)}')"
+                  class="apple-btn bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-md shadow-emerald-950/50 flex items-center gap-1.5 active:scale-95 transition cursor-pointer">
+                  <i class="fa-solid fa-user-plus text-xs"></i>
+                  <span>ตรวจแล้ว + เพิ่มเข้าตาราง</span>
+                </button>
+              `}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function importDiscordMemberToGuildTable(safeKey) {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_edit'), 'warning');
+        return;
+      }
+      const reg = discordVerifiedMembers[safeKey];
+      if (!reg) return;
+
+      const charName = (reg.characterName || reg.name || '').trim();
+      if (!charName) {
+        showToast('ไม่พบชื่อตัวละครในข้อมูลลงทะเบียน', 'warning');
+        return;
+      }
+
+      // Check if already exists in table
+      const existing = members.find(m => (m.characterName || m.name || '').trim().toLowerCase() === charName.toLowerCase());
+      if (existing) {
+        showToast(`ตัวละคร "${charName}" มีอยู่ในตารางคะแนนอยู่แล้ว`, 'info');
+        return;
+      }
+
+      const guildChoice = reg.guild || (guildsList[0] ? guildsList[0].name : 'RedDevil');
+
+      if (confirm(`🛡️ แอดมินตรวจสอบตัวละครในเกมแล้วใช่หรือไม่?\n\nยืนยันเพิ่ม "${charName}" (${guildChoice})\nเข้าสู่ตารางคะแนนกิลด์ตอนนี้?`)) {
+        const newId = members.length > 0 ? Math.max(...members.map(m => m.id)) + 1 : 1;
+        const newMember = {
+          id: newId,
+          characterName: charName,
+          name: charName,
+          guild: guildChoice,
+          email: reg.email || '',
+          uid: reg.uid || '',
+          wallet: reg.wallet || '',
+          discordId: reg.discordId || '',
+          discordTag: reg.discordTag || '',
+          cp: 0,
+          checks: Array(ACTIVITIES.length).fill(false),
+          history: [],
+          weeklyCp: {}
+        };
+
+        members.push(newMember);
+        saveData();
+        renderTable();
+        updateKPIs();
+        renderDiscordRegistrationsList();
+
+        addAuditLog(
+          'member_add',
+          `เพิ่มตัวละคร "${charName}" จากการลงทะเบียน Discord (ตรวจสอบในเกมแล้ว)`,
+          `กิลด์: ${newMember.guild} | UID: ${newMember.uid || '-'} | โดย Admin: ${currentAdminEmail || 'Admin'}`,
+          charName
+        );
+
+        showToast(`✅ เพิ่มตัวละคร "${charName}" เข้าตารางกิลด์เรียบร้อยแล้ว!`, 'success');
+      }
     }
 
     function isWeekLocked(w = currentWeekNumber) {
@@ -15447,6 +15651,74 @@ Output strictly valid JSON with no markdown formatting.`;
           </div>
         </div>
 
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= 📋 Modal: ตรวจสอบการลงทะเบียนจาก Discord (Discord Registrations Queue) ================= -->
+  <div id="discord-registrations-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-4 animate-fade-in">
+    <div
+      class="bg-slate-900/98 border border-indigo-500/40 rounded-3xl w-full max-w-4xl max-h-[88vh] shadow-2xl flex flex-col overflow-hidden text-white animate-scale-up">
+
+      <!-- Header -->
+      <div
+        class="p-4 bg-gradient-to-r from-indigo-950 via-slate-900 to-purple-950 border-b border-indigo-500/30 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center text-indigo-300 text-xl shadow">
+            <i class="fa-brands fa-discord"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm sm:text-base font-bold text-white tracking-wide">
+                ตรวจสอบการลงทะเบียนจาก Discord
+              </h3>
+              <span id="discord-reg-count-badge"
+                class="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-xs font-black font-mono">
+                0 คน
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">
+              🛡️ ตรวจสอบตัวละครในเกมให้แน่ใจ ก่อนกดอนุมัติเพิ่มเข้าตารางเช็คชื่อกิลด์
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="triggerDiscordBotSync()"
+            class="apple-btn bg-indigo-900/80 hover:bg-indigo-800 text-indigo-200 border border-indigo-500/50 px-2.5 py-1.5 text-xs rounded-xl flex items-center gap-1.5 shadow-sm font-semibold">
+            <i class="fa-solid fa-rotate text-xs"></i>
+            <span>รีเฟรชดิส</span>
+          </button>
+          <button onclick="closeDiscordRegistrationsModal()"
+            class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="p-3 bg-slate-950/60 border-b border-slate-800 flex items-center justify-between gap-2 flex-wrap">
+        <div class="flex items-center gap-2 flex-1 min-w-[200px]">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+            <input type="text" id="discord-reg-search-input" oninput="renderDiscordRegistrationsList()"
+              placeholder="ค้นหาชื่อตัวละคร, Discord, Email, UID..."
+              class="w-full bg-slate-900 border border-slate-700 text-xs rounded-xl pl-8 pr-3 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-400 font-medium" />
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5 text-xs font-semibold">
+          <button onclick="setDiscordRegFilter('all')" id="btn-dreg-filter-all" class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white transition">ทั้งหมด</button>
+          <button onclick="setDiscordRegFilter('pending')" id="btn-dreg-filter-pending" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition">🟡 รอตรวจสอบในเกม</button>
+          <button onclick="setDiscordRegFilter('in_table')" id="btn-dreg-filter-intable" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition">🟢 อยู่ในตารางแล้ว</button>
+        </div>
+      </div>
+
+      <!-- Content Table / List -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-2.5 text-xs">
+        <div id="discord-registrations-list" class="space-y-2">
+          <!-- Rendered by JS -->
+        </div>
       </div>
 
     </div>
