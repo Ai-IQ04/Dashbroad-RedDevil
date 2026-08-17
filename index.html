@@ -7670,6 +7670,15 @@ Output strictly valid JSON with no markdown wrapping:
       }
 
       if (imageFile) {
+        const nongDevilModal = document.getElementById('nong-devil-chat-modal');
+        const isNongDevilOpen = nongDevilModal && !nongDevilModal.classList.contains('hidden');
+
+        if (isNongDevilOpen) {
+          e.preventDefault();
+          handleNongDevilFileSelect(imageFile);
+          return;
+        }
+
         const squadModal = document.getElementById('ai-squad-check-modal');
         const isSquadModalOpen = squadModal && !squadModal.classList.contains('hidden');
         const isViewingScoring = typeof activeAppModule === 'undefined' || activeAppModule === 'scoring';
@@ -7681,6 +7690,567 @@ Output strictly valid JSON with no markdown wrapping:
         }
       }
     });
+
+    // ================= 😈 น้องเดวิล: เลขา AI ประจำกิลด์ RedDevil (AI Assistant Engine) =================
+    let nongDevilAttachedImage = null;
+    let nongDevilMessagesHistory = [];
+
+    function toggleNongDevilChat(forceOpen = null) {
+      const modal = document.getElementById('nong-devil-chat-modal');
+      if (!modal) return;
+
+      const isHidden = modal.classList.contains('hidden');
+      const shouldOpen = forceOpen !== null ? forceOpen : isHidden;
+
+      if (shouldOpen) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        if (nongDevilMessagesHistory.length === 0) {
+          initNongDevilGreeting();
+        }
+        setTimeout(() => {
+          const input = document.getElementById('nong-devil-input');
+          if (input) input.focus();
+        }, 150);
+      } else {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function initNongDevilGreeting() {
+      const messagesContainer = document.getElementById('nong-devil-messages');
+      if (!messagesContainer) return;
+
+      const greetingHtml = `
+        <div class="flex items-start gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-base shadow shrink-0 border border-rose-400/40">
+            <span>😈</span>
+          </div>
+          <div class="space-y-2 max-w-[85%]">
+            <div class="p-3 rounded-2xl rounded-tl-none bg-slate-900 border border-rose-500/30 text-slate-200 leading-relaxed text-xs shadow-md">
+              <div class="font-bold text-rose-300 mb-1 flex items-center gap-1.5">
+                <span>สวัสดีค่ะ! น้องเดวิล เลขาประจำกิลด์ RedDevil ยินดีรับใช้ค่ะ 😈🔥</span>
+              </div>
+              <div>
+                น้องพร้อมช่วยดูแลข้อมูลกิลด์ทุกเรื่องเลยค่ะ! ไม่ว่าจะเป็น:
+                <ul class="list-disc list-inside mt-1.5 space-y-0.5 text-slate-300">
+                  <li>🕒 <b>ถามเวลาเกิดบอส</b> / บอสที่กำลังจะเกิด</li>
+                  <li>👑 <b>เช็คอันดับ CP</b> และข้อมูลสมาชิกในกิลด์</li>
+                  <li>📊 <b>สรุปคะแนนเช็คชื่อ</b> กิจกรรมประจำสัปดาห์</li>
+                  <li>📸 <b>โยนรูป Log บอส / จัดการชุมนุม</b> ให้น้องช่วยลงระบบแทน</li>
+                </ul>
+              </div>
+            </div>
+            <div class="text-[9.5px] text-slate-500 font-mono ml-1">น้องเดวิล • ออนไลน์พร้อมช่วยค่ะ</div>
+          </div>
+        </div>
+      `;
+
+      messagesContainer.innerHTML = greetingHtml;
+      nongDevilMessagesHistory.push({ role: 'assistant', text: 'Greeting initialized' });
+    }
+
+    function clearNongDevilChatHistory() {
+      nongDevilMessagesHistory = [];
+      clearNongDevilImageAttachment();
+      initNongDevilGreeting();
+      showToast('ล้างประวัติการคุยกับน้องเดวิลเรียบร้อยค่ะ 😈', 'info');
+    }
+
+    function sendNongDevilQuickPrompt(promptText) {
+      const input = document.getElementById('nong-devil-input');
+      if (input) {
+        input.value = promptText;
+        handleNongDevilSubmit(new Event('submit'));
+      }
+    }
+
+    function handleNongDevilFileSelect(file) {
+      if (!file) return;
+      nongDevilAttachedImage = file;
+
+      const previewBox = document.getElementById('nong-devil-img-preview-box');
+      const previewThumb = document.getElementById('nong-devil-img-preview-thumb');
+      const previewName = document.getElementById('nong-devil-img-preview-name');
+
+      if (previewThumb) previewThumb.src = URL.createObjectURL(file);
+      if (previewName) previewName.textContent = file.name || 'image.png';
+      if (previewBox) previewBox.classList.remove('hidden');
+
+      const input = document.getElementById('nong-devil-input');
+      if (input) input.focus();
+    }
+
+    function clearNongDevilImageAttachment() {
+      nongDevilAttachedImage = null;
+      const previewBox = document.getElementById('nong-devil-img-preview-box');
+      const previewThumb = document.getElementById('nong-devil-img-preview-thumb');
+      const fileInput = document.getElementById('nong-devil-file-input');
+
+      if (previewThumb) previewThumb.src = '';
+      if (fileInput) fileInput.value = '';
+      if (previewBox) previewBox.classList.add('hidden');
+    }
+
+    function getNongDevilLiveContext() {
+      // 1. Members and CP summary
+      const totalMembers = Array.isArray(members) ? members.length : 0;
+      const sortedMembers = [...(members || [])].sort((a, b) => (b.cp || 0) - (a.cp || 0));
+      const top5Cp = sortedMembers.slice(0, 5).map((m, i) => `${i + 1}. ${m.characterName || m.name} (CP: ${(m.cp || 0).toLocaleString()}, กิลด์: ${m.guild || '-'})`).join('\n');
+
+      // 2. Boss timer status
+      const now = new Date();
+      const upcomingBosses = [];
+      if (typeof bossList !== 'undefined' && Array.isArray(bossList)) {
+        bossList.forEach(b => {
+          if (b.nextSpawnTime) {
+            const diffMs = new Date(b.nextSpawnTime) - now;
+            const diffMins = Math.round(diffMs / 60000);
+            if (diffMins > -60 && diffMins < 360) {
+              upcomingBosses.push(`- บอส ${b.name} (Map: ${b.map || '-'}): เกิดเวลา ${new Date(b.nextSpawnTime).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} (อีก ${diffMins > 0 ? diffMins + ' นาที' : 'เกิดแล้ว ' + Math.abs(diffMins) + ' นาที'})`);
+            }
+          }
+        });
+      }
+
+      // 3. Activities
+      const actList = Array.isArray(ACTIVITIES) ? ACTIVITIES.map((a, i) => `[${i}] ${a.name} (${a.day || '-'}) น้ำหนัก ${a.weight || 0}%`).join(', ') : '';
+
+      return `
+[LIVE GUILD DATA CONTEXT]:
+- Guild Name: RedDevil
+- Current Week: ${typeof getWeekName === 'function' ? getWeekName(currentWeekNumber) : 'สัปดาห์ปัจจุบัน'}
+- Total Guild Members: ${totalMembers} คน
+- Top 5 CP Rankings:
+${top5Cp || 'ไม่มีข้อมูล'}
+
+- Upcoming Bosses (ใกล้เกิด):
+${upcomingBosses.length > 0 ? upcomingBosses.join('\n') : 'ไม่มีบอสที่ระบุเวลาเกิดใน 6 ชั่วโมงนี้'}
+
+- Activities list:
+${actList || 'ไม่มี'}
+`;
+    }
+
+    async function handleNongDevilSubmit(e) {
+      if (e) e.preventDefault();
+
+      const input = document.getElementById('nong-devil-input');
+      const messagesContainer = document.getElementById('nong-devil-messages');
+      const userText = input ? input.value.trim() : '';
+      const imageFile = nongDevilAttachedImage;
+
+      if (!userText && !imageFile) return;
+
+      const apiKey = localStorage.getItem('guild_boss_gemini_api_key') || (typeof bossGeminiApiKey !== 'undefined' ? bossGeminiApiKey : '');
+      if (!apiKey) {
+        appendNongDevilMessage('assistant', `
+          <div class="text-amber-300 font-bold">
+            <i class="fa-solid fa-triangle-exclamation mr-1"></i> ยังไม่ได้ใส่ Google Gemini API Key ค่ะ!
+          </div>
+          <div class="mt-1 text-slate-300">
+            กรุณาให้ Super Admin ไปที่เมนู <b>⚙️ ตั้งค่า Discord / Sheets</b> แล้วใส่ API Key เพื่อเปิดใช้งานสมองของน้องเดวิลนะคะ 😈
+          </div>
+        `);
+        return;
+      }
+
+      // Clear input & attachment
+      if (input) input.value = '';
+      clearNongDevilImageAttachment();
+
+      // 1. Render User Message
+      let userMsgHtml = escapeHtml(userText);
+      if (imageFile) {
+        const thumbUrl = URL.createObjectURL(imageFile);
+        userMsgHtml = `
+          <div class="space-y-1.5">
+            <img src="${thumbUrl}" alt="User upload" class="max-h-36 rounded-xl border border-slate-700 object-cover" />
+            ${userText ? `<div>${escapeHtml(userText)}</div>` : ''}
+          </div>
+        `;
+      }
+      appendNongDevilMessage('user', userMsgHtml);
+
+      // 2. Render Thinking Placeholder
+      const thinkingId = `nong_devil_thinking_${Date.now()}`;
+      appendNongDevilMessage('assistant', `
+        <div id="${thinkingId}" class="flex items-center gap-2 text-rose-300 font-medium">
+          <i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400"></i>
+          <span>น้องเดวิลกำลังวิเคราะห์และหาคำตอบให้ค่ะ...</span>
+        </div>
+      `);
+
+      try {
+        const liveContext = getNongDevilLiveContext();
+        let base64Str = '';
+        let mimeType = 'image/jpeg';
+
+        if (imageFile) {
+          const comp = await compressImageForGemini(imageFile, 1600, 0.88);
+          base64Str = comp.base64Str;
+          mimeType = comp.mimeType;
+        }
+
+        const prompt = `You are "น้องเดวิล" (Nong Devil), the clever, friendly, and enthusiastic AI Secretary for the "RedDevil" guild in the MMORPG "LORD NINE".
+You speak natural, lively Thai with emojis (😈, 🔥, ⚔️, 👑, ✨).
+You are equipped with autonomous capabilities to analyze images and act on behalf of the guild master/admin.
+
+${liveContext}
+
+User Query: "${userText || 'วิเคราะห์รูปภาพนี้ให้หน่อยค่ะ'}"
+
+### Autonomous Image & Task Detection Rules:
+If an image is attached, carefully identify its type and output JSON:
+1. If it's a Boss Kill / Drop Log screenshot -> output JSON:
+{
+  "actionType": "boss_kill",
+  "reply": "friendly explanation of what was found",
+  "bossId": "matching boss ID or general_aquleus, etc.",
+  "bossName": "Thai boss name",
+  "killTime": "HH:MM",
+  "killDate": "YYYY-MM-DD or today",
+  "dropItems": ["item 1 (ผู้รับ: xxx)", "item 2 (ผู้รับ: xxx)"]
+}
+2. If it's a Squad Management (จัดการชุมนุม) screenshot -> output JSON:
+{
+  "actionType": "squad_attendance",
+  "reply": "friendly explanation of detected squad members",
+  "detectedCount": 18,
+  "members": ["name1", "name2", "name3"]
+}
+3. If it's a Character CP Profile screenshot -> output JSON:
+{
+  "actionType": "cp_update",
+  "reply": "friendly explanation",
+  "characterName": "Player Name",
+  "cp": 182000
+}
+4. If it's general text chat or question -> output JSON:
+{
+  "actionType": "general_chat",
+  "reply": "helpful, polite, and well-formatted Thai answer with markdown bullets if helpful"
+}
+
+Output strictly valid JSON with no markdown wrapping.`;
+
+        let rawAiResponse = '';
+        if (imageFile) {
+          const parsed = await callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey);
+          rawAiResponse = parsed;
+        } else {
+          // Text-only direct generateContent
+          const activeEndpoint = window.cachedGeminiModelEndpoint || await discoverActiveGeminiModel(apiKey);
+          const genRes = await fetch(`https://generativelanguage.googleapis.com/${activeEndpoint.apiVer}/models/${activeEndpoint.model}:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.2 }
+            })
+          });
+
+          if (!genRes.ok) {
+            const errT = await genRes.text();
+            throw new Error(`Google API Error (${genRes.status}): ${errT}`);
+          }
+
+          const genJson = await genRes.json();
+          const outText = genJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          rawAiResponse = extractJsonFromGeminiResponse(outText);
+        }
+
+        // Remove thinking placeholder
+        const thinkingEl = document.getElementById(thinkingId);
+        if (thinkingEl && thinkingEl.parentElement) {
+          thinkingEl.parentElement.parentElement.remove();
+        }
+
+        // Render Nong Devil's Response with Action Card
+        renderNongDevilResponse(rawAiResponse);
+
+      } catch (err) {
+        console.error('[Nong Devil Error]', err);
+        const thinkingEl = document.getElementById(thinkingId);
+        if (thinkingEl && thinkingEl.parentElement) {
+          thinkingEl.parentElement.parentElement.remove();
+        }
+        appendNongDevilMessage('assistant', `
+          <div class="text-rose-300 font-medium">
+            <i class="fa-solid fa-circle-exclamation mr-1"></i> ขออภัยค่ะท่านแอดมิน น้องเดวิลพบข้อผิดพลาด: ${escapeHtml(err.message || 'ไม่สามารถเชื่อมต่อได้')}
+          </div>
+        `);
+      }
+    }
+
+    function appendNongDevilMessage(sender, contentHtml) {
+      const messagesContainer = document.getElementById('nong-devil-messages');
+      if (!messagesContainer) return;
+
+      const isUser = sender === 'user';
+      const bubbleId = `nong_devil_msg_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+
+      const html = isUser ? `
+        <div class="flex items-start justify-end gap-2" id="${bubbleId}">
+          <div class="max-w-[85%] p-3 rounded-2xl rounded-tr-none bg-gradient-to-r from-rose-600 to-red-600 text-white text-xs shadow-md">
+            ${contentHtml}
+          </div>
+          <div class="w-7 h-7 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center text-xs shrink-0 border border-slate-700">
+            <i class="fa-solid fa-user"></i>
+          </div>
+        </div>
+      ` : `
+        <div class="flex items-start gap-2.5" id="${bubbleId}">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-base shadow shrink-0 border border-rose-400/40">
+            <span>😈</span>
+          </div>
+          <div class="space-y-2 max-w-[85%]">
+            <div class="p-3 rounded-2xl rounded-tl-none bg-slate-900 border border-rose-500/30 text-slate-200 leading-relaxed text-xs shadow-md">
+              ${contentHtml}
+            </div>
+            <div class="text-[9.5px] text-slate-500 font-mono ml-1">น้องเดวิล • ตอบเมื่อสักครู่</div>
+          </div>
+        </div>
+      `;
+
+      messagesContainer.insertAdjacentHTML('beforeend', html);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function renderNongDevilResponse(data) {
+      if (!data) return;
+
+      const replyText = data.reply || 'น้องเดวิลวิเคราะห์ข้อมูลเรียบร้อยแล้วค่ะ 😈';
+      let actionCardHtml = '';
+
+      // 1. Boss Kill Action Card
+      if (data.actionType === 'boss_kill' && (data.bossName || data.killTime)) {
+        const payloadStr = encodeURIComponent(JSON.stringify(data));
+        actionCardHtml = `
+          <div class="mt-2.5 p-3 rounded-xl bg-rose-950/70 border border-rose-500/50 space-y-2 text-left">
+            <div class="font-bold text-rose-300 flex items-center gap-1.5 text-xs">
+              <i class="fa-solid fa-skull text-rose-400"></i>
+              <span>พบข้อมูลบอสตาย: ${escapeHtml(data.bossName || 'ไม่ระบุชื่อ')}</span>
+            </div>
+            <div class="text-[11px] text-slate-300 space-y-0.5 font-mono">
+              <div>⏱️ เวลาตาย: <b class="text-amber-300">${escapeHtml(data.killTime || '-')} น.</b> (${escapeHtml(data.killDate || 'วันนี้')})</div>
+              ${Array.isArray(data.dropItems) && data.dropItems.length > 0 ? `<div>📦 ไอเทม: ${escapeHtml(data.dropItems.join(', '))}</div>` : ''}
+            </div>
+            <button type="button" onclick="executeNongDevilBossKill(this, '${payloadStr}')"
+              class="w-full py-2 px-3 bg-gradient-to-r from-rose-600 to-red-500 hover:from-rose-500 hover:to-amber-500 text-white font-bold text-xs rounded-lg shadow-md shadow-rose-600/30 transition flex items-center justify-center gap-1.5 active:scale-95">
+              <i class="fa-solid fa-bolt"></i> <span>⚡ ให้น้องเดวิลบันทึกเวลาบอสลงระบบทันที</span>
+            </button>
+          </div>
+        `;
+      }
+
+      // 2. Squad Attendance Action Card
+      else if (data.actionType === 'squad_attendance' && Array.isArray(data.members) && data.members.length > 0) {
+        const memberNamesStr = encodeURIComponent(JSON.stringify(data.members));
+        let actOptions = '';
+        if (Array.isArray(ACTIVITIES)) {
+          ACTIVITIES.forEach((act, idx) => {
+            actOptions += `<option value="${idx}">⚔️ ${escapeHtml(act.name)} (${escapeHtml(act.shortName || '')})</option>`;
+          });
+        }
+
+        const uniqueCardId = `squad_act_${Date.now()}`;
+
+        actionCardHtml = `
+          <div class="mt-2.5 p-3 rounded-xl bg-indigo-950/70 border border-indigo-500/50 space-y-2.5 text-left">
+            <div class="font-bold text-indigo-300 flex items-center gap-1.5 text-xs">
+              <i class="fa-solid fa-users text-indigo-400"></i>
+              <span>ตรวจพบสมาชิกในหน่วยชุมนุม ${data.members.length} คน</span>
+            </div>
+            <div class="text-[11px] text-slate-300 font-mono truncate">
+              รายชื่อ: ${escapeHtml(data.members.slice(0, 6).join(', '))}${data.members.length > 6 ? ` และอีก ${data.members.length - 6} คน` : ''}
+            </div>
+            <div class="space-y-1">
+              <label class="block text-[10.5px] text-slate-400 font-medium">เลือกกิจกรรม/บอสที่ต้องการเช็คชื่อ:</label>
+              <select id="${uniqueCardId}" class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-lg p-1.5 focus:border-indigo-400 focus:outline-none">
+                ${actOptions}
+              </select>
+            </div>
+            <button type="button" onclick="executeNongDevilSquadCheck(this, '${memberNamesStr}', '${uniqueCardId}')"
+              class="w-full py-2 px-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs rounded-lg shadow-md shadow-indigo-600/30 transition flex items-center justify-center gap-1.5 active:scale-95">
+              <i class="fa-solid fa-check"></i> <span>✅ ให้น้องเดวิลติ๊กถูกให้สมาชิกทุกคน</span>
+            </button>
+          </div>
+        `;
+      }
+
+      // 3. CP Update Action Card
+      else if (data.actionType === 'cp_update' && data.characterName && data.cp) {
+        const payloadStr = encodeURIComponent(JSON.stringify(data));
+        actionCardHtml = `
+          <div class="mt-2.5 p-3 rounded-xl bg-amber-950/70 border border-amber-500/50 space-y-2 text-left">
+            <div class="font-bold text-amber-300 flex items-center gap-1.5 text-xs">
+              <i class="fa-solid fa-bolt text-amber-400"></i>
+              <span>ตรวจพบข้อมูล CP: ${escapeHtml(data.characterName)}</span>
+            </div>
+            <div class="text-[11px] text-slate-300 font-mono">
+              ค่าพลัง CP ใหม่: <b class="text-amber-300 text-xs">${Number(data.cp).toLocaleString()}</b>
+            </div>
+            <button type="button" onclick="executeNongDevilCpUpdate(this, '${payloadStr}')"
+              class="w-full py-2 px-3 bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-slate-950 font-bold text-xs rounded-lg shadow-md shadow-amber-600/30 transition flex items-center justify-center gap-1.5 active:scale-95">
+              <i class="fa-solid fa-arrow-trend-up"></i> <span>📈 ให้น้องเดวิลอัปเดต CP ในตารางทันที</span>
+            </button>
+          </div>
+        `;
+      }
+
+      const formattedReply = replyText.replace(/\n/g, '<br/>');
+      appendNongDevilMessage('assistant', `
+        <div>${formattedReply}</div>
+        ${actionCardHtml}
+      `);
+    }
+
+    // Nong Devil Autonomous Action Handlers
+    function executeNongDevilBossKill(btn, payloadStr) {
+      if (!isAdmin) {
+        showToast('เฉพาะ Admin เท่านั้นที่สั่งลงเวลาบอสได้ค่ะ', 'warning');
+        return;
+      }
+
+      try {
+        const data = JSON.parse(decodeURIComponent(payloadStr));
+        if (typeof populateModalFromGeminiData === 'function') {
+          populateModalFromGeminiData(data);
+          if (typeof handleSaveKillConfirm === 'function') {
+            handleSaveKillConfirm();
+          }
+        }
+
+        if (btn) {
+          btn.disabled = true;
+          btn.classList.remove('from-rose-600', 'to-red-500');
+          btn.classList.add('bg-emerald-700', 'opacity-90');
+          btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>บันทึกเวลาบอสสำเร็จเรียบร้อยค่ะ! 🎉</span>`;
+        }
+
+        showToast(`😈 น้องเดวิลลงเวลาบอส "${data.bossName || 'บอส'}" ให้เรียบร้อยแล้วค่ะ! 🎉`, 'success');
+      } catch (err) {
+        console.error('Nong Devil Boss Kill Action Failed:', err);
+        showToast('เกิดข้อผิดพลาดในการลงเวลาบอส: ' + err.message, 'warning');
+      }
+    }
+
+    function executeNongDevilSquadCheck(btn, memberNamesStr, selectId) {
+      if (!isAdmin) {
+        showToast('เฉพาะ Admin เท่านั้นที่สั่งเช็คชื่อได้ค่ะ', 'warning');
+        return;
+      }
+
+      try {
+        const detectedNames = JSON.parse(decodeURIComponent(memberNamesStr));
+        const select = document.getElementById(selectId);
+        const actIdx = select ? parseInt(select.value) : 0;
+
+        if (isNaN(actIdx) || actIdx < 0 || actIdx >= ACTIVITIES.length) {
+          showToast('กรุณาเลือกกิจกรรมที่ถูกต้องค่ะ', 'warning');
+          return;
+        }
+
+        let affectedCount = 0;
+        detectedNames.forEach(rawName => {
+          const cleanName = String(rawName).trim().toLowerCase();
+          const m = members.find(mem => {
+            const cName = (mem.characterName || mem.name || '').trim().toLowerCase();
+            return cName === cleanName || cName.replace(/\s+/g, '') === cleanName.replace(/\s+/g, '');
+          });
+
+          if (m) {
+            ensureMemberWeeklyData(m);
+            m.checks[actIdx] = true;
+            if (!Array.isArray(m.weeklyChecks[currentWeekNumber])) {
+              m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
+            }
+            m.weeklyChecks[currentWeekNumber][actIdx] = true;
+            affectedCount++;
+          }
+        });
+
+        saveData();
+        renderTable();
+        updateKPIs();
+
+        const actName = ACTIVITIES[actIdx]?.name || ACTIVITIES[actIdx]?.shortName || 'กิจกรรม';
+
+        addAuditLog(
+          'batch',
+          `น้องเดวิล AI ติ๊กบอส: ${actName}`,
+          `สแกนจากรูปภาพจัดการชุมนุม | ติ๊กถูกสำเร็จ: ${affectedCount} คน | ${getWeekName(currentWeekNumber)}`
+        );
+
+        if (btn) {
+          btn.disabled = true;
+          btn.classList.remove('from-indigo-600', 'to-purple-600');
+          btn.classList.add('bg-emerald-700', 'opacity-90');
+          btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>ติ๊กถูกสำเร็จ ${affectedCount} คนแล้วค่ะ! 🎉</span>`;
+        }
+
+        showToast(`😈 น้องเดวิลติ๊กถูกบอส "${actName}" ให้สมาชิก ${affectedCount} คน เรียบร้อยแล้วค่ะ! 🎉`, 'success');
+      } catch (err) {
+        console.error('Nong Devil Squad Check Action Failed:', err);
+        showToast('เกิดข้อผิดพลาดในการเช็คชื่อ: ' + err.message, 'warning');
+      }
+    }
+
+    function executeNongDevilCpUpdate(btn, payloadStr) {
+      if (!isAdmin) {
+        showToast('เฉพาะ Admin เท่านั้นที่สั่งอัปเดต CP ได้ค่ะ', 'warning');
+        return;
+      }
+
+      try {
+        const data = JSON.parse(decodeURIComponent(payloadStr));
+        const targetName = String(data.characterName).trim().toLowerCase();
+        const newCp = parseInt(data.cp);
+
+        if (isNaN(newCp) || newCp <= 0) {
+          showToast('ค่า CP ไม่ถูกต้องค่ะ', 'warning');
+          return;
+        }
+
+        const m = members.find(mem => {
+          const cName = (mem.characterName || mem.name || '').trim().toLowerCase();
+          return cName === targetName || cName.replace(/\s+/g, '') === targetName.replace(/\s+/g, '');
+        });
+
+        if (!m) {
+          showToast(`ไม่พบสมาชิกชื่อ "${data.characterName}" ในกิลด์ค่ะ`, 'warning');
+          return;
+        }
+
+        const oldCp = m.cp || 0;
+        m.cp = newCp;
+
+        saveData();
+        renderTable();
+        updateKPIs();
+
+        addAuditLog(
+          'edit',
+          `น้องเดวิล AI อัปเดต CP: ${m.characterName}`,
+          `เปลี่ยน CP จาก ${oldCp.toLocaleString()} เป็น ${newCp.toLocaleString()}`,
+          m.characterName
+        );
+
+        if (btn) {
+          btn.disabled = true;
+          btn.classList.remove('from-amber-600', 'to-orange-500');
+          btn.classList.add('bg-emerald-700', 'opacity-90');
+          btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>อัปเดต CP เรียบร้อยค่ะ! (${newCp.toLocaleString()}) 🎉</span>`;
+        }
+
+        showToast(`😈 น้องเดวิลอัปเดต CP ของ "${m.characterName}" เป็น ${newCp.toLocaleString()} เรียบร้อยค่ะ! 🎉`, 'success');
+      } catch (err) {
+        console.error('Nong Devil CP Action Failed:', err);
+        showToast('เกิดข้อผิดพลาดในการอัปเดต CP: ' + err.message, 'warning');
+      }
+    }
 
     // ================= ระบบประวัติและบันทึกการแก้ไข (Audit Logs System) =================
     let auditLogs = JSON.parse(localStorage.getItem('guild_audit_logs')) || [];
@@ -13727,9 +14297,125 @@ Output strictly valid JSON with no markdown wrapping:
     </div>
   </div>
 
+  <!-- ================= 😈 น้องเดวิล: เลขา AI ประจำกิลด์ RedDevil (Floating Assistant) ================= -->
+  <!-- 1. Floating Action Button -->
+  <div id="nong-devil-floating-btn" onclick="toggleNongDevilChat()"
+    class="fixed bottom-5 right-5 z-40 flex items-center gap-2 group cursor-pointer animate-fade-in">
+    <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md border border-rose-500/40 text-white text-xs font-bold shadow-xl group-hover:scale-105 transition duration-200">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+      <span class="text-rose-300">น้องเดวิล (AI)</span>
+      <span class="text-[10px] text-slate-400 font-normal">พร้อมช่วยค่ะ 😈</span>
+    </div>
+    <div class="relative w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-600 via-red-500 to-amber-500 text-white flex items-center justify-center text-2xl shadow-2xl shadow-rose-600/40 border border-rose-400/50 group-hover:scale-110 active:scale-95 transition-all duration-200">
+      <span class="relative z-10 text-2xl">😈</span>
+      <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-slate-950 flex items-center justify-center">
+        <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+      </span>
+      <div class="absolute inset-0 rounded-2xl bg-rose-500/30 animate-ping pointer-events-none opacity-60"></div>
+    </div>
+  </div>
+
+  <!-- 2. Nong Devil Chat Modal -->
+  <div id="nong-devil-chat-modal"
+    class="fixed bottom-20 right-3 sm:right-6 z-50 w-[360px] sm:w-[410px] max-w-[calc(100vw-1.5rem)] h-[560px] max-h-[82vh] bg-slate-950/95 backdrop-blur-2xl border border-rose-500/40 rounded-3xl shadow-2xl shadow-rose-950/60 hidden flex-col overflow-hidden animate-scale-up">
+    
+    <!-- Modal Header -->
+    <div class="p-3.5 bg-gradient-to-r from-slate-900 via-rose-950/50 to-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-2.5">
+        <div class="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-xl shadow-md border border-rose-400/40 shrink-0">
+          <span>😈</span>
+          <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-950"></span>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h3 class="text-xs sm:text-sm font-extrabold text-white">น้องเดวิล (เลขา AI)</h3>
+            <span class="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[9px] font-mono">v3.5 Flash</span>
+          </div>
+          <p class="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span>เลขาประจำกิลด์ RedDevil พร้อมดูแลค่ะ</span>
+          </p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-1">
+        <button type="button" onclick="clearNongDevilChatHistory()"
+          class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition" title="ล้างข้อความแชท">
+          <i class="fa-solid fa-trash-can text-[10px]"></i>
+        </button>
+        <button type="button" onclick="toggleNongDevilChat()"
+          class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-rose-900/50 text-slate-400 hover:text-white flex items-center justify-center text-xs transition" title="ปิดหน้าต่าง">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Scrollable Messages Container -->
+    <div id="nong-devil-messages" class="flex-1 overflow-y-auto p-3.5 space-y-3 text-xs pr-2">
+      <!-- Populated via JS -->
+    </div>
+
+    <!-- Quick Action Prompts Row -->
+    <div id="nong-devil-quick-chips" class="px-3 py-1.5 bg-slate-900/70 border-t border-slate-800/80 flex items-center gap-1.5 overflow-x-auto text-[10.5px] shrink-0 no-scrollbar">
+      <button type="button" onclick="sendNongDevilQuickPrompt('บอสตัวต่อไปเกิดกี่โมง? มีตัวไหนใกล้เกิดบ้าง')"
+        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-rose-950/50 text-rose-200 border border-slate-700 hover:border-rose-500/40 whitespace-nowrap transition">
+        🕒 บอสตัวต่อไปเกิดเมื่อไหร่?
+      </button>
+      <button type="button" onclick="sendNongDevilQuickPrompt('สรุปอันดับ CP สูงสุด 5 คนแรกในกิลด์ให้หน่อย')"
+        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-amber-950/50 text-amber-200 border border-slate-700 hover:border-amber-500/40 whitespace-nowrap transition">
+        👑 อันดับ CP สูงสุด
+      </button>
+      <button type="button" onclick="sendNongDevilQuickPrompt('สรุปภาพรวมคะแนนเช็คชื่อสัปดาห์นี้ให้หน่อย')"
+        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-indigo-950/50 text-indigo-200 border border-slate-700 hover:border-indigo-500/40 whitespace-nowrap transition">
+        📊 สรุปคะแนนเช็คชื่อ
+      </button>
+      <button type="button" onclick="sendNongDevilQuickPrompt('โยนรูปภาพให้น้องช่วยทำงานอย่างไรได้บ้าง?')"
+        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-emerald-950/50 text-emerald-200 border border-slate-700 hover:border-emerald-500/40 whitespace-nowrap transition">
+        📸 วิธีโยนรูปภาพ
+      </button>
+    </div>
+
+    <!-- Image Attachment Preview Box -->
+    <div id="nong-devil-img-preview-box" class="hidden p-2 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-2 shrink-0">
+      <div class="flex items-center gap-2 min-w-0">
+        <img id="nong-devil-img-preview-thumb" src="" alt="Thumbnail" class="w-10 h-10 object-cover rounded-lg border border-slate-700 shrink-0" />
+        <div class="min-w-0 truncate">
+          <div class="text-[11px] font-bold text-white truncate" id="nong-devil-img-preview-name">image.png</div>
+          <div class="text-[9.5px] text-rose-400 font-mono">พร้อมให้น้องเดวิลวิเคราะห์ 😈</div>
+        </div>
+      </div>
+      <button type="button" onclick="clearNongDevilImageAttachment()" class="p-1 text-slate-400 hover:text-rose-400 text-xs">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Chat Input Form -->
+    <div class="p-2.5 bg-slate-900 border-t border-slate-800 shrink-0">
+      <form id="nong-devil-chat-form" onsubmit="handleNongDevilSubmit(event)" class="flex items-center gap-1.5">
+        <input type="file" id="nong-devil-file-input" accept="image/*" class="hidden" onchange="handleNongDevilFileSelect(this.files[0])" />
+        
+        <button type="button" onclick="document.getElementById('nong-devil-file-input').click()"
+          class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-rose-950/50 text-slate-400 hover:text-rose-300 flex items-center justify-center text-xs transition border border-slate-700 shrink-0"
+          title="แนบรูปภาพ (Log บอส, จัดการชุมนุม, หรือรูป CP)">
+          <i class="fa-solid fa-paperclip"></i>
+        </button>
+
+        <input type="text" id="nong-devil-input" placeholder="พิมพ์คุยกับน้องเดวิล หรือกด Ctrl+V วางรูป..."
+          autocomplete="off"
+          class="flex-1 bg-slate-950 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:border-rose-400 focus:outline-none placeholder:text-slate-500" />
+
+        <button type="submit" id="nong-devil-send-btn"
+          class="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-600 to-red-500 hover:from-rose-500 hover:to-amber-500 text-white flex items-center justify-center text-xs transition shadow-md shadow-rose-600/30 shrink-0 disabled:opacity-40">
+          <i class="fa-solid fa-paper-plane text-[11px]"></i>
+        </button>
+      </form>
+    </div>
+
+  </div>
+
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=4.8"></script>
+  <script src="boss_timer.js?v=5.0"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
