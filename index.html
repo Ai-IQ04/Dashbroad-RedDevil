@@ -6276,14 +6276,8 @@
           toggleBtn.className = "apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm";
           toggleBtn.innerHTML = `<i class="fa-solid fa-crown text-slate-950 text-xs"></i><span>${t('mode_super_admin')}</span>`;
         } else if (isBossAdmin) {
-          if (isViewingBossTimer) {
-            toggleBtn.className = "apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm text-slate-950 font-bold";
-            toggleBtn.innerHTML = `<i class="fa-solid fa-dragon text-slate-950 text-xs"></i><span>Admin บอส</span>`;
-          } else {
-            // ในหน้าเช็กชื่อ ให้แสดงเหมือนสมาชิกทั่วไป (Viewer)
-            toggleBtn.className = "apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm";
-            toggleBtn.innerHTML = `<i class="fa-solid fa-lock text-slate-400 text-[11px]"></i><span>${t('mode_viewer')}</span>`;
-          }
+          toggleBtn.className = "apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm text-slate-950 font-bold";
+          toggleBtn.innerHTML = `<i class="fa-solid fa-dragon text-slate-950 text-xs"></i><span>Admin บอส</span>`;
         } else {
           toggleBtn.className = "apple-btn apple-btn-ruby inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm";
           toggleBtn.innerHTML = `<i class="fa-solid fa-lock-open text-white text-xs"></i><span>${t('mode_admin')}</span>`;
@@ -6362,14 +6356,8 @@
             indicatorText.className = "text-[10px] ml-2 px-2 py-0.5 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30";
             indicatorText.textContent = t('status_super_admin', { email: currentAdminEmail });
           } else if (isBossAdmin) {
-            if (isViewingBossTimer) {
-              indicatorText.className = "text-[10px] ml-2 px-2 py-0.5 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30";
-              indicatorText.textContent = `🐉 Admin บอส: ${currentAdminEmail}`;
-            } else {
-              // ในหน้าเช็กชื่อ แสดงเป็นโหมดดูอย่างเดียว
-              indicatorText.className = "text-[10px] ml-2 px-2 py-0.5 rounded font-mono bg-slate-800 text-slate-400 border border-slate-700";
-              indicatorText.textContent = t('status_readonly');
-            }
+            indicatorText.className = "text-[10px] ml-2 px-2 py-0.5 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30";
+            indicatorText.textContent = `🐉 Admin บอส: ${currentAdminEmail}`;
           } else {
             indicatorText.className = "text-[10px] ml-2 px-2 py-0.5 rounded font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
             indicatorText.textContent = t('status_admin', { email: currentAdminEmail });
@@ -6426,12 +6414,21 @@
         }
       }
 
+      // ปุ่มส่งออก CSV แสดงเฉพาะ Full Admin ในหน้าคะแนน
+      const exportCsvBtnTop = document.getElementById('btn-export-csv-top');
+      if (exportCsvBtnTop) {
+        if (isFullAdmin && !isViewingBossTimer) exportCsvBtnTop.classList.remove('hidden');
+        else exportCsvBtnTop.classList.add('hidden');
+      }
+
       renderLockBanner();
 
       const adminHub = document.getElementById('admin-hub-container');
       const memberHub = document.getElementById('member-hub-container');
+      const showAdminHub = isFullAdmin && !isViewingBossTimer;
+
       if (adminHub) {
-        if (isAdmin) {
+        if (showAdminHub) {
           adminHub.classList.remove('hidden');
           adminHub.classList.add('flex');
         } else {
@@ -6440,16 +6437,18 @@
         }
       }
       if (memberHub) {
-        if (isAdmin) {
+        if (showAdminHub) {
           memberHub.classList.add('hidden');
+          memberHub.classList.remove('flex');
         } else {
           memberHub.classList.remove('hidden');
+          memberHub.classList.add('flex');
         }
       }
 
       const manageRewardsBtn = document.getElementById('btn-manage-rewards');
       if (manageRewardsBtn) {
-        if (isAdmin) {
+        if (showAdminHub) {
           manageRewardsBtn.classList.remove('hidden');
           manageRewardsBtn.classList.add('inline-flex');
         } else {
