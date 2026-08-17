@@ -7757,18 +7757,18 @@ Output strictly valid JSON with no markdown wrapping:
       if (!messagesContainer) return;
 
       const greetingHtml = `
-        <div class="flex items-start gap-2.5">
-          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-base shadow shrink-0 border border-rose-400/40">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-lg shadow shrink-0 border border-rose-400/40 mt-0.5">
             <span>😈</span>
           </div>
-          <div class="space-y-2 max-w-[85%]">
-            <div class="p-3 rounded-2xl rounded-tl-none bg-slate-900 border border-rose-500/30 text-slate-200 leading-relaxed text-xs shadow-md">
-              <div class="font-bold text-rose-300 mb-1 flex items-center gap-1.5">
+          <div class="space-y-1.5 max-w-[88%] min-w-0">
+            <div class="p-3.5 rounded-2xl rounded-tl-none bg-slate-900/95 border border-slate-700/80 text-slate-100 leading-relaxed text-[13.5px] shadow-lg break-words [word-break:break-word]">
+              <div class="font-bold text-rose-300 text-sm mb-1.5 flex items-center gap-1.5">
                 <span>สวัสดีค่ะท่านแอดมิน! น้องเดวิล เลขาประจำกิลด์ RedDevil ยินดีรับใช้ค่ะ 😈🔥</span>
               </div>
-              <div>
+              <div class="text-slate-200">
                 น้องพร้อมช่วยดูแลข้อมูลกิลด์และระบบเว็บทุกเรื่องเลยค่ะ:
-                <ul class="list-disc list-inside mt-1.5 space-y-0.5 text-slate-300">
+                <ul class="list-disc list-inside mt-2 space-y-1 text-slate-200 text-[13px]">
                   <li>🕒 <b>ถามเวลาเกิดบอส</b> / สรุปอันดับ CP และคะแนนเช็คชื่อ</li>
                   <li>📸 <b>โยนรูป Log บอส / จัดการชุมนุม</b> ให้น้องช่วยลงระบบแทน</li>
                   <li>💡 <b>เสนอไอเดียฟังก์ชันใหม่</b> ➔ ให้น้องวิเคราะห์และร่างแนวทางโค้ดให้</li>
@@ -7776,7 +7776,7 @@ Output strictly valid JSON with no markdown wrapping:
                 </ul>
               </div>
             </div>
-            <div class="text-[9.5px] text-slate-500 font-mono ml-1">น้องเดวิล • ออนไลน์พร้อมดูแลท่านแอดมินค่ะ</div>
+            <div class="text-[10px] text-slate-400 font-mono ml-1">น้องเดวิล • ออนไลน์พร้อมดูแลท่านแอดมินค่ะ</div>
           </div>
         </div>
       `;
@@ -8064,24 +8064,24 @@ Output strictly valid JSON with no markdown formatting.`;
       const bubbleId = `nong_devil_msg_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
 
       const html = isUser ? `
-        <div class="flex items-start justify-end gap-2" id="${bubbleId}">
-          <div class="max-w-[85%] p-3 rounded-2xl rounded-tr-none bg-gradient-to-r from-rose-600 to-red-600 text-white text-xs shadow-md">
+        <div class="flex items-start justify-end gap-2.5" id="${bubbleId}">
+          <div class="max-w-[88%] p-3.5 rounded-2xl rounded-tr-none bg-gradient-to-r from-rose-600 to-red-600 text-white text-[13.5px] leading-relaxed shadow-md break-words [word-break:break-word]">
             ${contentHtml}
           </div>
-          <div class="w-7 h-7 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center text-xs shrink-0 border border-slate-700">
+          <div class="w-8 h-8 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center text-xs shrink-0 border border-slate-700 mt-0.5">
             <i class="fa-solid fa-user"></i>
           </div>
         </div>
       ` : `
-        <div class="flex items-start gap-2.5" id="${bubbleId}">
-          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-base shadow shrink-0 border border-rose-400/40">
+        <div class="flex items-start gap-3" id="${bubbleId}">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-lg shadow shrink-0 border border-rose-400/40 mt-0.5">
             <span>😈</span>
           </div>
-          <div class="space-y-2 max-w-[85%]">
-            <div class="p-3 rounded-2xl rounded-tl-none bg-slate-900 border border-rose-500/30 text-slate-200 leading-relaxed text-xs shadow-md">
+          <div class="space-y-1.5 max-w-[88%] min-w-0">
+            <div class="p-3.5 rounded-2xl rounded-tl-none bg-slate-900/95 border border-slate-700/80 text-slate-100 leading-relaxed text-[13.5px] shadow-lg break-words [word-break:break-word]">
               ${contentHtml}
             </div>
-            <div class="text-[9.5px] text-slate-500 font-mono ml-1">น้องเดวิล • ตอบเมื่อสักครู่</div>
+            <div class="text-[10px] text-slate-400 font-mono ml-1">น้องเดวิล • ตอบเมื่อสักครู่</div>
           </div>
         </div>
       `;
@@ -8100,17 +8100,17 @@ Output strictly valid JSON with no markdown formatting.`;
       if (data.actionType === 'boss_kill' && (data.bossName || data.killTime)) {
         const payloadStr = encodeURIComponent(JSON.stringify(data));
         actionCardHtml = `
-          <div class="mt-2.5 p-3 rounded-xl bg-rose-950/70 border border-rose-500/50 space-y-2 text-left">
-            <div class="font-bold text-rose-300 flex items-center gap-1.5 text-xs">
+          <div class="mt-3 p-3.5 rounded-2xl bg-rose-950/80 border border-rose-500/60 space-y-2 text-left shadow-md">
+            <div class="font-bold text-rose-300 flex items-center gap-1.5 text-sm">
               <i class="fa-solid fa-skull text-rose-400"></i>
               <span>พบข้อมูลบอสตาย: ${escapeHtml(data.bossName || 'ไม่ระบุชื่อ')}</span>
             </div>
-            <div class="text-[11px] text-slate-300 space-y-0.5 font-mono">
-              <div>⏱️ เวลาตาย: <b class="text-amber-300">${escapeHtml(data.killTime || '-')} น.</b> (${escapeHtml(data.killDate || 'วันนี้')})</div>
-              ${Array.isArray(data.dropItems) && data.dropItems.length > 0 ? `<div>📦 ไอเทม: ${escapeHtml(data.dropItems.join(', '))}</div>` : ''}
+            <div class="text-xs text-slate-200 space-y-1 font-mono">
+              <div>⏱️ เวลาตาย: <b class="text-amber-300 text-[13px]">${escapeHtml(data.killTime || '-')} น.</b> (${escapeHtml(data.killDate || 'วันนี้')})</div>
+              ${Array.isArray(data.dropItems) && data.dropItems.length > 0 ? `<div class="text-slate-300">📦 ไอเทม: ${escapeHtml(data.dropItems.join(', '))}</div>` : ''}
             </div>
             <button type="button" onclick="executeNongDevilBossKill(this, '${payloadStr}')"
-              class="w-full py-2 px-3 bg-gradient-to-r from-rose-600 to-red-500 hover:from-rose-500 hover:to-amber-500 text-white font-bold text-xs rounded-lg shadow-md shadow-rose-600/30 transition flex items-center justify-center gap-1.5 active:scale-95">
+              class="w-full py-2.5 px-3 bg-gradient-to-r from-rose-600 to-red-500 hover:from-rose-500 hover:to-amber-500 text-white font-bold text-xs rounded-xl shadow-md shadow-rose-600/30 transition flex items-center justify-center gap-1.5 active:scale-95">
               <i class="fa-solid fa-bolt"></i> <span>⚡ ให้น้องเดวิลบันทึกเวลาบอสลงระบบทันที</span>
             </button>
           </div>
@@ -8130,22 +8130,22 @@ Output strictly valid JSON with no markdown formatting.`;
         const uniqueCardId = `squad_act_${Date.now()}`;
 
         actionCardHtml = `
-          <div class="mt-2.5 p-3 rounded-xl bg-indigo-950/70 border border-indigo-500/50 space-y-2.5 text-left">
-            <div class="font-bold text-indigo-300 flex items-center gap-1.5 text-xs">
+          <div class="mt-3 p-3.5 rounded-2xl bg-indigo-950/80 border border-indigo-500/60 space-y-2.5 text-left shadow-md">
+            <div class="font-bold text-indigo-300 flex items-center gap-1.5 text-sm">
               <i class="fa-solid fa-users text-indigo-400"></i>
               <span>ตรวจพบสมาชิกในหน่วยชุมนุม ${data.members.length} คน</span>
             </div>
-            <div class="text-[11px] text-slate-300 font-mono truncate">
+            <div class="text-xs text-slate-200 font-mono truncate leading-relaxed">
               รายชื่อ: ${escapeHtml(data.members.slice(0, 6).join(', '))}${data.members.length > 6 ? ` และอีก ${data.members.length - 6} คน` : ''}
             </div>
             <div class="space-y-1">
-              <label class="block text-[10.5px] text-slate-400 font-medium">เลือกกิจกรรม/บอสที่ต้องการเช็คชื่อ:</label>
-              <select id="${uniqueCardId}" class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-lg p-1.5 focus:border-indigo-400 focus:outline-none">
+              <label class="block text-[11px] text-slate-300 font-medium">เลือกกิจกรรม/บอสที่ต้องการเช็คชื่อ:</label>
+              <select id="${uniqueCardId}" class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl p-2 focus:border-indigo-400 focus:outline-none">
                 ${actOptions}
               </select>
             </div>
             <button type="button" onclick="executeNongDevilSquadCheck(this, '${memberNamesStr}', '${uniqueCardId}')"
-              class="w-full py-2 px-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs rounded-lg shadow-md shadow-indigo-600/30 transition flex items-center justify-center gap-1.5 active:scale-95">
+              class="w-full py-2.5 px-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/30 transition flex items-center justify-center gap-1.5 active:scale-95">
               <i class="fa-solid fa-check"></i> <span>✅ ให้น้องเดวิลติ๊กถูกให้สมาชิกทุกคน</span>
             </button>
           </div>
@@ -8156,16 +8156,16 @@ Output strictly valid JSON with no markdown formatting.`;
       else if (data.actionType === 'cp_update' && data.characterName && data.cp) {
         const payloadStr = encodeURIComponent(JSON.stringify(data));
         actionCardHtml = `
-          <div class="mt-2.5 p-3 rounded-xl bg-amber-950/70 border border-amber-500/50 space-y-2 text-left">
-            <div class="font-bold text-amber-300 flex items-center gap-1.5 text-xs">
+          <div class="mt-3 p-3.5 rounded-2xl bg-amber-950/80 border border-amber-500/60 space-y-2 text-left shadow-md">
+            <div class="font-bold text-amber-300 flex items-center gap-1.5 text-sm">
               <i class="fa-solid fa-bolt text-amber-400"></i>
               <span>ตรวจพบข้อมูล CP: ${escapeHtml(data.characterName)}</span>
             </div>
-            <div class="text-[11px] text-slate-300 font-mono">
-              ค่าพลัง CP ใหม่: <b class="text-amber-300 text-xs">${Number(data.cp).toLocaleString()}</b>
+            <div class="text-xs text-slate-200 font-mono">
+              ค่าพลัง CP ใหม่: <b class="text-amber-300 text-sm">${Number(data.cp).toLocaleString()}</b>
             </div>
             <button type="button" onclick="executeNongDevilCpUpdate(this, '${payloadStr}')"
-              class="w-full py-2 px-3 bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-slate-950 font-bold text-xs rounded-lg shadow-md shadow-amber-600/30 transition flex items-center justify-center gap-1.5 active:scale-95">
+              class="w-full py-2.5 px-3 bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-slate-950 font-bold text-xs rounded-xl shadow-md shadow-amber-600/30 transition flex items-center justify-center gap-1.5 active:scale-95">
               <i class="fa-solid fa-arrow-trend-up"></i> <span>📈 ให้น้องเดวิลอัปเดต CP ในตารางทันที</span>
             </button>
           </div>
@@ -8177,24 +8177,24 @@ Output strictly valid JSON with no markdown formatting.`;
         const payloadStr = encodeURIComponent(JSON.stringify(data));
         const readyPromptEsc = encodeURIComponent(data.readyPrompt || '');
         actionCardHtml = `
-          <div class="mt-2.5 p-3.5 rounded-2xl bg-gradient-to-b from-purple-950/80 to-slate-900 border border-purple-500/50 space-y-2.5 text-left shadow-lg">
+          <div class="mt-3 p-3.5 rounded-2xl bg-gradient-to-b from-purple-950/90 to-slate-900 border border-purple-500/60 space-y-2.5 text-left shadow-lg">
             <div class="flex items-center justify-between border-b border-purple-500/30 pb-2">
-              <div class="font-bold text-purple-300 flex items-center gap-1.5 text-xs">
+              <div class="font-bold text-purple-300 flex items-center gap-1.5 text-sm">
                 <i class="fa-solid fa-lightbulb text-amber-400"></i>
                 <span>ข้อเสนอแนะฟังก์ชัน: ${escapeHtml(data.title || 'ไอเดียใหม่')}</span>
               </div>
-              <span class="px-2 py-0.5 rounded-full text-[9px] font-mono bg-purple-500/20 text-purple-200 border border-purple-500/40">Feature Request</span>
+              <span class="px-2 py-0.5 rounded-full text-[9.5px] font-mono bg-purple-500/20 text-purple-200 border border-purple-500/40">Feature Request</span>
             </div>
 
             ${data.whyAndHow ? `
-              <div class="text-[11px] text-slate-300 leading-relaxed bg-slate-950/60 p-2 rounded-xl border border-slate-800">
+              <div class="text-xs text-slate-200 leading-relaxed bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
                 <b class="text-purple-300">💡 การวิเคราะห์ (Why & How):</b><br/>
                 ${escapeHtml(data.whyAndHow).replace(/\n/g, '<br/>')}
               </div>
             ` : ''}
 
             ${data.proposedPlan ? `
-              <div class="text-[11px] text-slate-300 leading-relaxed bg-slate-950/60 p-2 rounded-xl border border-slate-800 font-mono">
+              <div class="text-xs text-slate-200 leading-relaxed bg-slate-950/70 p-2.5 rounded-xl border border-slate-800 font-mono">
                 <b class="text-emerald-300">🛠️ แผนการเขียนโค้ด:</b><br/>
                 ${escapeHtml(data.proposedPlan).replace(/\n/g, '<br/>')}
               </div>
@@ -8202,12 +8202,12 @@ Output strictly valid JSON with no markdown formatting.`;
 
             <div class="grid grid-cols-2 gap-2 pt-1">
               <button type="button" onclick="saveNongDevilItemToWishlist(this, '${payloadStr}')"
-                class="py-2 px-2.5 bg-slate-800 hover:bg-slate-700 text-purple-200 text-[11px] font-bold rounded-xl border border-purple-500/40 transition flex items-center justify-center gap-1 active:scale-95">
-                <i class="fa-solid fa-bookmark"></i> <span>💾 บันทึกลงสมุดโน้ต</span>
+                class="py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-purple-200 text-xs font-bold rounded-xl border border-purple-500/40 transition flex items-center justify-center gap-1.5 active:scale-95">
+                <i class="fa-solid fa-bookmark"></i> <span>💾 บันทึกไอเดีย</span>
               </button>
               <button type="button" onclick="copyNongDevilCodePrompt(this, '${readyPromptEsc}')"
-                class="py-2 px-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-[11px] font-bold rounded-xl shadow-md transition flex items-center justify-center gap-1 active:scale-95">
-                <i class="fa-solid fa-copy"></i> <span>📋 คัดลอก Prompt โค้ด</span>
+                class="py-2.5 px-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center justify-center gap-1.5 active:scale-95">
+                <i class="fa-solid fa-copy"></i> <span>📋 คัดลอก Prompt</span>
               </button>
             </div>
           </div>
@@ -8219,24 +8219,24 @@ Output strictly valid JSON with no markdown formatting.`;
         const payloadStr = encodeURIComponent(JSON.stringify(data));
         const readyPromptEsc = encodeURIComponent(data.readyPrompt || '');
         actionCardHtml = `
-          <div class="mt-2.5 p-3.5 rounded-2xl bg-gradient-to-b from-rose-950/80 to-slate-900 border border-rose-500/50 space-y-2.5 text-left shadow-lg">
+          <div class="mt-3 p-3.5 rounded-2xl bg-gradient-to-b from-rose-950/90 to-slate-900 border border-rose-500/60 space-y-2.5 text-left shadow-lg">
             <div class="flex items-center justify-between border-b border-rose-500/30 pb-2">
-              <div class="font-bold text-rose-300 flex items-center gap-1.5 text-xs">
+              <div class="font-bold text-rose-300 flex items-center gap-1.5 text-sm">
                 <i class="fa-solid fa-bug text-rose-400"></i>
                 <span>ผลวิเคราะห์ปัญหา: ${escapeHtml(data.title || 'รายงานข้อผิดพลาด')}</span>
               </div>
-              <span class="px-2 py-0.5 rounded-full text-[9px] font-mono bg-rose-500/20 text-rose-200 border border-rose-500/40">Diagnostics</span>
+              <span class="px-2 py-0.5 rounded-full text-[9.5px] font-mono bg-rose-500/20 text-rose-200 border border-rose-500/40">Diagnostics</span>
             </div>
 
             ${data.rootCause ? `
-              <div class="text-[11px] text-slate-300 leading-relaxed bg-slate-950/60 p-2 rounded-xl border border-slate-800">
+              <div class="text-xs text-slate-200 leading-relaxed bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
                 <b class="text-rose-300">🔍 สาเหตุที่แท้จริง (Root Cause):</b><br/>
                 ${escapeHtml(data.rootCause).replace(/\n/g, '<br/>')}
               </div>
             ` : ''}
 
             ${data.proposedFix ? `
-              <div class="text-[11px] text-slate-300 leading-relaxed bg-slate-950/60 p-2 rounded-xl border border-slate-800 font-mono">
+              <div class="text-xs text-slate-200 leading-relaxed bg-slate-950/70 p-2.5 rounded-xl border border-slate-800 font-mono">
                 <b class="text-emerald-300">🔧 แนวทางแก้ไข:</b><br/>
                 ${escapeHtml(data.proposedFix).replace(/\n/g, '<br/>')}
               </div>
@@ -8244,12 +8244,12 @@ Output strictly valid JSON with no markdown formatting.`;
 
             <div class="grid grid-cols-2 gap-2 pt-1">
               <button type="button" onclick="saveNongDevilItemToWishlist(this, '${payloadStr}')"
-                class="py-2 px-2.5 bg-slate-800 hover:bg-slate-700 text-rose-200 text-[11px] font-bold rounded-xl border border-rose-500/40 transition flex items-center justify-center gap-1 active:scale-95">
-                <i class="fa-solid fa-bookmark"></i> <span>💾 บันทึกปัญหาไว้</span>
+                class="py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-rose-200 text-xs font-bold rounded-xl border border-rose-500/40 transition flex items-center justify-center gap-1.5 active:scale-95">
+                <i class="fa-solid fa-bookmark"></i> <span>💾 บันทึกปัญหา</span>
               </button>
               <button type="button" onclick="copyNongDevilCodePrompt(this, '${readyPromptEsc}')"
-                class="py-2 px-2.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-[11px] font-bold rounded-xl shadow-md transition flex items-center justify-center gap-1 active:scale-95">
-                <i class="fa-solid fa-copy"></i> <span>📋 คัดลอก Prompt แก้บั๊ก</span>
+                class="py-2.5 px-3 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center justify-center gap-1.5 active:scale-95">
+                <i class="fa-solid fa-copy"></i> <span>📋 คัดลอก Prompt</span>
               </button>
             </div>
           </div>
@@ -14636,10 +14636,10 @@ Output strictly valid JSON with no markdown formatting.`;
 
   <!-- 2. Nong Devil Chat Modal -->
   <div id="nong-devil-chat-modal"
-    class="fixed bottom-20 right-3 sm:right-6 z-50 w-[360px] sm:w-[410px] max-w-[calc(100vw-1.5rem)] h-[560px] max-h-[82vh] bg-slate-950/95 backdrop-blur-2xl border border-rose-500/40 rounded-3xl shadow-2xl shadow-rose-950/60 hidden flex-col overflow-hidden animate-scale-up">
+    class="fixed bottom-4 right-2.5 sm:bottom-6 sm:right-6 z-50 w-[360px] sm:w-[480px] md:w-[510px] max-w-[calc(100vw-1.25rem)] h-[600px] max-h-[86vh] bg-slate-950/98 backdrop-blur-2xl border border-rose-500/50 rounded-3xl shadow-2xl shadow-rose-950/80 hidden flex-col overflow-hidden animate-scale-up">
     
     <!-- Modal Header -->
-    <div class="p-3.5 bg-gradient-to-r from-slate-900 via-rose-950/50 to-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
+    <div class="p-3.5 bg-gradient-to-r from-slate-900 via-rose-950/60 to-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
       <div class="flex items-center gap-2.5">
         <div class="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-xl shadow-md border border-rose-400/40 shrink-0">
           <span>😈</span>
@@ -14650,7 +14650,7 @@ Output strictly valid JSON with no markdown formatting.`;
             <h3 class="text-xs sm:text-sm font-extrabold text-white">น้องเดวิล (เลขา AI)</h3>
             <span class="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[9px] font-mono">v3.5 Flash</span>
           </div>
-          <p class="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+          <p class="text-[10.5px] text-emerald-400 font-medium flex items-center gap-1">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
             <span>เลขาประจำกิลด์ RedDevil พร้อมดูแลค่ะ</span>
           </p>
@@ -14670,12 +14670,12 @@ Output strictly valid JSON with no markdown formatting.`;
     </div>
 
     <!-- Scrollable Messages Container -->
-    <div id="nong-devil-messages" class="flex-1 overflow-y-auto p-3.5 space-y-3 text-xs pr-2">
+    <div id="nong-devil-messages" class="flex-1 overflow-y-auto p-4 space-y-3.5 text-[13.5px] pr-2 overflow-x-hidden leading-relaxed">
       <!-- Populated via JS -->
     </div>
 
     <!-- Quick Action Prompts Row -->
-    <div id="nong-devil-quick-chips" class="px-3 py-1.5 bg-slate-900/70 border-t border-slate-800/80 flex items-center gap-1.5 overflow-x-auto text-[10.5px] shrink-0 no-scrollbar">
+    <div id="nong-devil-quick-chips" class="px-3 py-2 bg-slate-900/90 border-t border-slate-800/80 flex items-center gap-1.5 overflow-x-auto text-[11px] shrink-0 no-scrollbar">
       <button type="button" onclick="sendNongDevilQuickPrompt('บอสตัวต่อไปเกิดกี่โมง? มีตัวไหนใกล้เกิดบ้าง')"
         class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-rose-950/50 text-rose-200 border border-slate-700 hover:border-rose-500/40 whitespace-nowrap transition">
         🕒 บอสตัวต่อไปเกิดเมื่อไหร่?
@@ -14699,37 +14699,37 @@ Output strictly valid JSON with no markdown formatting.`;
     </div>
 
     <!-- Image Attachment Preview Box -->
-    <div id="nong-devil-img-preview-box" class="hidden p-2 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-2 shrink-0">
-      <div class="flex items-center gap-2 min-w-0">
-        <img id="nong-devil-img-preview-thumb" src="" alt="Thumbnail" class="w-10 h-10 object-cover rounded-lg border border-slate-700 shrink-0" />
+    <div id="nong-devil-img-preview-box" class="hidden p-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-2 shrink-0">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <img id="nong-devil-img-preview-thumb" src="" alt="Thumbnail" class="w-11 h-11 object-cover rounded-lg border border-slate-700 shrink-0" />
         <div class="min-w-0 truncate">
-          <div class="text-[11px] font-bold text-white truncate" id="nong-devil-img-preview-name">image.png</div>
-          <div class="text-[9.5px] text-rose-400 font-mono">พร้อมให้น้องเดวิลวิเคราะห์ 😈</div>
+          <div class="text-xs font-bold text-white truncate" id="nong-devil-img-preview-name">image.png</div>
+          <div class="text-[10px] text-rose-400 font-mono">พร้อมให้น้องเดวิลวิเคราะห์ 😈</div>
         </div>
       </div>
-      <button type="button" onclick="clearNongDevilImageAttachment()" class="p-1 text-slate-400 hover:text-rose-400 text-xs">
+      <button type="button" onclick="clearNongDevilImageAttachment()" class="p-1.5 text-slate-400 hover:text-rose-400 text-sm">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
 
     <!-- Chat Input Form -->
     <div class="p-2.5 bg-slate-900 border-t border-slate-800 shrink-0">
-      <form id="nong-devil-chat-form" onsubmit="handleNongDevilSubmit(event)" class="flex items-center gap-1.5">
+      <form id="nong-devil-chat-form" onsubmit="handleNongDevilSubmit(event)" class="flex items-center gap-2">
         <input type="file" id="nong-devil-file-input" accept="image/*" class="hidden" onchange="handleNongDevilFileSelect(this.files[0])" />
         
         <button type="button" onclick="document.getElementById('nong-devil-file-input').click()"
-          class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-rose-950/50 text-slate-400 hover:text-rose-300 flex items-center justify-center text-xs transition border border-slate-700 shrink-0"
+          class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-rose-950/50 text-slate-300 hover:text-rose-300 flex items-center justify-center text-sm transition border border-slate-700 shrink-0"
           title="แนบรูปภาพ (Log บอส, จัดการชุมนุม, หรือรูป CP)">
           <i class="fa-solid fa-paperclip"></i>
         </button>
 
         <input type="text" id="nong-devil-input" placeholder="พิมพ์คุยกับน้องเดวิล หรือกด Ctrl+V วางรูป..."
           autocomplete="off"
-          class="flex-1 bg-slate-950 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:border-rose-400 focus:outline-none placeholder:text-slate-500" />
+          class="flex-1 bg-slate-950 border border-slate-700 text-white text-xs sm:text-[13px] rounded-xl px-3.5 py-2.5 focus:border-rose-400 focus:outline-none placeholder:text-slate-500" />
 
         <button type="submit" id="nong-devil-send-btn"
-          class="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-600 to-red-500 hover:from-rose-500 hover:to-amber-500 text-white flex items-center justify-center text-xs transition shadow-md shadow-rose-600/30 shrink-0 disabled:opacity-40">
-          <i class="fa-solid fa-paper-plane text-[11px]"></i>
+          class="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-600 to-red-500 hover:from-rose-500 hover:to-amber-500 text-white flex items-center justify-center text-sm transition shadow-md shadow-rose-600/30 shrink-0 disabled:opacity-40">
+          <i class="fa-solid fa-paper-plane text-xs"></i>
         </button>
       </form>
     </div>
