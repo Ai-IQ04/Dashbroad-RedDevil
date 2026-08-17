@@ -1653,7 +1653,7 @@ Output strictly valid JSON with no markdown wrapping:
 async function discoverActiveGeminiModel(apiKey) {
   if (window.cachedGeminiModelEndpoint) return window.cachedGeminiModelEndpoint;
 
-  const apiVersions = ['v1', 'v1beta'];
+  const apiVersions = ['v1beta', 'v1'];
   for (const apiVer of apiVersions) {
     try {
       const listRes = await fetch(`https://generativelanguage.googleapis.com/${apiVer}/models?key=${apiKey}`);
@@ -1664,13 +1664,15 @@ async function discoverActiveGeminiModel(apiKey) {
           .map(m => m.name.replace(/^models\//, ''));
 
         if (available.length > 0) {
-          // Priority: flash 1.5/2.0 > any flash > pro 1.5/2.0 > any pro > first available
+          // Priority: 3.5-flash > 3.6-flash > 3.7-flash > 3-flash > 3.1-flash > flash-latest > any flash > first available
           const preferred = 
-            available.find(m => /gemini-1\.5-flash/i.test(m)) ||
-            available.find(m => /gemini-2\.0-flash/i.test(m)) ||
+            available.find(m => /gemini-3\.5-flash/i.test(m)) ||
+            available.find(m => /gemini-3\.6-flash/i.test(m)) ||
+            available.find(m => /gemini-3\.7-flash/i.test(m)) ||
+            available.find(m => /gemini-3-flash/i.test(m)) ||
+            available.find(m => /gemini-3\.1-flash/i.test(m)) ||
+            available.find(m => /gemini-flash-latest/i.test(m)) ||
             available.find(m => /flash/i.test(m)) ||
-            available.find(m => /gemini-1\.5-pro/i.test(m)) ||
-            available.find(m => /pro/i.test(m)) ||
             available[0];
 
           if (preferred) {
@@ -1685,8 +1687,8 @@ async function discoverActiveGeminiModel(apiKey) {
     }
   }
 
-  // Fallback defaults if ListModels is restricted
-  return { apiVer: 'v1', model: 'gemini-1.5-flash' };
+  // Fallback defaults
+  return { apiVer: 'v1beta', model: 'gemini-3.5-flash' };
 }
 
 // Universal Gemini Vision Caller with Model Discovery & Auto-Fallback
@@ -1696,14 +1698,15 @@ async function callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiK
   
   const candidateList = [
     { apiVer: discovered.apiVer, model: discovered.model },
-    { apiVer: 'v1', model: 'gemini-1.5-flash' },
-    { apiVer: 'v1', model: 'gemini-1.5-pro' },
-    { apiVer: 'v1', model: 'gemini-2.0-flash' },
+    { apiVer: 'v1beta', model: 'gemini-3.5-flash' },
+    { apiVer: 'v1beta', model: 'gemini-3.6-flash' },
+    { apiVer: 'v1beta', model: 'gemini-3.7-flash' },
+    { apiVer: 'v1beta', model: 'gemini-3-flash-preview' },
+    { apiVer: 'v1beta', model: 'gemini-3.1-flash-lite' },
+    { apiVer: 'v1', model: 'gemini-3.5-flash' },
     { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' },
     { apiVer: 'v1beta', model: 'gemini-1.5-flash' },
-    { apiVer: 'v1beta', model: 'gemini-2.0-flash' },
-    { apiVer: 'v1beta', model: 'gemini-1.5-pro-latest' },
-    { apiVer: 'v1beta', model: 'gemini-1.5-pro' }
+    { apiVer: 'v1', model: 'gemini-1.5-flash' }
   ];
 
   let lastError = null;
@@ -2371,8 +2374,8 @@ async function testGeminiApiKeyConnection() {
       .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
       .map(m => m.name.replace(/^models\//, ''));
 
-    // 2. Test live generateContent ping on v1/gemini-1.5-flash
-    const testGen = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`, {
+    // 2. Test live generateContent ping on gemini-3.5-flash
+    const testGen = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${key}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: "Hello" }] }] })
@@ -2387,10 +2390,10 @@ async function testGeminiApiKeyConnection() {
     statusEl.innerHTML = `
       <div class="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/50 text-emerald-200 text-[11px] text-left space-y-1">
         <div class="font-bold flex items-center gap-1.5 text-emerald-300 text-xs">
-          <i class="fa-solid fa-circle-check"></i> ✅ API Key ถูกต้อง 100%! เชื่อมต่อ v1 สำเร็จ
+          <i class="fa-solid fa-circle-check"></i> ✅ API Key ถูกต้อง 100%! เชื่อมต่อสำเร็จ
         </div>
         <div class="text-[10.5px] text-slate-300">
-          พบโมเดลพร้อมใช้งาน <span class="font-mono text-emerald-400 font-bold">${activeModels.length}</span> ตัว (ทดสอบยิง <span class="font-mono text-purple-300">v1/gemini-1.5-flash</span> สำเร็จแล้ว)
+          พบโมเดลพร้อมใช้งาน <span class="font-mono text-emerald-400 font-bold">${activeModels.length}</span> ตัว (ทดสอบยิง <span class="font-mono text-purple-300">gemini-3.5-flash</span> สำเร็จแล้ว)
         </div>
       </div>
     `;
