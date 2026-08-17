@@ -818,15 +818,43 @@ function recordBossKillNow(bossId) {
   playChime();
 }
 
-// Send Boss Kill Log row to Google Sheets via Webhook (Background Async)
+// Send Boss Kill Log row to Google Sheets via Webhook (Background Async - Only when drop items exist!)
 function sendKillLogToGoogleSheet(logData) {
   if (!bossSheetWebhookUrl) return;
+
+  // 📦 ส่งไปยัง Google Sheets เฉพาะเมื่อมีรายการไอเทมดรอปเท่านั้น (Drop Items Only)
+  if (!logData || !Array.isArray(logData.dropItems) || logData.dropItems.length === 0) {
+    return;
+  }
+
   try {
+    const payload = {
+      action: 'drop_log',
+      bossId: logData.bossId || '',
+      bossName: logData.bossName || '',
+      map: logData.map || '-',
+      killTime: logData.killTimeFormatted || (logData.killTime ? formatDateTimeShort(new Date(logData.killTime)) : '-'),
+      recordedBy: logData.recordedBy || 'Admin',
+      timestamp: logData.timestampStr || formatDateTimeShort(new Date()),
+      dropItems: logData.dropItems,
+      dropItemsText: logData.dropItemsText || logData.dropItems.join(', '),
+      itemsCount: logData.dropItems.length,
+      // Array of detailed rows for Google Apps Script to loop appendRow
+      rows: logData.dropItems.map(item => ({
+        timestamp: logData.timestampStr || formatDateTimeShort(new Date()),
+        bossName: logData.bossName || '',
+        map: logData.map || '-',
+        killTime: logData.killTimeFormatted || (logData.killTime ? formatDateTimeShort(new Date(logData.killTime)) : '-'),
+        item: item,
+        recordedBy: logData.recordedBy || 'Admin'
+      }))
+    };
+
     fetch(bossSheetWebhookUrl, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(logData)
+      body: JSON.stringify(payload)
     }).catch(err => console.warn('Google Sheet Webhook send error:', err));
   } catch (e) {
     console.warn('Google Sheet Webhook exception:', e);
