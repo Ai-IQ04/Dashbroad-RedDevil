@@ -7710,9 +7710,18 @@ Output strictly valid JSON with no markdown wrapping:
       }
     });
 
-    // ================= 😈 น้องเดวิล: เลขา AI ประจำกิลด์ RedDevil (AI Assistant Engine) =================
+    // ================= 😈 น้องเดวิล: เลขา AI ประจำกิลด์ RedDevil (AI Assistant & Diagnostics Engine) =================
     let nongDevilAttachedImage = null;
     let nongDevilMessagesHistory = [];
+    let nongDevilFeedbackLogs = JSON.parse(localStorage.getItem('guild_nong_devil_feedback_logs')) || [];
+
+    function saveNongDevilFeedbackLogs() {
+      if (nongDevilFeedbackLogs.length > 200) nongDevilFeedbackLogs = nongDevilFeedbackLogs.slice(0, 200);
+      localStorage.setItem('guild_nong_devil_feedback_logs', JSON.stringify(nongDevilFeedbackLogs));
+      if (fbDb) {
+        fbDb.ref('guild_app/nong_devil_feedback_logs').set(nongDevilFeedbackLogs);
+      }
+    }
 
     function toggleNongDevilChat(forceOpen = null) {
       if (!isAdmin) {
@@ -7755,19 +7764,19 @@ Output strictly valid JSON with no markdown wrapping:
           <div class="space-y-2 max-w-[85%]">
             <div class="p-3 rounded-2xl rounded-tl-none bg-slate-900 border border-rose-500/30 text-slate-200 leading-relaxed text-xs shadow-md">
               <div class="font-bold text-rose-300 mb-1 flex items-center gap-1.5">
-                <span>สวัสดีค่ะ! น้องเดวิล เลขาประจำกิลด์ RedDevil ยินดีรับใช้ค่ะ 😈🔥</span>
+                <span>สวัสดีค่ะท่านแอดมิน! น้องเดวิล เลขาประจำกิลด์ RedDevil ยินดีรับใช้ค่ะ 😈🔥</span>
               </div>
               <div>
-                น้องพร้อมช่วยดูแลข้อมูลกิลด์ทุกเรื่องเลยค่ะ! ไม่ว่าจะเป็น:
+                น้องพร้อมช่วยดูแลข้อมูลกิลด์และระบบเว็บทุกเรื่องเลยค่ะ:
                 <ul class="list-disc list-inside mt-1.5 space-y-0.5 text-slate-300">
-                  <li>🕒 <b>ถามเวลาเกิดบอส</b> / บอสที่กำลังจะเกิด</li>
-                  <li>👑 <b>เช็คอันดับ CP</b> และข้อมูลสมาชิกในกิลด์</li>
-                  <li>📊 <b>สรุปคะแนนเช็คชื่อ</b> กิจกรรมประจำสัปดาห์</li>
+                  <li>🕒 <b>ถามเวลาเกิดบอส</b> / สรุปอันดับ CP และคะแนนเช็คชื่อ</li>
                   <li>📸 <b>โยนรูป Log บอส / จัดการชุมนุม</b> ให้น้องช่วยลงระบบแทน</li>
+                  <li>💡 <b>เสนอไอเดียฟังก์ชันใหม่</b> ➔ ให้น้องวิเคราะห์และร่างแนวทางโค้ดให้</li>
+                  <li>🔍 <b>แจ้งปัญหา / บั๊กในระบบ</b> ➔ น้องจะเจาะลึกสาเหตุและสรุปวิธีแก้ให้</li>
                 </ul>
               </div>
             </div>
-            <div class="text-[9.5px] text-slate-500 font-mono ml-1">น้องเดวิล • ออนไลน์พร้อมช่วยค่ะ</div>
+            <div class="text-[9.5px] text-slate-500 font-mono ml-1">น้องเดวิล • ออนไลน์พร้อมดูแลท่านแอดมินค่ะ</div>
           </div>
         </div>
       `;
@@ -7842,11 +7851,15 @@ Output strictly valid JSON with no markdown wrapping:
       // 3. Activities
       const actList = Array.isArray(ACTIVITIES) ? ACTIVITIES.map((a, i) => `[${i}] ${a.name} (${a.day || '-'}) น้ำหนัก ${a.weight || 0}%`).join(', ') : '';
 
+      // 4. Saved Wishlist Count
+      const savedCount = nongDevilFeedbackLogs.length;
+
       return `
 [LIVE GUILD DATA CONTEXT]:
 - Guild Name: RedDevil
 - Current Week: ${typeof getWeekName === 'function' ? getWeekName(currentWeekNumber) : 'สัปดาห์ปัจจุบัน'}
 - Total Guild Members: ${totalMembers} คน
+- Saved Wishlist / Issue Notes: ${savedCount} รายการ
 - Top 5 CP Rankings:
 ${top5Cp || 'ไม่มีข้อมูล'}
 
@@ -7875,7 +7888,7 @@ ${actList || 'ไม่มี'}
             <i class="fa-solid fa-triangle-exclamation mr-1"></i> ยังไม่ได้ใส่ Google Gemini API Key ค่ะ!
           </div>
           <div class="mt-1 text-slate-300">
-            กรุณาให้ Super Admin ไปที่เมนู <b>⚙️ ตั้งค่า Discord / Sheets</b> แล้วใส่ API Key เพื่อเปิดใช้งานสมองของน้องเดวิลนะคะ 😈
+            กรุณาไปที่เมนู <b>⚙️ ตั้งค่า Discord / Sheets</b> แล้วใส่ API Key เพื่อเปิดใช้งานสมองของน้องเดวิลนะคะ 😈
           </div>
         `);
         return;
@@ -7884,6 +7897,13 @@ ${actList || 'ไม่มี'}
       // Clear input & attachment
       if (input) input.value = '';
       clearNongDevilImageAttachment();
+
+      // Check if user is asking to view wishlist
+      if (userText.includes('สมุดบันทึก') || userText.includes('wishlist') || userText.includes('รายการที่บันทึก') || userText.includes('ดูไอเดีย')) {
+        appendNongDevilMessage('user', escapeHtml(userText));
+        renderNongDevilWishlistHistory();
+        return;
+      }
 
       // 1. Render User Message
       let userMsgHtml = escapeHtml(userText);
@@ -7903,7 +7923,7 @@ ${actList || 'ไม่มี'}
       appendNongDevilMessage('assistant', `
         <div id="${thinkingId}" class="flex items-center gap-2 text-rose-300 font-medium">
           <i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400"></i>
-          <span>น้องเดวิลกำลังวิเคราะห์และหาคำตอบให้ค่ะ...</span>
+          <span>น้องเดวิลกำลังวิเคราะห์และประมวลผลให้ค่ะ...</span>
         </div>
       `);
 
@@ -7918,47 +7938,74 @@ ${actList || 'ไม่มี'}
           mimeType = comp.mimeType;
         }
 
-        const prompt = `You are "น้องเดวิล" (Nong Devil), the clever, friendly, and enthusiastic AI Secretary for the "RedDevil" guild in the MMORPG "LORD NINE".
+        const prompt = `You are "น้องเดวิล" (Nong Devil), the smart, polite, and enthusiastic AI Secretary for the "RedDevil" guild in the MMORPG "LORD NINE".
 You speak natural, lively Thai with emojis (😈, 🔥, ⚔️, 👑, ✨).
-You are equipped with autonomous capabilities to analyze images and act on behalf of the guild master/admin.
+You are equipped with autonomous capabilities to:
+1. Analyze images (Boss kill logs, Squad Management attendance, Character CP profiles)
+2. Receive Admin Feature Requests & Wishlist ideas: analyze Why & How, propose technical implementation steps, and generate a ready-to-use coding prompt for an AI assistant/developer.
+3. Diagnose System Issues / Bugs reported by Admin: analyze Root Cause, suggest fixes, and generate a ready-to-use debug/fix prompt.
+4. Answer guild questions using live context.
 
 ${liveContext}
 
 User Query: "${userText || 'วิเคราะห์รูปภาพนี้ให้หน่อยค่ะ'}"
 
-### Autonomous Image & Task Detection Rules:
-If an image is attached, carefully identify its type and output JSON:
-1. If it's a Boss Kill / Drop Log screenshot -> output JSON:
+### Task & Intent Detection Rules (Output strictly valid JSON with no markdown wrapping):
+
+1. If user suggests a NEW FEATURE / IMPROVEMENT / WISHLIST IDEA -> output JSON:
+{
+  "actionType": "feature_request",
+  "reply": "friendly explanation of how this feature will benefit the guild",
+  "title": "Short title in Thai",
+  "whyAndHow": "Why this is useful & How to implement it conceptually",
+  "proposedPlan": "Technical steps & files to modify (index.html / boss_timer.js)",
+  "readyPrompt": "Detailed, professional instruction prompt in Thai ready to feed into AI code assistant to implement this feature"
+}
+
+2. If user reports a BUG / ISSUE / ERROR / QUESTION ABOUT SYSTEM FAILURE -> output JSON:
+{
+  "actionType": "issue_report",
+  "reply": "empathic acknowledgment and clear breakdown of the issue",
+  "title": "Short issue title in Thai",
+  "rootCause": "Analysis of likely root cause (Why it happened)",
+  "proposedFix": "Step-by-step solution to fix this issue",
+  "readyPrompt": "Detailed, professional prompt in Thai ready to feed into AI code assistant to fix this bug"
+}
+
+3. If image is Boss Kill / Drop Log -> output JSON:
 {
   "actionType": "boss_kill",
-  "reply": "friendly explanation of what was found",
-  "bossId": "matching boss ID or general_aquleus, etc.",
+  "reply": "friendly explanation of detected boss and drops",
+  "bossId": "matching boss ID or generic",
   "bossName": "Thai boss name",
   "killTime": "HH:MM",
   "killDate": "YYYY-MM-DD or today",
   "dropItems": ["item 1 (ผู้รับ: xxx)", "item 2 (ผู้รับ: xxx)"]
 }
-2. If it's a Squad Management (จัดการชุมนุม) screenshot -> output JSON:
+
+4. If image is Squad Management (จัดการชุมนุม) -> output JSON:
 {
   "actionType": "squad_attendance",
   "reply": "friendly explanation of detected squad members",
   "detectedCount": 18,
   "members": ["name1", "name2", "name3"]
 }
-3. If it's a Character CP Profile screenshot -> output JSON:
+
+5. If image is Character CP Profile -> output JSON:
 {
   "actionType": "cp_update",
   "reply": "friendly explanation",
   "characterName": "Player Name",
   "cp": 182000
 }
-4. If it's general text chat or question -> output JSON:
+
+6. If general text chat or questions -> output JSON:
 {
   "actionType": "general_chat",
   "reply": "helpful, polite, and well-formatted Thai answer with markdown bullets if helpful"
 }
 
-Output strictly valid JSON with no markdown wrapping.`;
+Output strictly valid JSON with no markdown formatting.`;
 
         let rawAiResponse = '';
         if (imageFile) {
@@ -8125,10 +8172,194 @@ Output strictly valid JSON with no markdown wrapping.`;
         `;
       }
 
+      // 4. Feature Request Proposal Card
+      else if (data.actionType === 'feature_request') {
+        const payloadStr = encodeURIComponent(JSON.stringify(data));
+        const readyPromptEsc = encodeURIComponent(data.readyPrompt || '');
+        actionCardHtml = `
+          <div class="mt-2.5 p-3.5 rounded-2xl bg-gradient-to-b from-purple-950/80 to-slate-900 border border-purple-500/50 space-y-2.5 text-left shadow-lg">
+            <div class="flex items-center justify-between border-b border-purple-500/30 pb-2">
+              <div class="font-bold text-purple-300 flex items-center gap-1.5 text-xs">
+                <i class="fa-solid fa-lightbulb text-amber-400"></i>
+                <span>ข้อเสนอแนะฟังก์ชัน: ${escapeHtml(data.title || 'ไอเดียใหม่')}</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-mono bg-purple-500/20 text-purple-200 border border-purple-500/40">Feature Request</span>
+            </div>
+
+            ${data.whyAndHow ? `
+              <div class="text-[11px] text-slate-300 leading-relaxed bg-slate-950/60 p-2 rounded-xl border border-slate-800">
+                <b class="text-purple-300">💡 การวิเคราะห์ (Why & How):</b><br/>
+                ${escapeHtml(data.whyAndHow).replace(/\n/g, '<br/>')}
+              </div>
+            ` : ''}
+
+            ${data.proposedPlan ? `
+              <div class="text-[11px] text-slate-300 leading-relaxed bg-slate-950/60 p-2 rounded-xl border border-slate-800 font-mono">
+                <b class="text-emerald-300">🛠️ แผนการเขียนโค้ด:</b><br/>
+                ${escapeHtml(data.proposedPlan).replace(/\n/g, '<br/>')}
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button type="button" onclick="saveNongDevilItemToWishlist(this, '${payloadStr}')"
+                class="py-2 px-2.5 bg-slate-800 hover:bg-slate-700 text-purple-200 text-[11px] font-bold rounded-xl border border-purple-500/40 transition flex items-center justify-center gap-1 active:scale-95">
+                <i class="fa-solid fa-bookmark"></i> <span>💾 บันทึกลงสมุดโน้ต</span>
+              </button>
+              <button type="button" onclick="copyNongDevilCodePrompt(this, '${readyPromptEsc}')"
+                class="py-2 px-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-[11px] font-bold rounded-xl shadow-md transition flex items-center justify-center gap-1 active:scale-95">
+                <i class="fa-solid fa-copy"></i> <span>📋 คัดลอก Prompt โค้ด</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      // 5. Issue & Bug Diagnostics Card
+      else if (data.actionType === 'issue_report') {
+        const payloadStr = encodeURIComponent(JSON.stringify(data));
+        const readyPromptEsc = encodeURIComponent(data.readyPrompt || '');
+        actionCardHtml = `
+          <div class="mt-2.5 p-3.5 rounded-2xl bg-gradient-to-b from-rose-950/80 to-slate-900 border border-rose-500/50 space-y-2.5 text-left shadow-lg">
+            <div class="flex items-center justify-between border-b border-rose-500/30 pb-2">
+              <div class="font-bold text-rose-300 flex items-center gap-1.5 text-xs">
+                <i class="fa-solid fa-bug text-rose-400"></i>
+                <span>ผลวิเคราะห์ปัญหา: ${escapeHtml(data.title || 'รายงานข้อผิดพลาด')}</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-mono bg-rose-500/20 text-rose-200 border border-rose-500/40">Diagnostics</span>
+            </div>
+
+            ${data.rootCause ? `
+              <div class="text-[11px] text-slate-300 leading-relaxed bg-slate-950/60 p-2 rounded-xl border border-slate-800">
+                <b class="text-rose-300">🔍 สาเหตุที่แท้จริง (Root Cause):</b><br/>
+                ${escapeHtml(data.rootCause).replace(/\n/g, '<br/>')}
+              </div>
+            ` : ''}
+
+            ${data.proposedFix ? `
+              <div class="text-[11px] text-slate-300 leading-relaxed bg-slate-950/60 p-2 rounded-xl border border-slate-800 font-mono">
+                <b class="text-emerald-300">🔧 แนวทางแก้ไข:</b><br/>
+                ${escapeHtml(data.proposedFix).replace(/\n/g, '<br/>')}
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button type="button" onclick="saveNongDevilItemToWishlist(this, '${payloadStr}')"
+                class="py-2 px-2.5 bg-slate-800 hover:bg-slate-700 text-rose-200 text-[11px] font-bold rounded-xl border border-rose-500/40 transition flex items-center justify-center gap-1 active:scale-95">
+                <i class="fa-solid fa-bookmark"></i> <span>💾 บันทึกปัญหาไว้</span>
+              </button>
+              <button type="button" onclick="copyNongDevilCodePrompt(this, '${readyPromptEsc}')"
+                class="py-2 px-2.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-[11px] font-bold rounded-xl shadow-md transition flex items-center justify-center gap-1 active:scale-95">
+                <i class="fa-solid fa-copy"></i> <span>📋 คัดลอก Prompt แก้บั๊ก</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
       const formattedReply = replyText.replace(/\n/g, '<br/>');
       appendNongDevilMessage('assistant', `
         <div>${formattedReply}</div>
         ${actionCardHtml}
+      `);
+    }
+
+    // Action Helpers for Wishlist and Diagnostics
+    function saveNongDevilItemToWishlist(btn, payloadStr) {
+      try {
+        const item = JSON.parse(decodeURIComponent(payloadStr));
+        item.id = Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+        item.createdAt = new Date().toISOString();
+        item.status = 'pending';
+
+        nongDevilFeedbackLogs.unshift(item);
+        saveNongDevilFeedbackLogs();
+
+        if (btn) {
+          btn.disabled = true;
+          btn.classList.add('bg-emerald-800/80', 'text-emerald-200');
+          btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>บันทึกแล้ว ✅</span>`;
+        }
+
+        showToast('😈 น้องเดวิลบันทึกรายการลงสมุดโน้ตแอดมินเรียบร้อยค่ะ! 📖', 'success');
+      } catch (err) {
+        console.error('Save Wishlist Error:', err);
+        showToast('บันทึกไม่สำเร็จ: ' + err.message, 'warning');
+      }
+    }
+
+    function copyNongDevilCodePrompt(btn, promptEsc) {
+      try {
+        const promptText = decodeURIComponent(promptEsc);
+        navigator.clipboard.writeText(promptText).then(() => {
+          if (btn) {
+            const oldHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>คัดลอกสำเร็จ!</span>`;
+            setTimeout(() => { btn.innerHTML = oldHtml; }, 2500);
+          }
+          showToast('คัดลอก Prompt สำหรับส่งให้ AI เขียนโค้ดเรียบร้อยแล้วค่ะ! 📋', 'success');
+        }).catch(() => {
+          fallbackCopyTextToClipboard(promptText);
+          showToast('คัดลอก Prompt เรียบร้อยแล้วค่ะ!', 'success');
+        });
+      } catch (err) {
+        console.error('Copy Prompt Error:', err);
+      }
+    }
+
+    function renderNongDevilWishlistHistory() {
+      if (nongDevilFeedbackLogs.length === 0) {
+        appendNongDevilMessage('assistant', `
+          <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-xs">
+            <div class="font-bold text-amber-300 mb-1">📖 สมุดบันทึกแอดมินยังว่างอยู่ค่ะ</div>
+            <div>ท่านแอดมินสามารถพิมพ์บอกไอเดียฟังก์ชันใหม่ หรือพิมพ์แจ้งปัญหาของระบบ เพื่อให้น้องเดวิลช่วยวิเคราะห์และบันทึกไว้ได้ตลอดเวลาเลยนะคะ 😈</div>
+          </div>
+        `);
+        return;
+      }
+
+      let itemsHtml = '';
+      nongDevilFeedbackLogs.slice(0, 10).forEach((it, idx) => {
+        const isIssue = it.actionType === 'issue_report';
+        const typeBadge = isIssue 
+          ? '<span class="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[9px]">Bug / Issue</span>'
+          : '<span class="px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[9px]">Feature Idea</span>';
+        
+        const readyPromptEsc = encodeURIComponent(it.readyPrompt || '');
+        const dateStr = it.createdAt ? new Date(it.createdAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : 'ล่าสุด';
+
+        itemsHtml += `
+          <div class="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1.5 text-left">
+            <div class="flex items-center justify-between">
+              <div class="font-bold text-white text-xs truncate flex items-center gap-1.5">
+                <span>${idx + 1}. ${escapeHtml(it.title || 'รายการ')}</span>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                ${typeBadge}
+                <span class="text-[9.5px] text-slate-500 font-mono">${dateStr}</span>
+              </div>
+            </div>
+            <div class="text-[10.5px] text-slate-400 line-clamp-2">
+              ${escapeHtml(it.whyAndHow || it.rootCause || it.proposedPlan || '-')}
+            </div>
+            <div class="flex items-center justify-end gap-1.5 pt-1">
+              <button type="button" onclick="copyNongDevilCodePrompt(this, '${readyPromptEsc}')"
+                class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] rounded-lg border border-slate-700 transition flex items-center gap-1">
+                <i class="fa-solid fa-copy text-[9px]"></i> <span>คัดลอก Prompt</span>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      appendNongDevilMessage('assistant', `
+        <div class="space-y-2">
+          <div class="font-bold text-rose-300 text-xs flex items-center justify-between">
+            <span>📖 สมุดบันทึกไอเดีย & ปัญหาของแอดมิน (${nongDevilFeedbackLogs.length} รายการ)</span>
+          </div>
+          <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+            ${itemsHtml}
+          </div>
+        </div>
       `);
     }
 
@@ -14393,6 +14624,10 @@ Output strictly valid JSON with no markdown wrapping.`;
       <button type="button" onclick="sendNongDevilQuickPrompt('สรุปภาพรวมคะแนนเช็คชื่อสัปดาห์นี้ให้หน่อย')"
         class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-indigo-950/50 text-indigo-200 border border-slate-700 hover:border-indigo-500/40 whitespace-nowrap transition">
         📊 สรุปคะแนนเช็คชื่อ
+      </button>
+      <button type="button" onclick="sendNongDevilQuickPrompt('ดูสมุดบันทึกไอเดียและปัญหาของแอดมิน')"
+        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-purple-950/50 text-purple-200 border border-slate-700 hover:border-purple-500/40 whitespace-nowrap transition">
+        📖 สมุดบันทึกไอเดีย & ปัญหา
       </button>
       <button type="button" onclick="sendNongDevilQuickPrompt('โยนรูปภาพให้น้องช่วยทำงานอย่างไรได้บ้าง?')"
         class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-emerald-950/50 text-emerald-200 border border-slate-700 hover:border-emerald-500/40 whitespace-nowrap transition">
