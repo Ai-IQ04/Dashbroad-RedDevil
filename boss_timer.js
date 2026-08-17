@@ -1725,8 +1725,7 @@ async function callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiK
       // Update cache with successful model!
       window.cachedGeminiModelEndpoint = { apiVer: item.apiVer, model: item.model };
 
-      const cleanJsonStr = textOutput.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
-      return JSON.parse(cleanJsonStr);
+      return extractJsonFromGeminiResponse(textOutput);
     } catch (err) {
       console.warn(`Failed with ${key}:`, err);
       lastError = err;
@@ -1734,6 +1733,46 @@ async function callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiK
   }
 
   throw lastError || new Error('All Gemini models failed. Please check your API key.');
+}
+
+// Bulletproof JSON extractor for Google Gemini output
+function extractJsonFromGeminiResponse(text) {
+  if (!text) throw new Error('Empty response content from AI');
+
+  const trimmed = text.trim();
+
+  // 1. Direct JSON parse
+  try {
+    return JSON.parse(trimmed);
+  } catch (e) {}
+
+  // 2. Extract code block ```json ... ``` or ``` ... ```
+  const blockMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (blockMatch && blockMatch[1]) {
+    try {
+      return JSON.parse(blockMatch[1].trim());
+    } catch (e) {}
+  }
+
+  // 3. Extract JSON object { ... }
+  const firstBrace = trimmed.indexOf('{');
+  const lastBrace = trimmed.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    try {
+      return JSON.parse(trimmed.substring(firstBrace, lastBrace + 1));
+    } catch (e) {}
+  }
+
+  // 4. Extract JSON array [ ... ]
+  const firstBracket = trimmed.indexOf('[');
+  const lastBracket = trimmed.lastIndexOf(']');
+  if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+    try {
+      return JSON.parse(trimmed.substring(firstBracket, lastBracket + 1));
+    } catch (e) {}
+  }
+
+  throw new Error('Invalid JSON structure in AI response: ' + trimmed.substring(0, 80));
 }
 
 // Populate Modal Fields from Gemini AI Result
