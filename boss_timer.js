@@ -968,24 +968,24 @@ function populate24HourSelects() {
 // ================= Boss Kill Confirmation Modal with Optional Drop Log (Ctrl+V) =================
 let currentKillConfirmBossId = null;
 let killConfirmImageBlob = null;
+let isBossLockedFromCard = false;
 
-function populateBossKillConfirmSelect(selectedBossId) {
-  const sel = document.getElementById('kill-confirm-boss-select');
-  if (!sel) return;
-  sel.innerHTML = bossList.map(b => 
-    `<option value="${b.id}" ${b.id === selectedBossId ? 'selected' : ''}>${escapeHtml(b.name)} (Lv.${b.level || '??'} - ${escapeHtml(b.map || 'ไม่ระบุ')})</option>`
-  ).join('');
-}
-
-function onKillConfirmBossSelectChange(bossId) {
+function updateKillConfirmBossHeader(bossId) {
   currentKillConfirmBossId = bossId;
-  const boss = bossList.find(b => b.id === bossId);
-  if (!boss) return;
+  const boss = bossList.find(b => b.id === bossId) || { name: bossId || 'ไม่ระบุ', level: '??', map: 'ไม่ระบุ', respawnLabel: 'ตามเงื่อนไข' };
 
+  const nameText = document.getElementById('kill-confirm-boss-name-text');
+  const levelBadge = document.getElementById('kill-confirm-boss-level-badge');
   const desc = document.getElementById('kill-confirm-desc');
   const avatarBox = document.getElementById('kill-confirm-avatar-box');
+  const headerTag = document.getElementById('kill-confirm-header-tag');
 
-  if (desc) desc.textContent = `เลเวล ${boss.level || '??'} • แมพ: ${boss.map || 'ไม่ระบุ'} • รอบเกิด: ${boss.respawnLabel || 'ตามเงื่อนไข'}`;
+  if (headerTag) {
+    headerTag.textContent = isBossLockedFromCard ? '🐉 ยืนยันลงเวลาตาย' : '📸 สแกน Log / บันทึกบอส';
+  }
+  if (nameText) nameText.textContent = boss.name;
+  if (levelBadge) levelBadge.textContent = `Lv.${boss.level || '??'}`;
+  if (desc) desc.textContent = `แมพ: ${boss.map || 'ไม่ระบุ'} • รอบเกิด: ${boss.respawnLabel || 'ตามเงื่อนไข'}`;
 
   if (avatarBox) {
     if (boss.avatar) {
@@ -998,32 +998,19 @@ function onKillConfirmBossSelectChange(bossId) {
 
 function openBossKillConfirmModal(bossId) {
   populate24HourSelects();
-  const titleEl = document.getElementById('kill-confirm-title');
-  const selectWrap = document.getElementById('kill-confirm-boss-select-wrap');
 
   if (bossId) {
-    // Case 1: Opened from specific boss card -> Hide dropdown, set clean title
-    const boss = bossList.find(b => b.id === bossId);
+    // Case 1: Opened from specific boss card -> Lock boss, set clean typography header
+    isBossLockedFromCard = true;
     currentKillConfirmBossId = bossId;
-    populateBossKillConfirmSelect(bossId);
-
-    if (titleEl) {
-      titleEl.textContent = `ยืนยันลงเวลาตาย: ${boss ? boss.name : bossId}`;
-    }
-    if (selectWrap) selectWrap.classList.add('hidden');
-    onKillConfirmBossSelectChange(bossId);
+    updateKillConfirmBossHeader(bossId);
   } else {
-    // Case 2: General scan / paste -> Show dropdown so user or AI can select boss
+    // Case 2: General scan / paste -> AI auto-detects or defaults
+    isBossLockedFromCard = false;
     const defaultBoss = bossList[0];
     currentKillConfirmBossId = defaultBoss ? defaultBoss.id : null;
-    populateBossKillConfirmSelect(currentKillConfirmBossId);
-
-    if (titleEl) {
-      titleEl.textContent = '📸 สแกน Log / บันทึกบอส';
-    }
-    if (selectWrap) selectWrap.classList.remove('hidden');
     if (currentKillConfirmBossId) {
-      onKillConfirmBossSelectChange(currentKillConfirmBossId);
+      updateKillConfirmBossHeader(currentKillConfirmBossId);
     }
   }
 
@@ -1040,6 +1027,7 @@ function closeBossKillConfirmModal() {
   if (modal) modal.classList.add('hidden');
   clearKillConfirmImage();
   currentKillConfirmBossId = null;
+  isBossLockedFromCard = false;
 }
 
 function applyQuickKillConfirmTime(minutesAgo) {
@@ -1154,17 +1142,18 @@ function applyExtractedBossData(data) {
   const minSelect = document.getElementById('kill-confirm-min');
   const dateInput = document.getElementById('kill-confirm-date');
 
-  // 1. Auto-select Boss if detected
-  let matchedBoss = null;
-  if (data.bossId) matchedBoss = bossList.find(b => b.id === data.bossId);
-  if (!matchedBoss && data.bossName) {
-    const bn = data.bossName.toLowerCase();
-    matchedBoss = bossList.find(b => b.name.toLowerCase().includes(bn) || bn.includes(b.name.toLowerCase()) || (b.map && b.map.toLowerCase().includes(bn)));
-  }
-  if (matchedBoss) {
-    const sel = document.getElementById('kill-confirm-boss-select');
-    if (sel) sel.value = matchedBoss.id;
-    onKillConfirmBossSelectChange(matchedBoss.id);
+  // 1. Auto-select Boss if detected (ONLY if boss is not locked from card)
+  if (!isBossLockedFromCard) {
+    let matchedBoss = null;
+    if (data.bossId) matchedBoss = bossList.find(b => b.id === data.bossId);
+    if (!matchedBoss && data.bossName) {
+      const bn = data.bossName.toLowerCase();
+      matchedBoss = bossList.find(b => b.name.toLowerCase().includes(bn) || bn.includes(b.name.toLowerCase()) || (b.map && b.map.toLowerCase().includes(bn)));
+    }
+    if (matchedBoss) {
+      currentKillConfirmBossId = matchedBoss.id;
+      updateKillConfirmBossHeader(matchedBoss.id);
+    }
   }
 
   // 2. Set Time & Date

@@ -14473,7 +14473,7 @@ Output strictly valid JSON with no markdown formatting.`;
         <i class="fa-solid fa-xmark"></i>
       </button>
 
-      <!-- Modal Header -->
+      <!-- Modal Header (Clean Typography - 100% Dropdown Free) -->
       <div class="flex items-center gap-3 pb-3 border-b border-slate-800 shrink-0">
         <div id="kill-confirm-avatar-box"
           class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-600 to-red-500 text-white flex items-center justify-center text-xl shadow-md shrink-0 border border-rose-400/40 overflow-hidden">
@@ -14481,19 +14481,18 @@ Output strictly valid JSON with no markdown formatting.`;
         </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-center justify-between gap-2">
-            <h3 id="kill-confirm-title" class="text-sm sm:text-base font-extrabold text-white truncate">
-              ยืนยันลงเวลาตาย
-            </h3>
+            <span id="kill-confirm-header-tag" class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">🐉 บันทึกเวลาบอส</span>
             <span
               class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 shrink-0">24 hr</span>
           </div>
-          <!-- Dropdown only visible when opened from general scan/upload -->
-          <div id="kill-confirm-boss-select-wrap" class="hidden mt-1">
-            <select id="kill-confirm-boss-select" onchange="onKillConfirmBossSelectChange(this.value)"
-              class="w-full bg-slate-950 border border-slate-700 hover:border-amber-400 text-white text-xs sm:text-sm font-black rounded-xl p-1.5 focus:border-rose-400 focus:outline-none cursor-pointer">
-            </select>
+          <div class="flex items-center gap-2 mt-0.5">
+            <h3 id="kill-confirm-boss-name-text" class="text-base sm:text-lg font-black text-white truncate">
+              -
+            </h3>
+            <span id="kill-confirm-boss-level-badge"
+              class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0 font-mono">Lv.??</span>
           </div>
-          <p id="kill-confirm-desc" class="text-[11px] text-slate-400 truncate mt-0.5">บอสจะเริ่มนับเวลาเกิดรอบถัดไปทันที</p>
+          <p id="kill-confirm-desc" class="text-[11px] text-slate-400 truncate mt-0.5">แมพ: - • รอบเกิด: -</p>
         </div>
       </div>
 
@@ -15535,7 +15534,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=5.2"></script>
+  <script src="boss_timer.js?v=5.4"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
