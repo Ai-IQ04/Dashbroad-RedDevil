@@ -188,20 +188,17 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
   const defDate = defeatedDateStr ? new Date(defeatedDateStr) : null;
   const defTimestamp = (defDate && !isNaN(defDate.getTime())) ? defDate.getTime() : 0;
 
-  // 1. Interval bosses require recorded defeat time
+  // 1. Interval bosses: คงสถานะ 'เกิดแล้ว' ค้างไว้จนกว่า Admin จะมากดลงเวลาตายจริง
   if (boss.respawnType === 'interval') {
     if (!defeatedDateStr || isNaN(defTimestamp) || defTimestamp === 0) return null; // Unrecorded -> Do NOT show countdown
     const nextSpawn = new Date(defTimestamp + (boss.intervalHours * 3600 * 1000));
     return nextSpawn;
   }
 
-  // 2. Fixed schedule bosses calculate next upcoming spawn or keep ALIVE if not yet recorded
+  // 2. Fixed schedule bosses: คำนวณเวลารอบถัดไปตามตารางเวลาเสมอ (ไม่ค้างสถานะ)
   if (boss.respawnType === 'fixed' && Array.isArray(boss.fixedTimes)) {
-    let mostRecentPastSpawn = null;
-    let nearestFutureSpawn = null;
-
-    // Check schedules across past and future 7 days
-    for (let offset = -7; offset <= 7; offset++) {
+    let nearest = null;
+    for (let offset = 0; offset <= 7; offset++) {
       const checkDate = new Date(now.getTime() + offset * 24 * 3600 * 1000);
       const dayOfWeek = checkDate.getDay(); // 0 = Sun, 1 = Mon ...
 
@@ -209,26 +206,15 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
         if (ft.days.includes(dayOfWeek)) {
           const [h, m] = ft.time.split(':').map(Number);
           const candidate = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate(), h, m, 0, 0);
-
-          if (candidate.getTime() <= now.getTime()) {
-            if (!mostRecentPastSpawn || candidate.getTime() > mostRecentPastSpawn.getTime()) {
-              mostRecentPastSpawn = candidate;
-            }
-          } else {
-            if (!nearestFutureSpawn || candidate.getTime() < nearestFutureSpawn.getTime()) {
-              nearestFutureSpawn = candidate;
+          if (candidate > now) {
+            if (!nearest || candidate < nearest) {
+              nearest = candidate;
             }
           }
         }
       }
     }
-
-    // หากรอบเวลาเกิดล่าสุดได้ผ่านไปแล้ว และ Admin ยังไม่ได้ลงเวลาตายของรอบนี้ -> คงสถานะ ALIVE!
-    if (mostRecentPastSpawn && defTimestamp < mostRecentPastSpawn.getTime()) {
-      return mostRecentPastSpawn;
-    }
-
-    return nearestFutureSpawn;
+    return nearest;
   }
 
   return null;
