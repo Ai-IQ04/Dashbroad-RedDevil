@@ -1054,6 +1054,8 @@ function clearKillConfirmImage() {
   if (fileInput) fileInput.value = '';
 }
 
+let pendingKillConfirmData = null;
+
 function handleSaveKillConfirm(e) {
   if (e) e.preventDefault();
   if (!currentKillConfirmBossId) return;
@@ -1083,16 +1085,96 @@ function handleSaveKillConfirm(e) {
   const rawItems = itemsText ? itemsText.value.trim() : '';
   const itemsList = rawItems ? rawItems.split('\n').map(i => i.trim()).filter(i => i.length > 0) : [];
 
-  // 2. Save Boss Kill Time & Create History Log (Firebase + Google Sheets)
-  saveBossKillTime(currentKillConfirmBossId, dt.toISOString(), killerEmail, itemsList);
+  // Store in pending object for double check
+  pendingKillConfirmData = {
+    bossId: currentKillConfirmBossId,
+    bossName: bossName,
+    bossMap: boss?.map || '-',
+    bossIcon: boss?.icon || '🐉',
+    bossImage: boss?.image || '',
+    killDate: dateVal,
+    killHour: hourVal,
+    killMin: minVal,
+    killDateTime: dt,
+    killerEmail: killerEmail,
+    itemsList: itemsList
+  };
 
-  // 3. Save Drop Log if items provided
+  // Open Double-Check Modal to confirm boss name
+  openBossDoubleCheckModal(pendingKillConfirmData);
+}
+
+function openBossDoubleCheckModal(data) {
+  const modal = document.getElementById('boss-double-check-modal');
+  if (!modal) {
+    // Fallback if modal not present
+    commitSaveBossKillConfirm();
+    return;
+  }
+
+  const nameEl = document.getElementById('double-check-boss-name');
+  const mapEl = document.getElementById('double-check-boss-map-text');
+  const timeEl = document.getElementById('double-check-kill-time');
+  const countEl = document.getElementById('double-check-items-count');
+  const previewEl = document.getElementById('double-check-items-preview');
+  const iconEl = document.getElementById('double-check-boss-icon');
+  const imgEl = document.getElementById('double-check-boss-img');
+
+  if (nameEl) nameEl.textContent = data.bossName;
+  if (mapEl) mapEl.textContent = `แมพ: ${data.bossMap}`;
+  if (timeEl) {
+    const timeFormatted = data.killDateTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    timeEl.textContent = `${timeFormatted} น. (${data.killDate})`;
+  }
+  if (countEl) countEl.textContent = `${data.itemsList.length} รายการ`;
+
+  if (data.bossImage && imgEl && iconEl) {
+    imgEl.src = data.bossImage;
+    imgEl.classList.remove('hidden');
+    iconEl.classList.add('hidden');
+  } else if (iconEl && imgEl) {
+    iconEl.textContent = data.bossIcon || '🐉';
+    iconEl.classList.remove('hidden');
+    imgEl.classList.add('hidden');
+  }
+
+  if (previewEl) {
+    if (data.itemsList.length > 0) {
+      previewEl.innerHTML = data.itemsList.map(item => `
+        <div class="flex items-center gap-1.5 truncate">
+          <i class="fa-solid fa-gem text-amber-400 text-[9px]"></i>
+          <span>${escapeHtml(item)}</span>
+        </div>
+      `).join('');
+      previewEl.classList.remove('hidden');
+    } else {
+      previewEl.classList.add('hidden');
+    }
+  }
+
+  modal.classList.remove('hidden');
+}
+
+function closeBossDoubleCheckModal() {
+  const modal = document.getElementById('boss-double-check-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function commitSaveBossKillConfirm() {
+  if (!pendingKillConfirmData) return;
+
+  const { bossId, bossName, killDateTime, killerEmail, itemsList } = pendingKillConfirmData;
+
+  // 1. Save Boss Kill Time & Create History Log (Firebase + Google Sheets)
+  saveBossKillTime(bossId, killDateTime.toISOString(), killerEmail, itemsList);
+
+  // 2. Save Drop Log if items provided
   if (itemsList.length > 0) {
     const dropEntry = {
       id: 'drop_' + Date.now(),
-      bossId: currentKillConfirmBossId,
+      bossId: bossId,
       bossName: bossName,
-      killTime: dt.toISOString(),
+      killTime: killDateTime.toISOString(),
       items: itemsList,
       recordedBy: killerEmail,
       timestamp: new Date().toISOString()
@@ -1104,8 +1186,11 @@ function handleSaveKillConfirm(e) {
     }
   }
 
+  closeBossDoubleCheckModal();
   closeBossKillConfirmModal();
-  showToast(`💀 บันทึกเวลาตายของ "${bossName}" (${formatDateTimeShort(dt)}) เรียบร้อยแล้ว!`, 'success');
+  pendingKillConfirmData = null;
+
+  showToast(`💀 บันทึกเวลาตายของ "${bossName}" (${formatDateTimeShort(killDateTime)}) เรียบร้อยแล้ว!`, 'success');
   playChime();
 }
 
@@ -2563,7 +2648,10 @@ async function testDiscordWebhook() {
 }
 
 // Drop Log Viewer Modal
+let currentViewDropBossId = null;
+
 function openBossDropLogModal(bossId) {
+  currentViewDropBossId = bossId;
   const modal = document.getElementById('boss-drop-log-modal');
   const title = document.getElementById('boss-drop-log-title');
   const list = document.getElementById('boss-drop-log-list');
@@ -2577,16 +2665,26 @@ function openBossDropLogModal(bossId) {
     if (logs.length === 0) {
       list.innerHTML = `<div class="p-6 text-center text-slate-500 text-xs">ยังไม่มีบันทึกไอเทมดรอปสำหรับบอสตัวนี้</div>`;
     } else {
+      const isUserAdmin = typeof isAdmin !== 'undefined' ? isAdmin : false;
+
       list.innerHTML = logs.map(l => `
-        <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl space-y-2 shadow-sm">
+        <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl space-y-2 shadow-sm relative group">
           <div class="flex items-center justify-between text-xs pb-1.5 border-b border-slate-800/80">
             <div class="flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-amber-400"></span>
               <span class="font-bold text-amber-300 text-sm">${escapeHtml(l.bossName)}</span>
             </div>
-            <span class="font-mono text-[11px] text-slate-400 px-2 py-0.5 rounded-full bg-slate-950 border border-slate-800">
-              <i class="fa-regular fa-clock text-[9px] mr-1"></i>${formatDateTimeShort(new Date(l.killTime))}
-            </span>
+            <div class="flex items-center gap-1.5">
+              <span class="font-mono text-[11px] text-slate-400 px-2 py-0.5 rounded-full bg-slate-950 border border-slate-800">
+                <i class="fa-regular fa-clock text-[9px] mr-1"></i>${formatDateTimeShort(new Date(l.killTime))}
+              </span>
+              ${isUserAdmin ? `
+                <button type="button" onclick="deleteBossDropLog('${l.id}')"
+                  class="w-6 h-6 rounded-lg bg-rose-950/60 hover:bg-rose-600 text-rose-300 hover:text-white flex items-center justify-center text-[10px] border border-rose-500/30 hover:border-rose-500 transition shadow-sm" title="ลบรายการนี้">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              ` : ''}
+            </div>
           </div>
           <div class="space-y-1.5">
             ${l.items.map(item => `
@@ -2610,6 +2708,25 @@ function openBossDropLogModal(bossId) {
 function closeBossDropLogModal() {
   const modal = document.getElementById('boss-drop-log-modal');
   if (modal) modal.classList.add('hidden');
+  currentViewDropBossId = null;
+}
+
+function deleteBossDropLog(logId) {
+  if (typeof isAdmin !== 'undefined' && !isAdmin) {
+    showToast('เฉพาะ Admin เท่านั้นที่สามารถลบ Log ไอเทมได้ค่ะ', 'warning');
+    return;
+  }
+
+  if (!confirm('คุณต้องการลบรายการบันทึกไอเทมดรอปนี้ใช่หรือไม่?')) return;
+
+  bossDropLogs = bossDropLogs.filter(l => l.id !== logId);
+  localStorage.setItem('guild_boss_drop_logs', JSON.stringify(bossDropLogs));
+  if (typeof fbDb !== 'undefined' && fbDb) {
+    fbDb.ref('guild_app/boss_drop_logs').set(bossDropLogs);
+  }
+
+  showToast('🗑️ ลบรายการบันทึกไอเทมดรอปเรียบร้อยแล้วค่ะ', 'success');
+  openBossDropLogModal(currentViewDropBossId);
 }
 
 // Sound Alert Toggle
@@ -2652,6 +2769,9 @@ window.applyQuickKillConfirmTime = applyQuickKillConfirmTime;
 window.handleKillConfirmFileSelect = handleKillConfirmFileSelect;
 window.clearKillConfirmImage = clearKillConfirmImage;
 window.handleSaveKillConfirm = handleSaveKillConfirm;
+window.openBossDoubleCheckModal = openBossDoubleCheckModal;
+window.closeBossDoubleCheckModal = closeBossDoubleCheckModal;
+window.commitSaveBossKillConfirm = commitSaveBossKillConfirm;
 window.openEditBossModal = openEditBossModal;
 window.closeEditBossModal = closeEditBossModal;
 window.handleSaveEditBoss = handleSaveEditBoss;
@@ -2662,6 +2782,7 @@ window.applyQuickEditDefTime = applyQuickEditDefTime;
 window.resetSingleBossTimer = resetSingleBossTimer;
 window.openBossDropLogModal = openBossDropLogModal;
 window.closeBossDropLogModal = closeBossDropLogModal;
+window.deleteBossDropLog = deleteBossDropLog;
 window.processImageForBossOCR = processImageForBossOCR;
 window.toggleBossSound = toggleBossSound;
 window.renderBossTimerCards = renderBossTimerCards;
