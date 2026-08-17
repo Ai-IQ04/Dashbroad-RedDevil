@@ -7082,22 +7082,76 @@
 
     // ================= 📸 ระบบ AI สแกนรูปจัดการชุมนุมเพื่อติ๊กคะแนนบอส (AI Squad Attendance Scanner) =================
     let detectedSquadData = { squads: [], allMembers: [], matchedMembers: [] };
+    let cachedGeminiModelEndpoint = null;
 
-    // Universal Gemini Vision Caller with Model Auto-Fallback
+    // Dynamic Discovery: Ask Google AI Studio which models are active for this API key
+    async function discoverActiveGeminiModel(apiKey) {
+      if (cachedGeminiModelEndpoint) return cachedGeminiModelEndpoint;
+
+      const apiVersions = ['v1beta', 'v1'];
+      for (const apiVer of apiVersions) {
+        try {
+          const listRes = await fetch(`https://generativelanguage.googleapis.com/${apiVer}/models?key=${apiKey}`);
+          if (listRes.ok) {
+            const listData = await listRes.json();
+            const available = (listData.models || [])
+              .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+              .map(m => m.name.replace(/^models\//, ''));
+
+            if (available.length > 0) {
+              // Priority: flash 1.5/2.0 > any flash > pro 1.5/2.0 > any pro > first available
+              const preferred = 
+                available.find(m => /gemini-1\.5-flash/i.test(m)) ||
+                available.find(m => /gemini-2\.0-flash/i.test(m)) ||
+                available.find(m => /flash/i.test(m)) ||
+                available.find(m => /gemini-1\.5-pro/i.test(m)) ||
+                available.find(m => /pro/i.test(m)) ||
+                available[0];
+
+              if (preferred) {
+                console.log(`[Gemini Discovery] Found active model: ${preferred} via ${apiVer}`);
+                cachedGeminiModelEndpoint = { apiVer, model: preferred };
+                return cachedGeminiModelEndpoint;
+              }
+            }
+          }
+        } catch (err) {
+          console.warn(`[Gemini Discovery] Failed to list models on ${apiVer}:`, err);
+        }
+      }
+
+      // Fallback defaults if ListModels is restricted
+      return { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' };
+    }
+
+    // Universal Gemini Vision Caller with Model Discovery & Auto-Fallback
     async function callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey) {
-      const modelCandidates = [
-        'gemini-1.5-flash-latest',
-        'gemini-1.5-flash',
-        'gemini-2.0-flash',
-        'gemini-2.0-flash-exp',
-        'gemini-1.5-flash-8b',
-        'gemini-1.5-pro-latest',
-        'gemini-1.5-pro'
+      // 1. First attempt: Use Dynamically Discovered Model
+      const discovered = await discoverActiveGeminiModel(apiKey);
+      
+      const candidateList = [
+        { apiVer: discovered.apiVer, model: discovered.model },
+        { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' },
+        { apiVer: 'v1beta', model: 'gemini-1.5-flash' },
+        { apiVer: 'v1beta', model: 'gemini-1.5-flash-001' },
+        { apiVer: 'v1beta', model: 'gemini-1.5-flash-002' },
+        { apiVer: 'v1beta', model: 'gemini-2.0-flash' },
+        { apiVer: 'v1beta', model: 'gemini-2.0-flash-exp' },
+        { apiVer: 'v1beta', model: 'gemini-1.5-pro-latest' },
+        { apiVer: 'v1beta', model: 'gemini-1.5-pro' },
+        { apiVer: 'v1', model: 'gemini-1.5-flash' },
+        { apiVer: 'v1', model: 'gemini-1.5-pro' },
+        { apiVer: 'v1beta', model: 'gemini-pro-vision' }
       ];
 
       let lastError = null;
+      const tried = new Set();
 
-      for (const model of modelCandidates) {
+      for (const item of candidateList) {
+        const key = `${item.apiVer}:${item.model}`;
+        if (tried.has(key)) continue;
+        tried.add(key);
+
         try {
           const payload = {
             contents: [
@@ -7118,7 +7172,7 @@
             }
           };
 
-          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+          const res = await fetch(`https://generativelanguage.googleapis.com/${item.apiVer}/models/${item.model}:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -7126,27 +7180,30 @@
 
           if (!res.ok) {
             const errText = await res.text();
-            console.warn(`Model ${model} returned ${res.status}:`, errText);
-            lastError = new Error(`Model ${model} (${res.status}): ${errText}`);
+            console.warn(`Model ${item.model} (${item.apiVer}) returned ${res.status}:`, errText);
+            lastError = new Error(`Model ${item.model} (${res.status}): ${errText}`);
             continue;
           }
 
           const jsonRes = await res.json();
           const textOutput = jsonRes?.candidates?.[0]?.content?.parts?.[0]?.text;
           if (!textOutput) {
-            lastError = new Error(`Model ${model} returned empty content`);
+            lastError = new Error(`Model ${item.model} returned empty content`);
             continue;
           }
+
+          // Update cache with successful model!
+          cachedGeminiModelEndpoint = { apiVer: item.apiVer, model: item.model };
 
           const cleanJsonStr = textOutput.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
           return JSON.parse(cleanJsonStr);
         } catch (err) {
-          console.warn(`Failed with model ${model}:`, err);
+          console.warn(`Failed with ${key}:`, err);
           lastError = err;
         }
       }
 
-      throw lastError || new Error('All Gemini models failed');
+      throw lastError || new Error('All Gemini models failed. Please check your API key.');
     }
 
     function openAiSquadCheckModal() {
@@ -13458,7 +13515,7 @@ Output strictly valid JSON with no markdown wrapping:
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=3.8"></script>
+  <script src="boss_timer.js?v=3.9"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
