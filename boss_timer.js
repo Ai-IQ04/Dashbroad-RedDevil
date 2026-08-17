@@ -118,6 +118,10 @@ function playBossAlertSound() {
 // Module Switcher
 function switchAppModule(moduleName) {
   activeAppModule = moduleName;
+  try {
+    localStorage.setItem('guild_active_app_module', moduleName);
+  } catch (e) {}
+
   const scoringContainer = document.getElementById('scoring-module-container');
   const scoringSubHeader = document.getElementById('scoring-sub-header');
   const bossContainer = document.getElementById('boss-timer-module-container');
@@ -320,6 +324,14 @@ function initBossTimerModule() {
   populate24HourSelects();
   renderBossTimerCards();
   updateUpcomingBossWidget();
+
+  // Restore Last Active Module (Scoring vs Boss Timer)
+  try {
+    const savedModule = localStorage.getItem('guild_active_app_module');
+    if (savedModule === 'boss_timer') {
+      switchAppModule('boss_timer');
+    }
+  } catch (e) {}
 }
 
 // Render Boss Cards
