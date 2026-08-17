@@ -1610,45 +1610,74 @@ Output strictly valid JSON with no markdown wrapping:
   ]
 }`;
 
-  const payload = {
-    contents: [
-      {
-        parts: [
-          { text: prompt },
+  const data = await callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey);
+  populateModalFromGeminiData(data);
+}
+
+// Universal Gemini Vision Caller with Model Auto-Fallback
+async function callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey) {
+  const modelCandidates = [
+    'gemini-1.5-flash-latest',
+    'gemini-1.5-flash',
+    'gemini-2.0-flash',
+    'gemini-2.0-flash-exp',
+    'gemini-1.5-flash-8b',
+    'gemini-1.5-pro-latest',
+    'gemini-1.5-pro'
+  ];
+
+  let lastError = null;
+
+  for (const model of modelCandidates) {
+    try {
+      const payload = {
+        contents: [
           {
-            inlineData: {
-              mimeType: mimeType,
-              data: base64Str
-            }
+            parts: [
+              { text: prompt },
+              {
+                inlineData: {
+                  mimeType: mimeType,
+                  data: base64Str
+                }
+              }
+            ]
           }
-        ]
+        ],
+        generationConfig: {
+          temperature: 0.1
+        }
+      };
+
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.warn(`Model ${model} returned ${res.status}:`, errText);
+        lastError = new Error(`Model ${model} (${res.status}): ${errText}`);
+        continue;
       }
-    ],
-    generationConfig: {
-      temperature: 0.1,
-      responseMimeType: "application/json"
+
+      const jsonRes = await res.json();
+      const textOutput = jsonRes?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!textOutput) {
+        lastError = new Error(`Model ${model} returned empty content`);
+        continue;
+      }
+
+      const cleanJsonStr = textOutput.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
+      return JSON.parse(cleanJsonStr);
+    } catch (err) {
+      console.warn(`Failed with model ${model}:`, err);
+      lastError = err;
     }
-  };
-
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Gemini API error (${res.status}): ${errText}`);
   }
 
-  const jsonRes = await res.json();
-  const textOutput = jsonRes?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!textOutput) throw new Error('No response content from Gemini');
-
-  const cleanJsonStr = textOutput.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/```$/, '').trim();
-  const data = JSON.parse(cleanJsonStr);
-
-  populateModalFromGeminiData(data);
+  throw lastError || new Error('All Gemini models failed');
 }
 
 // Populate Modal Fields from Gemini AI Result
