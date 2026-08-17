@@ -681,6 +681,15 @@
           <span id="lang-label">EN</span>
         </button>
 
+        <!-- ปุ่มสถานะ & ซิงค์ Discord Bot -->
+        <button id="btn-discord-sync-top" onclick="triggerDiscordBotSync()"
+          class="apple-btn bg-slate-900 hover:bg-slate-800 border border-indigo-500/40 text-indigo-300 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm cursor-pointer"
+          title="คลิกเพื่อสั่งให้บอทซิงค์รายชื่อ Discord ทันที">
+          <span id="discord-bot-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <i id="discord-sync-icon" class="fa-brands fa-discord text-indigo-400 text-xs"></i>
+          <span id="discord-bot-status-text" class="hidden md:inline font-semibold">ซิงค์ดิส (34 คน)</span>
+        </button>
+
         <!-- ปุ่มเพิ่มตัวละคร -->
         <button id="btn-add-member-top" onclick="openAddMemberModal()"
           class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm font-semibold">
@@ -5978,12 +5987,61 @@
           localStorage.setItem('guild_discord_server_members', JSON.stringify({}));
         }
         renderTable();
+        updateDiscordBotStatusUI(lastKnownBotStatus);
+      });
+
+      // 19. ดักฟังสถานะบอท Discord Real-Time (Heartbeat)
+      fbDb.ref('guild_app/bot_status').on('value', snapshot => {
+        const val = snapshot.val();
+        lastKnownBotStatus = val;
+        updateDiscordBotStatusUI(val);
       });
     }
 
     let discordVerifiedMembers = JSON.parse(localStorage.getItem('guild_registered_members')) || {};
     let discordServerMembers = JSON.parse(localStorage.getItem('guild_discord_server_members')) || {};
+    let lastKnownBotStatus = null;
     let lockedWeeks = JSON.parse(localStorage.getItem('guild_locked_weeks')) || { 1: false, 2: false, 3: false, 4: false };
+
+    function updateDiscordBotStatusUI(statusData) {
+      const dot = document.getElementById('discord-bot-status-dot');
+      const text = document.getElementById('discord-bot-status-text');
+      if (!dot || !text) return;
+
+      const count = discordServerMembers ? Object.keys(discordServerMembers).length : 0;
+
+      if (statusData && statusData.isOnline) {
+        const lastHb = statusData.lastHeartbeat ? new Date(statusData.lastHeartbeat).getTime() : 0;
+        const isAlive = (Date.now() - lastHb) < 90000; // ตรวจสอบภายใน 90 วินาที
+
+        if (isAlive) {
+          dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+          text.textContent = `บอทออนไลน์ (${count || statusData.memberCount || 0} คน)`;
+          text.className = 'hidden md:inline font-semibold text-emerald-300';
+          return;
+        }
+      }
+
+      dot.className = 'w-2 h-2 rounded-full bg-slate-500';
+      text.textContent = `ดิสคอร์ด (${count} คน)`;
+      text.className = 'hidden md:inline font-semibold text-slate-300';
+    }
+
+    function triggerDiscordBotSync() {
+      const icon = document.getElementById('discord-sync-icon');
+      if (icon) icon.className = 'fa-solid fa-rotate fa-spin text-indigo-300 text-xs';
+
+      if (typeof fbDb !== 'undefined' && fbDb) {
+        fbDb.ref('guild_app/bot_commands/sync_trigger').set(Date.now());
+      }
+
+      showToast('🔄 ส่งคำสั่งให้บอทซิงค์รายชื่อ Discord เรียบร้อยแล้ว!', 'info');
+
+      setTimeout(() => {
+        if (icon) icon.className = 'fa-brands fa-discord text-indigo-400 text-xs';
+        if (typeof renderTable === 'function') renderTable();
+      }, 2500);
+    }
 
     function isWeekLocked(w = currentWeekNumber) {
       return Boolean(lockedWeeks[w]);

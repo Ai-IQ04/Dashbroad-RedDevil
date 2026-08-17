@@ -410,10 +410,49 @@ async function syncDiscordServerMembers() {
       body: JSON.stringify(serverMembersData)
     });
 
-    console.log(`👥 [Discord Sync] ซิงค์รายชื่อสมาชิกในเซิร์ฟเวอร์ Discord สำเร็จ: ${Object.keys(serverMembersData).length} คน`);
+    const count = Object.keys(serverMembersData).length;
+    console.log(`👥 [Discord Sync] ซิงค์รายชื่อสมาชิกในเซิร์ฟเวอร์ Discord สำเร็จ: ${count} คน`);
+    await sendHeartbeat(count);
   } catch (err) {
     console.error('❌ Error syncing Discord server members:', err.message);
   }
+}
+
+// 💓 ส่งสถานะ Heartbeat ขึ้น Firebase
+async function sendHeartbeat(memberCount = 0) {
+  try {
+    const endpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/bot_status.json`;
+    await fetch(endpoint, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        isOnline: true,
+        tag: client.user ? client.user.tag : 'RedDevil Bot',
+        memberCount: memberCount,
+        lastHeartbeat: new Date().toISOString()
+      })
+    });
+  } catch (e) { }
+}
+
+// ⚡ ดักฟังคำสั่งซิงค์ด่วนจากปุ่มหน้าเว็บ Dashboard
+function listenForDashboardCommands() {
+  let lastSeenTrigger = Date.now();
+  setInterval(async () => {
+    try {
+      const endpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/sync_trigger.json`;
+      const res = await fetch(endpoint);
+      if (res.ok) {
+        const trigger = await res.json();
+        if (trigger && Number(trigger) > lastSeenTrigger) {
+          lastSeenTrigger = Number(trigger);
+          console.log('⚡ [Dashboard Trigger] ได้รับคำสั่งกดซิงค์ข้อมูลจากหน้าเว็บ...');
+          await syncDiscordServerMembers();
+          await scanRegistrationHistory();
+        }
+      }
+    } catch (e) { }
+  }, 4000);
 }
 
 // 🟢 เมื่อบอทออนไลน์สำเร็จ
@@ -426,13 +465,16 @@ client.once('clientReady', async () => {
 
   await scanRegistrationHistory();
   await syncDiscordServerMembers();
+  listenForDashboardCommands();
 
   // ตรวจสอบและส่งแจ้งเตือนบอสทันทีเมื่อเปิดบอท และตรวจสอบซ้ำทุกๆ 15 วินาที
   await checkAndSendBossAlerts();
   setInterval(checkAndSendBossAlerts, 15000);
 
-  // ซิงค์รายชื่อสมาชิก Discord ทุกๆ 60 วินาที
-  setInterval(syncDiscordServerMembers, 60000);
+  // ซิงค์รายชื่อสมาชิก Discord และส่ง Heartbeat ทุกๆ 30 วินาที
+  setInterval(async () => {
+    await syncDiscordServerMembers();
+  }, 30000);
 });
 
 // 👥 ดักฟังสมาชิกเข้าใหม่ / อัปเดตชื่อใน Discord
