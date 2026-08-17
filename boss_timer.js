@@ -20,6 +20,7 @@ let bossDropLogs = [];  // [ { id, bossId, bossName, killTime, items: [], record
 let bossKillLogs = [];  // [ { id, bossId, bossName, level, map, killTime, killTimeFormatted, nextSpawnTime, nextSpawnFormatted, recordedBy, timestamp, timestampStr, dropItems, dropItemsText } ]
 let bossSheetWebhookUrl = localStorage.getItem('guild_boss_sheet_webhook') || '';
 let bossDiscordWebhookUrl = localStorage.getItem('guild_boss_discord_webhook') || '';
+let sentDiscordAlerts = new Set();
 let bossTimerInterval = null;
 let currentBossFilter = 'all';
 let currentBossSearch = '';
@@ -288,6 +289,13 @@ function initBossTimerModule() {
         updateWebhookStatusUi();
       }
     });
+
+    fbDb.ref('guild_app/sent_discord_alerts').on('value', snap => {
+      if (snap.exists()) {
+        const val = snap.val() || {};
+        Object.keys(val).forEach(k => sentDiscordAlerts.add(k));
+      }
+    });
   }
 
   // Live Timer Interval (every 1 second)
@@ -295,6 +303,7 @@ function initBossTimerModule() {
   bossTimerInterval = setInterval(() => {
     updateCountdowns();
     updateUpcomingBossWidget();
+    checkAndSendDiscordSpawnAlerts();
   }, 1000);
 
   // Setup Paste Handler for instant OCR anywhere in Boss Tab
@@ -855,9 +864,8 @@ function saveBossKillTime(bossId, killTimeISO, killerEmail, dropItemsList) {
     fbDb.ref('guild_app/boss_kill_logs').set(bossKillLogs);
   }
 
-  // 3. Send row to Google Sheets & Discord Webhook (Background Async)
+  // 3. Send row to Google Sheets (Background Async)
   sendKillLogToGoogleSheet(killLogEntry);
-  sendKillLogToDiscordWebhook(killLogEntry, boss, killTimeISO, nextSpawn, killerEmail, dropItemsList);
 
   if (typeof addAuditLog === 'function') {
     addAuditLog('boss_kill', `ลงเวลาตายบอส "${boss.name}"`, `เวลา: ${formatDateTimeShort(defDate)} โดย: ${killerEmail}`, 'BossTimer');
@@ -2030,57 +2038,10 @@ function saveSheetWebhookUrl() {
   showToast('✅ บันทึกการเชื่อมต่อ Webhook เรียบร้อยแล้ว!', 'success');
 }
 
-// Send Boss Kill Embed to Discord Webhook
-async function sendKillLogToDiscordWebhook(logData, boss, killTimeISO, nextSpawn, killerEmail, dropItemsList) {
+// Helper: Send Payload to Discord Webhook
+async function sendDiscordWebhookPayload(payload) {
   if (!bossDiscordWebhookUrl) return;
-
   try {
-    const isGuild = GUILD_SCORING_BOSS_IDS.has(boss.id) || (boss.name && /lucus|bahel|libitina|rakajeth|tumier|neva|icarut|morti|motti|arena|camalia|world/i.test(boss.name));
-    const isHighTier = (boss.level && Number(String(boss.level).match(/\d+/)?.[0] || 0) >= 100);
-    // Colors: Gold for Guild Boss (0xF59E0B), Red for High-tier (0xF43F5E), Emerald for Normal (0x10B981)
-    const colorInt = isGuild ? 0xF59E0B : (isHighTier ? 0xF43F5E : 0x10B981);
-
-    const killUnix = Math.floor(new Date(killTimeISO).getTime() / 1000);
-    const nextSpawnUnix = nextSpawn ? Math.floor(nextSpawn.getTime() / 1000) : null;
-
-    const fields = [
-      { name: '🗺️ แผนที่ / สถานที่', value: boss.map || 'ไม่ระบุ', inline: true },
-      { name: '💀 เวลาตาย', value: `<t:${killUnix}:f>`, inline: true },
-      { name: '⏳ เกิดรอบถัดไป', value: nextSpawnUnix ? `<t:${nextSpawnUnix}:f>\n*(<t:${nextSpawnUnix}:R>)*` : 'รอลงเวลาตาย', inline: false }
-    ];
-
-    if (dropItemsList && dropItemsList.length > 0) {
-      fields.push({
-        name: '🎁 ไอเทมดรอป',
-        value: dropItemsList.map(item => `• **${item}**`).join('\n'),
-        inline: false
-      });
-    }
-
-    fields.push({
-      name: '👤 บันทึกโดย',
-      value: `\`${killerEmail || 'Admin'}\``,
-      inline: true
-    });
-
-    const embed = {
-      title: `⚔️ [บันทึกเวลาตาย] ${boss.name} (Lv.${boss.level || '??'})`,
-      color: colorInt,
-      fields: fields,
-      footer: {
-        text: '🛡️ LORD NINE • Dashboard RedDevil'
-      },
-      timestamp: new Date().toISOString()
-    };
-
-    if (boss.avatar) {
-      embed.thumbnail = { url: boss.avatar };
-    }
-
-    const payload = {
-      embeds: [embed]
-    };
-
     await fetch(bossDiscordWebhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2088,6 +2049,76 @@ async function sendKillLogToDiscordWebhook(logData, boss, killTimeISO, nextSpawn
     });
   } catch (err) {
     console.warn('Discord Webhook send error:', err);
+  }
+}
+
+// Check & Send Realtime Discord Spawn Alerts (5-Min Soon Warning & Spawned Alert)
+async function checkAndSendDiscordSpawnAlerts() {
+  if (!bossDiscordWebhookUrl) return;
+
+  const now = new Date();
+
+  for (const boss of bossList) {
+    const timer = bossTimerData[boss.id] || {};
+    let nextSpawn = timer.customNextSpawn ? new Date(timer.customNextSpawn) : calculateNextSpawnDate(boss, timer.defeatedTime);
+
+    if (!nextSpawn || isNaN(nextSpawn.getTime())) continue;
+
+    const diffMs = nextSpawn.getTime() - now.getTime();
+    const spawnUnix = Math.floor(nextSpawn.getTime() / 1000);
+    const pad = n => String(n).padStart(2, '0');
+    const timeHHmm = `${pad(nextSpawn.getHours())}:${pad(nextSpawn.getMinutes())} น.`;
+    const bossDisplayName = `Lv.${boss.level || '??'}, ${boss.name}`;
+
+    // 🟡 1. แจ้งเตือนก่อนเกิด 5 นาที (เหลือ 0 ถึง 5 นาที)
+    if (diffMs > 0 && diffMs <= 5 * 60 * 1000) {
+      const alertKey = `${boss.id}_5m_${spawnUnix}`;
+      if (!sentDiscordAlerts.has(alertKey)) {
+        sentDiscordAlerts.add(alertKey);
+        if (typeof fbDb !== 'undefined' && fbDb) {
+          fbDb.ref(`guild_app/sent_discord_alerts/${alertKey}`).set(Date.now());
+        }
+
+        const embed5m = {
+          color: 0xFFD700, // สีเหลืองทอง
+          author: { name: 'LORDNINE S.6' },
+          title: `⏳ SOON • ${bossDisplayName}`,
+          description: `# 🕖 ${timeHHmm}\n\n> ▎ 🗺️ **แผนที่**: \`${boss.map || '-'}\`\n> ▎ ⏳ **เตรียมตัว!** อีก 5 นาทีบอสจะเกิด (<t:${spawnUnix}:R>)`,
+          footer: { text: '🛡️ LORD NINE SYSTEM • Dashboard RedDevil' },
+          timestamp: nextSpawn.toISOString()
+        };
+        if (boss.avatar) {
+          embed5m.thumbnail = { url: boss.avatar };
+        }
+
+        sendDiscordWebhookPayload({ embeds: [embed5m] });
+      }
+    }
+
+    // 🔴 2. แจ้งเตือนเมื่อบอสเกิดแล้ว (เมื่อเลยเวลาเกิดมาไม่เกิน 15 นาที)
+    if (diffMs <= 0 && diffMs >= -15 * 60 * 1000) {
+      const alertKey = `${boss.id}_spawned_${spawnUnix}`;
+      if (!sentDiscordAlerts.has(alertKey)) {
+        sentDiscordAlerts.add(alertKey);
+        if (typeof fbDb !== 'undefined' && fbDb) {
+          fbDb.ref(`guild_app/sent_discord_alerts/${alertKey}`).set(Date.now());
+        }
+
+        const embedSpawned = {
+          color: 0xFF2A2A, // สีแดงสด
+          author: { name: 'LORDNINE S.6' },
+          title: `🔴 SPAWN • ${bossDisplayName}`,
+          description: `# 🕖 ${timeHHmm}\n\n> ▎ 🗺️ **แผนที่**: \`${boss.map || '-'}\`\n> ▎ 🚨 **บอสเกิดแล้ว!** ออกล่าได้ทันที`,
+          footer: { text: '🛡️ LORD NINE SYSTEM • Dashboard RedDevil' },
+          timestamp: now.toISOString()
+        };
+        if (boss.avatar) {
+          embedSpawned.thumbnail = { url: boss.avatar };
+        }
+
+        sendDiscordWebhookPayload({ embeds: [embedSpawned] });
+      }
+    }
   }
 }
 
@@ -2247,7 +2278,7 @@ window.openSheetWebhookSettingsModal = openSheetWebhookSettingsModal;
 window.closeSheetWebhookSettingsModal = closeSheetWebhookSettingsModal;
 window.saveSheetWebhookUrl = saveSheetWebhookUrl;
 window.sendKillLogToGoogleSheet = sendKillLogToGoogleSheet;
-window.sendKillLogToDiscordWebhook = sendKillLogToDiscordWebhook;
+window.checkAndSendDiscordSpawnAlerts = checkAndSendDiscordSpawnAlerts;
 window.testDiscordWebhook = testDiscordWebhook;
 window.updateWebhookStatusUi = updateWebhookStatusUi;
 
