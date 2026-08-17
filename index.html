@@ -757,6 +757,14 @@
             <i class="fa-solid fa-bullhorn text-xs"></i>
             <span data-i18n="btn_appeal_request">ยื่นอุทธรณ์</span>
           </button>
+
+          <!-- ✏️ ปุ่มแก้ไขข้อมูลตัวละคร (ทุกคนเห็น - ไว้หลังสุด) -->
+          <button onclick="openCharEditRequestModal()"
+            class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
+            title="แก้ไขข้อมูลตัวละคร: ชื่อตัวละคร, Email, สังกัดกิลด์ (ต้องรอ Admin อนุมัติ)" data-i18n-title="modal_char_edit_desc">
+            <i class="fa-solid fa-user-pen text-xs"></i>
+            <span data-i18n="btn_edit_character">แก้ไขข้อมูลตัวละคร</span>
+          </button>
         </div>
 
         <!-- 👑 Admin Hub (แทนที่ฝั่งขวาในแถวเดียวกันทันทีเมื่อล็อกอิน Admin) -->
@@ -783,6 +791,14 @@
               <i class="fa-solid fa-bullhorn text-xs"></i>
               <span data-i18n="btn_appeal_approval">อุทธรณ์</span>
               <span id="appeal-pending-badge"
+                class="hidden px-1.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
+            </button>
+
+            <button id="btn-approve-char-edits" onclick="openCharEditApprovalModal()"
+              class="hidden apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+              <i class="fa-solid fa-user-pen text-xs"></i>
+              <span data-i18n="btn_approve_char_edits">อนุมัติข้อมูล</span>
+              <span id="char-edit-pending-badge"
                 class="hidden px-1.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
             </button>
 
@@ -4834,7 +4850,37 @@
         "boss_wait_record": "รอลงเวลาตาย",
         "btn_record_kill_now": "ตายตอนนี้",
         "btn_custom_time": "ปรับเวลา",
-        "btn_drop_logs": "ดูประวัติไอเทมดรอป"
+        "btn_drop_logs": "ดูประวัติไอเทมดรอป",
+        "btn_edit_character": "แก้ไขข้อมูลตัวละคร",
+        "btn_approve_char_edits": "อนุมัติข้อมูล",
+        "modal_char_edit_title": "แก้ไขข้อมูลตัวละคร",
+        "modal_char_edit_desc": "ยื่นคำขอแก้ไขชื่อตัวละคร, Email, และสังกัดกิลด์ (ต้องได้รับการอนุมัติจาก Admin)",
+        "label_current_char_select": "เลือกตัวละครของคุณ *",
+        "label_new_char_name": "ชื่อตัวละครใหม่ *",
+        "label_new_email": "Email (ใช้เข้าสู่ระบบ/รับการแจ้งเตือน) *",
+        "label_new_guild": "สังกัดกิลด์ *",
+        "label_char_edit_reason": "เหตุผลในการขอแก้ไข *",
+        "placeholder_char_edit_reason": "เช่น เปลี่ยนชื่อในเกม, ย้ายกิลด์, แก้ไข Email ให้ถูกต้อง",
+        "char_edit_info_notice": "เมื่อส่งคำขอแล้ว แอดมินจะได้รับแจ้งเตือนและตรวจสอบเพื่ออนุมัติการแก้ไขข้อมูลให้โดยเร็วครับ",
+        "btn_submit_char_edit": "ส่งคำขอแก้ไขให้ Admin อนุมัติ",
+        "modal_char_appr_title": "อนุมัติคำขอแก้ไขข้อมูลตัวละคร",
+        "modal_char_appr_desc": "ตรวจสอบและอนุมัติการเปลี่ยนชื่อ Email หรือสังกัดกิลด์ของสมาชิก",
+        "char_edit_pending_title": "คำขอรอดำเนินการ ({count} คำขอ)",
+        "char_edit_processed_title": "ประวัติที่ดำเนินการแล้ว ({count} รายการ)",
+        "char_edit_no_data": "ไม่มีคำขอแก้ไขข้อมูลตัวละครในขณะนี้",
+        "char_edit_no_data_desc": "เมื่อสมาชิกส่งคำขอแก้ไขข้อมูล จะปรากฏในหน้านี้",
+        "old_name_label": "ชื่อเดิม:",
+        "new_name_label": "ชื่อใหม่:",
+        "old_email_label": "Email เดิม:",
+        "new_email_label": "Email ใหม่:",
+        "old_guild_label": "กิลด์เดิม:",
+        "new_guild_label": "กิลด์ใหม่:",
+        "btn_clear_char_edit_history": "ล้างประวัติที่ดำเนินการแล้ว",
+        "toast_char_edit_sent": "ส่งคำขอแก้ไขข้อมูลตัวละครเรียบร้อยแล้ว! รอดำเนินการอนุมัติจาก Admin",
+        "toast_char_edit_approved": "อนุมัติการแก้ไขข้อมูลตัวละคร \"{name}\" เรียบร้อยแล้ว",
+        "toast_char_edit_rejected": "ปฏิเสธคำขอแก้ไขข้อมูลของ \"{name}\" แล้ว",
+        "toast_char_edit_history_cleared": "ล้างประวัติคำขอแก้ไขข้อมูลตัวละครเรียบร้อยแล้ว",
+        "confirm_clear_char_edit_history": "ต้องการล้างประวัติคำขอแก้ไขข้อมูลที่ดำเนินการเสร็จสิ้นแล้วใช่หรือไม่?"
       },
       "en": {
         "btn_top10_summary": "Top 10 Summary",
@@ -5225,7 +5271,37 @@
         "boss_wait_record": "Waiting for Kill Time",
         "btn_record_kill_now": "Defeated Now",
         "btn_custom_time": "Custom Time",
-        "btn_drop_logs": "View Drop Logs"
+        "btn_drop_logs": "View Drop Logs",
+        "btn_edit_character": "Edit Character",
+        "btn_approve_char_edits": "Char Approvals",
+        "modal_char_edit_title": "Edit Character Profile",
+        "modal_char_edit_desc": "Submit request to change character name, email, or guild (Requires Admin Approval)",
+        "label_current_char_select": "Select Your Character *",
+        "label_new_char_name": "New Character Name *",
+        "label_new_email": "Email (Login / Notifications) *",
+        "label_new_guild": "Guild *",
+        "label_char_edit_reason": "Reason for Request *",
+        "placeholder_char_edit_reason": "e.g. Renamed in-game, transferred guild, updated email",
+        "char_edit_info_notice": "Once submitted, Admins will review and approve your character changes soon.",
+        "btn_submit_char_edit": "Submit Edit Request",
+        "modal_char_appr_title": "Approve Character Edit Requests",
+        "modal_char_appr_desc": "Review and approve/reject character name, email, or guild changes",
+        "char_edit_pending_title": "Pending Requests ({count} items)",
+        "char_edit_processed_title": "Processed History ({count} items)",
+        "char_edit_no_data": "No pending character edit requests",
+        "char_edit_no_data_desc": "When members submit character edit requests, they will appear here.",
+        "old_name_label": "Current Name:",
+        "new_name_label": "New Name:",
+        "old_email_label": "Current Email:",
+        "new_email_label": "New Email:",
+        "old_guild_label": "Current Guild:",
+        "new_guild_label": "New Guild:",
+        "btn_clear_char_edit_history": "Clear Processed History",
+        "toast_char_edit_sent": "Character edit request submitted! Awaiting Admin approval.",
+        "toast_char_edit_approved": "Approved character edit for \"{name}\" successfully.",
+        "toast_char_edit_rejected": "Rejected character edit request for \"{name}\".",
+        "toast_char_edit_history_cleared": "Cleared character edit request history.",
+        "confirm_clear_char_edit_history": "Are you sure you want to clear all processed character edit history?"
       }
     };
 
@@ -5842,6 +5918,20 @@
         renderLockBanner();
         updateAdminUI();
       });
+
+      // 17. ดักฟังรายการคำขอแก้ไขข้อมูลตัวละคร (Character Edit Requests)
+      fbDb.ref('guild_app/char_edit_requests').on('value', snapshot => {
+        const val = snapshot.val();
+        if (Array.isArray(val)) {
+          charEditRequests = val;
+          localStorage.setItem('guild_char_edit_requests', JSON.stringify(charEditRequests));
+        } else {
+          charEditRequests = [];
+          localStorage.setItem('guild_char_edit_requests', JSON.stringify([]));
+        }
+        if (typeof updateCharEditBadge === 'function') updateCharEditBadge();
+        if (typeof renderCharEditApprovalList === 'function') renderCharEditApprovalList();
+      });
     }
 
     let discordVerifiedMembers = JSON.parse(localStorage.getItem('guild_registered_members')) || {};
@@ -6310,6 +6400,17 @@
           } else {
             approveRewardsBtn.classList.add('hidden');
             approveRewardsBtn.classList.remove('inline-flex');
+          }
+        }
+        const approveCharEditsBtn = document.getElementById('btn-approve-char-edits');
+        if (approveCharEditsBtn) {
+          if (isFullAdmin) {
+            approveCharEditsBtn.classList.remove('hidden');
+            approveCharEditsBtn.classList.add('inline-flex');
+            if (typeof updateCharEditBadge === 'function') updateCharEditBadge();
+          } else {
+            approveCharEditsBtn.classList.add('hidden');
+            approveCharEditsBtn.classList.remove('inline-flex');
           }
         }
         if (manageGuildsBtn) {
@@ -13149,6 +13250,365 @@ Output strictly valid JSON with no markdown formatting.`;
       renderStoreHistoryTable();
     }
 
+    // ================= ✏️ ระบบขอแก้ไขข้อมูลตัวละคร & Admin Approval =================
+    let charEditRequests = JSON.parse(localStorage.getItem('guild_char_edit_requests')) || [];
+
+    function saveCharEditRequests() {
+      localStorage.setItem('guild_char_edit_requests', JSON.stringify(charEditRequests));
+      if (typeof fbDb !== 'undefined' && fbDb) {
+        fbDb.ref('guild_app/char_edit_requests').set(charEditRequests);
+      }
+      updateCharEditBadge();
+    }
+
+    function updateCharEditBadge() {
+      const badge = document.getElementById('char-edit-pending-badge');
+      const countBadge = document.getElementById('char-edit-approval-count-badge');
+      const pendingCount = (charEditRequests || []).filter(r => r.status === 'pending').length;
+
+      if (badge) {
+        if (pendingCount > 0 && isAdmin) {
+          badge.textContent = pendingCount;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      }
+      if (countBadge) {
+        countBadge.textContent = `${pendingCount} ${currentLang === 'th' ? 'รายการ' : 'items'}`;
+      }
+    }
+
+    function openCharEditRequestModal(prefillCharName = '') {
+      const modal = document.getElementById('char-edit-request-modal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      populateCharEditMemberSelect();
+
+      const select = document.getElementById('char-edit-select-member');
+      if (prefillCharName && select) {
+        select.value = prefillCharName;
+        onCharEditMemberSelected();
+      }
+    }
+
+    function closeCharEditRequestModal() {
+      const modal = document.getElementById('char-edit-request-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function populateCharEditMemberSelect() {
+      const select = document.getElementById('char-edit-select-member');
+      if (!select) return;
+      const currentVal = select.value;
+      select.innerHTML = `<option value="">-- ${t('select_char_placeholder')} --</option>`;
+
+      const sortedMembers = [...members].sort((a, b) => {
+        const nameA = a.characterName || a.name || '';
+        const nameB = b.characterName || b.name || '';
+        return nameA.localeCompare(nameB, currentLang === 'th' ? 'th' : 'en');
+      });
+
+      sortedMembers.forEach(m => {
+        const charName = m.characterName || m.name || '';
+        if (!charName) return;
+        const opt = document.createElement('option');
+        opt.value = charName;
+        opt.textContent = `${charName} (${m.guild || 'Guild'})`;
+        select.appendChild(opt);
+      });
+
+      if (currentVal && members.some(m => (m.characterName || m.name) === currentVal)) {
+        select.value = currentVal;
+      }
+    }
+
+    function onCharEditMemberSelected() {
+      const select = document.getElementById('char-edit-select-member');
+      const nameInput = document.getElementById('char-edit-new-name');
+      const emailInput = document.getElementById('char-edit-new-email');
+      const guildSelect = document.getElementById('char-edit-new-guild');
+      if (!select) return;
+
+      const charName = select.value;
+      const m = members.find(x => (x.characterName || x.name) === charName);
+      if (m) {
+        if (nameInput) nameInput.value = m.characterName || m.name || '';
+        if (emailInput) emailInput.value = m.email || '';
+        if (guildSelect) guildSelect.value = m.guild || 'RedDevil';
+      }
+    }
+
+    function submitCharEditRequest(e) {
+      if (e) e.preventDefault();
+      const select = document.getElementById('char-edit-select-member');
+      const nameInput = document.getElementById('char-edit-new-name');
+      const emailInput = document.getElementById('char-edit-new-email');
+      const guildSelect = document.getElementById('char-edit-new-guild');
+      const reasonInput = document.getElementById('char-edit-reason');
+
+      const originalCharName = select ? select.value : '';
+      if (!originalCharName) {
+        showToast(currentLang === 'th' ? 'กรุณาเลือกตัวละครของคุณก่อนครับ' : 'Please select your character', 'warning');
+        return;
+      }
+
+      const m = members.find(x => (x.characterName || x.name) === originalCharName);
+      if (!m) return;
+
+      const newName = (nameInput ? nameInput.value : '').trim();
+      const newEmail = (emailInput ? emailInput.value : '').trim();
+      const newGuild = (guildSelect ? guildSelect.value : '').trim() || m.guild;
+      const reason = (reasonInput ? reasonInput.value : '').trim();
+
+      if (!newName) {
+        showToast(currentLang === 'th' ? 'กรุณาระบุชื่อตัวละครใหม่' : 'Please enter new character name', 'warning');
+        return;
+      }
+      if (!newEmail) {
+        showToast(currentLang === 'th' ? 'กรุณาระบุ Email' : 'Please enter email address', 'warning');
+        return;
+      }
+
+      // If Admin is logged in, ask if they want to apply directly or queue
+      if (isAdmin) {
+        if (confirm(`👑 ท่านกำลังใช้งานในโหมด Admin:\n\nต้องการบันทึกการแก้ไขข้อมูลของ "${originalCharName}" ทันทีเลยหรือไม่?\n• ชื่อใหม่: ${newName}\n• Email: ${newEmail}\n• กิลด์: ${newGuild}`)) {
+          const oldName = m.characterName || m.name;
+          const oldEmail = m.email || '-';
+          const oldGuild = m.guild || '-';
+
+          m.characterName = newName;
+          m.name = newName;
+          m.email = newEmail;
+          m.guild = newGuild;
+
+          saveData();
+          renderTable();
+          updateKPIs();
+          closeCharEditRequestModal();
+
+          addAuditLog(
+            'member_edit',
+            `แก้ไขข้อมูลตัวละคร "${oldName}" ➔ "${newName}" (โดย Admin: ${currentAdminEmail || 'Admin'})`,
+            `Email: ${oldEmail} ➔ ${newEmail} | กิลด์: ${oldGuild} ➔ ${newGuild}`,
+            newName
+          );
+
+          showToast(t('toast_member_updated', { name: newName }), 'success');
+          return;
+        }
+      }
+
+      const reqEntry = {
+        id: 'CHREQ-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+        originalCharName: originalCharName,
+        oldName: m.characterName || m.name,
+        newName: newName,
+        oldEmail: m.email || '-',
+        newEmail: newEmail,
+        oldGuild: m.guild || '-',
+        newGuild: newGuild,
+        reason: reason || 'ขอแก้ไขข้อมูลตัวละคร',
+        timestamp: Date.now(),
+        dateStr: new Date().toLocaleString(currentLang === 'th' ? 'th-TH' : 'en-US'),
+        status: 'pending',
+        processedBy: null,
+        processedAt: null
+      };
+
+      charEditRequests.unshift(reqEntry);
+      saveCharEditRequests();
+      closeCharEditRequestModal();
+
+      if (reasonInput) reasonInput.value = '';
+
+      showToast(t('toast_char_edit_sent'), 'success');
+      renderCharEditApprovalList();
+    }
+
+    function openCharEditApprovalModal() {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_edit'), 'warning');
+        openAdminEmailModal();
+        return;
+      }
+      const modal = document.getElementById('char-edit-approval-modal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      renderCharEditApprovalList();
+    }
+
+    function closeCharEditApprovalModal() {
+      const modal = document.getElementById('char-edit-approval-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function renderCharEditApprovalList() {
+      const pendingContainer = document.getElementById('char-edit-approval-pending-list');
+      const processedContainer = document.getElementById('char-edit-approval-processed-list');
+      if (!pendingContainer || !processedContainer) return;
+
+      const pending = (charEditRequests || []).filter(r => r.status === 'pending');
+      const processed = (charEditRequests || []).filter(r => r.status !== 'pending').slice(0, 30);
+
+      updateCharEditBadge();
+
+      // Render Pending
+      if (pending.length === 0) {
+        pendingContainer.innerHTML = `
+          <div class="p-6 text-center bg-slate-900/50 border border-slate-800/80 rounded-2xl">
+            <i class="fa-solid fa-circle-check text-2xl text-emerald-400/60 mb-2"></i>
+            <p class="text-slate-300 font-semibold" data-i18n="char_edit_no_data">${t('char_edit_no_data')}</p>
+            <p class="text-slate-500 text-[11px] mt-0.5" data-i18n="char_edit_no_data_desc">${t('char_edit_no_data_desc')}</p>
+          </div>
+        `;
+      } else {
+        pendingContainer.innerHTML = pending.map(req => `
+          <div class="bg-slate-900/90 border border-amber-500/30 hover:border-amber-500/60 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md transition">
+            <div class="space-y-1.5 flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-bold text-white text-sm">${escapeHtml(req.originalCharName)}</span>
+                <i class="fa-solid fa-arrow-right text-[10px] text-amber-400"></i>
+                <span class="font-extrabold text-amber-300 text-sm bg-amber-500/15 px-2 py-0.5 rounded-lg border border-amber-500/30">${escapeHtml(req.newName)}</span>
+                <span class="text-[10.5px] px-2 py-0.5 rounded-full font-bold ${req.newGuild === 'RedDevil' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'}">${escapeHtml(req.newGuild)}</span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] text-slate-300">
+                <div><span class="text-slate-500">${t('old_email_label')}</span> <span class="font-mono text-slate-400">${escapeHtml(req.oldEmail)}</span> ➔ <span class="font-mono text-amber-200">${escapeHtml(req.newEmail)}</span></div>
+                <div><span class="text-slate-500">${t('old_guild_label')}</span> ${escapeHtml(req.oldGuild)} ➔ <span class="text-emerald-300 font-bold">${escapeHtml(req.newGuild)}</span></div>
+              </div>
+              <p class="text-[11px] text-slate-400 bg-slate-950/70 p-2 rounded-xl border border-slate-800"><span class="text-slate-500">เหตุผล:</span> "${escapeHtml(req.reason || '-')}"</p>
+              <div class="text-[10px] text-slate-500 font-mono"><i class="fa-regular fa-clock mr-1"></i>${req.dateStr}</div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button onclick="approveCharEditRequest('${req.id}')"
+                class="apple-btn apple-btn-emerald px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm">
+                <i class="fa-solid fa-check"></i> <span data-i18n="btn_approve">${t('btn_approve')}</span>
+              </button>
+              <button onclick="rejectCharEditRequest('${req.id}')"
+                class="apple-btn apple-btn-burgundy px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm">
+                <i class="fa-solid fa-xmark"></i> <span data-i18n="btn_reject">${t('btn_reject')}</span>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Render Processed
+      if (processed.length === 0) {
+        processedContainer.innerHTML = `<p class="text-slate-500 text-center py-2 text-[11px]">ยังไม่มีประวัติการดำเนินการ</p>`;
+      } else {
+        processedContainer.innerHTML = processed.map(req => {
+          const isApproved = req.status === 'approved';
+          return `
+            <div class="p-2 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-[11px] gap-2 opacity-75">
+              <div class="min-w-0">
+                <span class="font-bold text-white">${escapeHtml(req.originalCharName)} ➔ ${escapeHtml(req.newName)}</span>
+                <span class="text-slate-400 ml-1">(${escapeHtml(req.newGuild)})</span>
+                <div class="text-[10px] text-slate-500 font-mono">${req.dateStr} ${req.processedBy ? `| โดย: ${req.processedBy}` : ''}</div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold shrink-0 ${isApproved ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'}">
+                ${isApproved ? t('approved_badge') : t('rejected_badge')}
+              </span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function approveCharEditRequest(requestId) {
+      if (!isAdmin) return;
+      const req = (charEditRequests || []).find(r => r.id === requestId);
+      if (!req) return;
+
+      const m = members.find(x => (x.characterName || x.name) === req.originalCharName);
+      if (!m) {
+        showToast(`ไม่พบตัวละคร "${req.originalCharName}" ในระบบ อาจถูกลบไปแล้ว`, 'warning');
+        req.status = 'rejected';
+        req.processedBy = currentAdminEmail || 'Admin';
+        req.processedAt = new Date().toISOString();
+        saveCharEditRequests();
+        renderCharEditApprovalList();
+        return;
+      }
+
+      const oldName = m.characterName || m.name;
+      const oldEmail = m.email || '-';
+      const oldGuild = m.guild || '-';
+
+      // Update Member data
+      m.characterName = req.newName;
+      m.name = req.newName;
+      m.email = req.newEmail;
+      m.guild = req.newGuild;
+
+      // Update pin mapping if exists
+      if (typeof memberPins !== 'undefined' && memberPins[oldName]) {
+        memberPins[req.newName] = memberPins[oldName];
+        delete memberPins[oldName];
+        saveMemberPins();
+      }
+
+      req.status = 'approved';
+      req.processedBy = currentAdminEmail || 'Admin';
+      req.processedAt = new Date().toISOString();
+
+      saveData();
+      saveCharEditRequests();
+      renderTable();
+      updateKPIs();
+      renderCharEditApprovalList();
+
+      addAuditLog(
+        'member_edit',
+        `อนุมัติแก้ไขข้อมูลตัวละคร: "${oldName}" ➔ "${req.newName}"`,
+        `Email: ${oldEmail} ➔ ${req.newEmail} | กิลด์: ${oldGuild} ➔ ${req.newGuild} | อนุมัติโดย: ${currentAdminEmail || 'Admin'}`,
+        req.newName
+      );
+
+      showToast(t('toast_char_edit_approved', { name: req.newName }), 'success');
+    }
+
+    function rejectCharEditRequest(requestId) {
+      if (!isAdmin) return;
+      const req = (charEditRequests || []).find(r => r.id === requestId);
+      if (!req) return;
+
+      req.status = 'rejected';
+      req.processedBy = currentAdminEmail || 'Admin';
+      req.processedAt = new Date().toISOString();
+
+      saveCharEditRequests();
+      renderCharEditApprovalList();
+
+      addAuditLog(
+        'member_edit',
+        `ปฏิเสธคำขอแก้ไขข้อมูลตัวละครของ "${req.originalCharName}"`,
+        `โดย: ${currentAdminEmail || 'Admin'}`,
+        req.originalCharName
+      );
+
+      showToast(t('toast_char_edit_rejected', { name: req.originalCharName }), 'info');
+    }
+
+    function clearCharEditHistory() {
+      if (!isAdmin) return;
+      if (!confirm(t('confirm_clear_char_edit_history'))) return;
+
+      charEditRequests = charEditRequests.filter(r => r.status === 'pending');
+      saveCharEditRequests();
+      renderCharEditApprovalList();
+      showToast(t('toast_char_edit_history_cleared'), 'success');
+    }
+
   </script>
 
   <!-- ================= Modal: สรุปคะแนน Top 10 (Export to Image) ================= -->
@@ -14637,6 +15097,155 @@ Output strictly valid JSON with no markdown formatting.`;
           </button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ================= ✏️ Modal: ยื่นคำขอแก้ไขข้อมูลตัวละคร (Character Edit Request) ================= -->
+  <div id="char-edit-request-modal"
+    class="hidden fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-3 sm:p-4 backdrop-blur-md overflow-y-auto">
+    <div
+      class="apple-modal-box relative w-full max-w-lg bg-[#090d18] border border-amber-500/40 rounded-3xl shadow-2xl p-5 sm:p-6 my-auto overflow-hidden">
+      
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div
+            class="h-10 w-10 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-orange-600/30 border border-amber-400/40 text-amber-300 flex items-center justify-center text-lg shadow-inner">
+            <i class="fa-solid fa-user-pen"></i>
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-white tracking-wide" data-i18n="modal_char_edit_title">แก้ไขข้อมูลตัวละคร</h3>
+            <p class="text-xs text-slate-400 mt-0.5" data-i18n="modal_char_edit_desc">ยื่นคำขอแก้ไขชื่อตัวละคร, Email, และสังกัดกิลด์ (ต้องได้รับการอนุมัติจาก Admin)</p>
+          </div>
+        </div>
+        <button onclick="closeCharEditRequestModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Form Content -->
+      <form id="char-edit-form" onsubmit="submitCharEditRequest(event)" class="py-4 space-y-3.5 text-xs">
+        
+        <!-- Select Member -->
+        <div>
+          <label class="block text-slate-300 font-bold mb-1.5" data-i18n="label_current_char_select">เลือกตัวละครของคุณ *</label>
+          <select id="char-edit-select-member" required onchange="onCharEditMemberSelected()"
+            class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl p-2.5 focus:border-amber-400 focus:outline-none cursor-pointer">
+            <option value="">-- กรุณาเลือกตัวละครของคุณ --</option>
+          </select>
+        </div>
+
+        <!-- 1. Character Name -->
+        <div>
+          <label class="block text-slate-300 font-bold mb-1.5" data-i18n="label_new_char_name">👤 ชื่อตัวละครใหม่ *</label>
+          <input type="text" id="char-edit-new-name" required placeholder="เช่น ไข่หวาน, ShadowKnight"
+            class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl p-2.5 focus:border-amber-400 focus:outline-none" />
+        </div>
+
+        <!-- 2. Email -->
+        <div>
+          <label class="block text-slate-300 font-bold mb-1.5" data-i18n="label_new_email">📧 Email (ใช้เข้าสู่ระบบ/รับการแจ้งเตือน) *</label>
+          <input type="email" id="char-edit-new-email" required placeholder="player@gmail.com"
+            class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl p-2.5 focus:border-amber-400 focus:outline-none font-mono" />
+        </div>
+
+        <!-- 3. Guild -->
+        <div>
+          <label class="block text-slate-300 font-bold mb-1.5" data-i18n="label_new_guild">🛡️ สังกัดกิลด์ *</label>
+          <select id="char-edit-new-guild" required
+            class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl p-2.5 focus:border-amber-400 focus:outline-none cursor-pointer">
+            <option value="RedDevil">RedDevil</option>
+            <option value="BlueDevil">BlueDevil</option>
+          </select>
+        </div>
+
+        <!-- Reason -->
+        <div>
+          <label class="block text-slate-300 font-bold mb-1.5" data-i18n="label_char_edit_reason">💬 เหตุผลในการขอแก้ไข *</label>
+          <input type="text" id="char-edit-reason" required placeholder="เช่น เปลี่ยนชื่อในเกม, ย้ายกิลด์, แก้ไข Email"
+            data-i18n-placeholder="placeholder_char_edit_reason"
+            class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl p-2.5 focus:border-amber-400 focus:outline-none" />
+        </div>
+
+        <!-- Approval notice -->
+        <div class="p-3 bg-amber-500/10 border border-amber-500/25 rounded-2xl text-[11px] text-amber-300 leading-relaxed flex items-start gap-2">
+          <i class="fa-solid fa-shield-halved text-amber-400 mt-0.5 shrink-0 text-xs"></i>
+          <span data-i18n="char_edit_info_notice">เมื่อส่งคำขอแล้ว แอดมินจะได้รับแจ้งเตือนและตรวจสอบเพื่ออนุมัติการแก้ไขข้อมูลให้โดยเร็วครับ</span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-2 pt-2">
+          <button type="button" onclick="closeCharEditRequestModal()" class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition">
+            <span data-i18n="btn_cancel">ยกเลิก</span>
+          </button>
+          <button type="submit" id="btn-char-edit-submit"
+            class="flex-1 py-2.5 px-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-500/25 active:scale-95 transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span data-i18n="btn_submit_char_edit">ส่งคำขอแก้ไขให้ Admin อนุมัติ</span>
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ================= 👑 Modal: พิจารณาอนุมัติคำขอแก้ไขข้อมูลตัวละคร (Admin Character Edit Approval) ================= -->
+  <div id="char-edit-approval-modal"
+    class="hidden fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-3 sm:p-4 backdrop-blur-md overflow-y-auto">
+    <div
+      class="apple-modal-box relative w-full max-w-3xl bg-[#090d18] border border-amber-500/40 rounded-3xl shadow-2xl p-5 sm:p-6 my-auto overflow-hidden flex flex-col max-h-[90vh]">
+      
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div
+            class="h-10 w-10 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-orange-600/30 border border-amber-400/40 text-amber-300 flex items-center justify-center text-lg shadow-inner">
+            <i class="fa-solid fa-user-check"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm sm:text-base font-bold text-white tracking-wide" data-i18n="modal_char_appr_title">อนุมัติคำขอแก้ไขข้อมูลตัวละคร</h3>
+              <span id="char-edit-approval-count-badge" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black font-mono">0 รายการ</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5" data-i18n="modal_char_appr_desc">ตรวจสอบและอนุมัติการเปลี่ยนชื่อ Email หรือสังกัดกิลด์ของสมาชิก</p>
+          </div>
+        </div>
+        <button onclick="closeCharEditApprovalModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Content Scrollable -->
+      <div class="flex-1 overflow-y-auto pr-1 py-3 space-y-4 text-xs">
+        
+        <!-- Section 1: Pending -->
+        <div>
+          <h4 class="font-bold text-amber-300 flex items-center gap-1.5 mb-2.5">
+            <i class="fa-solid fa-clock text-amber-400"></i> <span id="char-edit-pending-heading">คำขอรอดำเนินการ (Pending Requests)</span>
+          </h4>
+          <div id="char-edit-approval-pending-list" class="space-y-2.5">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Section 2: Processed History -->
+        <div class="pt-3 border-t border-slate-800">
+          <div class="flex items-center justify-between mb-2.5">
+            <h4 class="font-bold text-slate-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-clock-rotate-left text-slate-500"></i> <span id="char-edit-processed-heading">ประวัติที่ดำเนินการแล้ว</span>
+            </h4>
+            <button onclick="clearCharEditHistory()"
+              class="text-[11px] text-slate-400 hover:text-rose-400 transition flex items-center gap-1">
+              <i class="fa-solid fa-trash-can text-[10px]"></i> <span data-i18n="btn_clear_char_edit_history">ล้างประวัติ</span>
+            </button>
+          </div>
+          <div id="char-edit-approval-processed-list" class="space-y-1.5">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+      </div>
+
     </div>
   </div>
 
