@@ -121,10 +121,20 @@ function switchAppModule(moduleName) {
   const tabScoring = document.getElementById('nav-tab-scoring');
   const tabBoss = document.getElementById('nav-tab-boss-timer');
 
+  // Contextual Header Buttons for Scoring (Add Character, CSV, Reset)
+  const btnAddMember = document.getElementById('btn-add-member-top');
+  const btnExportCsv = document.getElementById('btn-export-csv-top');
+  const btnResetTop = document.getElementById('btn-reset-top');
+
   if (moduleName === 'boss_timer') {
     if (scoringContainer) scoringContainer.classList.add('hidden');
     if (scoringSubHeader) scoringSubHeader.classList.add('hidden');
     if (bossContainer) bossContainer.classList.remove('hidden');
+
+    // Hide Scoring action buttons in Boss Timer
+    if (btnAddMember) btnAddMember.classList.add('hidden');
+    if (btnExportCsv) btnExportCsv.classList.add('hidden');
+    if (btnResetTop) btnResetTop.classList.add('hidden');
 
     if (tabScoring) {
       tabScoring.className = "apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-2 active:scale-95";
@@ -137,6 +147,21 @@ function switchAppModule(moduleName) {
     if (scoringContainer) scoringContainer.classList.remove('hidden');
     if (scoringSubHeader) scoringSubHeader.classList.remove('hidden');
     if (bossContainer) bossContainer.classList.add('hidden');
+
+    // Show Scoring action buttons if Admin is active
+    const isAdmin = (typeof isAdminActive !== 'undefined') ? isAdminActive : true;
+    if (btnAddMember) {
+      if (isAdmin) btnAddMember.classList.remove('hidden');
+      else btnAddMember.classList.add('hidden');
+    }
+    if (btnExportCsv) {
+      if (isAdmin) btnExportCsv.classList.remove('hidden');
+      else btnExportCsv.classList.add('hidden');
+    }
+    if (btnResetTop) {
+      if (isAdmin) btnResetTop.classList.remove('hidden');
+      else btnResetTop.classList.add('hidden');
+    }
 
     if (tabScoring) {
       tabScoring.className = "apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-orange-500/20 active:scale-95";

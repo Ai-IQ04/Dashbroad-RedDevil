@@ -686,7 +686,7 @@
         </button>
 
         <!-- ปุ่มส่งออก CSV -->
-        <button onclick="exportToCSV()"
+        <button id="btn-export-csv-top" onclick="exportToCSV()"
           class="apple-btn bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 text-emerald-300 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
           title="Export to CSV" data-i18n-title="tooltip_export_csv">
           <i class="fa-solid fa-file-excel text-emerald-400 text-xs"></i>
@@ -12759,7 +12759,7 @@
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=2.6"></script>
+  <script src="boss_timer.js?v=2.7"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
