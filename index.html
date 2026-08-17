@@ -681,13 +681,13 @@
           <span id="lang-label">EN</span>
         </button>
 
-        <!-- ปุ่มสถานะ & ซิงค์ Discord Bot -->
+        <!-- ปุ่มสถานะ & ซิงค์ Discord Bot (โดดเด่น มองเห็นชัดเจน 100%) -->
         <button id="btn-discord-sync-top" onclick="triggerDiscordBotSync()"
-          class="apple-btn bg-slate-900 hover:bg-slate-800 border border-indigo-500/40 text-indigo-300 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm cursor-pointer"
+          class="apple-btn bg-indigo-950/90 hover:bg-indigo-900 border border-indigo-500/60 text-indigo-200 hover:text-white inline-flex items-center gap-2 px-3 py-1.5 text-xs shadow-md shadow-indigo-950/60 cursor-pointer rounded-xl font-bold transition"
           title="คลิกเพื่อสั่งให้บอทซิงค์รายชื่อ Discord ทันที">
-          <span id="discord-bot-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <i id="discord-sync-icon" class="fa-brands fa-discord text-indigo-400 text-xs"></i>
-          <span id="discord-bot-status-text" class="hidden md:inline font-semibold">ซิงค์ดิส (34 คน)</span>
+          <span id="discord-bot-status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400 shrink-0"></span>
+          <i id="discord-sync-icon" class="fa-brands fa-discord text-indigo-400 text-sm shrink-0"></i>
+          <span id="discord-bot-status-text" class="font-bold">บอทออนไลน์ (34 คน)</span>
         </button>
 
         <!-- ปุ่มเพิ่มตัวละคร -->
@@ -737,6 +737,14 @@
         <!-- 👥 Member Hub (ร้านค้า, สรุปคะแนน, Top 10, ขอ CP, อุทธรณ์) -->
         <div id="member-hub-container"
           class="flex items-center gap-1.5 p-1 bg-slate-950/80 border border-slate-800/90 rounded-2xl backdrop-blur-md shadow-sm flex-wrap">
+          <!-- 🤖 ปุ่มซิงค์ข้อมูล Discord -->
+          <button type="button" onclick="triggerDiscordBotSync()"
+            class="apple-btn bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-300 hover:text-white inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm font-bold"
+            title="กดเพื่อสั่งให้บอทซิงค์รายชื่อสมาชิก Discord ทันที">
+            <i class="fa-brands fa-discord text-indigo-400 text-xs"></i>
+            <span>ซิงค์ดิส (Discord)</span>
+          </button>
+
           <!-- 🎁 ปุ่มเปิดร้านค้าของรางวัล & Showcase -->
           <button type="button" onclick="openRewardStoreModal()"
             class="apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm">
