@@ -942,18 +942,22 @@ function populate24HourSelects() {
 let currentKillConfirmBossId = null;
 let killConfirmImageBlob = null;
 
-function openBossKillConfirmModal(bossId) {
-  populate24HourSelects();
+function populateBossKillConfirmSelect(selectedBossId) {
+  const sel = document.getElementById('kill-confirm-boss-select');
+  if (!sel) return;
+  sel.innerHTML = bossList.map(b => 
+    `<option value="${b.id}" ${b.id === selectedBossId ? 'selected' : ''}>${escapeHtml(b.name)} (Lv.${b.level || '??'} - ${escapeHtml(b.map || 'ไม่ระบุ')})</option>`
+  ).join('');
+}
+
+function onKillConfirmBossSelectChange(bossId) {
   currentKillConfirmBossId = bossId;
   const boss = bossList.find(b => b.id === bossId);
   if (!boss) return;
 
-  const modal = document.getElementById('boss-kill-confirm-modal');
-  const title = document.getElementById('kill-confirm-title');
   const desc = document.getElementById('kill-confirm-desc');
   const avatarBox = document.getElementById('kill-confirm-avatar-box');
 
-  if (title) title.textContent = `ยืนยันลงเวลาตาย: ${boss.name}`;
   if (desc) desc.textContent = `เลเวล ${boss.level || '??'} • แมพ: ${boss.map || 'ไม่ระบุ'} • รอบเกิด: ${boss.respawnLabel || 'ตามเงื่อนไข'}`;
 
   if (avatarBox) {
@@ -963,11 +967,23 @@ function openBossKillConfirmModal(bossId) {
       avatarBox.innerHTML = `<i class="fa-solid fa-skull"></i>`;
     }
   }
+}
+
+function openBossKillConfirmModal(bossId) {
+  populate24HourSelects();
+  const validBoss = bossList.find(b => b.id === bossId) || bossList[0];
+  currentKillConfirmBossId = validBoss ? validBoss.id : bossId;
+
+  populateBossKillConfirmSelect(currentKillConfirmBossId);
+  if (currentKillConfirmBossId) {
+    onKillConfirmBossSelectChange(currentKillConfirmBossId);
+  }
 
   // Reset image / drop items
   clearKillConfirmImage();
   applyQuickKillConfirmTime(0); // Default to current time
 
+  const modal = document.getElementById('boss-kill-confirm-modal');
   if (modal) modal.classList.remove('hidden');
 }
 
@@ -1006,15 +1022,51 @@ async function processKillConfirmImage(file) {
   const previewImg = document.getElementById('kill-confirm-preview-img');
   const statusEl = document.getElementById('kill-confirm-ocr-status');
   const itemsBox = document.getElementById('kill-confirm-items-box');
-  const itemsText = document.getElementById('kill-confirm-items-text');
 
   if (emptyBox) emptyBox.classList.add('hidden');
   if (filledBox) filledBox.classList.remove('hidden');
   if (previewImg) previewImg.src = URL.createObjectURL(file);
   if (statusEl) {
-    statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400"></i> กำลังสแกนอ่านไอเทมดรอปจากภาพ...`;
+    statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400"></i> กำลังสแกนอ่านชื่อบอส เวลา และไอเทมดรอปจากภาพ...`;
   }
 
+  // Priority 1: Gemini Vision if configured
+  if (bossGeminiApiKey) {
+    try {
+      if (statusEl) {
+        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400"></i> ส่งภาพให้ Google Gemini AI วิเคราะห์บอสและของดรอป...`;
+      }
+      const { base64Str, mimeType } = await compressImageForGemini(file, 1600, 0.88);
+      const bossCatalog = bossList.map(b => `- ID: ${b.id} | Name: ${b.name} | Map: ${b.map || ''}`).join('\n');
+      const prompt = `You are a specialized game log OCR and data extractor for the MMORPG 'LORD NINE' (LORDNINE / ลอร์ดไนน์).
+Examine this screenshot of the game's drop / kill chat log.
+
+### Boss Database:
+${bossCatalog}
+
+### Extraction Rules:
+1. 'killTime': Extract the 24-hour timestamp from the log line (e.g. '09:51', '19:46').
+2. 'bossId' & 'bossName': Determine which boss was defeated by matching the location after 'จาก' or from the boss name directly.
+3. 'dropItems': Extract EVERY item dropped in the screenshot. Format: "{ItemName} (ผู้รับ: {PlayerName})"
+
+Output strictly valid JSON with no markdown wrapping:
+{
+  "bossId": "matching boss ID or null",
+  "bossName": "matching boss name",
+  "killTime": "HH:MM",
+  "killDate": "YYYY-MM-DD or null",
+  "dropItems": ["Item name and receiver"]
+}`;
+
+      const data = await callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, bossGeminiApiKey);
+      applyExtractedBossData(data);
+      return;
+    } catch (geminiErr) {
+      console.warn('Gemini Vision failed in Kill Confirm, fallback to local OCR:', geminiErr);
+    }
+  }
+
+  // Priority 2: Canvas Pre-processing + Tesseract
   try {
     const processedBlob = await preprocessImageCanvas(file);
     if (typeof Tesseract === 'undefined') {
@@ -1030,36 +1082,64 @@ async function processKillConfirmImage(file) {
     });
 
     const parsed = normalizeAndCleanThaiDropLog(text);
-
-    // If time was detected from screenshot, auto adjust time if valid
-    if (parsed.timeMatch) {
-      const [hh, mm] = parsed.timeMatch.split(':');
-      const hourSelect = document.getElementById('kill-confirm-hour');
-      const minSelect = document.getElementById('kill-confirm-min');
-      if (hourSelect) hourSelect.value = hh;
-      if (minSelect) minSelect.value = mm;
-    }
-    if (parsed.dateMatch) {
-      const dateInput = document.getElementById('kill-confirm-date');
-      if (dateInput) dateInput.value = parsed.dateMatch;
-    }
-
-    if (itemsBox) itemsBox.classList.remove('hidden');
-    if (itemsText) {
-      if (parsed.items.length > 0) {
-        itemsText.value = parsed.items.join('\n');
-        if (statusEl) statusEl.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-check-circle"></i> ตรวจพบไอเทม ${parsed.items.length} รายการ (ตรวจสอบหรือแก้ไขได้ด้านล่าง)</span>`;
-      } else {
-        itemsText.value = text.split('\n').filter(l => l.trim().length > 3).slice(0, 4).join('\n');
-        if (statusEl) statusEl.innerHTML = `<span class="text-amber-300"><i class="fa-solid fa-circle-info"></i> อ่านข้อความเสร็จสิ้น สามารถพิมพ์/แก้ไขไอเทมดรอปได้</span>`;
-      }
-    }
+    applyExtractedBossData({
+      bossId: parsed.bossMatch ? parsed.bossMatch.id : null,
+      bossName: parsed.bossMatch ? parsed.bossMatch.name : null,
+      killTime: parsed.timeMatch,
+      killDate: parsed.dateMatch,
+      dropItems: parsed.items.length > 0 ? parsed.items : text.split('\n').filter(l => l.trim().length > 3).slice(0, 5)
+    });
   } catch (err) {
     console.warn('Kill Confirm OCR Error:', err);
     if (statusEl) {
-      statusEl.innerHTML = `<span class="text-amber-400 text-xs">อ่านภาพไม่สำเร็จ แต่ยังสามารถบันทึกเวลาได้ตามปกติ</span>`;
+      statusEl.innerHTML = `<span class="text-amber-400 text-xs">อ่านภาพไม่สำเร็จ แต่ยังสามารถระบุเวลาและของดรอปได้ตามปกติ</span>`;
     }
     if (itemsBox) itemsBox.classList.remove('hidden');
+  }
+}
+
+function applyExtractedBossData(data) {
+  const statusEl = document.getElementById('kill-confirm-ocr-status');
+  const itemsBox = document.getElementById('kill-confirm-items-box');
+  const itemsText = document.getElementById('kill-confirm-items-text');
+  const hourSelect = document.getElementById('kill-confirm-hour');
+  const minSelect = document.getElementById('kill-confirm-min');
+  const dateInput = document.getElementById('kill-confirm-date');
+
+  // 1. Auto-select Boss if detected
+  let matchedBoss = null;
+  if (data.bossId) matchedBoss = bossList.find(b => b.id === data.bossId);
+  if (!matchedBoss && data.bossName) {
+    const bn = data.bossName.toLowerCase();
+    matchedBoss = bossList.find(b => b.name.toLowerCase().includes(bn) || bn.includes(b.name.toLowerCase()) || (b.map && b.map.toLowerCase().includes(bn)));
+  }
+  if (matchedBoss) {
+    const sel = document.getElementById('kill-confirm-boss-select');
+    if (sel) sel.value = matchedBoss.id;
+    onKillConfirmBossSelectChange(matchedBoss.id);
+  }
+
+  // 2. Set Time & Date
+  if (data.killTime && data.killTime.includes(':')) {
+    const [hh, mm] = data.killTime.split(':');
+    const pad = n => String(n).padStart(2, '0');
+    if (hourSelect) hourSelect.value = pad(Number(hh));
+    if (minSelect) minSelect.value = pad(Number(mm));
+  }
+  if (data.killDate && dateInput) {
+    dateInput.value = data.killDate;
+  }
+
+  // 3. Set Drop Items
+  if (itemsBox) itemsBox.classList.remove('hidden');
+  if (itemsText) {
+    if (Array.isArray(data.dropItems) && data.dropItems.length > 0) {
+      itemsText.value = data.dropItems.join('\n');
+      if (statusEl) statusEl.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-check-circle"></i> ตรวจพบไอเทม ${data.dropItems.length} รายการ (ตรวจสอบหรือแก้ไขได้ด้านล่าง)</span>`;
+    } else {
+      itemsText.value = '';
+      if (statusEl) statusEl.innerHTML = `<span class="text-amber-300"><i class="fa-solid fa-circle-info"></i> อ่านข้อมูลเสร็จสิ้น สามารถพิมพ์/แก้ไขไอเทมดรอปได้</span>`;
+    }
   }
 }
 
@@ -1086,10 +1166,15 @@ let pendingKillConfirmData = null;
 
 function handleSaveKillConfirm(e) {
   if (e) e.preventDefault();
-  if (!currentKillConfirmBossId) return;
+  const bossSelect = document.getElementById('kill-confirm-boss-select');
+  const bossId = bossSelect ? bossSelect.value : currentKillConfirmBossId;
+  if (!bossId) {
+    alert('กรุณาเลือกบอสที่ต้องการบันทึก');
+    return;
+  }
 
-  const boss = bossList.find(b => b.id === currentKillConfirmBossId);
-  const bossName = boss ? boss.name : currentKillConfirmBossId;
+  const boss = bossList.find(b => b.id === bossId);
+  const bossName = boss ? boss.name : bossId;
 
   const dateVal = document.getElementById('kill-confirm-date').value;
   const hourVal = document.getElementById('kill-confirm-hour').value;
@@ -1114,13 +1199,13 @@ function handleSaveKillConfirm(e) {
   const itemsList = rawItems ? rawItems.split('\n').map(i => i.trim()).filter(i => i.length > 0) : [];
 
   // 2. Save Boss Kill Time & Create History Log (Firebase + Google Sheets)
-  saveBossKillTime(currentKillConfirmBossId, dt.toISOString(), killerEmail, itemsList);
+  saveBossKillTime(bossId, dt.toISOString(), killerEmail, itemsList);
 
   // 3. Save Drop Log if items provided
   if (itemsList.length > 0) {
     const dropEntry = {
       id: 'drop_' + Date.now(),
-      bossId: currentKillConfirmBossId,
+      bossId: bossId,
       bossName: bossName,
       killTime: dt.toISOString(),
       items: itemsList,
@@ -1933,115 +2018,18 @@ function extractJsonFromGeminiResponse(text) {
   throw new Error('Invalid JSON structure in AI response: ' + trimmed.substring(0, 80));
 }
 
-// Populate Modal Fields from Gemini AI Result
+// Populate Modal Fields from Gemini AI Result (Unified)
 function populateModalFromGeminiData(data) {
-  const statusEl = document.getElementById('ocr-progress-status');
-  const resultBox = document.getElementById('ocr-result-form');
-  populate24HourSelects();
-
-  const bossSelect = document.getElementById('ocr-boss-select');
-  const dateInput = document.getElementById('ocr-kill-date');
-  const hourSelect = document.getElementById('ocr-kill-hour');
-  const minSelect = document.getElementById('ocr-kill-min');
-  const itemsText = document.getElementById('ocr-drop-items');
-
-  if (statusEl) statusEl.classList.add('hidden');
-  if (resultBox) resultBox.classList.remove('hidden');
-
-  if (bossSelect) {
-    bossSelect.innerHTML = bossList.map(b => `<option value="${b.id}">${escapeHtml(b.name)} (Lv.${b.level} - ${escapeHtml(b.map)})</option>`).join('');
-    let matched = null;
-    if (data.bossId) matched = bossList.find(b => b.id === data.bossId);
-    if (!matched && data.bossName) {
-      const bn = data.bossName.toLowerCase();
-      matched = bossList.find(b => b.name.toLowerCase().includes(bn) || bn.includes(b.name.toLowerCase()) || (b.map && b.map.toLowerCase().includes(bn)));
-    }
-    if (matched) bossSelect.value = matched.id;
-  }
-
-  const now = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  if (dateInput) {
-    dateInput.value = data.killDate || `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-  }
-
-  if (data.killTime && data.killTime.includes(':')) {
-    const [hh, mm] = data.killTime.split(':');
-    if (hourSelect) hourSelect.value = pad(Number(hh));
-    if (minSelect) minSelect.value = pad(Number(mm));
-  } else {
-    if (hourSelect) hourSelect.value = pad(now.getHours());
-    if (minSelect) minSelect.value = pad(now.getMinutes());
-  }
-
-  if (itemsText) {
-    if (Array.isArray(data.dropItems) && data.dropItems.length > 0) {
-      itemsText.value = data.dropItems.join('\n');
-    } else {
-      itemsText.value = '';
-    }
-  }
+  if (!data) return;
+  openBossKillConfirmModal(data.bossId || null);
+  applyExtractedBossData(data);
 }
 
-// Process Image with AI OCR (Gemini Vision 1st Priority, Tesseract.js Fallback)
+// Process Image with AI OCR (Gemini Vision 1st Priority, Tesseract.js Fallback) -> Opens Unified Modal
 async function processImageForBossOCR(file) {
   if (!file) return;
-
-  const modal = document.getElementById('boss-ai-ocr-modal');
-  const statusEl = document.getElementById('ocr-progress-status');
-  const previewImg = document.getElementById('ocr-image-preview');
-  const resultBox = document.getElementById('ocr-result-form');
-
-  if (previewImg) {
-    previewImg.src = URL.createObjectURL(file);
-    previewImg.classList.remove('hidden');
-  }
-  if (resultBox) resultBox.classList.add('hidden');
-  if (modal) modal.classList.remove('hidden');
-
-  // Option A: Use Google Gemini 1.5 Flash Vision (99.9% Accuracy) if API Key configured
-  if (bossGeminiApiKey) {
-    try {
-      await processImageWithGeminiVision(file, bossGeminiApiKey);
-      return;
-    } catch (geminiErr) {
-      console.warn('Gemini Vision OCR failed, falling back to local OCR:', geminiErr);
-    }
-  }
-
-  // Option B: Fallback to Canvas Pre-processing + Tesseract.js
-  try {
-    if (statusEl) {
-      statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400"></i> กำลังปรับความคมชัดของภาพ (Canvas Multi-color Pre-processing)...`;
-      statusEl.classList.remove('hidden');
-    }
-
-    const processedBlob = await preprocessImageCanvas(file);
-
-    if (typeof Tesseract === 'undefined') {
-      if (statusEl) statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดโมเดลภาษาไทย...`;
-      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
-    }
-
-    if (statusEl) statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-amber-400"></i> กำลังสแกนอ่านข้อความภาษาไทย...`;
-
-    const { data: { text } } = await Tesseract.recognize(processedBlob, 'tha+eng', {
-      logger: m => {
-        if (statusEl && m.status === 'recognizing text') {
-          statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-amber-400"></i> กำลังอ่านข้อความ (${Math.round(m.progress * 100)}%)...`;
-        }
-      }
-    });
-
-    console.log('OCR Raw Text:\n', text);
-    parseOCRTextAndPopulateModal(text);
-  } catch (err) {
-    console.error('OCR Error:', err);
-    if (statusEl) {
-      statusEl.innerHTML = `<span class="text-rose-400"><i class="fa-solid fa-triangle-exclamation"></i> ไม่สามารถอ่านรูปภาพได้ กรุณาระบุข้อมูลเอง</span>`;
-    }
-    if (resultBox) resultBox.classList.remove('hidden');
-  }
+  openBossKillConfirmModal(null);
+  await processKillConfirmImage(file);
 }
 
 // Smart Thai Text Normalizer and Drop Log Cleaner
@@ -2166,102 +2154,24 @@ function normalizeAndCleanThaiDropLog(rawText) {
   };
 }
 
-// Parse OCR Text
+// Parse OCR Text (Unified Fallback)
 function parseOCRTextAndPopulateModal(rawText) {
-  const statusEl = document.getElementById('ocr-progress-status');
-  const resultBox = document.getElementById('ocr-result-form');
-  populate24HourSelects();
-  const bossSelect = document.getElementById('ocr-boss-select');
-  const dateInput = document.getElementById('ocr-kill-date');
-  const hourSelect = document.getElementById('ocr-kill-hour');
-  const minSelect = document.getElementById('ocr-kill-min');
-  const itemsText = document.getElementById('ocr-drop-items');
-
-  if (statusEl) statusEl.classList.add('hidden');
-  if (resultBox) resultBox.classList.remove('hidden');
-
-  // Populate Boss Select
-  if (bossSelect) {
-    bossSelect.innerHTML = bossList.map(b => `<option value="${b.id}">${escapeHtml(b.name)} (Lv.${b.level} - ${escapeHtml(b.map)})</option>`).join('');
-  }
-
   const parsed = normalizeAndCleanThaiDropLog(rawText);
-
-  // 1. Set Boss
-  if (parsed.bossMatch && bossSelect) {
-    bossSelect.value = parsed.bossMatch.id;
-  }
-
-  // 2. Set Date & Time
-  const now = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  if (dateInput) {
-    dateInput.value = parsed.dateMatch || `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-  }
-  if (parsed.timeMatch) {
-    const [hh, mm] = parsed.timeMatch.split(':');
-    if (hourSelect) hourSelect.value = hh;
-    if (minSelect) minSelect.value = mm;
-  } else {
-    if (hourSelect) hourSelect.value = pad(now.getHours());
-    if (minSelect) minSelect.value = pad(now.getMinutes());
-  }
-
-  // 3. Set Clean Items
-  if (itemsText) {
-    if (parsed.items.length > 0) {
-      itemsText.value = parsed.items.join('\n');
-    } else {
-      // Fallback
-      itemsText.value = rawText.split('\n').filter(l => l.trim().length > 3).slice(0, 5).join('\n');
-    }
-  }
+  applyExtractedBossData({
+    bossId: parsed.bossMatch ? parsed.bossMatch.id : null,
+    bossName: parsed.bossMatch ? parsed.bossMatch.name : null,
+    killTime: parsed.timeMatch,
+    killDate: parsed.dateMatch,
+    dropItems: parsed.items.length > 0 ? parsed.items : rawText.split('\n').filter(l => l.trim().length > 3).slice(0, 5)
+  });
 }
 
 function handleConfirmOcrSave(e) {
-  if (e) e.preventDefault();
-  const bossId = document.getElementById('ocr-boss-select').value;
-  const dateVal = document.getElementById('ocr-kill-date').value;
-  const hourVal = document.getElementById('ocr-kill-hour').value;
-  const minVal = document.getElementById('ocr-kill-min').value;
-  const itemsVal = document.getElementById('ocr-drop-items').value.trim();
+  handleSaveKillConfirm(e);
+}
 
-  if (!bossId || !dateVal || hourVal === '' || minVal === '') return;
-
-  const dt = new Date(`${dateVal}T${hourVal}:${minVal}:00`);
-  if (isNaN(dt.getTime())) {
-    alert('วันที่หรือเวลาไม่ถูกต้อง');
-    return;
-  }
-
-  const boss = bossList.find(b => b.id === bossId);
-  const adminEmail = typeof currentAdminEmail !== 'undefined' ? currentAdminEmail : 'Admin';
-  const itemsList = itemsVal ? itemsVal.split('\n').map(i => i.trim()).filter(i => i.length > 0) : [];
-
-  // 1. Save Boss Kill Time & Create History Log (Firebase + Google Sheets)
-  saveBossKillTime(bossId, dt.toISOString(), adminEmail, itemsList);
-
-  // 2. Save Drop Log
-  if (itemsList.length > 0) {
-    const dropEntry = {
-      id: 'drop_' + Date.now(),
-      bossId,
-      bossName: boss ? boss.name : bossId,
-      killTime: dt.toISOString(),
-      items: itemsList,
-      recordedBy: adminEmail,
-      timestamp: new Date().toISOString()
-    };
-
-    bossDropLogs.unshift(dropEntry);
-    localStorage.setItem('guild_boss_drop_logs', JSON.stringify(bossDropLogs));
-    if (typeof fbDb !== 'undefined' && fbDb) {
-      fbDb.ref('guild_app/boss_drop_logs').set(bossDropLogs);
-    }
-  }
-
-  closeBossAiOcrModal();
-  showToast(`📸 บันทึกเวลาและไอเทมดรอปของ "${boss ? boss.name : bossId}" สำเร็จ!`, 'success');
+function closeBossAiOcrModal() {
+  closeBossKillConfirmModal();
 }
 
 function closeBossAiOcrModal() {
@@ -2803,6 +2713,7 @@ window.switchAppModule = switchAppModule;
 window.recordBossKillNow = recordBossKillNow;
 window.openBossKillConfirmModal = openBossKillConfirmModal;
 window.closeBossKillConfirmModal = closeBossKillConfirmModal;
+window.onKillConfirmBossSelectChange = onKillConfirmBossSelectChange;
 window.applyQuickKillConfirmTime = applyQuickKillConfirmTime;
 window.handleKillConfirmFileSelect = handleKillConfirmFileSelect;
 window.clearKillConfirmImage = clearKillConfirmImage;
