@@ -819,15 +819,30 @@ function updateUpcomingBossWidget() {
   }
 }
 
-// Record Boss Kill (Now)
+// Record Boss Kill (Now) -> Protected by Double-Check Modal
 function recordBossKillNow(bossId) {
   const boss = bossList.find(b => b.id === bossId);
   if (!boss) return;
 
   const now = new Date();
-  saveBossKillTime(bossId, now.toISOString(), (typeof currentAdminEmail !== 'undefined' ? currentAdminEmail : 'Admin'));
-  showToast(`บันทึกเวลาตายของ "${boss.name}" เรียบร้อยแล้ว!`, 'success');
-  playChime();
+  const pad = n => String(n).padStart(2, '0');
+  const killerEmail = (typeof currentAdminEmail !== 'undefined' ? currentAdminEmail : 'Admin');
+
+  pendingKillConfirmData = {
+    bossId: bossId,
+    bossName: boss.name,
+    bossMap: boss.map || '-',
+    bossIcon: boss.icon || '🐉',
+    bossImage: boss.avatar || '',
+    killDate: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
+    killHour: pad(now.getHours()),
+    killMin: pad(now.getMinutes()),
+    killDateTime: now,
+    killerEmail: killerEmail,
+    itemsList: []
+  };
+
+  openBossDoubleCheckModal(pendingKillConfirmData);
 }
 
 // Send Boss Kill Log row to Google Sheets via Webhook (Background Async - Only when drop items exist!)
@@ -983,12 +998,33 @@ function onKillConfirmBossSelectChange(bossId) {
 
 function openBossKillConfirmModal(bossId) {
   populate24HourSelects();
-  const validBoss = bossList.find(b => b.id === bossId) || bossList[0];
-  currentKillConfirmBossId = validBoss ? validBoss.id : bossId;
+  const titleEl = document.getElementById('kill-confirm-title');
+  const selectWrap = document.getElementById('kill-confirm-boss-select-wrap');
 
-  populateBossKillConfirmSelect(currentKillConfirmBossId);
-  if (currentKillConfirmBossId) {
-    onKillConfirmBossSelectChange(currentKillConfirmBossId);
+  if (bossId) {
+    // Case 1: Opened from specific boss card -> Hide dropdown, set clean title
+    const boss = bossList.find(b => b.id === bossId);
+    currentKillConfirmBossId = bossId;
+    populateBossKillConfirmSelect(bossId);
+
+    if (titleEl) {
+      titleEl.textContent = `ยืนยันลงเวลาตาย: ${boss ? boss.name : bossId}`;
+    }
+    if (selectWrap) selectWrap.classList.add('hidden');
+    onKillConfirmBossSelectChange(bossId);
+  } else {
+    // Case 2: General scan / paste -> Show dropdown so user or AI can select boss
+    const defaultBoss = bossList[0];
+    currentKillConfirmBossId = defaultBoss ? defaultBoss.id : null;
+    populateBossKillConfirmSelect(currentKillConfirmBossId);
+
+    if (titleEl) {
+      titleEl.textContent = '📸 สแกน Log / บันทึกบอส';
+    }
+    if (selectWrap) selectWrap.classList.remove('hidden');
+    if (currentKillConfirmBossId) {
+      onKillConfirmBossSelectChange(currentKillConfirmBossId);
+    }
   }
 
   // Reset image / drop items

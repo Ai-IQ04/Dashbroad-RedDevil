@@ -14473,7 +14473,7 @@ Output strictly valid JSON with no markdown formatting.`;
         <i class="fa-solid fa-xmark"></i>
       </button>
 
-      <!-- Modal Header (Avatar + Boss Selector + Confirmation) -->
+      <!-- Modal Header -->
       <div class="flex items-center gap-3 pb-3 border-b border-slate-800 shrink-0">
         <div id="kill-confirm-avatar-box"
           class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-600 to-red-500 text-white flex items-center justify-center text-xl shadow-md shrink-0 border border-rose-400/40 overflow-hidden">
@@ -14481,13 +14481,18 @@ Output strictly valid JSON with no markdown formatting.`;
         </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-center justify-between gap-2">
-            <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">🐉 ยืนยันชื่อบอส & ลงเวลาตาย</span>
+            <h3 id="kill-confirm-title" class="text-sm sm:text-base font-extrabold text-white truncate">
+              ยืนยันลงเวลาตาย
+            </h3>
             <span
               class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 shrink-0">24 hr</span>
           </div>
-          <select id="kill-confirm-boss-select" onchange="onKillConfirmBossSelectChange(this.value)"
-            class="w-full mt-1 bg-slate-950 border border-slate-700 hover:border-amber-400 text-white text-xs sm:text-sm font-black rounded-xl p-1.5 focus:border-rose-400 focus:outline-none cursor-pointer">
-          </select>
+          <!-- Dropdown only visible when opened from general scan/upload -->
+          <div id="kill-confirm-boss-select-wrap" class="hidden mt-1">
+            <select id="kill-confirm-boss-select" onchange="onKillConfirmBossSelectChange(this.value)"
+              class="w-full bg-slate-950 border border-slate-700 hover:border-amber-400 text-white text-xs sm:text-sm font-black rounded-xl p-1.5 focus:border-rose-400 focus:outline-none cursor-pointer">
+            </select>
+          </div>
           <p id="kill-confirm-desc" class="text-[11px] text-slate-400 truncate mt-0.5">บอสจะเริ่มนับเวลาเกิดรอบถัดไปทันที</p>
         </div>
       </div>
