@@ -13137,10 +13137,16 @@ Output strictly valid JSON with no markdown wrapping:
           </div>
 
           <!-- Drop items textarea (Auto-populated by OCR or manual input) -->
-          <div id="kill-confirm-items-box" class="hidden space-y-1">
-            <label class="block text-[11px] font-bold text-slate-300">📦 รายการไอเทมที่ดรอป (แก้ไขได้):</label>
-            <textarea id="kill-confirm-items-text" rows="2" placeholder="เช่น กล่องบอส x5&#10;หินอัปเกรด x10"
-              class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-amber-400 focus:outline-none font-mono"></textarea>
+          <div id="kill-confirm-items-box" class="hidden space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-boxes-stacked text-amber-400"></i>
+                <span>📦 รายการไอเทมที่ดรอป (แก้ไขได้):</span>
+              </label>
+              <span class="text-[10px] text-slate-400 font-mono">1 บรรทัด = 1 ไอเทม</span>
+            </div>
+            <textarea id="kill-confirm-items-text" rows="6" placeholder="เช่น ชุดเกราะแห่งตะวันสีชาด (ผู้รับ: ไข่ตุ๋น)&#10;หินถลุงเครื่องประดับแห่งโชคชะตา x3 (ผู้รับ: ไข่ตุ๋น)"
+              class="w-full min-h-[140px] bg-slate-900 border border-slate-700 text-white text-xs rounded-xl p-3 focus:border-amber-400 focus:outline-none font-mono leading-relaxed resize-y"></textarea>
           </div>
         </div>
 
@@ -13723,7 +13729,7 @@ Output strictly valid JSON with no markdown wrapping:
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=4.7"></script>
+  <script src="boss_timer.js?v=4.8"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
