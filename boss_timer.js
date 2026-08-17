@@ -14,7 +14,8 @@ function tBoss(key, fallback) {
 
 // Global state for Boss Timer
 let bossList = [];
-let bossTimerData = {}; // { [bossId]: { defeatedTime: ISOString, defeatedBy: string, nextSpawnTime: ISOString } }
+let bossCustomConfigs = {}; // { [bossId]: { name, level, map, avatar, intervalHours, scheduleText, note } }
+let bossTimerData = {}; // { [bossId]: { defeatedTime: ISOString, defeatedBy: string, nextSpawnTime: ISOString, customNextSpawn: ISOString } }
 let bossDropLogs = [];  // [ { id, bossId, bossName, killTime, items: [], recordedBy, timestamp } ]
 let bossTimerInterval = null;
 let currentBossFilter = 'all';
@@ -69,6 +70,23 @@ const DEFAULT_BOSS_DATABASE = [
   { id: 'guild_arena', name: 'Guild Arena', level: '00', map: 'Guild Base', respawnType: 'fixed', scheduleText: 'Fri/Sat/Sun 19:25', fixedTimes: [{days: [5,6,0], time: '19:25'}], note: 'Guild Base' },
   { id: 'reddevil_guild_boss', name: 'RedDevil Guild Boss', level: '00', map: 'Guild Base', respawnType: 'fixed', scheduleText: 'Sun 19:05', fixedTimes: [{days: [0], time: '19:05'}], note: 'Guild Base' }
 ];
+
+// Helper to rebuild bossList merged with custom configs
+function rebuildBossList() {
+  bossList = DEFAULT_BOSS_DATABASE.map(b => {
+    const custom = bossCustomConfigs[b.id] || {};
+    return {
+      ...b,
+      name: custom.name || b.name,
+      level: custom.level || b.level,
+      map: custom.map || b.map,
+      avatar: custom.avatar || null,
+      intervalHours: (custom.intervalHours !== undefined && custom.intervalHours !== null) ? Number(custom.intervalHours) : b.intervalHours,
+      scheduleText: custom.scheduleText || b.scheduleText,
+      note: (custom.note !== undefined && custom.note !== null) ? custom.note : b.note
+    };
+  });
+}
 
 // Audio synthesizer for boss alert
 function playBossAlertSound() {
@@ -167,7 +185,10 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
 
 // Initialize Boss Data
 function initBossTimerModule() {
-  bossList = DEFAULT_BOSS_DATABASE;
+  const savedConfigs = localStorage.getItem('guild_boss_custom_configs');
+  bossCustomConfigs = savedConfigs ? JSON.parse(savedConfigs) : {};
+
+  rebuildBossList();
 
   const savedTimers = localStorage.getItem('guild_boss_timers');
   bossTimerData = savedTimers ? JSON.parse(savedTimers) : {};
@@ -177,6 +198,16 @@ function initBossTimerModule() {
 
   // Listen to Firebase Realtime Database
   if (typeof fbDb !== 'undefined' && fbDb) {
+    fbDb.ref('guild_app/boss_custom_configs').on('value', snap => {
+      if (snap.exists()) {
+        bossCustomConfigs = snap.val() || {};
+        localStorage.setItem('guild_boss_custom_configs', JSON.stringify(bossCustomConfigs));
+        rebuildBossList();
+        renderBossTimerCards();
+        updateUpcomingBossWidget();
+      }
+    });
+
     fbDb.ref('guild_app/boss_timers').on('value', snap => {
       if (snap.exists()) {
         bossTimerData = snap.val() || {};
@@ -357,8 +388,8 @@ function renderBossTimerCards() {
     // Boss Name Color & Size
     const nameColorClass = isGuildActivity ? 'text-amber-400' : 'text-rose-500';
     const typeBadge = isGuildActivity 
-      ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm flex items-center gap-1"><i class="fa-solid fa-star text-[7.5px] text-amber-400"></i> ${tBoss('boss_tag_guild', 'กิจกรรมกิลด์')}</span>`
-      : `<span class="px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-800/80 text-slate-400 border border-slate-700/60">${tBoss('boss_tag_field', 'บอสทั่วไป')}</span>`;
+      ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm flex items-center gap-1 shrink-0"><i class="fa-solid fa-star text-[7.5px] text-amber-400"></i> ${tBoss('boss_tag_guild', 'กิจกรรมกิลด์')}</span>`
+      : `<span class="px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-800/80 text-slate-400 border border-slate-700/60 shrink-0">${tBoss('boss_tag_field', 'บอสทั่วไป')}</span>`;
 
     let statusBadge = '';
     let cardBorder = isGuildActivity ? 'border-amber-500/40' : 'border-slate-800/80';
@@ -382,21 +413,31 @@ function renderBossTimerCards() {
     const lastDefeatedStr = b.timer.defeatedTime ? formatDateTimeShort(new Date(b.timer.defeatedTime)) : '-';
     const nextSpawnStr = b.nextSpawn ? formatDateTimeShort(b.nextSpawn) : (b.respawnType === 'interval' ? tBoss('boss_wait_record', 'รอลงเวลาตาย') : '-');
 
-    // Action Buttons: Admin gets full controls; Member gets View Drop Log only
+    // Boss Profile Avatar Thumbnail
+    const avatarHtml = b.avatar
+      ? `<img src="${escapeHtml(b.avatar)}" alt="${escapeHtml(b.name)}" class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover border border-amber-500/40 shadow-lg ring-2 ring-amber-500/20 bg-slate-900 shrink-0" onerror="this.onerror=null; this.src=''; this.parentElement.innerHTML='<div class=\\'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xl text-amber-400\\'><i class=\\'fa-solid fa-dragon\\'></i></div>';" />`
+      : `<div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/80 flex items-center justify-center text-xl sm:text-2xl text-amber-400/90 shadow-inner shrink-0"><i class="fa-solid fa-dragon"></i></div>`;
+
+    // Action Buttons: Admin gets full controls + Edit; Member gets View Drop Log only
     let actionButtonsHtml = '';
     if (isAdminActive) {
       actionButtonsHtml = `
         <div class="mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center gap-1.5">
           <button onclick="recordBossKillNow('${b.id}')"
-            class="flex-1 apple-btn apple-btn-ruby inline-flex items-center justify-center gap-1.5 py-2 px-2.5 text-xs font-bold shadow-md shadow-rose-950/30"
+            class="flex-1 apple-btn apple-btn-ruby inline-flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-bold shadow-md shadow-rose-950/30"
             title="${tBoss('btn_record_kill_now', 'กดเมื่อบอสตายตอนนี้ทันที')}">
             <i class="fa-solid fa-skull text-[11px]"></i>
             <span>${tBoss('btn_record_kill_now', 'ตายตอนนี้')}</span>
           </button>
           <button onclick="openCustomKillModal('${b.id}')"
-            class="apple-btn apple-btn-slate inline-flex items-center justify-center p-2 text-xs font-semibold"
-            title="${tBoss('btn_custom_time', 'ระบุเวลาตายย้อนหลัง')}">
+            class="apple-btn apple-btn-slate inline-flex items-center justify-center p-2 text-xs font-semibold text-slate-300 hover:text-white"
+            title="${tBoss('btn_custom_time', 'ระบุเวลาตายย้อนหลัง (รูปแบบ 24 ชม.)')}">
             <i class="fa-solid fa-clock-rotate-left"></i>
+          </button>
+          <button onclick="openEditBossModal('${b.id}')"
+            class="apple-btn apple-btn-slate inline-flex items-center justify-center p-2 text-xs font-semibold text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
+            title="${tBoss('btn_edit_boss', 'แก้ไขข้อมูล & เพิ่มรูปโปรไฟล์บอส')}">
+            <i class="fa-solid fa-pen-to-square"></i>
           </button>
           <button onclick="openBossDropLogModal('${b.id}')"
             class="apple-btn apple-btn-amber inline-flex items-center justify-center p-2 text-xs font-semibold"
@@ -421,24 +462,30 @@ function renderBossTimerCards() {
     html += `
       <div class="boss-card relative flex flex-col justify-between bg-gradient-to-b ${cardBg} border ${cardBorder} rounded-2xl p-4 shadow-xl backdrop-blur transition hover:scale-[1.01] hover:border-amber-400/60 duration-200">
         <div>
-          <!-- Header Row: Level & Type Badge -->
-          <div class="flex items-center justify-between gap-2 mb-1.5">
-            <span class="text-[10.5px] font-mono font-bold px-2 py-0.5 rounded-lg bg-slate-900 text-amber-400 border border-slate-700/80 shadow-inner">Lv.${b.level || '??'}</span>
-            <div class="flex items-center gap-1.5">
-              ${typeBadge}
-              <div id="boss-status-badge-${b.id}">${statusBadge}</div>
-            </div>
+          <!-- Top Row: Status Badge -->
+          <div class="flex items-center justify-between gap-1.5 mb-2.5">
+            ${typeBadge}
+            <div id="boss-status-badge-${b.id}">${statusBadge}</div>
           </div>
 
-          <!-- Boss Name (Large, Bold & Color Coded) -->
-          <div class="mb-2">
-            <h4 class="text-base sm:text-lg font-black tracking-tight leading-snug ${nameColorClass}">
-              ${escapeHtml(b.name)}
-            </h4>
-            <p class="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-              <i class="fa-solid fa-location-dot text-slate-500 text-[10px]"></i>
-              <span class="truncate">${escapeHtml(b.map || (isEn ? 'Unassigned map' : 'ไม่ระบุแมพ'))}</span>
-            </p>
+          <!-- Header with Avatar & Boss Details -->
+          <div class="flex items-start gap-3 mb-2">
+            <div class="relative cursor-pointer group/avatar" onclick="${isAdminActive ? `openEditBossModal('${b.id}')` : `openBossDropLogModal('${b.id}')`}" title="${isAdminActive ? 'คลิกเพื่อแก้ไขรูปโปรไฟล์บอส' : escapeHtml(b.name)}">
+              ${avatarHtml}
+              ${isAdminActive ? `<div class="absolute inset-0 bg-black/60 rounded-2xl opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center text-white text-xs transition"><i class="fa-solid fa-camera"></i></div>` : ''}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1.5 mb-0.5">
+                <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-lg bg-slate-900 text-amber-400 border border-slate-700/80 shadow-inner">Lv.${escapeHtml(b.level || '??')}</span>
+              </div>
+              <h4 class="text-base sm:text-lg font-black tracking-tight leading-snug truncate ${nameColorClass}" title="${escapeHtml(b.name)}">
+                ${escapeHtml(b.name)}
+              </h4>
+              <p class="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+                <i class="fa-solid fa-location-dot text-slate-500 text-[10px]"></i>
+                <span class="truncate">${escapeHtml(b.map || (isEn ? 'Unassigned map' : 'ไม่ระบุแมพ'))}</span>
+              </p>
+            </div>
           </div>
 
           <!-- Countdown Big Box -->
@@ -449,14 +496,14 @@ function renderBossTimerCards() {
             </div>
           </div>
 
-          <!-- Metadata Grid -->
+          <!-- Metadata Grid (24-Hour Timestamps) -->
           <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-300 pt-2 border-t border-slate-800/80">
             <div>
               <span class="text-slate-500 block text-[9.5px] font-medium">${tBoss('boss_respawn_cycle_label', 'ระยะเกิด:')}</span>
               <span class="font-semibold text-amber-300/90">${escapeHtml(b.respawnLabel)}</span>
             </div>
             <div>
-              <span class="text-slate-500 block text-[9.5px] font-medium">${tBoss('boss_respawn_time_label', 'เกิดรอบถัดไป:')}</span>
+              <span class="text-slate-500 block text-[9.5px] font-medium">${tBoss('boss_respawn_time_label', 'เกิดรอบถัดไป (24 ชม.):')}</span>
               <span id="boss-next-${b.id}" class="font-mono font-bold ${b.nextSpawn ? 'text-emerald-300' : 'text-slate-500'}">${nextSpawnStr}</span>
             </div>
             <div class="col-span-2 text-slate-400 flex items-center justify-between text-[10.5px] pt-1">
@@ -498,22 +545,23 @@ function formatCountdown(diffMs, status) {
   const s = totalSec % 60;
 
   const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
-  const dUnit = isEn ? 'd ' : 'ว ';
+  const dUnit = isEn ? 'd ' : ' วัน ';
   if (d > 0) {
     return `${d}${dUnit}${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   }
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
 
-// Format DateTime Short
+// Format DateTime Short (24-Hour Format: DD/MM HH:MM น.)
 function formatDateTimeShort(d) {
   if (!d || isNaN(d.getTime())) return '-';
+  const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
   const pad = n => String(n).padStart(2, '0');
   const day = pad(d.getDate());
   const month = pad(d.getMonth() + 1);
   const hours = pad(d.getHours());
   const min = pad(d.getMinutes());
-  return `${day}/${month} ${hours}:${min}`;
+  return `${day}/${month} ${hours}:${min}${isEn ? '' : ' น.'}`;
 }
 
 // Update Active Countdowns Every Second
@@ -595,7 +643,7 @@ function updateUpcomingBossWidget() {
     nameEl.textContent = `${nearest.boss.name}${nearest.boss.level ? ` (Lv.${nearest.boss.level})` : ''}`;
   }
   if (locEl) {
-    locEl.textContent = nearest.boss.location ? `• ${nearest.boss.location}` : '';
+    locEl.textContent = nearest.boss.map ? `• ${nearest.boss.map}` : '';
   }
 
   if (timerTextEl) {
@@ -672,7 +720,19 @@ function saveBossKillTime(bossId, killTimeISO, killerEmail) {
   updateUpcomingBossWidget();
 }
 
-// Custom Kill Time Modal
+// Quick presets for 24-Hour time input
+function applyQuickKillTime(minutesAgo) {
+  const dateInput = document.getElementById('boss-custom-kill-date');
+  const timeInput = document.getElementById('boss-custom-kill-time');
+  if (!dateInput || !timeInput) return;
+
+  const targetDate = new Date(Date.now() - (minutesAgo * 60 * 1000));
+  const pad = n => String(n).padStart(2, '0');
+  dateInput.value = `${targetDate.getFullYear()}-${pad(targetDate.getMonth() + 1)}-${pad(targetDate.getDate())}`;
+  timeInput.value = `${pad(targetDate.getHours())}:${pad(targetDate.getMinutes())}`;
+}
+
+// Custom Kill Time Modal (24-Hour Format)
 let currentEditBossId = null;
 function openCustomKillModal(bossId) {
   currentEditBossId = bossId;
@@ -681,15 +741,12 @@ function openCustomKillModal(bossId) {
 
   const modal = document.getElementById('boss-custom-kill-modal');
   const title = document.getElementById('boss-custom-kill-title');
-  const dateInput = document.getElementById('boss-custom-kill-date');
-  const timeInput = document.getElementById('boss-custom-kill-time');
+  const desc = document.getElementById('boss-custom-kill-desc');
 
-  if (title) title.textContent = `ระบุเวลาตาย: ${boss.name} (${boss.map})`;
+  if (title) title.textContent = `ระบุเวลาตาย: ${boss.name}`;
+  if (desc) desc.textContent = `เลเวล ${boss.level || '??'} • แมพ: ${boss.map || 'ไม่ระบุ'} • รอบเกิด: ${boss.respawnLabel || 'ตามเงื่อนไข'}`;
 
-  const now = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  if (dateInput) dateInput.value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-  if (timeInput) timeInput.value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  applyQuickKillTime(0); // Default to current time
 
   if (modal) modal.classList.remove('hidden');
 }
@@ -709,13 +766,237 @@ function handleSaveCustomKill(e) {
 
   const dt = new Date(`${dateVal}T${timeVal}:00`);
   if (isNaN(dt.getTime())) {
-    alert('รูปแบบวันที่หรือเวลาไม่ถูกต้อง');
+    alert('รูปแบบวันที่หรือเวลาไม่ถูกต้อง (กรุณากรอกแบบ 24 ชั่วโมง เช่น 14:30)');
     return;
   }
 
   saveBossKillTime(currentEditBossId, dt.toISOString(), (typeof currentAdminEmail !== 'undefined' ? currentAdminEmail : 'Admin'));
   closeCustomKillModal();
-  showToast(`บันทึกเวลาตายย้อนหลังเรียบร้อยแล้ว`, 'success');
+  showToast(`บันทึกเวลาตาย (${formatDateTimeShort(dt)}) เรียบร้อยแล้ว`, 'success');
+}
+
+// ================= Boss Edit Modal (Name, Level, Map, Avatar, Schedule, Notes) =================
+let editingBossAvatarData = null; // Stored Base64 or URL during modal editing
+
+function openEditBossModal(bossId) {
+  currentEditBossId = bossId;
+  const boss = bossList.find(b => b.id === bossId);
+  if (!boss) return;
+
+  const modal = document.getElementById('boss-edit-modal');
+  const title = document.getElementById('edit-boss-modal-title');
+  const nameInput = document.getElementById('edit-boss-name');
+  const levelInput = document.getElementById('edit-boss-level');
+  const mapInput = document.getElementById('edit-boss-map');
+  const intervalInput = document.getElementById('edit-boss-interval');
+  const scheduleInput = document.getElementById('edit-boss-schedule');
+  const noteInput = document.getElementById('edit-boss-note');
+  const avatarPreview = document.getElementById('edit-boss-avatar-preview');
+  const avatarPlaceholder = document.getElementById('edit-boss-avatar-placeholder');
+  const avatarUrlInput = document.getElementById('edit-boss-avatar-url');
+
+  if (title) title.textContent = `แก้ไขข้อมูลบอส: ${boss.name}`;
+  if (nameInput) nameInput.value = boss.name || '';
+  if (levelInput) levelInput.value = boss.level || '';
+  if (mapInput) mapInput.value = boss.map || '';
+  if (intervalInput) intervalInput.value = boss.intervalHours || '';
+  if (scheduleInput) scheduleInput.value = boss.scheduleText || '';
+  if (noteInput) noteInput.value = boss.note || '';
+
+  editingBossAvatarData = boss.avatar || null;
+  if (avatarUrlInput) avatarUrlInput.value = (boss.avatar && !boss.avatar.startsWith('data:')) ? boss.avatar : '';
+
+  updateEditBossAvatarDisplay();
+
+  // Populate timer section in edit modal
+  const timer = bossTimerData[bossId] || {};
+  const editDefDateInput = document.getElementById('edit-boss-def-date');
+  const editDefTimeInput = document.getElementById('edit-boss-def-time');
+  const pad = n => String(n).padStart(2, '0');
+
+  if (timer.defeatedTime) {
+    const d = new Date(timer.defeatedTime);
+    if (editDefDateInput) editDefDateInput.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    if (editDefTimeInput) editDefTimeInput.value = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  } else {
+    if (editDefDateInput) editDefDateInput.value = '';
+    if (editDefTimeInput) editDefTimeInput.value = '';
+  }
+
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeEditBossModal() {
+  const modal = document.getElementById('boss-edit-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function updateEditBossAvatarDisplay() {
+  const preview = document.getElementById('edit-boss-avatar-preview');
+  const placeholder = document.getElementById('edit-boss-avatar-placeholder');
+  if (!preview || !placeholder) return;
+
+  if (editingBossAvatarData) {
+    preview.src = editingBossAvatarData;
+    preview.classList.remove('hidden');
+    placeholder.classList.add('hidden');
+  } else {
+    preview.src = '';
+    preview.classList.add('hidden');
+    placeholder.classList.remove('hidden');
+  }
+}
+
+function handleBossAvatarFileSelect(input) {
+  if (!input || !input.files || !input.files[0]) return;
+  const file = input.files[0];
+
+  // Auto resize and compress to WebP Base64 to save bandwidth and Firebase quota
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX_SIZE = 160;
+      let w = img.width;
+      let h = img.height;
+      if (w > h) {
+        if (w > MAX_SIZE) {
+          h = Math.round((h * MAX_SIZE) / w);
+          w = MAX_SIZE;
+        }
+      } else {
+        if (h > MAX_SIZE) {
+          w = Math.round((w * MAX_SIZE) / h);
+          h = MAX_SIZE;
+        }
+      }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      editingBossAvatarData = canvas.toDataURL('image/webp', 0.85);
+      const urlInput = document.getElementById('edit-boss-avatar-url');
+      if (urlInput) urlInput.value = '';
+      updateEditBossAvatarDisplay();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function updateBossAvatarFromUrl(url) {
+  const cleanUrl = (url || '').trim();
+  if (cleanUrl) {
+    editingBossAvatarData = cleanUrl;
+  } else {
+    editingBossAvatarData = null;
+  }
+  updateEditBossAvatarDisplay();
+}
+
+function clearBossAvatar() {
+  editingBossAvatarData = null;
+  const urlInput = document.getElementById('edit-boss-avatar-url');
+  const fileInput = document.getElementById('edit-boss-avatar-file');
+  if (urlInput) urlInput.value = '';
+  if (fileInput) fileInput.value = '';
+  updateEditBossAvatarDisplay();
+}
+
+function applyQuickEditDefTime(minutesAgo) {
+  const dateInput = document.getElementById('edit-boss-def-date');
+  const timeInput = document.getElementById('edit-boss-def-time');
+  if (!dateInput || !timeInput) return;
+
+  const targetDate = new Date(Date.now() - (minutesAgo * 60 * 1000));
+  const pad = n => String(n).padStart(2, '0');
+  dateInput.value = `${targetDate.getFullYear()}-${pad(targetDate.getMonth() + 1)}-${pad(targetDate.getDate())}`;
+  timeInput.value = `${pad(targetDate.getHours())}:${pad(targetDate.getMinutes())}`;
+}
+
+function handleSaveEditBoss(e) {
+  if (e) e.preventDefault();
+  if (!currentEditBossId) return;
+
+  const nameVal = document.getElementById('edit-boss-name').value.trim();
+  const levelVal = document.getElementById('edit-boss-level').value.trim();
+  const mapVal = document.getElementById('edit-boss-map').value.trim();
+  const intervalVal = document.getElementById('edit-boss-interval').value;
+  const scheduleVal = document.getElementById('edit-boss-schedule').value.trim();
+  const noteVal = document.getElementById('edit-boss-note').value.trim();
+
+  if (!nameVal) {
+    alert('กรุณาระบุชื่อบอส');
+    return;
+  }
+
+  // 1. Update Custom Boss Config
+  bossCustomConfigs[currentEditBossId] = {
+    name: nameVal,
+    level: levelVal,
+    map: mapVal,
+    avatar: editingBossAvatarData || null,
+    intervalHours: intervalVal !== '' ? Number(intervalVal) : null,
+    scheduleText: scheduleVal || null,
+    note: noteVal || null,
+    updatedAt: new Date().toISOString()
+  };
+
+  localStorage.setItem('guild_boss_custom_configs', JSON.stringify(bossCustomConfigs));
+  if (typeof fbDb !== 'undefined' && fbDb) {
+    fbDb.ref('guild_app/boss_custom_configs').set(bossCustomConfigs);
+  }
+
+  // 2. Check if defeat time was modified in edit modal
+  const editDefDateVal = document.getElementById('edit-boss-def-date').value;
+  const editDefTimeVal = document.getElementById('edit-boss-def-time').value;
+
+  if (editDefDateVal && editDefTimeVal) {
+    const dt = new Date(`${editDefDateVal}T${editDefTimeVal}:00`);
+    if (!isNaN(dt.getTime())) {
+      saveBossKillTime(currentEditBossId, dt.toISOString(), (typeof currentAdminEmail !== 'undefined' ? currentAdminEmail : 'Admin'));
+    }
+  }
+
+  rebuildBossList();
+  renderBossTimerCards();
+  updateUpcomingBossWidget();
+  closeEditBossModal();
+
+  const adminEmail = typeof currentAdminEmail !== 'undefined' ? currentAdminEmail : 'Admin';
+  if (typeof addAuditLog === 'function') {
+    addAuditLog('boss_edit_config', `แก้ไขข้อมูลบอส "${nameVal}"`, `โดย: ${adminEmail}`, 'BossTimer');
+  }
+
+  showToast(`✨ บันทึกการแก้ไขข้อมูลและรูปโปรไฟล์ "${nameVal}" เรียบร้อยแล้ว!`, 'success');
+  playChime();
+}
+
+function resetSingleBossTimer(bossId) {
+  const targetId = bossId || currentEditBossId;
+  if (!targetId) return;
+  const boss = bossList.find(b => b.id === targetId);
+  const bossName = boss ? boss.name : targetId;
+
+  if (!confirm(`คุณต้องการล้างเวลาของบอส "${bossName}" กลับเป็น "ยังไม่ลงเวลา" ใช่หรือไม่?`)) return;
+
+  if (bossTimerData[targetId]) {
+    delete bossTimerData[targetId];
+    localStorage.setItem('guild_boss_timers', JSON.stringify(bossTimerData));
+    if (typeof fbDb !== 'undefined' && fbDb) {
+      fbDb.ref(`guild_app/boss_timers/${targetId}`).remove();
+    }
+  }
+
+  const editDefDateInput = document.getElementById('edit-boss-def-date');
+  const editDefTimeInput = document.getElementById('edit-boss-def-time');
+  if (editDefDateInput) editDefDateInput.value = '';
+  if (editDefTimeInput) editDefTimeInput.value = '';
+
+  renderBossTimerCards();
+  updateUpcomingBossWidget();
+  showToast(`🗑️ ล้างเวลาของ "${bossName}" เรียบร้อยแล้ว`, 'info');
 }
 
 // ================= Server Maintenance Reset Modal =================
@@ -1284,6 +1565,15 @@ window.recordBossKillNow = recordBossKillNow;
 window.openCustomKillModal = openCustomKillModal;
 window.closeCustomKillModal = closeCustomKillModal;
 window.handleSaveCustomKill = handleSaveCustomKill;
+window.applyQuickKillTime = applyQuickKillTime;
+window.openEditBossModal = openEditBossModal;
+window.closeEditBossModal = closeEditBossModal;
+window.handleSaveEditBoss = handleSaveEditBoss;
+window.handleBossAvatarFileSelect = handleBossAvatarFileSelect;
+window.updateBossAvatarFromUrl = updateBossAvatarFromUrl;
+window.clearBossAvatar = clearBossAvatar;
+window.applyQuickEditDefTime = applyQuickEditDefTime;
+window.resetSingleBossTimer = resetSingleBossTimer;
 window.openBossDropLogModal = openBossDropLogModal;
 window.closeBossDropLogModal = closeBossDropLogModal;
 window.processImageForBossOCR = processImageForBossOCR;
@@ -1292,3 +1582,4 @@ window.renderBossTimerCards = renderBossTimerCards;
 window.closeBossAiOcrModal = closeBossAiOcrModal;
 window.handleConfirmOcrSave = handleConfirmOcrSave;
 window.clearAllBossTimers = clearAllBossTimers;
+
