@@ -1557,6 +1557,43 @@ function fileToBase64(file) {
   });
 }
 
+function compressImageForGemini(file, maxWidth = 1600, quality = 0.88) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth || height > maxWidth) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxWidth) / height);
+            height = maxWidth;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        const base64Str = dataUrl.split(',')[1];
+        resolve({ base64Str, mimeType: 'image/jpeg' });
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 // Process Image with Google Gemini 1.5 Flash Vision API (99.9% Accuracy for Thai & Game Logs)
 async function processImageWithGeminiVision(file, apiKey) {
   const statusEl = document.getElementById('ocr-progress-status');
@@ -1566,9 +1603,7 @@ async function processImageWithGeminiVision(file, apiKey) {
     statusEl.classList.remove('hidden');
   }
 
-  const base64DataUrl = await fileToBase64(file);
-  const base64Str = base64DataUrl.split(',')[1];
-  const mimeType = file.type || 'image/png';
+  const { base64Str, mimeType } = await compressImageForGemini(file, 1600, 0.88);
 
   const bossCatalog = bossList.map(b => `- ID: ${b.id} | Name: ${b.name} | Map: ${b.map || ''}`).join('\n');
 

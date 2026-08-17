@@ -7308,6 +7308,43 @@
       select.innerHTML = html;
     }
 
+    function compressImageForGemini(file, maxWidth = 1600, quality = 0.88) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+            if (width > maxWidth || height > maxWidth) {
+              if (width > height) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              } else {
+                width = Math.round((width * maxWidth) / height);
+                height = maxWidth;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            const base64Str = dataUrl.split(',')[1];
+            resolve({ base64Str, mimeType: 'image/jpeg' });
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
     function handleSquadFileSelect(file) {
       if (!file) return;
       processSquadImageWithGemini(file);
@@ -7326,24 +7363,28 @@
         if (dropzonePrompt) dropzonePrompt.classList.add('hidden');
       }
 
+      const apiKey = localStorage.getItem('guild_boss_gemini_api_key') || (typeof bossGeminiApiKey !== 'undefined' ? bossGeminiApiKey : '');
+      if (!apiKey) {
+        if (statusEl) {
+          statusEl.innerHTML = `<span class="text-amber-300 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ยังไม่ได้ใส่ Google Gemini API Key กรุณาให้ Super Admin ใส่ Key ในเมนู '⚙️ ตั้งค่า Discord / Sheets' ก่อนใช้งาน</span>`;
+          statusEl.classList.remove('hidden');
+        }
+        return;
+      }
+
       if (statusEl) {
-        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400 mr-1.5"></i> กำลังสแกนรูปภาพและถอดรายชื่อสมาชิกในหน่วยชุมนุม 1-4...`;
+        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400 mr-1.5"></i> กำลังส่งภาพให้ Google Gemini AI สแกนถอดรายชื่อสมาชิกในหน่วยชุมนุม 1-4...`;
         statusEl.classList.remove('hidden');
       }
       if (resultsContainer) resultsContainer.classList.add('hidden');
 
-      const apiKey = localStorage.getItem('guild_boss_gemini_api_key') || (typeof bossGeminiApiKey !== 'undefined' ? bossGeminiApiKey : '');
+      try {
+        // Optimize & compress image through Canvas for optimal Gemini processing (< 500KB)
+        const { base64Str, mimeType } = await compressImageForGemini(file, 1600, 0.88);
 
-      // Try Google Gemini Vision first if API key is provided
-      if (apiKey) {
-        try {
-          const base64DataUrl = await fileToBase64(file);
-          const base64Str = base64DataUrl.split(',')[1];
-          const mimeType = file.type || 'image/png';
+        const memberRoster = members.map(m => (m.characterName || m.name || '').trim()).filter(Boolean).join(', ');
 
-          const memberRoster = members.map(m => (m.characterName || m.name || '').trim()).filter(Boolean).join(', ');
-
-          const prompt = `You are a high-precision OCR and character name extractor for the MMORPG 'LORD NINE' (LORDNINE / ลอร์ดไนน์).
+        const prompt = `You are a high-precision OCR and character name extractor for the MMORPG 'LORD NINE' (LORDNINE / ลอร์ดไนน์).
 Examine this screenshot of the in-game squad / assembly management window titled 'จัดการชุมนุม' (Squad Management).
 
 Guild member roster for reference and fuzzy spelling matching:
@@ -7369,67 +7410,14 @@ Output strictly valid JSON with no markdown wrapping:
   "allMembers": ["name1", "name2"]
 }`;
 
-          const parsedData = await callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey);
-          renderSquadScanResults(parsedData);
-          return;
-        } catch (geminiErr) {
-          console.warn('Gemini Vision failed, falling back to Local OCR:', geminiErr);
-          if (statusEl) {
-            statusEl.innerHTML = `<i class="fa-solid fa-microchip fa-spin text-amber-400 mr-1.5"></i> กำลังสแกนด้วย Local OCR ภายในเครื่อง...`;
-          }
-        }
-      }
-
-      // Fallback: Local OCR (Tesseract.js)
-      try {
-        await processSquadImageWithLocalOCR(file);
-      } catch (localErr) {
-        console.error('Squad Scan Error:', localErr);
+        const parsedData = await callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey);
+        renderSquadScanResults(parsedData);
+      } catch (err) {
+        console.error('Google Gemini Squad Scan Error:', err);
         if (statusEl) {
-          statusEl.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i> ไม่สามารถอ่านรูปภาพได้: ${escapeHtml(localErr.message || 'โปรดลองอีกครั้ง')}</span>`;
+          statusEl.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Google Gemini สแกนไม่สำเร็จ: ${escapeHtml(err.message || 'โปรดตรวจสอบ API Key')}</span>`;
         }
       }
-    }
-
-    // Local OCR Fallback for Squad Image
-    async function processSquadImageWithLocalOCR(file) {
-      if (typeof Tesseract === 'undefined') {
-        throw new Error('ไม่พบโมดูล OCR ในเครื่อง กรุณาเชื่อมต่ออินเทอร์เน็ต');
-      }
-
-      const { data: { text } } = await Tesseract.recognize(file, 'tha+eng', {
-        logger: m => console.log('[Squad Local OCR]', m)
-      });
-
-      // Match extracted words with guild members
-      const detectedMembers = [];
-      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-
-      members.forEach(m => {
-        const cName = (m.characterName || m.name || '').trim();
-        if (!cName) return;
-
-        const isFound = lines.some(line => 
-          line.includes(cName) || 
-          line.toLowerCase().includes(cName.toLowerCase()) ||
-          cName.toLowerCase().includes(line.toLowerCase()) && line.length >= 3
-        );
-
-        if (isFound && !detectedMembers.includes(cName)) {
-          detectedMembers.push(cName);
-        }
-      });
-
-      const fallbackData = {
-        squads: [
-          {
-            squadNumber: 1,
-            members: detectedMembers.length > 0 ? detectedMembers : members.slice(0, 10).map(m => m.characterName)
-          }
-        ]
-      };
-
-      renderSquadScanResults(fallbackData);
     }
 
     function renderSquadScanResults(data) {
@@ -13732,7 +13720,7 @@ Output strictly valid JSON with no markdown wrapping:
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=4.5"></script>
+  <script src="boss_timer.js?v=4.6"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
