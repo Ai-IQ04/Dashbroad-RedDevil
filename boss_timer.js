@@ -396,9 +396,10 @@ function renderBossTimerCards() {
     const isGuildActivity = GUILD_SCORING_BOSS_IDS.has(b.id) || (b.name && /lucus|bahel|libitina|rakajeth|tumier|neva|icarut|morti|motti|arena|camalia|world/i.test(b.name));
     const isHighTier = isHighLevelBoss(b.level, b.id, b.name);
 
-    // 1. Color Palette based on Boss Tier
-    // High Tier (Lv. 100+): Red Theme
-    // Normal Boss (Lv. < 100): Green Theme
+    // 1. Color Palette based on Boss Tier:
+    // - Guild Activity: Yellow / Gold Theme
+    // - High Tier Field Boss (Lv. 100+): Red / Ruby Theme
+    // - Normal Field Boss (Lv. < 100): Green / Emerald Theme
     let nameColorClass = '';
     let levelBadgeClass = '';
     let typeBadge = '';
@@ -406,15 +407,20 @@ function renderBossTimerCards() {
     let cardBaseBorder = '';
     let cardBaseBg = '';
 
-    if (isHighTier) {
+    if (isGuildActivity) {
+      nameColorClass = 'text-amber-400 font-black drop-shadow-[0_2px_8px_rgba(251,191,36,0.45)]';
+      levelBadgeClass = 'bg-amber-950/90 text-amber-300 border-amber-500/60 shadow-amber-950/60';
+      avatarRingClass = 'border-amber-500/60 ring-2 ring-amber-500/30 shadow-amber-950/60';
+      cardBaseBorder = 'border-amber-500/40 hover:border-amber-400 shadow-amber-950/30';
+      cardBaseBg = 'from-slate-900 via-slate-900/95 to-amber-950/25';
+      typeBadge = `<span class="px-2.5 py-0.5 rounded-full text-[9.5px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-sm flex items-center gap-1 shrink-0"><i class="fa-solid fa-star text-[8px] text-amber-400"></i> ${tBoss('boss_tag_guild', 'กิจกรรมกิลด์')}</span>`;
+    } else if (isHighTier) {
       nameColorClass = 'text-rose-400 font-black drop-shadow-[0_2px_8px_rgba(244,63,94,0.45)]';
       levelBadgeClass = 'bg-rose-950/90 text-rose-300 border-rose-500/60 shadow-rose-950/60';
       avatarRingClass = 'border-rose-500/60 ring-2 ring-rose-500/30 shadow-rose-950/60';
       cardBaseBorder = 'border-rose-500/40 hover:border-rose-400 shadow-rose-950/30';
       cardBaseBg = 'from-slate-900 via-slate-900/95 to-rose-950/30';
-      typeBadge = isGuildActivity
-        ? `<span class="px-2.5 py-0.5 rounded-full text-[9.5px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/50 shadow-sm flex items-center gap-1 shrink-0"><i class="fa-solid fa-crown text-[8px] text-rose-400"></i> ${tBoss('boss_tag_guild', 'บอสระดับสูง (กิจกรรมกิลด์)')}</span>`
-        : `<span class="px-2.5 py-0.5 rounded-full text-[9.5px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/50 shadow-sm flex items-center gap-1 shrink-0"><i class="fa-solid fa-skull-crossbones text-[8px] text-rose-400"></i> ${tBoss('boss_tag_high', 'บอสระดับสูง (Lv.100+)')}</span>`;
+      typeBadge = `<span class="px-2.5 py-0.5 rounded-full text-[9.5px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/50 shadow-sm flex items-center gap-1 shrink-0"><i class="fa-solid fa-skull-crossbones text-[8px] text-rose-400"></i> ${tBoss('boss_tag_high', 'บอสระดับสูง (Lv.100+)')}</span>`;
     } else {
       nameColorClass = 'text-emerald-400 font-black drop-shadow-[0_2px_8px_rgba(52,211,153,0.35)]';
       levelBadgeClass = 'bg-emerald-950/90 text-emerald-300 border-emerald-500/60 shadow-emerald-950/60';
