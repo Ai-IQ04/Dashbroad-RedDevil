@@ -609,7 +609,7 @@
   <!-- ================= ส่วนหัวเว็บ (Navbar & Admin Control) ================= -->
   <header
     class="bg-slate-950/90 border-b border-slate-800/80 shrink-0 z-30 px-3 sm:px-5 py-2.5 backdrop-blur-xl shadow-xl shadow-black/40">
-    
+
     <!-- Tier 1: Main Header Bar (Logo / Module Switcher / System Controls) -->
     <div class="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
 
@@ -630,7 +630,8 @@
               class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 text-[10px] font-medium shadow-sm select-none cursor-help transition hover:bg-emerald-900/60"
               title="กำลังใช้งานอยู่ 1 คน">
               <span class="relative flex h-1.5 w-1.5">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
               </span>
               <span id="online-users-count" class="font-mono font-bold text-white">1</span>
@@ -645,7 +646,8 @@
 
       <!-- Center: Prominent Segmented Nav Switcher -->
       <div class="flex items-center justify-center flex-1 mx-2">
-        <div class="flex items-center p-1 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-xl backdrop-blur-xl">
+        <div
+          class="flex items-center p-1 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-xl backdrop-blur-xl">
           <button id="nav-tab-scoring" onclick="switchAppModule('scoring')"
             class="apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-orange-500/20 active:scale-95">
             <i class="fa-solid fa-shield-halved text-sm"></i>
@@ -655,7 +657,8 @@
             class="apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-2 active:scale-95">
             <i class="fa-solid fa-stopwatch text-amber-400 text-sm"></i>
             <span data-i18n="nav_boss_timer">บอสไทม์เมอร์</span>
-            <span id="badge-boss-alive-count" class="hidden px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-rose-600 text-white animate-pulse shadow-md">0</span>
+            <span id="badge-boss-alive-count"
+              class="hidden px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-rose-600 text-white animate-pulse shadow-md">0</span>
           </button>
         </div>
       </div>
@@ -704,12 +707,14 @@
     </div>
 
     <!-- Tier 2: Sub-Bar for Week Tabs & Tools (Contextual for Scoring Module) -->
-    <div id="scoring-sub-header" class="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between gap-3 flex-wrap">
-      
+    <div id="scoring-sub-header"
+      class="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between gap-3 flex-wrap">
+
       <!-- Left: 4-Week Capsule Tabs -->
       <div class="flex items-center gap-2">
         <span class="text-[11px] font-bold text-slate-400 flex items-center gap-1">
-          <i class="fa-solid fa-calendar-week text-amber-400"></i> <span data-i18n="weekly_cycle_label">รอบสัปดาห์:</span>
+          <i class="fa-solid fa-calendar-week text-amber-400"></i> <span
+            data-i18n="weekly_cycle_label">รอบสัปดาห์:</span>
         </span>
         <div id="week-tabs-bar"
           class="flex items-center gap-1 bg-slate-900/90 border border-slate-800/90 rounded-full p-0.5 shadow-inner backdrop-blur">
@@ -721,7 +726,8 @@
       <div class="flex items-center gap-2">
 
         <!-- 👥 Member Hub (ร้านค้า, สรุปคะแนน, Top 10, ขอ CP, อุทธรณ์) -->
-        <div id="member-hub-container" class="flex items-center gap-1.5 p-1 bg-slate-950/80 border border-slate-800/90 rounded-2xl backdrop-blur-md shadow-sm flex-wrap">
+        <div id="member-hub-container"
+          class="flex items-center gap-1.5 p-1 bg-slate-950/80 border border-slate-800/90 rounded-2xl backdrop-blur-md shadow-sm flex-wrap">
           <!-- 🎁 ปุ่มเปิดร้านค้าของรางวัล & Showcase -->
           <button type="button" onclick="openRewardStoreModal()"
             class="apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm">
@@ -761,7 +767,8 @@
           <!-- ✏️ ปุ่มแก้ไขข้อมูลตัวละคร (ทุกคนเห็น - ไว้หลังสุด) -->
           <button onclick="openCharEditRequestModal()"
             class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
-            title="แก้ไขข้อมูลตัวละคร: ชื่อตัวละคร, Email, สังกัดกิลด์ (ต้องรอ Admin อนุมัติ)" data-i18n-title="modal_char_edit_desc">
+            title="แก้ไขข้อมูลตัวละคร: ชื่อตัวละคร, Email, สังกัดกิลด์ (ต้องรอ Admin อนุมัติ)"
+            data-i18n-title="modal_char_edit_desc">
             <i class="fa-solid fa-user-pen text-xs"></i>
             <span data-i18n="btn_edit_character">แก้ไขข้อมูลตัวละคร</span>
           </button>
@@ -770,8 +777,9 @@
         <!-- 👑 Admin Hub (แทนที่ฝั่งขวาในแถวเดียวกันทันทีเมื่อล็อกอิน Admin) -->
         <div id="admin-hub-container"
           class="hidden flex items-center gap-1.5 p-1 bg-gradient-to-r from-purple-950/60 via-slate-950/90 to-amber-950/60 border border-purple-500/40 rounded-2xl backdrop-blur-md shadow-lg flex-wrap">
-          
-          <div class="px-2 py-0.5 text-[10px] font-black text-amber-300 uppercase tracking-wider flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+
+          <div
+            class="px-2 py-0.5 text-[10px] font-black text-amber-300 uppercase tracking-wider flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 rounded-xl">
             <i class="fa-solid fa-crown text-amber-400 text-[10px]"></i>
             <span data-i18n="admin_hub_title">ADMIN</span>
           </div>
@@ -880,262 +888,266 @@
   <div id="scoring-module-container" class="flex-1 flex flex-col min-h-0">
     <!-- ================= แดชบอร์ดสรุปผลด้านบน (Top Summary Dashboard - Apple Glass Cards) ================= -->
     <section class="bg-slate-950/60 border-b border-slate-800/80 px-3 sm:px-5 py-3 shrink-0 backdrop-blur-md">
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
 
-      <!-- การ์ด 1: สมาชิก & พลังรบเฉลี่ย -->
-      <div
-        class="apple-kpi-card apple-kpi-blue p-3 sm:p-3.5 flex items-center justify-between animate-apple-kpi animate-delay-1">
-        <div class="min-w-0 pr-2">
-          <div class="flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
-            <span class="text-[10.5px] font-semibold text-slate-300 uppercase tracking-wider truncate"
-              data-i18n="kpi_both_guilds">สมาชิกทั้ง 2 กิลด์</span>
-          </div>
-          <div class="flex items-baseline gap-2 mt-1">
-            <span id="kpi-total-members"
-              class="text-2xl sm:text-3xl font-black font-mono tracking-tight bg-gradient-to-b from-white to-slate-200 bg-clip-text text-transparent">0</span>
-            <span class="text-[10px] font-medium text-slate-400" data-i18n="unit_people">คน</span>
-            <span id="kpi-guild-split"
-              class="text-[10px] font-mono text-sky-300/90 font-medium px-1.5 py-0.5 rounded-md bg-sky-500/10 border border-sky-500/20"></span>
-          </div>
-          <p class="text-[10.5px] text-slate-400 mt-1 flex items-center gap-1">
-            <span data-i18n="kpi_avg_cp">CP เฉลี่ย</span>:
-            <strong class="text-amber-300 font-mono font-bold flex items-center gap-1">
-              <i class="fa-solid fa-bolt text-[9px] text-amber-400"></i>
-              <span id="kpi-avg-cp">0</span>
-            </strong>
-          </p>
-        </div>
+        <!-- การ์ด 1: สมาชิก & พลังรบเฉลี่ย -->
         <div
-          class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-tr from-sky-500/20 to-blue-600/30 border border-sky-400/30 text-sky-300 flex items-center justify-center text-base sm:text-lg shrink-0 shadow-lg shadow-sky-500/10"
-          style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);">
-          <i class="fa-solid fa-users filter drop-shadow"></i>
-        </div>
-      </div>
-
-      <!-- การ์ด 2: ผ่านเกณฑ์ปันผล (>7 กิจกรรม) -->
-      <div
-        class="apple-kpi-card apple-kpi-emerald p-3 sm:p-3.5 flex items-center justify-between animate-apple-kpi animate-delay-2">
-        <div class="min-w-0 pr-2">
-          <div class="flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span class="text-[10.5px] font-semibold text-emerald-300 uppercase tracking-wider truncate"
-              data-i18n="kpi_eligible">ผ่านเกณฑ์ปันผล (>7)</span>
-          </div>
-          <div class="flex items-baseline gap-2 mt-1">
-            <span id="kpi-eligible-members"
-              class="text-2xl sm:text-3xl font-black font-mono tracking-tight bg-gradient-to-b from-emerald-300 to-teal-400 bg-clip-text text-transparent">0</span>
-            <span id="kpi-eligible-rate" class="text-xs font-bold text-emerald-400 font-mono">(0%)</span>
+          class="apple-kpi-card apple-kpi-blue p-3 sm:p-3.5 flex items-center justify-between animate-apple-kpi animate-delay-1">
+          <div class="min-w-0 pr-2">
+            <div class="flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+              <span class="text-[10.5px] font-semibold text-slate-300 uppercase tracking-wider truncate"
+                data-i18n="kpi_both_guilds">สมาชิกทั้ง 2 กิลด์</span>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span id="kpi-total-members"
+                class="text-2xl sm:text-3xl font-black font-mono tracking-tight bg-gradient-to-b from-white to-slate-200 bg-clip-text text-transparent">0</span>
+              <span class="text-[10px] font-medium text-slate-400" data-i18n="unit_people">คน</span>
+              <span id="kpi-guild-split"
+                class="text-[10px] font-mono text-sky-300/90 font-medium px-1.5 py-0.5 rounded-md bg-sky-500/10 border border-sky-500/20"></span>
+            </div>
+            <p class="text-[10.5px] text-slate-400 mt-1 flex items-center gap-1">
+              <span data-i18n="kpi_avg_cp">CP เฉลี่ย</span>:
+              <strong class="text-amber-300 font-mono font-bold flex items-center gap-1">
+                <i class="fa-solid fa-bolt text-[9px] text-amber-400"></i>
+                <span id="kpi-avg-cp">0</span>
+              </strong>
+            </p>
           </div>
           <div
-            class="w-24 sm:w-32 bg-slate-900/90 border border-slate-700/60 h-2 rounded-full overflow-hidden mt-1.5 p-0.5 shadow-inner">
-            <div id="kpi-eligible-bar"
-              class="bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-300 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(52,211,153,0.6)]"
-              style="width: 0%"></div>
+            class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-tr from-sky-500/20 to-blue-600/30 border border-sky-400/30 text-sky-300 flex items-center justify-center text-base sm:text-lg shrink-0 shadow-lg shadow-sky-500/10"
+            style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);">
+            <i class="fa-solid fa-users filter drop-shadow"></i>
           </div>
         </div>
+
+        <!-- การ์ด 2: ผ่านเกณฑ์ปันผล (>7 กิจกรรม) -->
         <div
-          class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-600/30 border border-emerald-400/30 text-emerald-300 flex items-center justify-center text-base sm:text-lg shrink-0 shadow-lg shadow-emerald-500/10"
-          style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);">
-          <i class="fa-solid fa-circle-check filter drop-shadow"></i>
+          class="apple-kpi-card apple-kpi-emerald p-3 sm:p-3.5 flex items-center justify-between animate-apple-kpi animate-delay-2">
+          <div class="min-w-0 pr-2">
+            <div class="flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span class="text-[10.5px] font-semibold text-emerald-300 uppercase tracking-wider truncate"
+                data-i18n="kpi_eligible">ผ่านเกณฑ์ปันผล (>7)</span>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span id="kpi-eligible-members"
+                class="text-2xl sm:text-3xl font-black font-mono tracking-tight bg-gradient-to-b from-emerald-300 to-teal-400 bg-clip-text text-transparent">0</span>
+              <span id="kpi-eligible-rate" class="text-xs font-bold text-emerald-400 font-mono">(0%)</span>
+            </div>
+            <div
+              class="w-24 sm:w-32 bg-slate-900/90 border border-slate-700/60 h-2 rounded-full overflow-hidden mt-1.5 p-0.5 shadow-inner">
+              <div id="kpi-eligible-bar"
+                class="bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-300 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(52,211,153,0.6)]"
+                style="width: 0%"></div>
+            </div>
+          </div>
+          <div
+            class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-600/30 border border-emerald-400/30 text-emerald-300 flex items-center justify-center text-base sm:text-lg shrink-0 shadow-lg shadow-emerald-500/10"
+            style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);">
+            <i class="fa-solid fa-circle-check filter drop-shadow"></i>
+          </div>
         </div>
-      </div>
 
-      <!-- การ์ด 3: ไม่ผ่านเกณฑ์ (<=7 กิจกรรม) -->
-      <div
-        class="apple-kpi-card apple-kpi-rose p-3 sm:p-3.5 flex items-center justify-between animate-apple-kpi animate-delay-3">
-        <div class="min-w-0 pr-2">
-          <div class="flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-            <span class="text-[10.5px] font-semibold text-rose-300 uppercase tracking-wider truncate"
-              data-i18n="kpi_ineligible">ไม่ผ่านเกณฑ์ (โดนหักปรับ)</span>
-          </div>
-          <div class="flex items-baseline gap-2 mt-1">
-            <span id="kpi-ineligible-members"
-              class="text-2xl sm:text-3xl font-black font-mono tracking-tight bg-gradient-to-b from-rose-300 to-red-400 bg-clip-text text-transparent">0</span>
-            <span class="text-[10px] font-medium text-slate-400" data-i18n="unit_people">คน</span>
-          </div>
-          <p class="text-[10.5px] text-slate-400 mt-1">
-            <span data-i18n="kpi_avg_penalty">หักปรับเฉลี่ย</span>:
-            <strong id="kpi-avg-penalty" class="text-rose-400 font-mono font-bold">0%</strong>
-          </p>
-        </div>
+        <!-- การ์ด 3: ไม่ผ่านเกณฑ์ (<=7 กิจกรรม) -->
         <div
-          class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-tr from-rose-500/20 to-red-600/30 border border-rose-400/30 text-rose-300 flex items-center justify-center text-base sm:text-lg shrink-0 shadow-lg shadow-rose-500/10"
-          style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);">
-          <i class="fa-solid fa-circle-exclamation filter drop-shadow"></i>
-        </div>
-      </div>
-
-      <!-- การ์ด 4: คะแนนเฉลี่ยกิลด์ & บอสยอดนิยม -->
-      <div
-        class="apple-kpi-card apple-kpi-amber p-3 sm:p-3.5 flex items-center justify-between animate-apple-kpi animate-delay-4">
-        <div class="min-w-0 pr-2">
-          <div class="flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-            <span class="text-[10.5px] font-semibold text-amber-300 uppercase tracking-wider truncate"
-              data-i18n="kpi_avg_score">คะแนนเฉลี่ยทั้งกิลด์</span>
+          class="apple-kpi-card apple-kpi-rose p-3 sm:p-3.5 flex items-center justify-between animate-apple-kpi animate-delay-3">
+          <div class="min-w-0 pr-2">
+            <div class="flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+              <span class="text-[10.5px] font-semibold text-rose-300 uppercase tracking-wider truncate"
+                data-i18n="kpi_ineligible">ไม่ผ่านเกณฑ์ (โดนหักปรับ)</span>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span id="kpi-ineligible-members"
+                class="text-2xl sm:text-3xl font-black font-mono tracking-tight bg-gradient-to-b from-rose-300 to-red-400 bg-clip-text text-transparent">0</span>
+              <span class="text-[10px] font-medium text-slate-400" data-i18n="unit_people">คน</span>
+            </div>
+            <p class="text-[10.5px] text-slate-400 mt-1">
+              <span data-i18n="kpi_avg_penalty">หักปรับเฉลี่ย</span>:
+              <strong id="kpi-avg-penalty" class="text-rose-400 font-mono font-bold">0%</strong>
+            </p>
           </div>
-          <div class="flex items-baseline gap-2 mt-1">
-            <span id="kpi-avg-score"
-              class="text-2xl sm:text-3xl font-black font-mono tracking-tight bg-gradient-to-b from-amber-200 via-amber-300 to-yellow-400 bg-clip-text text-transparent">0</span>
-            <span class="text-[10px] text-slate-400 font-mono" data-i18n="kpi_out_of_100">/ 100 แต้ม</span>
+          <div
+            class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-tr from-rose-500/20 to-red-600/30 border border-rose-400/30 text-rose-300 flex items-center justify-center text-base sm:text-lg shrink-0 shadow-lg shadow-rose-500/10"
+            style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);">
+            <i class="fa-solid fa-circle-exclamation filter drop-shadow"></i>
           </div>
-          <p class="text-[10.5px] text-slate-400 mt-1 truncate max-w-[150px]">
-            <span data-i18n="kpi_top_boss">บอสยอดนิยม</span>:
-            <strong id="kpi-top-boss" class="text-indigo-300 font-semibold">-</strong>
-          </p>
         </div>
+
+        <!-- การ์ด 4: คะแนนเฉลี่ยกิลด์ & บอสยอดนิยม -->
         <div
-          class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-tr from-amber-500/20 to-yellow-600/30 border border-amber-400/30 text-amber-300 flex items-center justify-center text-base sm:text-lg shrink-0 shadow-lg shadow-amber-500/10"
-          style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);">
-          <i class="fa-solid fa-trophy filter drop-shadow"></i>
+          class="apple-kpi-card apple-kpi-amber p-3 sm:p-3.5 flex items-center justify-between animate-apple-kpi animate-delay-4">
+          <div class="min-w-0 pr-2">
+            <div class="flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              <span class="text-[10.5px] font-semibold text-amber-300 uppercase tracking-wider truncate"
+                data-i18n="kpi_avg_score">คะแนนเฉลี่ยทั้งกิลด์</span>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span id="kpi-avg-score"
+                class="text-2xl sm:text-3xl font-black font-mono tracking-tight bg-gradient-to-b from-amber-200 via-amber-300 to-yellow-400 bg-clip-text text-transparent">0</span>
+              <span class="text-[10px] text-slate-400 font-mono" data-i18n="kpi_out_of_100">/ 100 แต้ม</span>
+            </div>
+            <p class="text-[10.5px] text-slate-400 mt-1 truncate max-w-[150px]">
+              <span data-i18n="kpi_top_boss">บอสยอดนิยม</span>:
+              <strong id="kpi-top-boss" class="text-indigo-300 font-semibold">-</strong>
+            </p>
+          </div>
+          <div
+            class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-tr from-amber-500/20 to-yellow-600/30 border border-amber-400/30 text-amber-300 flex items-center justify-center text-base sm:text-lg shrink-0 shadow-lg shadow-amber-500/10"
+            style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);">
+            <i class="fa-solid fa-trophy filter drop-shadow"></i>
+          </div>
         </div>
+
       </div>
+    </section>
 
-    </div>
-  </section>
-
-  <!-- ================= แถบเครื่องมือ & การค้นหา (Toolbar) ================= -->
-  <div
-    class="bg-slate-950/50 border-b border-slate-800/80 px-3 sm:px-5 py-2 shrink-0 flex flex-wrap items-center justify-between gap-2.5 text-xs animate-apple-content backdrop-blur-md">
-
-    <!-- ช่องค้นหา & สรุปจำนวน -->
-    <div class="flex items-center gap-2 flex-1 min-w-[200px] max-w-xs sm:max-w-sm">
-      <div class="relative w-full">
-        <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-500">
-          <i class="fa-solid fa-magnifying-glass text-[11px]"></i>
-        </span>
-        <input type="text" id="search-input" oninput="renderTable()" placeholder="ค้นหาชื่อตัวละคร, กิลด์, อีเมล..."
-          data-i18n-placeholder="search_placeholder"
-          class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition">
-      </div>
-    </div>
-
-    <!-- 🐉 ช่องบอสที่กำลังจะเกิด (Upcoming Boss Live Tracker) - วางตรงกลาง -->
-    <div id="upcoming-boss-toolbar-widget" onclick="switchAppModule('boss_timer')"
-      class="apple-btn cursor-pointer group inline-flex items-center gap-2.5 px-3.5 py-1.5 bg-gradient-to-r from-rose-950/90 via-slate-950/95 to-purple-950/90 hover:from-rose-900/90 hover:to-purple-900/90 border border-rose-400/50 hover:border-rose-300/80 rounded-2xl shadow-lg shadow-rose-950/40 transition-all duration-300 mx-auto">
-      <div
-        class="w-6 h-6 rounded-xl bg-gradient-to-tr from-rose-500 via-red-500 to-amber-500 text-white shadow-md shadow-rose-500/30 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-rose-300/40">
-        <i class="fa-solid fa-dragon animate-pulse text-[11px] filter drop-shadow"></i>
-      </div>
-      <div class="flex items-center gap-2 flex-wrap text-xs">
-        <div class="flex items-center gap-1.5">
-          <span class="text-[10px] text-rose-300 font-bold uppercase tracking-wider hidden sm:inline"
-            data-i18n="boss_next_spawn_label">บอสถัดไป:</span>
-          <span id="widget-boss-name"
-            class="font-extrabold text-white tracking-wide truncate max-w-[130px] sm:max-w-[170px] drop-shadow-sm">กำลังโหลด...</span>
-          <span id="widget-boss-loc"
-            class="text-[10.5px] text-rose-200/75 font-medium hidden md:inline truncate max-w-[120px]">-</span>
-        </div>
-        <div
-          class="flex items-center gap-1.5 font-mono font-black text-amber-300 bg-slate-900/95 border border-amber-500/50 px-2.5 py-0.5 rounded-full text-xs shadow-inner shadow-amber-500/20"
-          id="widget-boss-timer">
-          <i class="fa-solid fa-clock text-[11px] text-amber-400"></i>
-          <span id="widget-boss-timer-text">--:--:--</span>
-        </div>
-      </div>
-      <i
-        class="fa-solid fa-chevron-right text-[11px] text-rose-300 group-hover:translate-x-1 transition-transform ml-0.5"></i>
-    </div>
-
-    <!-- ตัวกรอง และ การเรียงลำดับ -->
-    <div class="flex items-center gap-2">
-      <!-- ตัวกรองกิลด์ / สถานะ -->
-      <select id="filter-status" onchange="renderTable()"
-        class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 cursor-pointer">
-        <option value="all" data-i18n="filter_all">แสดงทั้งหมด (BlueDevil + RedDevil)</option>
-        <option value="RedDevil" data-i18n="filter_red">🔴 เฉพาะ RedDevil</option>
-        <option value="BlueDevil" data-i18n="filter_blue">🔵 เฉพาะ BlueDevil</option>
-        <option value="eligible" data-i18n="filter_eligible">✅ เฉพาะผู้ผ่านเกณฑ์ (>7)</option>
-        <option value="ineligible" data-i18n="filter_ineligible">❌ เฉพาะผู้ไม่ผ่านเกณฑ์ (≤7)</option>
-      </select>
-
-      <!-- เรียงลำดับ (Sort) -->
-      <select id="sort-by" onchange="renderTable()"
-        class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 cursor-pointer">
-        <option value="cp-desc" selected data-i18n="sort_cp_desc">⚡ พลังรบ CP (มาก ➔ น้อย)</option>
-        <option value="cp-asc" data-i18n="sort_cp_asc">พลังรบ CP (น้อย ➔ มาก)</option>
-        <option value="score-desc" data-i18n="sort_score_desc">คะแนนรวม (มาก ➔ น้อย)</option>
-        <option value="score-asc" data-i18n="sort_score_asc">คะแนนรวม (น้อย ➔ มาก)</option>
-        <option value="name-asc" data-i18n="sort_name_asc">ชื่อตัวละคร (ก-ฮ / A-Z)</option>
-      </select>
-
-      <!-- ปุ่มบันทึกปิดรอบสัปดาห์ / ปลดล็อกสัปดาห์ (เฉพาะ Admin) -->
-      <button id="btn-archive-week" onclick="toggleLockCurrentWeek()"
-        class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm"
-        title="คลิกเพื่อปิดรอบสัปดาห์นี้">
-        <i id="btn-archive-week-icon" class="fa-solid fa-lock-open text-[10px]"></i>
-        <span id="btn-archive-week-text" data-i18n="btn_archive_week">ปิดรอบสัปดาห์</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- ================= เนื้อหาหลัก: ตารางเช็คชื่อและคำนวณคะแนน ================= -->
-  <main class="flex-1 flex flex-col min-h-0 bg-transparent p-2 sm:p-3.5 overflow-hidden animate-apple-content">
-    <!-- 🔒 ป้ายแจ้งเตือนสัปดาห์ปิดรอบแล้ว (Locked Week Alert Banner) -->
-    <div id="locked-week-banner"
-      class="hidden mb-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-950/80 via-slate-950/90 to-amber-950/80 border border-amber-500/50 text-amber-200 text-xs flex items-center justify-between shadow-lg backdrop-blur shrink-0 animate-fade-in">
-      <div class="flex items-center gap-2.5">
-        <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-xs shrink-0 border border-amber-500/40">
-          <i class="fa-solid fa-lock animate-pulse"></i>
-        </span>
-        <div>
-          <span class="font-bold text-amber-300" id="locked-banner-week-name">สัปดาห์ที่ 1</span>
-          <span class="text-slate-300 ml-1">ถูกปิดรอบแล้ว (โหมดอ่านอย่างเดียว • การแก้ไขย้อนหลังต้องยืนยันด้วย Email Admin)</span>
-        </div>
-      </div>
-      <button id="btn-banner-unlock" onclick="toggleLockCurrentWeek()"
-        class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl shadow-md border border-amber-400/50 hover:brightness-110 active:scale-95 transition shrink-0">
-        <i class="fa-solid fa-lock text-[11px]"></i>
-        <span>ปลดล็อกสัปดาห์</span>
-      </button>
-    </div>
-
+    <!-- ================= แถบเครื่องมือ & การค้นหา (Toolbar) ================= -->
     <div
-      class="flex-1 flex flex-col min-h-0 bg-slate-950/80 border border-slate-800/90 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
+      class="bg-slate-950/50 border-b border-slate-800/80 px-3 sm:px-5 py-2 shrink-0 flex flex-wrap items-center justify-between gap-2.5 text-xs animate-apple-content backdrop-blur-md">
 
-      <!-- ตัวหุ้มตาราง (เลื่อนเฉพาะแนวตั้ง และตรึงหัวตาราง) -->
-      <div class="flex-1 overflow-y-auto overflow-x-hidden relative">
-        <table class="w-full text-left border-collapse table-fixed text-xs notranslate" translate="no">
-
-          <!-- หัวตาราง (Sticky Header - Apple Pro Table Header เรนเดอร์ผ่าน JS) -->
-          <thead id="main-table-head"
-            class="bg-slate-950/95 sticky top-0 z-20 text-slate-200 border-b border-slate-800/90 shadow-md backdrop-blur-xl">
-            <!-- Rendered dynamically via renderTableHeader() -->
-          </thead>
-
-          <!-- ข้อมูลสมาชิกในตาราง -->
-          <tbody id="member-table-body" class="divide-y divide-slate-800/70 text-slate-300 text-xs">
-            <!-- ตารางจะถูกเรนเดอร์โดย JavaScript -->
-          </tbody>
-        </table>
-      </div>
-
-      <!-- แถบด้านล่างตาราง (Footer Bar) -->
-      <div
-        class="bg-slate-950/90 border-t border-slate-800/80 px-4 py-2 shrink-0 flex flex-wrap items-center justify-between text-[11px] text-slate-400 gap-2 backdrop-blur-md">
-        <div class="flex items-center gap-2">
-          <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span><span data-i18n="footer_showing">แสดง</span> <strong id="footer-count" class="text-slate-200">0</strong>
-            <span data-i18n="footer_members">สมาชิก</span></span>
-          <span id="admin-indicator-text" class="text-[10px] ml-2 px-2 py-0.5 rounded font-mono"></span>
-        </div>
-        <div class="flex items-center gap-3 text-[10px]">
-          <span data-i18n="footer_criteria">เกณฑ์ปันผล: เข้าร่วม &gt; 7 ครั้ง</span>
-          <span class="text-slate-600">•</span>
-          <span data-i18n="footer_max_score">คะแนนเต็ม: 100 แต้ม</span>
-          <span class="text-slate-600">•</span>
-          <span>Guild System v6</span>
+      <!-- ช่องค้นหา & สรุปจำนวน -->
+      <div class="flex items-center gap-2 flex-1 min-w-[200px] max-w-xs sm:max-w-sm">
+        <div class="relative w-full">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-500">
+            <i class="fa-solid fa-magnifying-glass text-[11px]"></i>
+          </span>
+          <input type="text" id="search-input" oninput="renderTable()" placeholder="ค้นหาชื่อตัวละคร, กิลด์, อีเมล..."
+            data-i18n-placeholder="search_placeholder"
+            class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition">
         </div>
       </div>
 
+      <!-- 🐉 ช่องบอสที่กำลังจะเกิด (Upcoming Boss Live Tracker) - วางตรงกลาง -->
+      <div id="upcoming-boss-toolbar-widget" onclick="switchAppModule('boss_timer')"
+        class="apple-btn cursor-pointer group inline-flex items-center gap-2.5 px-3.5 py-1.5 bg-gradient-to-r from-rose-950/90 via-slate-950/95 to-purple-950/90 hover:from-rose-900/90 hover:to-purple-900/90 border border-rose-400/50 hover:border-rose-300/80 rounded-2xl shadow-lg shadow-rose-950/40 transition-all duration-300 mx-auto">
+        <div
+          class="w-6 h-6 rounded-xl bg-gradient-to-tr from-rose-500 via-red-500 to-amber-500 text-white shadow-md shadow-rose-500/30 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-rose-300/40">
+          <i class="fa-solid fa-dragon animate-pulse text-[11px] filter drop-shadow"></i>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap text-xs">
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] text-rose-300 font-bold uppercase tracking-wider hidden sm:inline"
+              data-i18n="boss_next_spawn_label">บอสถัดไป:</span>
+            <span id="widget-boss-name"
+              class="font-extrabold text-white tracking-wide truncate max-w-[130px] sm:max-w-[170px] drop-shadow-sm">กำลังโหลด...</span>
+            <span id="widget-boss-loc"
+              class="text-[10.5px] text-rose-200/75 font-medium hidden md:inline truncate max-w-[120px]">-</span>
+          </div>
+          <div
+            class="flex items-center gap-1.5 font-mono font-black text-amber-300 bg-slate-900/95 border border-amber-500/50 px-2.5 py-0.5 rounded-full text-xs shadow-inner shadow-amber-500/20"
+            id="widget-boss-timer">
+            <i class="fa-solid fa-clock text-[11px] text-amber-400"></i>
+            <span id="widget-boss-timer-text">--:--:--</span>
+          </div>
+        </div>
+        <i
+          class="fa-solid fa-chevron-right text-[11px] text-rose-300 group-hover:translate-x-1 transition-transform ml-0.5"></i>
+      </div>
+
+      <!-- ตัวกรอง และ การเรียงลำดับ -->
+      <div class="flex items-center gap-2">
+        <!-- ตัวกรองกิลด์ / สถานะ -->
+        <select id="filter-status" onchange="renderTable()"
+          class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 cursor-pointer">
+          <option value="all" data-i18n="filter_all">แสดงทั้งหมด (BlueDevil + RedDevil)</option>
+          <option value="RedDevil" data-i18n="filter_red">🔴 เฉพาะ RedDevil</option>
+          <option value="BlueDevil" data-i18n="filter_blue">🔵 เฉพาะ BlueDevil</option>
+          <option value="eligible" data-i18n="filter_eligible">✅ เฉพาะผู้ผ่านเกณฑ์ (>7)</option>
+          <option value="ineligible" data-i18n="filter_ineligible">❌ เฉพาะผู้ไม่ผ่านเกณฑ์ (≤7)</option>
+        </select>
+
+        <!-- เรียงลำดับ (Sort) -->
+        <select id="sort-by" onchange="renderTable()"
+          class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 cursor-pointer">
+          <option value="cp-desc" selected data-i18n="sort_cp_desc">⚡ พลังรบ CP (มาก ➔ น้อย)</option>
+          <option value="cp-asc" data-i18n="sort_cp_asc">พลังรบ CP (น้อย ➔ มาก)</option>
+          <option value="score-desc" data-i18n="sort_score_desc">คะแนนรวม (มาก ➔ น้อย)</option>
+          <option value="score-asc" data-i18n="sort_score_asc">คะแนนรวม (น้อย ➔ มาก)</option>
+          <option value="name-asc" data-i18n="sort_name_asc">ชื่อตัวละคร (ก-ฮ / A-Z)</option>
+        </select>
+
+        <!-- ปุ่มบันทึกปิดรอบสัปดาห์ / ปลดล็อกสัปดาห์ (เฉพาะ Admin) -->
+        <button id="btn-archive-week" onclick="toggleLockCurrentWeek()"
+          class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm"
+          title="คลิกเพื่อปิดรอบสัปดาห์นี้">
+          <i id="btn-archive-week-icon" class="fa-solid fa-lock-open text-[10px]"></i>
+          <span id="btn-archive-week-text" data-i18n="btn_archive_week">ปิดรอบสัปดาห์</span>
+        </button>
+      </div>
     </div>
-  </main>
-</div> <!-- /#scoring-module-container -->
+
+    <!-- ================= เนื้อหาหลัก: ตารางเช็คชื่อและคำนวณคะแนน ================= -->
+    <main class="flex-1 flex flex-col min-h-0 bg-transparent p-2 sm:p-3.5 overflow-hidden animate-apple-content">
+      <!-- 🔒 ป้ายแจ้งเตือนสัปดาห์ปิดรอบแล้ว (Locked Week Alert Banner) -->
+      <div id="locked-week-banner"
+        class="hidden mb-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-950/80 via-slate-950/90 to-amber-950/80 border border-amber-500/50 text-amber-200 text-xs flex items-center justify-between shadow-lg backdrop-blur shrink-0 animate-fade-in">
+        <div class="flex items-center gap-2.5">
+          <span
+            class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-xs shrink-0 border border-amber-500/40">
+            <i class="fa-solid fa-lock animate-pulse"></i>
+          </span>
+          <div>
+            <span class="font-bold text-amber-300" id="locked-banner-week-name">สัปดาห์ที่ 1</span>
+            <span class="text-slate-300 ml-1">ถูกปิดรอบแล้ว (โหมดอ่านอย่างเดียว • การแก้ไขย้อนหลังต้องยืนยันด้วย Email
+              Admin)</span>
+          </div>
+        </div>
+        <button id="btn-banner-unlock" onclick="toggleLockCurrentWeek()"
+          class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl shadow-md border border-amber-400/50 hover:brightness-110 active:scale-95 transition shrink-0">
+          <i class="fa-solid fa-lock text-[11px]"></i>
+          <span>ปลดล็อกสัปดาห์</span>
+        </button>
+      </div>
+
+      <div
+        class="flex-1 flex flex-col min-h-0 bg-slate-950/80 border border-slate-800/90 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
+
+        <!-- ตัวหุ้มตาราง (เลื่อนเฉพาะแนวตั้ง และตรึงหัวตาราง) -->
+        <div class="flex-1 overflow-y-auto overflow-x-hidden relative">
+          <table class="w-full text-left border-collapse table-fixed text-xs notranslate" translate="no">
+
+            <!-- หัวตาราง (Sticky Header - Apple Pro Table Header เรนเดอร์ผ่าน JS) -->
+            <thead id="main-table-head"
+              class="bg-slate-950/95 sticky top-0 z-20 text-slate-200 border-b border-slate-800/90 shadow-md backdrop-blur-xl">
+              <!-- Rendered dynamically via renderTableHeader() -->
+            </thead>
+
+            <!-- ข้อมูลสมาชิกในตาราง -->
+            <tbody id="member-table-body" class="divide-y divide-slate-800/70 text-slate-300 text-xs">
+              <!-- ตารางจะถูกเรนเดอร์โดย JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- แถบด้านล่างตาราง (Footer Bar) -->
+        <div
+          class="bg-slate-950/90 border-t border-slate-800/80 px-4 py-2 shrink-0 flex flex-wrap items-center justify-between text-[11px] text-slate-400 gap-2 backdrop-blur-md">
+          <div class="flex items-center gap-2">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span><span data-i18n="footer_showing">แสดง</span> <strong id="footer-count"
+                class="text-slate-200">0</strong>
+              <span data-i18n="footer_members">สมาชิก</span></span>
+            <span id="admin-indicator-text" class="text-[10px] ml-2 px-2 py-0.5 rounded font-mono"></span>
+          </div>
+          <div class="flex items-center gap-3 text-[10px]">
+            <span data-i18n="footer_criteria">เกณฑ์ปันผล: เข้าร่วม &gt; 7 ครั้ง</span>
+            <span class="text-slate-600">•</span>
+            <span data-i18n="footer_max_score">คะแนนเต็ม: 100 แต้ม</span>
+            <span class="text-slate-600">•</span>
+            <span>Guild System v6</span>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div> <!-- /#scoring-module-container -->
 
   <!-- ================= โมดูลที่ 2: บอสไทม์เมอร์ & นับถอยหลัง (Boss Timer Dashboard) ================= -->
-  <div id="boss-timer-module-container" class="hidden flex-1 flex flex-col min-h-0 bg-transparent overflow-hidden animate-apple-content">
+  <div id="boss-timer-module-container"
+    class="hidden flex-1 flex flex-col min-h-0 bg-transparent overflow-hidden animate-apple-content">
 
     <!-- แดชบอร์ดสรุปสถิติบอส (Top Boss Summary Stats) -->
     <section class="bg-slate-950/60 border-b border-slate-800/80 px-3 sm:px-5 py-2.5 shrink-0 backdrop-blur-md">
@@ -1144,13 +1156,15 @@
         <!-- การ์ด 1: บอสที่เกิดแล้ว (Alive Now) -->
         <div class="apple-kpi-card apple-kpi-rose p-2.5 sm:p-3 flex items-center justify-between">
           <div>
-            <span class="text-[10px] font-bold text-rose-300 uppercase tracking-wider block" data-i18n="boss_stat_alive">บอสเกิดแล้ว (ALIVE!)</span>
+            <span class="text-[10px] font-bold text-rose-300 uppercase tracking-wider block"
+              data-i18n="boss_stat_alive">บอสเกิดแล้ว (ALIVE!)</span>
             <div class="flex items-baseline gap-1.5 mt-0.5">
               <span id="stat-boss-alive-count" class="text-xl sm:text-2xl font-black font-mono text-rose-400">0</span>
               <span class="text-[10px] text-slate-400" data-i18n="unit_boss">ตัว</span>
             </div>
           </div>
-          <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 flex items-center justify-center text-sm border border-rose-500/30">
+          <div
+            class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 flex items-center justify-center text-sm border border-rose-500/30">
             <i class="fa-solid fa-skull animate-bounce"></i>
           </div>
         </div>
@@ -1158,13 +1172,15 @@
         <!-- การ์ด 2: บอสใกล้เกิดใน 30 นาที (Spawning Soon) -->
         <div class="apple-kpi-card apple-kpi-amber p-2.5 sm:p-3 flex items-center justify-between">
           <div>
-            <span class="text-[10px] font-bold text-amber-300 uppercase tracking-wider block" data-i18n="boss_stat_soon">ใกล้เกิด (&lt;30 นาที)</span>
+            <span class="text-[10px] font-bold text-amber-300 uppercase tracking-wider block"
+              data-i18n="boss_stat_soon">ใกล้เกิด (&lt;30 นาที)</span>
             <div class="flex items-baseline gap-1.5 mt-0.5">
               <span id="stat-boss-soon-count" class="text-xl sm:text-2xl font-black font-mono text-amber-300">0</span>
               <span class="text-[10px] text-slate-400" data-i18n="unit_boss">ตัว</span>
             </div>
           </div>
-          <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-sm border border-amber-500/30">
+          <div
+            class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-sm border border-amber-500/30">
             <i class="fa-solid fa-hourglass-start animate-pulse"></i>
           </div>
         </div>
@@ -1172,13 +1188,15 @@
         <!-- การ์ด 3: บอสทั้งหมดในระบบ -->
         <div class="apple-kpi-card apple-kpi-blue p-2.5 sm:p-3 flex items-center justify-between">
           <div>
-            <span class="text-[10px] font-bold text-sky-300 uppercase tracking-wider block" data-i18n="boss_stat_total">บอสทั้งหมดในระบบ</span>
+            <span class="text-[10px] font-bold text-sky-300 uppercase tracking-wider block"
+              data-i18n="boss_stat_total">บอสทั้งหมดในระบบ</span>
             <div class="flex items-baseline gap-1.5 mt-0.5">
               <span id="stat-boss-total-count" class="text-xl sm:text-2xl font-black font-mono text-sky-300">45</span>
               <span class="text-[10px] text-slate-400" data-i18n="unit_boss">ตัว</span>
             </div>
           </div>
-          <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-300 flex items-center justify-center text-sm border border-sky-500/30">
+          <div
+            class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-300 flex items-center justify-center text-sm border border-sky-500/30">
             <i class="fa-solid fa-dragon"></i>
           </div>
         </div>
@@ -1186,7 +1204,8 @@
         <!-- การ์ด 4: ปลั๊กอิน AI OCR & เสียงแจ้งเตือน -->
         <div class="apple-kpi-card apple-kpi-gold p-2.5 sm:p-3 flex items-center justify-between">
           <div>
-            <span class="text-[10px] font-bold text-amber-300 uppercase tracking-wider block" data-i18n="boss_stat_help">ระบบช่วยเหลือ</span>
+            <span class="text-[10px] font-bold text-amber-300 uppercase tracking-wider block"
+              data-i18n="boss_stat_help">ระบบช่วยเหลือ</span>
             <div class="flex items-center gap-2 mt-1">
               <button onclick="document.getElementById('boss-file-input').click()"
                 class="apple-btn apple-btn-amber px-2 py-0.5 text-[10px] font-bold rounded-lg flex items-center gap-1 shadow-sm">
@@ -1199,8 +1218,10 @@
               </button>
             </div>
           </div>
-          <input type="file" id="boss-file-input" accept="image/*" class="hidden" onchange="if(this.files[0]) processImageForBossOCR(this.files[0])" />
-          <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-sm border border-amber-500/30">
+          <input type="file" id="boss-file-input" accept="image/*" class="hidden"
+            onchange="if(this.files[0]) processImageForBossOCR(this.files[0])" />
+          <div
+            class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-sm border border-amber-500/30">
             <i class="fa-solid fa-wand-magic-sparkles"></i>
           </div>
         </div>
@@ -1209,32 +1230,42 @@
     </section>
 
     <!-- แถบควบคุมตัวกรอง และ ค้นหาบอส -->
-    <div class="bg-slate-950/50 border-b border-slate-800/80 px-3 sm:px-5 py-2 shrink-0 flex items-center justify-between gap-2.5 flex-wrap">
-      
+    <div
+      class="bg-slate-950/50 border-b border-slate-800/80 px-3 sm:px-5 py-2 shrink-0 flex items-center justify-between gap-2.5 flex-wrap">
+
       <!-- Filter Tabs -->
       <div class="flex items-center gap-1.5 flex-wrap">
         <div class="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-0.5 text-xs font-semibold">
-          <button onclick="currentBossFilter='all'; renderBossTimerCards(); document.querySelectorAll('.boss-filter-btn').forEach(b=>b.className='boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition'); this.className='boss-filter-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition';"
-            class="boss-filter-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition" data-i18n="btn_filter_all">
+          <button
+            onclick="currentBossFilter='all'; renderBossTimerCards(); document.querySelectorAll('.boss-filter-btn').forEach(b=>b.className='boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition'); this.className='boss-filter-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition';"
+            class="boss-filter-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition"
+            data-i18n="btn_filter_all">
             ทั้งหมด
           </button>
-          <button onclick="currentBossFilter='alive'; renderBossTimerCards(); document.querySelectorAll('.boss-filter-btn').forEach(b=>b.className='boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition'); this.className='boss-filter-btn px-2.5 py-1 rounded-lg bg-rose-500 text-white font-bold transition';"
-            class="boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition" data-i18n="btn_filter_alive">
+          <button
+            onclick="currentBossFilter='alive'; renderBossTimerCards(); document.querySelectorAll('.boss-filter-btn').forEach(b=>b.className='boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition'); this.className='boss-filter-btn px-2.5 py-1 rounded-lg bg-rose-500 text-white font-bold transition';"
+            class="boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition"
+            data-i18n="btn_filter_alive">
             🔴 เกิดแล้ว
           </button>
-          <button onclick="currentBossFilter='soon'; renderBossTimerCards(); document.querySelectorAll('.boss-filter-btn').forEach(b=>b.className='boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition'); this.className='boss-filter-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition';"
-            class="boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition" data-i18n="btn_filter_soon">
+          <button
+            onclick="currentBossFilter='soon'; renderBossTimerCards(); document.querySelectorAll('.boss-filter-btn').forEach(b=>b.className='boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition'); this.className='boss-filter-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition';"
+            class="boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition"
+            data-i18n="btn_filter_soon">
             🟡 ใกล้เกิด (&lt;30m)
           </button>
-          <button onclick="currentBossFilter='cooldown'; renderBossTimerCards(); document.querySelectorAll('.boss-filter-btn').forEach(b=>b.className='boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition'); this.className='boss-filter-btn px-2.5 py-1 rounded-lg bg-sky-500 text-slate-950 font-bold transition';"
-            class="boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition" data-i18n="btn_filter_cooldown">
+          <button
+            onclick="currentBossFilter='cooldown'; renderBossTimerCards(); document.querySelectorAll('.boss-filter-btn').forEach(b=>b.className='boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition'); this.className='boss-filter-btn px-2.5 py-1 rounded-lg bg-sky-500 text-slate-950 font-bold transition';"
+            class="boss-filter-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition"
+            data-i18n="btn_filter_cooldown">
             ⏳ รอเกิด
           </button>
         </div>
 
         <button id="btn-boss-maint-top" onclick="openMaintenanceModal()"
           class="hidden apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold shadow-sm"
-          title="รีเซ็ตเวลาบอสทั้งหมดพร้อมกันหลังเซิร์ฟเวอร์เปิด (คำนวณตามคอลัมน์ E)" data-i18n-title="tooltip_boss_maint">
+          title="รีเซ็ตเวลาบอสทั้งหมดพร้อมกันหลังเซิร์ฟเวอร์เปิด (คำนวณตามคอลัมน์ E)"
+          data-i18n-title="tooltip_boss_maint">
           <i class="fa-solid fa-wrench"></i>
           <span data-i18n="btn_maintenance">หลังเปิดเซิร์ฟ (Maintenance)</span>
         </button>
@@ -1266,11 +1297,11 @@
         <div class="relative w-44 sm:w-60">
           <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
           <input type="text" id="boss-search-input" oninput="currentBossSearch=this.value; renderBossTimerCards();"
-            placeholder="ค้นหาชื่อบอส, แมพ, เลเวล..."
-            data-i18n-placeholder="boss_search_placeholder"
+            placeholder="ค้นหาชื่อบอส, แมพ, เลเวล..." data-i18n-placeholder="boss_search_placeholder"
             class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-7 pr-2.5 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition" />
         </div>
-        <span id="boss-paste-hint" class="hidden text-[10.5px] text-slate-400 bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg">
+        <span id="boss-paste-hint"
+          class="hidden text-[10.5px] text-slate-400 bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg">
           💡 <span data-i18n="boss_paste_hint">กด Ctrl + V เพื่อวางรูปภาพ Log ให้ AI สแกน</span>
         </span>
       </div>
@@ -1279,7 +1310,8 @@
 
     <!-- บอสการ์ด Grid Container (เลื่อนได้) -->
     <div class="flex-1 overflow-y-auto p-3 sm:p-4">
-      <div id="boss-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-3.5">
+      <div id="boss-cards-grid"
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-3.5">
         <!-- Render via boss_timer.js -->
       </div>
     </div>
@@ -1860,7 +1892,8 @@
             <option value="boss_admin" selected>🐉 Admin บอสไทม์เมอร์ (ลงเวลาบอสอย่างเดียว)</option>
             <option value="admin">🛡️ Admin ทั่วไป (จัดการคะแนนและสมาชิกกิลด์)</option>
           </select>
-          <p class="text-[10.5px] text-slate-400 mt-1">💡 <b>Admin บอส</b> จะสามารถกดลงเวลาบอสและสแกนของดรอปได้ โดยไม่มีสิทธิ์แก้ไขคะแนนกิลด์</p>
+          <p class="text-[10.5px] text-slate-400 mt-1">💡 <b>Admin บอส</b> จะสามารถกดลงเวลาบอสและสแกนของดรอปได้
+            โดยไม่มีสิทธิ์แก้ไขคะแนนกิลด์</p>
         </div>
 
         <div>
@@ -2130,7 +2163,8 @@
         <div class="flex-1 min-w-0">
           <div class="font-bold text-rose-300">คำขอล่าสุดถูกปฏิเสธ</div>
           <div id="cp-update-rejection-reason" class="text-rose-100/90 mt-0.5 font-medium">-</div>
-          <div class="text-[10.5px] text-rose-300/70 mt-1">กรุณาตรวจสอบข้อความด้านบนและแนบรูปภาพใหม่ที่ถูกต้องเพื่อส่งคำขออีกครั้ง</div>
+          <div class="text-[10.5px] text-rose-300/70 mt-1">
+            กรุณาตรวจสอบข้อความด้านบนและแนบรูปภาพใหม่ที่ถูกต้องเพื่อส่งคำขออีกครั้ง</div>
         </div>
       </div>
 
@@ -2291,7 +2325,8 @@
       onclick="event.stopPropagation()">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center text-sm">
+          <div
+            class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center text-sm">
             <i class="fa-solid fa-comment-slash"></i>
           </div>
           <div>
@@ -2315,7 +2350,8 @@
             class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-[11px] font-medium transition">
             🔢 CP ในรูปไม่ตรงที่กรอก
           </button>
-          <button type="button" onclick="setQuickCpRejectReason('รูปไม่ได้ถ่ายแบบเต็มจอ (Full Screen) / ไม่เห็นชื่อตัวละคร')"
+          <button type="button"
+            onclick="setQuickCpRejectReason('รูปไม่ได้ถ่ายแบบเต็มจอ (Full Screen) / ไม่เห็นชื่อตัวละคร')"
             class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-[11px] font-medium transition">
             👤 ไม่เห็นชื่อตัวละคร / ไม่เต็มจอ
           </button>
@@ -6890,7 +6926,7 @@
           const dateStr = new Date(req.requestedAt).toLocaleString(currentLang === 'th' ? 'th-TH' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
           const reqRole = req.role || 'boss_admin';
           const isBossReq = reqRole === 'boss_admin';
-          const roleBadge = isBossReq 
+          const roleBadge = isBossReq
             ? `<span class="px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">🐉 ขอเป็น Admin บอส</span>`
             : `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">🛡️ ขอเป็น Admin ทั่วไป</span>`;
 
@@ -7292,7 +7328,7 @@
 
             if (available.length > 0) {
               // Priority: 3.5-flash > 3.6-flash > 3.7-flash > 3-flash > 3.1-flash > flash-latest > any flash > first available
-              const preferred = 
+              const preferred =
                 available.find(m => /gemini-3\.5-flash/i.test(m)) ||
                 available.find(m => /gemini-3\.6-flash/i.test(m)) ||
                 available.find(m => /gemini-3\.7-flash/i.test(m)) ||
@@ -7322,7 +7358,7 @@
     async function callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey) {
       // 1. First attempt: Use Dynamically Discovered Model
       const discovered = await discoverActiveGeminiModel(apiKey);
-      
+
       const candidateList = [
         { apiVer: discovered.apiVer, model: discovered.model },
         { apiVer: 'v1beta', model: 'gemini-3.5-flash' },
@@ -7406,14 +7442,14 @@
       // 1. Direct JSON parse
       try {
         return JSON.parse(trimmed);
-      } catch (e) {}
+      } catch (e) { }
 
       // 2. Extract code block ```json ... ``` or ``` ... ```
       const blockMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
       if (blockMatch && blockMatch[1]) {
         try {
           return JSON.parse(blockMatch[1].trim());
-        } catch (e) {}
+        } catch (e) { }
       }
 
       // 3. Extract JSON object { ... }
@@ -7422,7 +7458,7 @@
       if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
         try {
           return JSON.parse(trimmed.substring(firstBrace, lastBrace + 1));
-        } catch (e) {}
+        } catch (e) { }
       }
 
       // 4. Extract JSON array [ ... ]
@@ -7431,7 +7467,7 @@
       if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
         try {
           return JSON.parse(trimmed.substring(firstBracket, lastBracket + 1));
-        } catch (e) {}
+        } catch (e) { }
       }
 
       throw new Error('Invalid JSON structure in AI response: ' + trimmed.substring(0, 80));
@@ -7639,7 +7675,7 @@ Output strictly valid JSON with no markdown wrapping:
           const guildMember = members.find(m => {
             const cName = (m.characterName || m.name || '').trim();
             return cName.toLowerCase() === cleanName.toLowerCase() ||
-                   cName.replace(/\s+/g, '') === cleanName.replace(/\s+/g, '');
+              cName.replace(/\s+/g, '') === cleanName.replace(/\s+/g, '');
           });
 
           const itemId = `squad_item_${itemCounter++}`;
@@ -7689,8 +7725,8 @@ Output strictly valid JSON with no markdown wrapping:
           const memberName = item.member ? (item.member.characterName || item.member.name) : item.rawName;
           const guildName = item.member ? (item.member.guild || '-') : 'ไม่พบในกิลด์';
 
-          const cardClass = item.selected 
-            ? 'bg-indigo-950/40 border-indigo-500/50 shadow-sm' 
+          const cardClass = item.selected
+            ? 'bg-indigo-950/40 border-indigo-500/50 shadow-sm'
             : 'bg-slate-950/60 border-slate-800 opacity-60';
 
           html += `
@@ -7713,9 +7749,9 @@ Output strictly valid JSON with no markdown wrapping:
               </div>
 
               <div>
-                ${item.selected 
-                  ? '<span class="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shrink-0">เลือกแล้ว ✅</span>' 
-                  : '<span class="px-2 py-0.5 rounded-full text-[9.5px] font-medium bg-slate-800 text-slate-400 border border-slate-700 shrink-0">ไม่ติ๊ก</span>'}
+                ${item.selected
+              ? '<span class="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shrink-0">เลือกแล้ว ✅</span>'
+              : '<span class="px-2 py-0.5 rounded-full text-[9.5px] font-medium bg-slate-800 text-slate-400 border border-slate-700 shrink-0">ไม่ติ๊ก</span>'}
               </div>
             </div>
           `;
@@ -7757,7 +7793,7 @@ Output strictly valid JSON with no markdown wrapping:
       const guildMember = members.find(m => (m.characterName || m.name) === chosenName);
       if (!guildMember) return;
 
-      const alreadyExists = detectedSquadItems.some(it => 
+      const alreadyExists = detectedSquadItems.some(it =>
         (it.member && (it.member.characterName || it.member.name) === chosenName) ||
         it.rawName === chosenName
       );
@@ -8493,10 +8529,10 @@ Output strictly valid JSON with no markdown formatting.`;
       let itemsHtml = '';
       nongDevilFeedbackLogs.slice(0, 10).forEach((it, idx) => {
         const isIssue = it.actionType === 'issue_report';
-        const typeBadge = isIssue 
+        const typeBadge = isIssue
           ? '<span class="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[9px]">Bug / Issue</span>'
           : '<span class="px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[9px]">Feature Idea</span>';
-        
+
         const readyPromptEsc = encodeURIComponent(it.readyPrompt || '');
         const dateStr = it.createdAt ? new Date(it.createdAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : 'ล่าสุด';
 
@@ -11270,7 +11306,7 @@ Output strictly valid JSON with no markdown formatting.`;
       showToast(t('toast_appeal_history_cleared'), 'info');
     }
 
-        // Toast Alert Helper
+    // Toast Alert Helper
     function showToast(msg, type = "success") {
       const toast = document.getElementById('toast');
       const toastMsg = document.getElementById('toast-message');
@@ -14313,7 +14349,8 @@ Output strictly valid JSON with no markdown formatting.`;
         🔒 สัปดาห์นี้ถูกปิดรอบแล้ว
       </h3>
 
-      <div class="mt-2.5 text-xs text-slate-300 leading-relaxed bg-amber-950/30 border border-amber-500/30 rounded-xl p-3 text-left space-y-1">
+      <div
+        class="mt-2.5 text-xs text-slate-300 leading-relaxed bg-amber-950/30 border border-amber-500/30 rounded-xl p-3 text-left space-y-1">
         <div class="flex items-center gap-1.5 text-amber-300 font-bold">
           <i class="fa-solid fa-calendar-check text-[11px]"></i>
           <span id="retroactive-edit-week-name">สัปดาห์ที่ 1</span>
@@ -14333,8 +14370,7 @@ Output strictly valid JSON with no markdown formatting.`;
           </label>
           <div class="relative">
             <i class="fa-solid fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-            <input type="email" id="retroactive-edit-email-input" required
-              placeholder="เช่น admin@gmail.com"
+            <input type="email" id="retroactive-edit-email-input" required placeholder="เช่น admin@gmail.com"
               class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 text-white text-xs rounded-xl py-2.5 pl-9 pr-3 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition shadow-inner font-mono" />
           </div>
         </div>
@@ -14373,7 +14409,8 @@ Output strictly valid JSON with no markdown formatting.`;
         🔓 ยืนยันสิทธิ์เพื่อปลดล็อกสัปดาห์
       </h3>
 
-      <div class="mt-2.5 text-xs text-slate-300 leading-relaxed bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-3 text-left space-y-1">
+      <div
+        class="mt-2.5 text-xs text-slate-300 leading-relaxed bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-3 text-left space-y-1">
         <div class="flex items-center gap-1.5 text-emerald-300 font-bold">
           <i class="fa-solid fa-calendar-check text-[11px]"></i>
           <span id="unlock-week-modal-name">สัปดาห์ที่ 1</span>
@@ -14390,8 +14427,7 @@ Output strictly valid JSON with no markdown formatting.`;
           </label>
           <div class="relative">
             <i class="fa-solid fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-            <input type="email" id="unlock-week-email-input" required
-              placeholder="เช่น admin@gmail.com"
+            <input type="email" id="unlock-week-email-input" required placeholder="เช่น admin@gmail.com"
               class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 text-white text-xs rounded-xl py-2.5 pl-9 pr-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition shadow-inner font-mono" />
           </div>
         </div>
@@ -14402,8 +14438,7 @@ Output strictly valid JSON with no markdown formatting.`;
           </label>
           <div class="relative">
             <i class="fa-solid fa-key absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-            <input type="password" id="unlock-week-password-input" required
-              placeholder="••••••••"
+            <input type="password" id="unlock-week-password-input" required placeholder="••••••••"
               class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 text-white text-xs rounded-xl py-2.5 pl-9 pr-10 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition shadow-inner font-mono" />
             <button type="button" onclick="togglePasswordVisibility('unlock-week-password-input', this)"
               class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs transition">
@@ -14431,20 +14466,26 @@ Output strictly valid JSON with no markdown formatting.`;
   <!-- ================= หน้าต่างยืนยันการลงเวลาตายบอส + วางรูป Log (Ctrl+V) ================= -->
   <div id="boss-kill-confirm-modal"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-4 animate-fade-in">
-    <div class="w-full max-w-lg bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-rose-500/50 rounded-3xl p-6 shadow-2xl relative animate-scale-up max-h-[90vh] flex flex-col">
-      <button type="button" onclick="closeBossKillConfirmModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+    <div
+      class="w-full max-w-lg bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-rose-500/50 rounded-3xl p-6 shadow-2xl relative animate-scale-up max-h-[90vh] flex flex-col">
+      <button type="button" onclick="closeBossKillConfirmModal()"
+        class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
         <i class="fa-solid fa-xmark"></i>
       </button>
 
       <!-- Modal Header -->
       <div class="flex items-center gap-3 pb-3 border-b border-slate-800 shrink-0">
-        <div id="kill-confirm-avatar-box" class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-600 to-red-500 text-white flex items-center justify-center text-xl shadow-md shrink-0 border border-rose-400/40">
+        <div id="kill-confirm-avatar-box"
+          class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-600 to-red-500 text-white flex items-center justify-center text-xl shadow-md shrink-0 border border-rose-400/40">
           <i class="fa-solid fa-skull"></i>
         </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2">
-            <h3 id="kill-confirm-title" class="text-sm sm:text-base font-extrabold text-white truncate">ยืนยันการลงเวลาตาย</h3>
-            <span class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 shrink-0">24 hr</span>
+            <h3 id="kill-confirm-title" class="text-sm sm:text-base font-extrabold text-white truncate">
+              ยืนยันการลงเวลาตาย</h3>
+            <span
+              class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 shrink-0">24
+              hr</span>
           </div>
           <p id="kill-confirm-desc" class="text-[11px] text-slate-400 truncate">บอสจะเริ่มนับเวลาเกิดรอบถัดไปทันที</p>
         </div>
@@ -14456,11 +14497,16 @@ Output strictly valid JSON with no markdown formatting.`;
           <div class="flex items-center justify-between mb-1.5">
             <span class="text-[10.5px] text-slate-400 font-medium">⚡ เวลาที่บอสตาย (24 ชม.):</span>
             <div class="flex items-center gap-1 text-[10px] font-mono">
-              <button type="button" onclick="applyQuickKillConfirmTime(0)" class="px-2 py-0.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-bold border border-rose-500/40 rounded-lg transition">ตอนนี้</button>
-              <button type="button" onclick="applyQuickKillConfirmTime(5)" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">-5น.</button>
-              <button type="button" onclick="applyQuickKillConfirmTime(10)" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">-10น.</button>
-              <button type="button" onclick="applyQuickKillConfirmTime(15)" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">-15น.</button>
-              <button type="button" onclick="applyQuickKillConfirmTime(30)" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">-30น.</button>
+              <button type="button" onclick="applyQuickKillConfirmTime(0)"
+                class="px-2 py-0.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-bold border border-rose-500/40 rounded-lg transition">ตอนนี้</button>
+              <button type="button" onclick="applyQuickKillConfirmTime(5)"
+                class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">-5น.</button>
+              <button type="button" onclick="applyQuickKillConfirmTime(10)"
+                class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">-10น.</button>
+              <button type="button" onclick="applyQuickKillConfirmTime(15)"
+                class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">-15น.</button>
+              <button type="button" onclick="applyQuickKillConfirmTime(30)"
+                class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">-30น.</button>
             </div>
           </div>
 
@@ -14473,9 +14519,11 @@ Output strictly valid JSON with no markdown formatting.`;
             <div>
               <label class="block text-[10px] text-slate-500 mb-0.5 font-medium">เวลา (HH:MM 24ชม.)</label>
               <div class="flex items-center gap-1.5 font-mono">
-                <select id="kill-confirm-hour" class="picker-hour-select flex-1 bg-slate-950 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2.5 focus:border-rose-400 focus:outline-none text-center cursor-pointer"></select>
+                <select id="kill-confirm-hour"
+                  class="picker-hour-select flex-1 bg-slate-950 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2.5 focus:border-rose-400 focus:outline-none text-center cursor-pointer"></select>
                 <span class="text-amber-400 font-bold">:</span>
-                <select id="kill-confirm-min" class="picker-min-select flex-1 bg-slate-950 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2.5 focus:border-rose-400 focus:outline-none text-center cursor-pointer"></select>
+                <select id="kill-confirm-min"
+                  class="picker-min-select flex-1 bg-slate-950 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2.5 focus:border-rose-400 focus:outline-none text-center cursor-pointer"></select>
                 <span class="text-xs text-slate-400 font-sans">น.</span>
               </div>
             </div>
@@ -14495,22 +14543,28 @@ Output strictly valid JSON with no markdown formatting.`;
           <!-- Dropzone -->
           <div id="kill-confirm-dropzone" onclick="document.getElementById('kill-confirm-file-input').click()"
             class="group cursor-pointer border-2 border-dashed border-slate-700 hover:border-amber-400/70 bg-slate-900/60 hover:bg-slate-900 rounded-2xl p-4 text-center transition duration-200 relative">
-            <input type="file" id="kill-confirm-file-input" accept="image/*" class="hidden" onchange="handleKillConfirmFileSelect(this)" />
-            
+            <input type="file" id="kill-confirm-file-input" accept="image/*" class="hidden"
+              onchange="handleKillConfirmFileSelect(this)" />
+
             <div id="kill-confirm-dropzone-empty" class="space-y-1.5">
-              <div class="w-10 h-10 mx-auto rounded-xl bg-slate-800 group-hover:bg-amber-500/20 group-hover:text-amber-300 text-slate-400 flex items-center justify-center text-lg transition">
+              <div
+                class="w-10 h-10 mx-auto rounded-xl bg-slate-800 group-hover:bg-amber-500/20 group-hover:text-amber-300 text-slate-400 flex items-center justify-center text-lg transition">
                 <i class="fa-solid fa-paste"></i>
               </div>
-              <p class="text-xs text-slate-300 font-medium">กด <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-amber-300 text-[10px] font-mono">Ctrl + V</kbd> เพื่อวางรูปภาพ Log หรือคลิกเลือกไฟล์</p>
+              <p class="text-xs text-slate-300 font-medium">กด <kbd
+                  class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-amber-300 text-[10px] font-mono">Ctrl
+                  + V</kbd> เพื่อวางรูปภาพ Log หรือคลิกเลือกไฟล์</p>
               <p class="text-[10.5px] text-slate-500">ระบบ AI จะช่วยอ่านไอเทมดรอปและบันทึกลงประวัติให้โดยอัตโนมัติ</p>
             </div>
 
             <!-- Image Preview Box -->
             <div id="kill-confirm-dropzone-filled" class="hidden space-y-2">
               <div class="relative inline-block">
-                <img id="kill-confirm-preview-img" src="" alt="Drop Log Preview" class="max-h-36 rounded-xl border border-slate-700 object-contain shadow-md mx-auto" />
+                <img id="kill-confirm-preview-img" src="" alt="Drop Log Preview"
+                  class="max-h-36 rounded-xl border border-slate-700 object-contain shadow-md mx-auto" />
                 <button type="button" onclick="event.stopPropagation(); clearKillConfirmImage();"
-                  class="absolute -top-2 -right-2 w-6 h-6 bg-rose-600 hover:bg-rose-500 text-white rounded-full flex items-center justify-center text-xs shadow-lg transition" title="ลบรูปภาพ">
+                  class="absolute -top-2 -right-2 w-6 h-6 bg-rose-600 hover:bg-rose-500 text-white rounded-full flex items-center justify-center text-xs shadow-lg transition"
+                  title="ลบรูปภาพ">
                   <i class="fa-solid fa-xmark"></i>
                 </button>
               </div>
@@ -14527,15 +14581,18 @@ Output strictly valid JSON with no markdown formatting.`;
               </label>
               <span class="text-[10px] text-slate-400 font-mono">1 บรรทัด = 1 ไอเทม</span>
             </div>
-            <textarea id="kill-confirm-items-text" rows="6" placeholder="เช่น ชุดเกราะแห่งตะวันสีชาด (ผู้รับ: ไข่ตุ๋น)&#10;หินถลุงเครื่องประดับแห่งโชคชะตา x3 (ผู้รับ: ไข่ตุ๋น)"
+            <textarea id="kill-confirm-items-text" rows="6"
+              placeholder="เช่น ชุดเกราะแห่งตะวันสีชาด (ผู้รับ: ไข่ตุ๋น)&#10;หินถลุงเครื่องประดับแห่งโชคชะตา x3 (ผู้รับ: ไข่ตุ๋น)"
               class="w-full min-h-[140px] bg-slate-900 border border-slate-700 text-white text-xs rounded-xl p-3 focus:border-amber-400 focus:outline-none font-mono leading-relaxed resize-y"></textarea>
           </div>
         </div>
 
         <!-- Submit & Cancel Buttons -->
         <div class="flex items-center gap-2 pt-2 border-t border-slate-800">
-          <button type="button" onclick="closeBossKillConfirmModal()" class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">ยกเลิก</button>
-          <button type="button" onclick="handleSaveKillConfirm()" class="flex-1 py-2.5 px-4 bg-gradient-to-r from-rose-600 via-red-500 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-600/30 active:scale-95 transition flex items-center justify-center gap-1.5">
+          <button type="button" onclick="closeBossKillConfirmModal()"
+            class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">ยกเลิก</button>
+          <button type="button" onclick="handleSaveKillConfirm()"
+            class="flex-1 py-2.5 px-4 bg-gradient-to-r from-rose-600 via-red-500 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-600/30 active:scale-95 transition flex items-center justify-center gap-1.5">
             <i class="fa-solid fa-check"></i> <span>ยืนยันลงเวลาตาย</span>
           </button>
         </div>
@@ -14545,23 +14602,28 @@ Output strictly valid JSON with no markdown formatting.`;
 
   <!-- ================= 🛡️ หน้าต่างยืนยันชื่อบอสซ้ำอีกครั้ง (Boss Kill Double-Check Modal) ================= -->
   <div id="boss-double-check-modal"
-    class="fixed inset-0 z-55 flex items-center justify-center bg-black/90 backdrop-blur-md hidden p-4 animate-fade-in" style="z-index: 60;">
-    <div class="w-full max-w-md bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-2 border-amber-500/80 rounded-3xl p-5 sm:p-6 shadow-2xl shadow-amber-500/20 space-y-4 animate-scale-up text-center">
-      
+    class="fixed inset-0 z-55 flex items-center justify-center bg-black/90 backdrop-blur-md hidden p-4 animate-fade-in"
+    style="z-index: 60;">
+    <div
+      class="w-full max-w-md bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-2 border-amber-500/80 rounded-3xl p-5 sm:p-6 shadow-2xl shadow-amber-500/20 space-y-4 animate-scale-up text-center">
+
       <!-- Warning Header -->
-      <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 flex items-center justify-center text-2xl shadow-lg shadow-amber-500/30 animate-bounce">
+      <div
+        class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 flex items-center justify-center text-2xl shadow-lg shadow-amber-500/30 animate-bounce">
         <i class="fa-solid fa-shield-halved"></i>
       </div>
 
       <div>
         <h3 class="text-base sm:text-lg font-black text-white">ตรวจสอบชื่อบอสอีกครั้ง</h3>
-        <p class="text-xs text-amber-300/90 mt-0.5 font-medium">กรุณาตรวจสอบชื่อบอสและเวลาตายให้ถูกต้องเพื่อป้องกันการลงเวลาผิดตัว</p>
+        <p class="text-xs text-amber-300/90 mt-0.5 font-medium">
+          กรุณาตรวจสอบชื่อบอสและเวลาตายให้ถูกต้องเพื่อป้องกันการลงเวลาผิดตัว</p>
       </div>
 
       <!-- Boss & Time Details Card -->
       <div class="p-4 rounded-2xl bg-slate-950/80 border border-amber-500/40 text-left space-y-2.5 shadow-inner">
         <div class="flex items-center gap-3 pb-2.5 border-b border-slate-800">
-          <div id="double-check-boss-img-wrap" class="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center text-xl shrink-0">
+          <div id="double-check-boss-img-wrap"
+            class="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center text-xl shrink-0">
             <span id="double-check-boss-icon">🐉</span>
             <img id="double-check-boss-img" src="" alt="Boss" class="w-full h-full object-cover hidden" />
           </div>
@@ -14586,7 +14648,8 @@ Output strictly valid JSON with no markdown formatting.`;
           </div>
         </div>
 
-        <div id="double-check-items-preview" class="hidden text-[11px] text-slate-300 bg-slate-900/60 p-2 rounded-xl border border-slate-800/80 max-h-24 overflow-y-auto font-mono space-y-0.5">
+        <div id="double-check-items-preview"
+          class="hidden text-[11px] text-slate-300 bg-slate-900/60 p-2 rounded-xl border border-slate-800/80 max-h-24 overflow-y-auto font-mono space-y-0.5">
           <!-- Items List Preview -->
         </div>
       </div>
@@ -14609,13 +14672,16 @@ Output strictly valid JSON with no markdown formatting.`;
   <!-- ================= หน้าต่างแก้ไขข้อมูลบอส & รูปโปรไฟล์ (Boss Edit Modal) ================= -->
   <div id="boss-edit-modal"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-4 animate-fade-in">
-    <div class="w-full max-w-lg bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-amber-500/50 rounded-3xl p-6 shadow-2xl relative animate-scale-up max-h-[90vh] flex flex-col">
-      <button type="button" onclick="closeEditBossModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+    <div
+      class="w-full max-w-lg bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-amber-500/50 rounded-3xl p-6 shadow-2xl relative animate-scale-up max-h-[90vh] flex flex-col">
+      <button type="button" onclick="closeEditBossModal()"
+        class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
         <i class="fa-solid fa-xmark"></i>
       </button>
 
       <div class="flex items-center gap-3 pb-3 border-b border-slate-800 shrink-0">
-        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 flex items-center justify-center text-xl shadow-md">
+        <div
+          class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 flex items-center justify-center text-xl shadow-md">
           <i class="fa-solid fa-pen-to-square"></i>
         </div>
         <div>
@@ -14626,28 +14692,34 @@ Output strictly valid JSON with no markdown formatting.`;
 
       <div class="flex-1 overflow-y-auto py-3 space-y-3.5 pr-1">
         <form id="boss-edit-form" onsubmit="handleSaveEditBoss(event)" class="space-y-3.5">
-          
+
           <!-- Boss Avatar Section -->
           <div class="p-3.5 bg-slate-950/80 border border-slate-800 rounded-2xl space-y-2.5">
             <label class="block text-xs font-bold text-amber-300">🖼️ รูปโปรไฟล์บอส (Boss Avatar):</label>
             <div class="flex items-center gap-3.5">
-              <div class="relative w-16 h-16 rounded-2xl border border-amber-500/40 bg-slate-900 overflow-hidden shrink-0 flex items-center justify-center shadow-inner">
-                <img id="edit-boss-avatar-preview" src="" alt="Avatar Preview" class="w-full h-full object-cover hidden" />
-                <div id="edit-boss-avatar-placeholder" class="text-2xl text-amber-400"><i class="fa-solid fa-dragon"></i></div>
+              <div
+                class="relative w-16 h-16 rounded-2xl border border-amber-500/40 bg-slate-900 overflow-hidden shrink-0 flex items-center justify-center shadow-inner">
+                <img id="edit-boss-avatar-preview" src="" alt="Avatar Preview"
+                  class="w-full h-full object-cover hidden" />
+                <div id="edit-boss-avatar-placeholder" class="text-2xl text-amber-400"><i
+                    class="fa-solid fa-dragon"></i></div>
               </div>
               <div class="flex-1 space-y-1.5">
                 <div class="flex items-center gap-2">
-                  <input type="file" id="edit-boss-avatar-file" accept="image/*" class="hidden" onchange="handleBossAvatarFileSelect(this)" />
+                  <input type="file" id="edit-boss-avatar-file" accept="image/*" class="hidden"
+                    onchange="handleBossAvatarFileSelect(this)" />
                   <button type="button" onclick="document.getElementById('edit-boss-avatar-file').click()"
                     class="py-1.5 px-3 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition">
                     <i class="fa-solid fa-upload text-[11px]"></i> <span>อัปโหลดรูปภาพ</span>
                   </button>
                   <button type="button" onclick="clearBossAvatar()"
-                    class="py-1.5 px-2.5 bg-slate-800 hover:bg-rose-950/50 hover:text-rose-300 text-slate-400 border border-slate-700 text-xs font-semibold rounded-xl transition" title="ลบรูปภาพ">
+                    class="py-1.5 px-2.5 bg-slate-800 hover:bg-rose-950/50 hover:text-rose-300 text-slate-400 border border-slate-700 text-xs font-semibold rounded-xl transition"
+                    title="ลบรูปภาพ">
                     <i class="fa-solid fa-trash-can text-[11px]"></i>
                   </button>
                 </div>
-                <input type="url" id="edit-boss-avatar-url" placeholder="หรือวาง Image URL (https://...)" oninput="updateBossAvatarFromUrl(this.value)"
+                <input type="url" id="edit-boss-avatar-url" placeholder="หรือวาง Image URL (https://...)"
+                  oninput="updateBossAvatarFromUrl(this.value)"
                   class="w-full bg-slate-900 border border-slate-700 text-white text-[11.5px] rounded-xl px-2.5 py-1.5 focus:border-amber-400 focus:outline-none" />
               </div>
             </div>
@@ -14698,9 +14770,12 @@ Output strictly valid JSON with no markdown formatting.`;
             <div class="flex items-center justify-between">
               <label class="text-xs font-bold text-slate-300">⏱️ เวลาตายล่าสุด (รูปแบบ 24 ชม.):</label>
               <div class="flex items-center gap-1 text-[10px] font-mono">
-                <button type="button" onclick="applyQuickEditDefTime(0)" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-lg">ตอนนี้</button>
-                <button type="button" onclick="applyQuickEditDefTime(10)" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg">-10น.</button>
-                <button type="button" onclick="applyQuickEditDefTime(30)" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg">-30น.</button>
+                <button type="button" onclick="applyQuickEditDefTime(0)"
+                  class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-lg">ตอนนี้</button>
+                <button type="button" onclick="applyQuickEditDefTime(10)"
+                  class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg">-10น.</button>
+                <button type="button" onclick="applyQuickEditDefTime(30)"
+                  class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg">-30น.</button>
               </div>
             </div>
             <div class="grid grid-cols-2 gap-2">
@@ -14712,23 +14787,28 @@ Output strictly valid JSON with no markdown formatting.`;
               <div>
                 <label class="block text-[10px] text-slate-500 mb-0.5">เวลา (HH:MM)</label>
                 <div class="flex items-center gap-1 font-mono">
-                  <select id="edit-boss-def-hour" class="picker-hour-select flex-1 bg-slate-900 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
+                  <select id="edit-boss-def-hour"
+                    class="picker-hour-select flex-1 bg-slate-900 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
                   <span class="text-amber-400 font-bold">:</span>
-                  <select id="edit-boss-def-min" class="picker-min-select flex-1 bg-slate-900 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
+                  <select id="edit-boss-def-min"
+                    class="picker-min-select flex-1 bg-slate-900 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="flex items-center gap-2 pt-2 border-t border-slate-800">
-            <button type="button" onclick="closeEditBossModal()" class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">ยกเลิก</button>
-            <button type="submit" class="flex-1 py-2.5 px-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-orange-500/20 active:scale-95 transition flex items-center justify-center gap-1.5">
+            <button type="button" onclick="closeEditBossModal()"
+              class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">ยกเลิก</button>
+            <button type="submit"
+              class="flex-1 py-2.5 px-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-orange-500/20 active:scale-95 transition flex items-center justify-center gap-1.5">
               <i class="fa-solid fa-floppy-disk"></i> <span>บันทึกการแก้ไข</span>
             </button>
           </div>
 
           <div class="pt-1 text-center">
-            <button type="button" onclick="resetSingleBossTimer()" class="text-[11px] text-rose-400/80 hover:text-rose-300 underline transition">
+            <button type="button" onclick="resetSingleBossTimer()"
+              class="text-[11px] text-rose-400/80 hover:text-rose-300 underline transition">
               <i class="fa-solid fa-rotate-left mr-1"></i>ล้างเวลาบอสตัวนี้กลับเป็น "ยังไม่ลงเวลา"
             </button>
           </div>
@@ -14741,7 +14821,8 @@ Output strictly valid JSON with no markdown formatting.`;
   <!-- ================= หน้าต่างประวัติของดรอป (Boss Drop Log Modal) ================= -->
   <div id="boss-drop-log-modal"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-4 animate-fade-in">
-    <div class="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl relative flex flex-col max-h-[85vh]">
+    <div
+      class="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl relative flex flex-col max-h-[85vh]">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
         <div class="flex items-center gap-2.5 text-amber-400">
           <i class="fa-solid fa-gift text-lg"></i>
@@ -14755,7 +14836,8 @@ Output strictly valid JSON with no markdown formatting.`;
         <!-- Rendered by JS -->
       </div>
       <div class="pt-2 text-right">
-        <button type="button" onclick="closeBossDropLogModal()" class="py-2 px-4 bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl">ปิด</button>
+        <button type="button" onclick="closeBossDropLogModal()"
+          class="py-2 px-4 bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl">ปิด</button>
       </div>
     </div>
   </div>
@@ -14763,14 +14845,17 @@ Output strictly valid JSON with no markdown formatting.`;
   <!-- ================= หน้าต่างสแกน Log ภาพแคปด้วย AI (Boss AI OCR Modal) ================= -->
   <div id="boss-ai-ocr-modal"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-4 animate-fade-in">
-    <div class="w-full max-w-lg bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-amber-500/50 rounded-3xl p-6 shadow-2xl relative animate-scale-up max-h-[90vh] flex flex-col">
-      
-      <button type="button" onclick="closeBossAiOcrModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+    <div
+      class="w-full max-w-lg bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-amber-500/50 rounded-3xl p-6 shadow-2xl relative animate-scale-up max-h-[90vh] flex flex-col">
+
+      <button type="button" onclick="closeBossAiOcrModal()"
+        class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
         <i class="fa-solid fa-xmark"></i>
       </button>
 
       <div class="flex items-center gap-2.5 pb-3 border-b border-slate-800 shrink-0">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 flex items-center justify-center text-lg shadow-md">
+        <div
+          class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 flex items-center justify-center text-lg shadow-md">
           <i class="fa-solid fa-wand-magic-sparkles"></i>
         </div>
         <div>
@@ -14782,7 +14867,8 @@ Output strictly valid JSON with no markdown formatting.`;
       <div class="flex-1 overflow-y-auto py-3 space-y-3">
         <!-- Preview Image Box -->
         <div class="border border-slate-800 bg-slate-950 rounded-2xl overflow-hidden text-center p-2">
-          <img id="ocr-image-preview" src="" alt="OCR Preview" class="max-h-44 mx-auto object-contain rounded-lg hidden" />
+          <img id="ocr-image-preview" src="" alt="OCR Preview"
+            class="max-h-44 mx-auto object-contain rounded-lg hidden" />
           <div id="ocr-progress-status" class="py-3 text-xs text-amber-300 font-medium"></div>
         </div>
 
@@ -14805,9 +14891,11 @@ Output strictly valid JSON with no markdown formatting.`;
             <div>
               <label class="block text-xs font-bold text-slate-300 mb-1">เวลาตาย (24 ชม.):</label>
               <div class="flex items-center gap-1 font-mono">
-                <select id="ocr-kill-hour" class="picker-hour-select flex-1 bg-slate-950 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2.5 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
+                <select id="ocr-kill-hour"
+                  class="picker-hour-select flex-1 bg-slate-950 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2.5 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
                 <span class="text-amber-400 font-bold">:</span>
-                <select id="ocr-kill-min" class="picker-min-select flex-1 bg-slate-950 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2.5 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
+                <select id="ocr-kill-min"
+                  class="picker-min-select flex-1 bg-slate-950 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2.5 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
               </div>
             </div>
           </div>
@@ -14819,8 +14907,10 @@ Output strictly valid JSON with no markdown formatting.`;
           </div>
 
           <div class="flex items-center gap-2 pt-2">
-            <button type="button" onclick="closeBossAiOcrModal()" class="w-1/3 py-2.5 px-3 bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl">ยกเลิก</button>
-            <button type="submit" class="flex-1 py-2.5 px-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg flex items-center justify-center gap-1.5">
+            <button type="button" onclick="closeBossAiOcrModal()"
+              class="w-1/3 py-2.5 px-3 bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl">ยกเลิก</button>
+            <button type="submit"
+              class="flex-1 py-2.5 px-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg flex items-center justify-center gap-1.5">
               <i class="fa-solid fa-check"></i> <span>ยืนยันบันทึกเวลา & ของดรอป</span>
             </button>
           </div>
@@ -14833,13 +14923,16 @@ Output strictly valid JSON with no markdown formatting.`;
   <!-- ================= หน้าต่างรีเซ็ตเวลาหลังเปิดเซิร์ฟเวอร์ (Server Maintenance Reset Modal) ================= -->
   <div id="boss-maintenance-modal"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-4 animate-fade-in">
-    <div class="w-full max-w-md bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-amber-500/50 rounded-3xl p-6 shadow-2xl relative animate-scale-up">
-      <button type="button" onclick="closeMaintenanceModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+    <div
+      class="w-full max-w-md bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-amber-500/50 rounded-3xl p-6 shadow-2xl relative animate-scale-up">
+      <button type="button" onclick="closeMaintenanceModal()"
+        class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
         <i class="fa-solid fa-xmark"></i>
       </button>
 
       <div class="flex items-center gap-3 mb-4 text-amber-400">
-        <div class="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center text-xl border border-amber-500/30 text-amber-400 shadow-md">
+        <div
+          class="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center text-xl border border-amber-500/30 text-amber-400 shadow-md">
           <i class="fa-solid fa-wrench"></i>
         </div>
         <div>
@@ -14861,16 +14954,21 @@ Output strictly valid JSON with no markdown formatting.`;
             class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-amber-400 focus:outline-none font-mono" />
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">เวลาที่เซิร์ฟเวอร์เปิด (รูปแบบ 24 ชม. HH:MM):</label>
+          <label class="block text-xs font-bold text-slate-300 mb-1">เวลาที่เซิร์ฟเวอร์เปิด (รูปแบบ 24 ชม.
+            HH:MM):</label>
           <div class="flex items-center gap-1 font-mono">
-            <select id="maint-reset-hour" class="picker-hour-select flex-1 bg-slate-950 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2.5 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
+            <select id="maint-reset-hour"
+              class="picker-hour-select flex-1 bg-slate-950 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2.5 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
             <span class="text-amber-400 font-bold">:</span>
-            <select id="maint-reset-min" class="picker-min-select flex-1 bg-slate-950 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2.5 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
+            <select id="maint-reset-min"
+              class="picker-min-select flex-1 bg-slate-950 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2.5 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
           </div>
         </div>
         <div class="flex items-center gap-2 pt-2">
-          <button type="button" onclick="closeMaintenanceModal()" class="w-1/3 py-2.5 px-3 bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl">ยกเลิก</button>
-          <button type="submit" class="flex-1 py-2.5 px-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg flex items-center justify-center gap-1.5 active:scale-95 transition">
+          <button type="button" onclick="closeMaintenanceModal()"
+            class="w-1/3 py-2.5 px-3 bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl">ยกเลิก</button>
+          <button type="submit"
+            class="flex-1 py-2.5 px-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg flex items-center justify-center gap-1.5 active:scale-95 transition">
             <i class="fa-solid fa-bolt"></i> <span>ยืนยันรีเซ็ตเวลาบอส</span>
           </button>
         </div>
@@ -14887,23 +14985,29 @@ Output strictly valid JSON with no markdown formatting.`;
   <!-- ================= 📜 หน้าต่างประวัติการลงเวลาบอสทั้งหมด (Boss Kill History Modal) ================= -->
   <div id="boss-kill-history-modal"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-3 sm:p-4 animate-fade-in">
-    <div class="w-full max-w-4xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-amber-500/50 rounded-3xl p-4 sm:p-6 shadow-2xl relative animate-scale-up max-h-[92vh] flex flex-col">
-      <button type="button" onclick="closeBossKillHistoryModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+    <div
+      class="w-full max-w-4xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-amber-500/50 rounded-3xl p-4 sm:p-6 shadow-2xl relative animate-scale-up max-h-[92vh] flex flex-col">
+      <button type="button" onclick="closeBossKillHistoryModal()"
+        class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
         <i class="fa-solid fa-xmark"></i>
       </button>
 
       <!-- Header -->
       <div class="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0 pr-8 flex-wrap gap-2">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-amber-500/20 text-amber-300 flex items-center justify-center text-lg border border-amber-500/30 shadow-md">
+          <div
+            class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-amber-500/20 text-amber-300 flex items-center justify-center text-lg border border-amber-500/30 shadow-md">
             <i class="fa-solid fa-scroll"></i>
           </div>
           <div>
             <div class="flex items-center gap-2">
               <h3 class="text-sm sm:text-base font-extrabold text-white">ประวัติการลงเวลาบอส (Kill History Logs)</h3>
-              <span id="history-log-count-badge" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">0 รายการ</span>
+              <span id="history-log-count-badge"
+                class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">0
+                รายการ</span>
             </div>
-            <p class="text-[11px] text-slate-400">บันทึกประวัติย้อนหลังเรียลไทม์ ซิงค์คู่ขนานลง Firebase และ Google Sheets</p>
+            <p class="text-[11px] text-slate-400">บันทึกประวัติย้อนหลังเรียลไทม์ ซิงค์คู่ขนานลง Firebase และ Google
+              Sheets</p>
           </div>
         </div>
 
@@ -14949,28 +15053,34 @@ Output strictly valid JSON with no markdown formatting.`;
   <!-- ================= 📸 หน้าต่าง AI สแกนรูปจัดการชุมนุมติ๊กชื่อบอส ================= -->
   <div id="ai-squad-check-modal"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md hidden p-4 animate-fade-in">
-    <div class="w-full max-w-2xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-indigo-500/50 rounded-3xl p-5 sm:p-6 shadow-2xl relative animate-scale-up max-h-[92vh] flex flex-col font-sarabun">
-      <button type="button" onclick="closeAiSquadCheckModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+    <div
+      class="w-full max-w-2xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-indigo-500/50 rounded-3xl p-5 sm:p-6 shadow-2xl relative animate-scale-up max-h-[92vh] flex flex-col font-sarabun">
+      <button type="button" onclick="closeAiSquadCheckModal()"
+        class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
         <i class="fa-solid fa-xmark"></i>
       </button>
 
       <!-- Header -->
       <div class="flex items-center gap-3 pb-3 border-b border-slate-800 shrink-0">
-        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center text-xl border border-indigo-400/40 shadow-md">
+        <div
+          class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center text-xl border border-indigo-400/40 shadow-md">
           <i class="fa-solid fa-camera-retro"></i>
         </div>
         <div>
           <h3 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
             <span>AI สแกนรูป "จัดการชุมนุม" ติ๊กคะแนนบอส</span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/40">Gemini Vision 99.9%</span>
+            <span
+              class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/40">Gemini
+              Vision 99.9%</span>
           </h3>
-          <p class="text-[11px] text-slate-400">แคปรูปหน้าต่างจัดการชุมนุมในเกมแล้วกด Ctrl + V เพื่อสแกนและติ๊กถูกบอสให้ทุกคนใน 1 วินาที</p>
+          <p class="text-[11px] text-slate-400">แคปรูปหน้าต่างจัดการชุมนุมในเกมแล้วกด Ctrl + V
+            เพื่อสแกนและติ๊กถูกบอสให้ทุกคนใน 1 วินาที</p>
         </div>
       </div>
 
       <!-- Body Scrollable -->
       <div class="flex-1 overflow-y-auto py-3 space-y-3.5 pr-1 text-xs">
-        
+
         <!-- Step 1: Select Boss / Activity -->
         <div class="p-3.5 bg-slate-950/80 border border-slate-800 rounded-2xl space-y-2">
           <label class="block text-xs font-bold text-indigo-300">
@@ -14983,29 +15093,38 @@ Output strictly valid JSON with no markdown formatting.`;
         </div>
 
         <!-- Step 2: Image Dropzone & Paste Area -->
-        <div class="p-3.5 bg-slate-950/80 border border-dashed border-indigo-500/40 hover:border-indigo-400 rounded-2xl text-center relative cursor-pointer group transition"
+        <div
+          class="p-3.5 bg-slate-950/80 border border-dashed border-indigo-500/40 hover:border-indigo-400 rounded-2xl text-center relative cursor-pointer group transition"
           id="squad-image-dropzone" onclick="document.getElementById('squad-image-file-input').click()">
-          <input type="file" id="squad-image-file-input" accept="image/*" class="hidden" onchange="handleSquadFileSelect(this.files[0])" />
-          
+          <input type="file" id="squad-image-file-input" accept="image/*" class="hidden"
+            onchange="handleSquadFileSelect(this.files[0])" />
+
           <div id="squad-dropzone-prompt" class="py-4 space-y-2">
-            <div class="w-12 h-12 mx-auto rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+            <div
+              class="w-12 h-12 mx-auto rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-2xl group-hover:scale-110 transition">
               <i class="fa-solid fa-cloud-arrow-up"></i>
             </div>
-            <div class="text-xs font-bold text-white">กดคลิกเพื่อเลือกรูปภาพ หรือกด <span class="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 rounded-md font-mono">Ctrl + V</span> เพื่อวางภาพ</div>
+            <div class="text-xs font-bold text-white">กดคลิกเพื่อเลือกรูปภาพ หรือกด <span
+                class="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 rounded-md font-mono">Ctrl
+                + V</span> เพื่อวางภาพ</div>
             <div class="text-[11px] text-slate-400">รองรับรูปภาพหน้าจอ "จัดการชุมนุม" (หน่วย 1, 2, 3, 4)</div>
           </div>
 
-          <div id="squad-image-preview-box" class="hidden relative max-h-48 rounded-xl overflow-hidden border border-slate-700 mx-auto">
+          <div id="squad-image-preview-box"
+            class="hidden relative max-h-48 rounded-xl overflow-hidden border border-slate-700 mx-auto">
             <img id="squad-image-preview" class="max-h-48 w-full object-contain bg-slate-950" />
-            <button type="button" onclick="event.stopPropagation(); resetSquadImageScan();" class="absolute top-2 right-2 px-2 py-1 bg-black/80 hover:bg-black text-rose-300 rounded-lg text-[10px] border border-rose-500/40">
+            <button type="button" onclick="event.stopPropagation(); resetSquadImageScan();"
+              class="absolute top-2 right-2 px-2 py-1 bg-black/80 hover:bg-black text-rose-300 rounded-lg text-[10px] border border-rose-500/40">
               <i class="fa-solid fa-rotate-left mr-1"></i>เปลี่ยนรูป
             </button>
           </div>
         </div>
 
         <!-- Status indicator -->
-        <div id="squad-ai-status" class="hidden py-3 px-4 rounded-xl bg-purple-950/40 border border-purple-500/30 text-purple-300 text-xs text-center font-medium">
-          <i class="fa-solid fa-wand-magic-sparkles fa-spin mr-1.5"></i> กำลังส่งภาพให้ Google Gemini AI สแกนรายชื่อสมาชิก...
+        <div id="squad-ai-status"
+          class="hidden py-3 px-4 rounded-xl bg-purple-950/40 border border-purple-500/30 text-purple-300 text-xs text-center font-medium">
+          <i class="fa-solid fa-wand-magic-sparkles fa-spin mr-1.5"></i> กำลังส่งภาพให้ Google Gemini AI
+          สแกนรายชื่อสมาชิก...
         </div>
 
         <!-- Step 3: Detected Members Grid & Interactive Selector -->
@@ -15017,11 +15136,12 @@ Output strictly valid JSON with no markdown formatting.`;
                 <i class="fa-solid fa-users text-indigo-400"></i>
                 <span>รายชื่อที่ตรวจพบ:</span>
               </span>
-              <span id="squad-summary-badge" class="text-[10.5px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+              <span id="squad-summary-badge"
+                class="text-[10.5px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
                 พบสมาชิก 0 คน
               </span>
             </div>
-            
+
             <!-- Quick Actions -->
             <div class="flex items-center gap-1.5 text-[11px]">
               <button type="button" onclick="toggleAllSquadSelections(true)"
@@ -15058,12 +15178,14 @@ Output strictly valid JSON with no markdown formatting.`;
 
       <!-- Footer Buttons -->
       <div class="flex items-center gap-2 pt-3 border-t border-slate-800 shrink-0">
-        <button type="button" onclick="closeAiSquadCheckModal()" class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition text-xs">
+        <button type="button" onclick="closeAiSquadCheckModal()"
+          class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition text-xs">
           ยกเลิก
         </button>
         <button type="button" id="btn-confirm-squad-check" onclick="confirmAiSquadAttendanceCheck()" disabled
           class="flex-1 py-2.5 px-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500 hover:from-indigo-400 hover:to-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-500/25 active:scale-95 transition flex items-center justify-center gap-1.5">
-          <i class="fa-solid fa-check"></i> <span id="btn-confirm-squad-check-text">ยืนยันติ๊กถูกให้สมาชิกที่เลือก (0 คน)</span>
+          <i class="fa-solid fa-check"></i> <span id="btn-confirm-squad-check-text">ยืนยันติ๊กถูกให้สมาชิกที่เลือก (0
+            คน)</span>
         </button>
       </div>
 
@@ -15073,13 +15195,16 @@ Output strictly valid JSON with no markdown formatting.`;
   <!-- ================= ⚙️ หน้าต่างตั้งค่า Discord Webhook & Google Sheets ================= -->
   <div id="boss-sheet-config-modal"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md hidden p-4 animate-fade-in">
-    <div class="w-full max-w-lg bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-indigo-500/50 rounded-3xl p-6 shadow-2xl relative animate-scale-up max-h-[90vh] flex flex-col">
-      <button type="button" onclick="closeSheetWebhookSettingsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+    <div
+      class="w-full max-w-lg bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-indigo-500/50 rounded-3xl p-6 shadow-2xl relative animate-scale-up max-h-[90vh] flex flex-col">
+      <button type="button" onclick="closeSheetWebhookSettingsModal()"
+        class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
         <i class="fa-solid fa-xmark"></i>
       </button>
 
       <div class="flex items-center gap-3 pb-3 border-b border-slate-800 shrink-0">
-        <div class="w-11 h-11 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl border border-indigo-500/40 shadow-md">
+        <div
+          class="w-11 h-11 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl border border-indigo-500/40 shadow-md">
           <i class="fa-brands fa-discord"></i>
         </div>
         <div>
@@ -15089,7 +15214,7 @@ Output strictly valid JSON with no markdown formatting.`;
       </div>
 
       <div class="flex-1 overflow-y-auto py-3 space-y-4 pr-1 text-xs">
-        
+
         <!-- Section 1: Discord Webhook -->
         <div class="p-3.5 bg-indigo-950/40 border border-indigo-500/30 rounded-2xl space-y-2.5">
           <div class="flex items-center justify-between">
@@ -15097,16 +15222,18 @@ Output strictly valid JSON with no markdown formatting.`;
               <i class="fa-brands fa-discord text-sm"></i>
               <span>Discord Webhook (แจ้งเตือนบอสเรียลไทม์)</span>
             </div>
-            <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-mono">ทำงานจากเว็บ 100%</span>
+            <span
+              class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-mono">ทำงานจากเว็บ
+              100%</span>
           </div>
           <p class="text-[11px] text-slate-300 leading-relaxed">
-            สร้าง Webhook จากห้อง Discord ที่ต้องการ (เช่น <code>#boss-alert</code>) โดยไปที่ <b>Server Settings ➔ Integrations ➔ Webhooks</b> แล้วคัดลอก URL มาวางที่นี่
+            สร้าง Webhook จากห้อง Discord ที่ต้องการ (เช่น <code>#boss-alert</code>) โดยไปที่ <b>Server Settings ➔
+              Integrations ➔ Webhooks</b> แล้วคัดลอก URL มาวางที่นี่
           </p>
           <div>
             <label class="block text-[11px] font-bold text-slate-300 mb-1">Discord Webhook URL:</label>
             <div class="flex gap-2">
-              <input type="url" id="discord-webhook-url-input"
-                placeholder="https://discord.com/api/webhooks/..."
+              <input type="url" id="discord-webhook-url-input" placeholder="https://discord.com/api/webhooks/..."
                 class="flex-1 bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-indigo-400 focus:outline-none font-mono" />
               <button type="button" onclick="testDiscordWebhook()"
                 class="apple-btn apple-btn-sapphire px-3 py-2 text-xs font-bold shrink-0 flex items-center gap-1.5 shadow-sm"
@@ -15126,8 +15253,7 @@ Output strictly valid JSON with no markdown formatting.`;
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-300 mb-1">Google Apps Script Web App URL:</label>
-            <input type="url" id="sheet-webhook-url-input"
-              placeholder="https://script.google.com/macros/s/.../exec"
+            <input type="url" id="sheet-webhook-url-input" placeholder="https://script.google.com/macros/s/.../exec"
               class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-emerald-400 focus:outline-none font-mono" />
           </div>
         </div>
@@ -15145,13 +15271,13 @@ Output strictly valid JSON with no markdown formatting.`;
             </a>
           </div>
           <p class="text-[11px] text-slate-300 leading-relaxed">
-            ใช้พลัง AI ของ Google สแกนรูปภาพ Log ของบอสภาษาไทยโดยตรง ไม่เพี้ยน สระไม่ลอย พร้อมสกัดเวลาและไอเทมดรอปใส่ช่องให้อัตโนมัติ (ฟรี 1,500 ครั้ง/วัน)
+            ใช้พลัง AI ของ Google สแกนรูปภาพ Log ของบอสภาษาไทยโดยตรง ไม่เพี้ยน สระไม่ลอย
+            พร้อมสกัดเวลาและไอเทมดรอปใส่ช่องให้อัตโนมัติ (ฟรี 1,500 ครั้ง/วัน)
           </p>
           <div class="space-y-1.5">
             <label class="block text-[11px] font-bold text-slate-300">Google Gemini API Key:</label>
             <div class="flex items-center gap-2">
-              <input type="password" id="gemini-api-key-input"
-                placeholder="AIzaSy..."
+              <input type="password" id="gemini-api-key-input" placeholder="AIzaSy..."
                 class="flex-1 bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-purple-400 focus:outline-none font-mono" />
               <button type="button" onclick="testGeminiApiKeyConnection()"
                 class="px-3 py-2.5 bg-purple-600/80 hover:bg-purple-600 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-md">
@@ -15163,8 +15289,10 @@ Output strictly valid JSON with no markdown formatting.`;
         </div>
 
         <div class="flex items-center gap-2 pt-2">
-          <button type="button" onclick="closeSheetWebhookSettingsModal()" class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition">ยกเลิก</button>
-          <button type="button" onclick="saveSheetWebhookUrl()" class="flex-1 py-2.5 px-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500 hover:from-indigo-400 hover:to-emerald-400 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-500/25 active:scale-95 transition flex items-center justify-center gap-1.5">
+          <button type="button" onclick="closeSheetWebhookSettingsModal()"
+            class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition">ยกเลิก</button>
+          <button type="button" onclick="saveSheetWebhookUrl()"
+            class="flex-1 py-2.5 px-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500 hover:from-indigo-400 hover:to-emerald-400 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-500/25 active:scale-95 transition flex items-center justify-center gap-1.5">
             <i class="fa-solid fa-check"></i> <span>บันทึกการเชื่อมต่อทั้งหมด</span>
           </button>
         </div>
@@ -15177,7 +15305,7 @@ Output strictly valid JSON with no markdown formatting.`;
     class="hidden fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-3 sm:p-4 backdrop-blur-md overflow-y-auto">
     <div
       class="apple-modal-box relative w-full max-w-lg bg-[#090d18] border border-amber-500/40 rounded-3xl shadow-2xl p-5 sm:p-6 my-auto overflow-hidden">
-      
+
       <!-- Header -->
       <div class="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
         <div class="flex items-center gap-2.5">
@@ -15186,21 +15314,25 @@ Output strictly valid JSON with no markdown formatting.`;
             <i class="fa-solid fa-user-pen"></i>
           </div>
           <div>
-            <h3 class="text-sm sm:text-base font-bold text-white tracking-wide" data-i18n="modal_char_edit_title">แก้ไขข้อมูลตัวละคร</h3>
-            <p class="text-xs text-slate-400 mt-0.5" data-i18n="modal_char_edit_desc">ยื่นคำขอแก้ไขชื่อตัวละคร, Email, และสังกัดกิลด์ (ต้องได้รับการอนุมัติจาก Admin)</p>
+            <h3 class="text-sm sm:text-base font-bold text-white tracking-wide" data-i18n="modal_char_edit_title">
+              แก้ไขข้อมูลตัวละคร</h3>
+            <p class="text-xs text-slate-400 mt-0.5" data-i18n="modal_char_edit_desc">ยื่นคำขอแก้ไขชื่อตัวละคร, Email,
+              และสังกัดกิลด์ (ต้องได้รับการอนุมัติจาก Admin)</p>
           </div>
         </div>
-        <button onclick="closeCharEditRequestModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition">
+        <button onclick="closeCharEditRequestModal()"
+          class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
       <!-- Form Content -->
       <form id="char-edit-form" onsubmit="submitCharEditRequest(event)" class="py-4 space-y-3.5 text-xs">
-        
+
         <!-- Select Member -->
         <div>
-          <label class="block text-slate-300 font-bold mb-1.5" data-i18n="label_current_char_select">เลือกตัวละครของคุณ *</label>
+          <label class="block text-slate-300 font-bold mb-1.5" data-i18n="label_current_char_select">เลือกตัวละครของคุณ
+            *</label>
           <select id="char-edit-select-member" required onchange="onCharEditMemberSelected()"
             class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl p-2.5 focus:border-amber-400 focus:outline-none cursor-pointer">
             <option value="">-- กรุณาเลือกตัวละครของคุณ --</option>
@@ -15209,14 +15341,16 @@ Output strictly valid JSON with no markdown formatting.`;
 
         <!-- 1. Character Name -->
         <div>
-          <label class="block text-slate-300 font-bold mb-1.5" data-i18n="label_new_char_name">👤 ชื่อตัวละครใหม่ *</label>
+          <label class="block text-slate-300 font-bold mb-1.5" data-i18n="label_new_char_name">👤 ชื่อตัวละครใหม่
+            *</label>
           <input type="text" id="char-edit-new-name" required placeholder="เช่น ไข่หวาน, ShadowKnight"
             class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl p-2.5 focus:border-amber-400 focus:outline-none" />
         </div>
 
         <!-- 2. Email -->
         <div>
-          <label class="block text-slate-300 font-bold mb-1.5" data-i18n="label_new_email">📧 Email (ใช้เข้าสู่ระบบ/รับการแจ้งเตือน) *</label>
+          <label class="block text-slate-300 font-bold mb-1.5" data-i18n="label_new_email">📧 Email
+            (ใช้เข้าสู่ระบบ/รับการแจ้งเตือน) *</label>
           <input type="email" id="char-edit-new-email" required placeholder="player@gmail.com"
             class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl p-2.5 focus:border-amber-400 focus:outline-none font-mono" />
         </div>
@@ -15233,21 +15367,25 @@ Output strictly valid JSON with no markdown formatting.`;
 
         <!-- Reason -->
         <div>
-          <label class="block text-slate-300 font-bold mb-1.5" data-i18n="label_char_edit_reason">💬 เหตุผลในการขอแก้ไข *</label>
+          <label class="block text-slate-300 font-bold mb-1.5" data-i18n="label_char_edit_reason">💬 เหตุผลในการขอแก้ไข
+            *</label>
           <input type="text" id="char-edit-reason" required placeholder="เช่น เปลี่ยนชื่อในเกม, ย้ายกิลด์, แก้ไข Email"
             data-i18n-placeholder="placeholder_char_edit_reason"
             class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl p-2.5 focus:border-amber-400 focus:outline-none" />
         </div>
 
         <!-- Approval notice -->
-        <div class="p-3 bg-amber-500/10 border border-amber-500/25 rounded-2xl text-[11px] text-amber-300 leading-relaxed flex items-start gap-2">
+        <div
+          class="p-3 bg-amber-500/10 border border-amber-500/25 rounded-2xl text-[11px] text-amber-300 leading-relaxed flex items-start gap-2">
           <i class="fa-solid fa-shield-halved text-amber-400 mt-0.5 shrink-0 text-xs"></i>
-          <span data-i18n="char_edit_info_notice">เมื่อส่งคำขอแล้ว แอดมินจะได้รับแจ้งเตือนและตรวจสอบเพื่ออนุมัติการแก้ไขข้อมูลให้โดยเร็วครับ</span>
+          <span data-i18n="char_edit_info_notice">เมื่อส่งคำขอแล้ว
+            แอดมินจะได้รับแจ้งเตือนและตรวจสอบเพื่ออนุมัติการแก้ไขข้อมูลให้โดยเร็วครับ</span>
         </div>
 
         <!-- Action Buttons -->
         <div class="flex items-center gap-2 pt-2">
-          <button type="button" onclick="closeCharEditRequestModal()" class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition">
+          <button type="button" onclick="closeCharEditRequestModal()"
+            class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition">
             <span data-i18n="btn_cancel">ยกเลิก</span>
           </button>
           <button type="submit" id="btn-char-edit-submit"
@@ -15266,7 +15404,7 @@ Output strictly valid JSON with no markdown formatting.`;
     class="hidden fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-3 sm:p-4 backdrop-blur-md overflow-y-auto">
     <div
       class="apple-modal-box relative w-full max-w-3xl bg-[#090d18] border border-amber-500/40 rounded-3xl shadow-2xl p-5 sm:p-6 my-auto overflow-hidden flex flex-col max-h-[90vh]">
-      
+
       <!-- Header -->
       <div class="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
         <div class="flex items-center gap-2.5">
@@ -15276,24 +15414,30 @@ Output strictly valid JSON with no markdown formatting.`;
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <h3 class="text-sm sm:text-base font-bold text-white tracking-wide" data-i18n="modal_char_appr_title">อนุมัติคำขอแก้ไขข้อมูลตัวละคร</h3>
-              <span id="char-edit-approval-count-badge" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black font-mono">0 รายการ</span>
+              <h3 class="text-sm sm:text-base font-bold text-white tracking-wide" data-i18n="modal_char_appr_title">
+                อนุมัติคำขอแก้ไขข้อมูลตัวละคร</h3>
+              <span id="char-edit-approval-count-badge"
+                class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black font-mono">0
+                รายการ</span>
             </div>
-            <p class="text-xs text-slate-400 mt-0.5" data-i18n="modal_char_appr_desc">ตรวจสอบและอนุมัติการเปลี่ยนชื่อ Email หรือสังกัดกิลด์ของสมาชิก</p>
+            <p class="text-xs text-slate-400 mt-0.5" data-i18n="modal_char_appr_desc">ตรวจสอบและอนุมัติการเปลี่ยนชื่อ
+              Email หรือสังกัดกิลด์ของสมาชิก</p>
           </div>
         </div>
-        <button onclick="closeCharEditApprovalModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition">
+        <button onclick="closeCharEditApprovalModal()"
+          class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
       <!-- Content Scrollable -->
       <div class="flex-1 overflow-y-auto pr-1 py-3 space-y-4 text-xs">
-        
+
         <!-- Section 1: Pending -->
         <div>
           <h4 class="font-bold text-amber-300 flex items-center gap-1.5 mb-2.5">
-            <i class="fa-solid fa-clock text-amber-400"></i> <span id="char-edit-pending-heading">คำขอรอดำเนินการ (Pending Requests)</span>
+            <i class="fa-solid fa-clock text-amber-400"></i> <span id="char-edit-pending-heading">คำขอรอดำเนินการ
+              (Pending Requests)</span>
           </h4>
           <div id="char-edit-approval-pending-list" class="space-y-2.5">
             <!-- Rendered by JS -->
@@ -15304,11 +15448,13 @@ Output strictly valid JSON with no markdown formatting.`;
         <div class="pt-3 border-t border-slate-800">
           <div class="flex items-center justify-between mb-2.5">
             <h4 class="font-bold text-slate-400 flex items-center gap-1.5">
-              <i class="fa-solid fa-clock-rotate-left text-slate-500"></i> <span id="char-edit-processed-heading">ประวัติที่ดำเนินการแล้ว</span>
+              <i class="fa-solid fa-clock-rotate-left text-slate-500"></i> <span
+                id="char-edit-processed-heading">ประวัติที่ดำเนินการแล้ว</span>
             </h4>
             <button onclick="clearCharEditHistory()"
               class="text-[11px] text-slate-400 hover:text-rose-400 transition flex items-center gap-1">
-              <i class="fa-solid fa-trash-can text-[10px]"></i> <span data-i18n="btn_clear_char_edit_history">ล้างประวัติ</span>
+              <i class="fa-solid fa-trash-can text-[10px]"></i> <span
+                data-i18n="btn_clear_char_edit_history">ล้างประวัติ</span>
             </button>
           </div>
           <div id="char-edit-approval-processed-list" class="space-y-1.5">
@@ -15325,14 +15471,17 @@ Output strictly valid JSON with no markdown formatting.`;
   <!-- 1. Floating Action Button (Admin Only) -->
   <div id="nong-devil-floating-btn" onclick="toggleNongDevilChat()"
     class="hidden fixed bottom-5 right-5 z-40 items-center gap-2 group cursor-pointer animate-fade-in">
-    <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md border border-rose-500/40 text-white text-xs font-bold shadow-xl group-hover:scale-105 transition duration-200">
+    <div
+      class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md border border-rose-500/40 text-white text-xs font-bold shadow-xl group-hover:scale-105 transition duration-200">
       <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
       <span class="text-rose-300">น้องเดวิล (AI)</span>
       <span class="text-[10px] text-slate-400 font-normal">พร้อมช่วยค่ะ 😈</span>
     </div>
-    <div class="relative w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-600 via-red-500 to-amber-500 text-white flex items-center justify-center text-2xl shadow-2xl shadow-rose-600/40 border border-rose-400/50 group-hover:scale-110 active:scale-95 transition-all duration-200">
+    <div
+      class="relative w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-600 via-red-500 to-amber-500 text-white flex items-center justify-center text-2xl shadow-2xl shadow-rose-600/40 border border-rose-400/50 group-hover:scale-110 active:scale-95 transition-all duration-200">
       <span class="relative z-10 text-2xl">😈</span>
-      <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-slate-950 flex items-center justify-center">
+      <span
+        class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-slate-950 flex items-center justify-center">
         <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
       </span>
       <div class="absolute inset-0 rounded-2xl bg-rose-500/30 animate-ping pointer-events-none opacity-60"></div>
@@ -15342,18 +15491,23 @@ Output strictly valid JSON with no markdown formatting.`;
   <!-- 2. Nong Devil Chat Modal -->
   <div id="nong-devil-chat-modal"
     class="fixed bottom-4 right-2.5 sm:bottom-6 sm:right-6 z-50 w-[360px] sm:w-[480px] md:w-[510px] max-w-[calc(100vw-1.25rem)] h-[600px] max-h-[86vh] bg-slate-950/98 backdrop-blur-2xl border border-rose-500/50 rounded-3xl shadow-2xl shadow-rose-950/80 hidden flex-col overflow-hidden animate-scale-up">
-    
+
     <!-- Modal Header -->
-    <div class="p-3.5 bg-gradient-to-r from-slate-900 via-rose-950/60 to-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
+    <div
+      class="p-3.5 bg-gradient-to-r from-slate-900 via-rose-950/60 to-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
       <div class="flex items-center gap-2.5">
-        <div class="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-xl shadow-md border border-rose-400/40 shrink-0">
+        <div
+          class="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-xl shadow-md border border-rose-400/40 shrink-0">
           <span>😈</span>
-          <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-950"></span>
+          <span
+            class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-950"></span>
         </div>
         <div>
           <div class="flex items-center gap-1.5">
             <h3 class="text-xs sm:text-sm font-extrabold text-white">น้องเดวิล (เลขา AI)</h3>
-            <span class="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[9px] font-mono">v3.5 Flash</span>
+            <span
+              class="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[9px] font-mono">v3.5
+              Flash</span>
           </div>
           <p class="text-[10.5px] text-emerald-400 font-medium flex items-center gap-1">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
@@ -15361,26 +15515,30 @@ Output strictly valid JSON with no markdown formatting.`;
           </p>
         </div>
       </div>
-      
+
       <div class="flex items-center gap-1">
         <button type="button" onclick="clearNongDevilChatHistory()"
-          class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition" title="ล้างข้อความแชท">
+          class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition"
+          title="ล้างข้อความแชท">
           <i class="fa-solid fa-trash-can text-[10px]"></i>
         </button>
         <button type="button" onclick="toggleNongDevilChat()"
-          class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-rose-900/50 text-slate-400 hover:text-white flex items-center justify-center text-xs transition" title="ปิดหน้าต่าง">
+          class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-rose-900/50 text-slate-400 hover:text-white flex items-center justify-center text-xs transition"
+          title="ปิดหน้าต่าง">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
     </div>
 
     <!-- Scrollable Messages Container -->
-    <div id="nong-devil-messages" class="flex-1 overflow-y-auto p-4 space-y-3.5 text-[13.5px] pr-2 overflow-x-hidden leading-relaxed">
+    <div id="nong-devil-messages"
+      class="flex-1 overflow-y-auto p-4 space-y-3.5 text-[13.5px] pr-2 overflow-x-hidden leading-relaxed">
       <!-- Populated via JS -->
     </div>
 
     <!-- Quick Action Prompts Row -->
-    <div id="nong-devil-quick-chips" class="px-3 py-2 bg-slate-900/90 border-t border-slate-800/80 flex items-center gap-1.5 overflow-x-auto text-[11px] shrink-0 no-scrollbar">
+    <div id="nong-devil-quick-chips"
+      class="px-3 py-2 bg-slate-900/90 border-t border-slate-800/80 flex items-center gap-1.5 overflow-x-auto text-[11px] shrink-0 no-scrollbar">
       <button type="button" onclick="sendNongDevilQuickPrompt('บอสตัวต่อไปเกิดกี่โมง? มีตัวไหนใกล้เกิดบ้าง')"
         class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-rose-950/50 text-rose-200 border border-slate-700 hover:border-rose-500/40 whitespace-nowrap transition">
         🕒 บอสตัวต่อไปเกิดเมื่อไหร่?
@@ -15404,15 +15562,18 @@ Output strictly valid JSON with no markdown formatting.`;
     </div>
 
     <!-- Image Attachment Preview Box -->
-    <div id="nong-devil-img-preview-box" class="hidden p-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-2 shrink-0">
+    <div id="nong-devil-img-preview-box"
+      class="hidden p-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-2 shrink-0">
       <div class="flex items-center gap-2.5 min-w-0">
-        <img id="nong-devil-img-preview-thumb" src="" alt="Thumbnail" class="w-11 h-11 object-cover rounded-lg border border-slate-700 shrink-0" />
+        <img id="nong-devil-img-preview-thumb" src="" alt="Thumbnail"
+          class="w-11 h-11 object-cover rounded-lg border border-slate-700 shrink-0" />
         <div class="min-w-0 truncate">
           <div class="text-xs font-bold text-white truncate" id="nong-devil-img-preview-name">image.png</div>
           <div class="text-[10px] text-rose-400 font-mono">พร้อมให้น้องเดวิลวิเคราะห์ 😈</div>
         </div>
       </div>
-      <button type="button" onclick="clearNongDevilImageAttachment()" class="p-1.5 text-slate-400 hover:text-rose-400 text-sm">
+      <button type="button" onclick="clearNongDevilImageAttachment()"
+        class="p-1.5 text-slate-400 hover:text-rose-400 text-sm">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
@@ -15420,8 +15581,9 @@ Output strictly valid JSON with no markdown formatting.`;
     <!-- Chat Input Form -->
     <div class="p-2.5 bg-slate-900 border-t border-slate-800 shrink-0">
       <form id="nong-devil-chat-form" onsubmit="handleNongDevilSubmit(event)" class="flex items-center gap-2">
-        <input type="file" id="nong-devil-file-input" accept="image/*" class="hidden" onchange="handleNongDevilFileSelect(this.files[0])" />
-        
+        <input type="file" id="nong-devil-file-input" accept="image/*" class="hidden"
+          onchange="handleNongDevilFileSelect(this.files[0])" />
+
         <button type="button" onclick="document.getElementById('nong-devil-file-input').click()"
           class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-rose-950/50 text-slate-300 hover:text-rose-300 flex items-center justify-center text-sm transition border border-slate-700 shrink-0"
           title="แนบรูปภาพ (Log บอส, จัดการชุมนุม, หรือรูป CP)">

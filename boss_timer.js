@@ -1113,23 +1113,33 @@ function handleSaveKillConfirm(e) {
   const rawItems = itemsText ? itemsText.value.trim() : '';
   const itemsList = rawItems ? rawItems.split('\n').map(i => i.trim()).filter(i => i.length > 0) : [];
 
-  // Store in pending object for double check
-  pendingKillConfirmData = {
-    bossId: currentKillConfirmBossId,
-    bossName: bossName,
-    bossMap: boss?.map || '-',
-    bossIcon: boss?.icon || '🐉',
-    bossImage: boss?.image || '',
-    killDate: dateVal,
-    killHour: hourVal,
-    killMin: minVal,
-    killDateTime: dt,
-    killerEmail: killerEmail,
-    itemsList: itemsList
-  };
+  // 2. Save Boss Kill Time & Create History Log (Firebase + Google Sheets)
+  saveBossKillTime(currentKillConfirmBossId, dt.toISOString(), killerEmail, itemsList);
 
-  // Open Double-Check Modal to confirm boss name
-  openBossDoubleCheckModal(pendingKillConfirmData);
+  // 3. Save Drop Log if items provided
+  if (itemsList.length > 0) {
+    const dropEntry = {
+      id: 'drop_' + Date.now(),
+      bossId: currentKillConfirmBossId,
+      bossName: bossName,
+      killTime: dt.toISOString(),
+      items: itemsList,
+      recordedBy: killerEmail,
+      timestamp: new Date().toISOString()
+    };
+    bossDropLogs.unshift(dropEntry);
+    localStorage.setItem('guild_boss_drop_logs', JSON.stringify(bossDropLogs));
+    if (typeof fbDb !== 'undefined' && fbDb) {
+      fbDb.ref('guild_app/boss_drop_logs').set(bossDropLogs);
+    }
+  }
+
+  closeBossDoubleCheckModal();
+  closeBossKillConfirmModal();
+  pendingKillConfirmData = null;
+
+  showToast(`💀 บันทึกเวลาตายของ "${bossName}" (${formatDateTimeShort(dt)}) เรียบร้อยแล้ว!`, 'success');
+  playChime();
 }
 
 function openBossDoubleCheckModal(data) {
