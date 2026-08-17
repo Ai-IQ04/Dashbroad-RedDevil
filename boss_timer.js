@@ -460,21 +460,16 @@ function renderBossTimerCards() {
       ? `<img src="${escapeHtml(b.avatar)}" alt="${escapeHtml(b.name)}" class="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl object-cover border ${avatarRingClass} shadow-lg bg-slate-900 shrink-0" onerror="this.onerror=null; this.src=''; this.parentElement.innerHTML='<div class=\\'w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-slate-800 border ${avatarRingClass} flex items-center justify-center text-xl text-amber-400\\'><i class=\\'fa-solid fa-dragon\\'></i></div>';" />`
       : `<div class="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border ${avatarRingClass} flex items-center justify-center text-xl sm:text-2xl text-amber-400/90 shadow-inner shrink-0"><i class="fa-solid fa-dragon"></i></div>`;
 
-    // Action Buttons: Admin gets full controls + Edit; Member gets View Drop Log only
+    // Action Buttons: Admin gets Kill Confirm + Edit + Drop Log; Member gets View Drop Log only
     let actionButtonsHtml = '';
     if (isAdminActive) {
       actionButtonsHtml = `
-        <div class="mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center gap-1.5">
-          <button onclick="recordBossKillNow('${b.id}')"
-            class="flex-1 apple-btn apple-btn-ruby inline-flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-bold shadow-md shadow-rose-950/40 active:scale-95 transition"
-            title="${tBoss('btn_record_kill_now', 'กดเมื่อบอสตายตอนนี้ทันที')}">
+        <div class="mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center gap-2">
+          <button onclick="openBossKillConfirmModal('${b.id}')"
+            class="flex-1 apple-btn apple-btn-ruby inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold shadow-md shadow-rose-950/40 active:scale-95 transition"
+            title="${tBoss('btn_record_kill_now', 'กดเพื่อยืนยันลงเวลาตาย / วางรูปภาพ Log (Ctrl+V)')}">
             <i class="fa-solid fa-skull text-[11px]"></i>
             <span>${tBoss('btn_record_kill_now', 'ตายตอนนี้')}</span>
-          </button>
-          <button onclick="openCustomKillModal('${b.id}')"
-            class="apple-btn apple-btn-slate inline-flex items-center justify-center p-2 text-xs font-semibold text-slate-300 hover:text-white"
-            title="${tBoss('btn_custom_time', 'ระบุเวลาตายย้อนหลัง (รูปแบบ 24 ชม.)')}">
-            <i class="fa-solid fa-clock-rotate-left"></i>
           </button>
           <button onclick="openEditBossModal('${b.id}')"
             class="apple-btn apple-btn-slate inline-flex items-center justify-center p-2 text-xs font-semibold text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
@@ -776,12 +771,51 @@ function populate24HourSelects() {
   });
 }
 
-// Quick presets for 24-Hour time input (HH: 00-23, MM: 00-59)
-function applyQuickKillTime(minutesAgo) {
+// ================= Boss Kill Confirmation Modal with Optional Drop Log (Ctrl+V) =================
+let currentKillConfirmBossId = null;
+let killConfirmImageBlob = null;
+
+function openBossKillConfirmModal(bossId) {
   populate24HourSelects();
-  const dateInput = document.getElementById('boss-custom-kill-date');
-  const hourSelect = document.getElementById('boss-custom-kill-hour');
-  const minSelect = document.getElementById('boss-custom-kill-min');
+  currentKillConfirmBossId = bossId;
+  const boss = bossList.find(b => b.id === bossId);
+  if (!boss) return;
+
+  const modal = document.getElementById('boss-kill-confirm-modal');
+  const title = document.getElementById('kill-confirm-title');
+  const desc = document.getElementById('kill-confirm-desc');
+  const avatarBox = document.getElementById('kill-confirm-avatar-box');
+
+  if (title) title.textContent = `ยืนยันลงเวลาตาย: ${boss.name}`;
+  if (desc) desc.textContent = `เลเวล ${boss.level || '??'} • แมพ: ${boss.map || 'ไม่ระบุ'} • รอบเกิด: ${boss.respawnLabel || 'ตามเงื่อนไข'}`;
+
+  if (avatarBox) {
+    if (boss.avatar) {
+      avatarBox.innerHTML = `<img src="${escapeHtml(boss.avatar)}" class="w-full h-full rounded-2xl object-cover" />`;
+    } else {
+      avatarBox.innerHTML = `<i class="fa-solid fa-skull"></i>`;
+    }
+  }
+
+  // Reset image / drop items
+  clearKillConfirmImage();
+  applyQuickKillConfirmTime(0); // Default to current time
+
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeBossKillConfirmModal() {
+  const modal = document.getElementById('boss-kill-confirm-modal');
+  if (modal) modal.classList.add('hidden');
+  clearKillConfirmImage();
+  currentKillConfirmBossId = null;
+}
+
+function applyQuickKillConfirmTime(minutesAgo) {
+  populate24HourSelects();
+  const dateInput = document.getElementById('kill-confirm-date');
+  const hourSelect = document.getElementById('kill-confirm-hour');
+  const minSelect = document.getElementById('kill-confirm-min');
   if (!dateInput || !hourSelect || !minSelect) return;
 
   const targetDate = new Date(Date.now() - (minutesAgo * 60 * 1000));
@@ -791,50 +825,179 @@ function applyQuickKillTime(minutesAgo) {
   minSelect.value = pad(targetDate.getMinutes());
 }
 
-// Custom Kill Time Modal (Strict 24-Hour Format)
-let currentEditBossId = null;
-function openCustomKillModal(bossId) {
-  populate24HourSelects();
-  currentEditBossId = bossId;
-  const boss = bossList.find(b => b.id === bossId);
-  if (!boss) return;
-
-  const modal = document.getElementById('boss-custom-kill-modal');
-  const title = document.getElementById('boss-custom-kill-title');
-  const desc = document.getElementById('boss-custom-kill-desc');
-
-  if (title) title.textContent = `ระบุเวลาตาย: ${boss.name}`;
-  if (desc) desc.textContent = `เลเวล ${boss.level || '??'} • แมพ: ${boss.map || 'ไม่ระบุ'} • รอบเกิด: ${boss.respawnLabel || 'ตามเงื่อนไข'}`;
-
-  applyQuickKillTime(0); // Default to current time
-
-  if (modal) modal.classList.remove('hidden');
+function handleKillConfirmFileSelect(input) {
+  if (!input || !input.files || !input.files[0]) return;
+  processKillConfirmImage(input.files[0]);
 }
 
-function closeCustomKillModal() {
-  const modal = document.getElementById('boss-custom-kill-modal');
-  if (modal) modal.classList.add('hidden');
+async function processKillConfirmImage(file) {
+  if (!file) return;
+  killConfirmImageBlob = file;
+
+  const emptyBox = document.getElementById('kill-confirm-dropzone-empty');
+  const filledBox = document.getElementById('kill-confirm-dropzone-filled');
+  const previewImg = document.getElementById('kill-confirm-preview-img');
+  const statusEl = document.getElementById('kill-confirm-ocr-status');
+  const itemsBox = document.getElementById('kill-confirm-items-box');
+  const itemsText = document.getElementById('kill-confirm-items-text');
+
+  if (emptyBox) emptyBox.classList.add('hidden');
+  if (filledBox) filledBox.classList.remove('hidden');
+  if (previewImg) previewImg.src = URL.createObjectURL(file);
+  if (statusEl) {
+    statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400"></i> กำลังสแกนอ่านไอเทมดรอปจากภาพ...`;
+  }
+
+  try {
+    const processedBlob = await preprocessImageCanvas(file);
+    if (typeof Tesseract === 'undefined') {
+      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+    }
+
+    const { data: { text } } = await Tesseract.recognize(processedBlob, 'tha+eng', {
+      logger: m => {
+        if (statusEl && m.status === 'recognizing text') {
+          statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-amber-400"></i> กำลังอ่านข้อความ (${Math.round(m.progress * 100)}%)...`;
+        }
+      }
+    });
+
+    const parsed = normalizeAndCleanThaiDropLog(text);
+
+    // If time was detected from screenshot, auto adjust time if valid
+    if (parsed.timeMatch) {
+      const [hh, mm] = parsed.timeMatch.split(':');
+      const hourSelect = document.getElementById('kill-confirm-hour');
+      const minSelect = document.getElementById('kill-confirm-min');
+      if (hourSelect) hourSelect.value = hh;
+      if (minSelect) minSelect.value = mm;
+    }
+    if (parsed.dateMatch) {
+      const dateInput = document.getElementById('kill-confirm-date');
+      if (dateInput) dateInput.value = parsed.dateMatch;
+    }
+
+    if (itemsBox) itemsBox.classList.remove('hidden');
+    if (itemsText) {
+      if (parsed.items.length > 0) {
+        itemsText.value = parsed.items.join('\n');
+        if (statusEl) statusEl.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-check-circle"></i> ตรวจพบไอเทม ${parsed.items.length} รายการ (ตรวจสอบหรือแก้ไขได้ด้านล่าง)</span>`;
+      } else {
+        itemsText.value = text.split('\n').filter(l => l.trim().length > 3).slice(0, 4).join('\n');
+        if (statusEl) statusEl.innerHTML = `<span class="text-amber-300"><i class="fa-solid fa-circle-info"></i> อ่านข้อความเสร็จสิ้น สามารถพิมพ์/แก้ไขไอเทมดรอปได้</span>`;
+      }
+    }
+  } catch (err) {
+    console.warn('Kill Confirm OCR Error:', err);
+    if (statusEl) {
+      statusEl.innerHTML = `<span class="text-amber-400 text-xs">อ่านภาพไม่สำเร็จ แต่ยังสามารถบันทึกเวลาได้ตามปกติ</span>`;
+    }
+    if (itemsBox) itemsBox.classList.remove('hidden');
+  }
 }
 
-function handleSaveCustomKill(e) {
+function clearKillConfirmImage() {
+  killConfirmImageBlob = null;
+  const emptyBox = document.getElementById('kill-confirm-dropzone-empty');
+  const filledBox = document.getElementById('kill-confirm-dropzone-filled');
+  const previewImg = document.getElementById('kill-confirm-preview-img');
+  const statusEl = document.getElementById('kill-confirm-ocr-status');
+  const itemsBox = document.getElementById('kill-confirm-items-box');
+  const itemsText = document.getElementById('kill-confirm-items-text');
+  const fileInput = document.getElementById('kill-confirm-file-input');
+
+  if (emptyBox) emptyBox.classList.remove('hidden');
+  if (filledBox) filledBox.classList.add('hidden');
+  if (previewImg) previewImg.src = '';
+  if (statusEl) statusEl.innerHTML = '';
+  if (itemsBox) itemsBox.classList.add('hidden');
+  if (itemsText) itemsText.value = '';
+  if (fileInput) fileInput.value = '';
+}
+
+function handleSaveKillConfirm(e) {
   if (e) e.preventDefault();
-  if (!currentEditBossId) return;
+  if (!currentKillConfirmBossId) return;
 
-  const dateVal = document.getElementById('boss-custom-kill-date').value;
-  const hourVal = document.getElementById('boss-custom-kill-hour').value;
-  const minVal = document.getElementById('boss-custom-kill-min').value;
-  if (!dateVal || hourVal === '' || minVal === '') return;
+  const boss = bossList.find(b => b.id === currentKillConfirmBossId);
+  const bossName = boss ? boss.name : currentKillConfirmBossId;
 
-  const timeVal = `${hourVal}:${minVal}`;
-  const dt = new Date(`${dateVal}T${timeVal}:00`);
+  const dateVal = document.getElementById('kill-confirm-date').value;
+  const hourVal = document.getElementById('kill-confirm-hour').value;
+  const minVal = document.getElementById('kill-confirm-min').value;
+
+  if (!dateVal || hourVal === '' || minVal === '') {
+    alert('กรุณาระบุวันที่และเวลาที่บอสตาย');
+    return;
+  }
+
+  const dt = new Date(`${dateVal}T${hourVal}:${minVal}:00`);
   if (isNaN(dt.getTime())) {
     alert('รูปแบบวันที่หรือเวลาไม่ถูกต้อง');
     return;
   }
 
-  saveBossKillTime(currentEditBossId, dt.toISOString(), (typeof currentAdminEmail !== 'undefined' ? currentAdminEmail : 'Admin'));
-  closeCustomKillModal();
-  showToast(`บันทึกเวลาตาย (${formatDateTimeShort(dt)}) เรียบร้อยแล้ว`, 'success');
+  const killerEmail = (typeof currentAdminEmail !== 'undefined' ? currentAdminEmail : 'Admin');
+
+  // 1. Save Boss Kill Time
+  saveBossKillTime(currentKillConfirmBossId, dt.toISOString(), killerEmail);
+
+  // 2. Save Drop Log if items provided
+  const itemsText = document.getElementById('kill-confirm-items-text');
+  const rawItems = itemsText ? itemsText.value.trim() : '';
+  if (rawItems) {
+    const itemsList = rawItems.split('\n').map(i => i.trim()).filter(i => i.length > 0);
+    if (itemsList.length > 0) {
+      const dropEntry = {
+        id: 'drop_' + Date.now(),
+        bossId: currentKillConfirmBossId,
+        bossName: bossName,
+        killTime: dt.toISOString(),
+        items: itemsList,
+        recordedBy: killerEmail,
+        timestamp: new Date().toISOString()
+      };
+      bossDropLogs.unshift(dropEntry);
+      localStorage.setItem('guild_boss_drop_logs', JSON.stringify(bossDropLogs));
+      if (typeof fbDb !== 'undefined' && fbDb) {
+        fbDb.ref('guild_app/boss_drop_logs').set(bossDropLogs);
+      }
+    }
+  }
+
+  closeBossKillConfirmModal();
+  showToast(`💀 บันทึกเวลาตายของ "${bossName}" (${formatDateTimeShort(dt)}) เรียบร้อยแล้ว!`, 'success');
+  playChime();
+}
+
+// Global Paste Handler: Supports Ctrl+V across the boss tab & inside modal
+function handleGlobalPasteForOCR(e) {
+  if (!e.clipboardData || !e.clipboardData.items) return;
+
+  for (let i = 0; i < e.clipboardData.items.length; i++) {
+    const item = e.clipboardData.items[i];
+    if (item.type.indexOf('image') !== -1) {
+      const file = item.getAsFile();
+      if (!file) return;
+
+      e.preventDefault();
+
+      // Case 1: Kill Confirm Modal is currently open
+      const killConfirmModal = document.getElementById('boss-kill-confirm-modal');
+      if (killConfirmModal && !killConfirmModal.classList.contains('hidden')) {
+        processKillConfirmImage(file);
+        return;
+      }
+
+      // Case 2: AI OCR Modal is open or user is viewing the boss timer tab
+      const bossModule = document.getElementById('module-boss-timer');
+      const isBossTabActive = bossModule && !bossModule.classList.contains('hidden');
+      if (isBossTabActive) {
+        processImageForBossOCR(file);
+      }
+      break;
+    }
+  }
 }
 
 // ================= Boss Edit Modal (Name, Level, Map, Avatar, Schedule, Notes) =================
@@ -1642,10 +1805,12 @@ window.closeMaintenanceModal = closeMaintenanceModal;
 window.handleConfirmMaintenance = handleConfirmMaintenance;
 window.switchAppModule = switchAppModule;
 window.recordBossKillNow = recordBossKillNow;
-window.openCustomKillModal = openCustomKillModal;
-window.closeCustomKillModal = closeCustomKillModal;
-window.handleSaveCustomKill = handleSaveCustomKill;
-window.applyQuickKillTime = applyQuickKillTime;
+window.openBossKillConfirmModal = openBossKillConfirmModal;
+window.closeBossKillConfirmModal = closeBossKillConfirmModal;
+window.applyQuickKillConfirmTime = applyQuickKillConfirmTime;
+window.handleKillConfirmFileSelect = handleKillConfirmFileSelect;
+window.clearKillConfirmImage = clearKillConfirmImage;
+window.handleSaveKillConfirm = handleSaveKillConfirm;
 window.openEditBossModal = openEditBossModal;
 window.closeEditBossModal = closeEditBossModal;
 window.handleSaveEditBoss = handleSaveEditBoss;
