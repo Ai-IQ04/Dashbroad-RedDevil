@@ -1229,6 +1229,13 @@
           <i class="fa-solid fa-scroll text-amber-400"></i>
           <span>ประวัติลงเวลา</span>
         </button>
+
+        <button id="btn-boss-integrations-top" onclick="openSheetWebhookSettingsModal()"
+          class="apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-indigo-300 hover:text-white shadow-sm"
+          title="ตั้งค่าเชื่อมต่อ Discord Webhook และ Google Sheets">
+          <i class="fa-brands fa-discord text-indigo-400"></i>
+          <span class="hidden sm:inline">ตั้งค่า Discord / Sheets</span>
+        </button>
       </div>
 
       <!-- Search & Paste Hint -->
@@ -12865,45 +12872,72 @@
     </div>
   </div>
 
-  <!-- ================= ⚙️ หน้าต่างตั้งค่า Google Sheets Webhook (Sheet Config Modal) ================= -->
+  <!-- ================= ⚙️ หน้าต่างตั้งค่า Discord Webhook & Google Sheets ================= -->
   <div id="boss-sheet-config-modal"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md hidden p-4 animate-fade-in">
-    <div class="w-full max-w-lg bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-emerald-500/50 rounded-3xl p-6 shadow-2xl relative animate-scale-up max-h-[90vh] flex flex-col">
+    <div class="w-full max-w-lg bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-indigo-500/50 rounded-3xl p-6 shadow-2xl relative animate-scale-up max-h-[90vh] flex flex-col">
       <button type="button" onclick="closeSheetWebhookSettingsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
         <i class="fa-solid fa-xmark"></i>
       </button>
 
       <div class="flex items-center gap-3 pb-3 border-b border-slate-800 shrink-0">
-        <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl border border-emerald-500/40 shadow-md">
-          <i class="fa-solid fa-table"></i>
+        <div class="w-11 h-11 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl border border-indigo-500/40 shadow-md">
+          <i class="fa-brands fa-discord"></i>
         </div>
         <div>
-          <h3 class="text-sm sm:text-base font-extrabold text-white">ตั้งค่าเชื่อมต่อ Google Sheets Webhook</h3>
-          <p class="text-[11px] text-slate-400">ส่งแถวประวัติลงเวลาบอสเข้า Google Sheet อัตโนมัติทุกครั้ง</p>
+          <h3 class="text-sm sm:text-base font-extrabold text-white">ตั้งค่า Discord Webhook & Google Sheets</h3>
+          <p class="text-[11px] text-slate-400">ส่งแจ้งเตือนบอสเข้า Discord และบันทึกประวัติลง Google Sheets</p>
         </div>
       </div>
 
-      <div class="flex-1 overflow-y-auto py-3 space-y-3 pr-1 text-xs">
-        <div class="p-3 bg-emerald-950/30 border border-emerald-500/30 rounded-2xl space-y-1.5 text-emerald-200">
-          <div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> วิธีเชื่อมต่อง่ายๆ ใน 3 สเต็ป:</div>
-          <ol class="list-decimal list-inside space-y-1 text-[11px] text-slate-300">
-            <li>สร้างไฟล์ Google Sheets ใหม่ 1 ไฟล์</li>
-            <li>ไปที่เมนู <b>ส่วนขยาย (Extensions)</b> ➔ <b>Apps Script</b> ➔ วางโค้ดที่เตรียมไว้ ➔ กด <b>ทำให้ใช้งานได้ (Deploy) ➔ เป็นเว็บแอป (Web App)</b></li>
-            <li>คัดลอก <b>Web App URL</b> (ลงท้ายด้วย <code>/exec</code>) มาวางในช่องด้านล่างนี้ได้เลยครับ</li>
-          </ol>
+      <div class="flex-1 overflow-y-auto py-3 space-y-4 pr-1 text-xs">
+        
+        <!-- Section 1: Discord Webhook -->
+        <div class="p-3.5 bg-indigo-950/40 border border-indigo-500/30 rounded-2xl space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="font-bold text-indigo-300 flex items-center gap-1.5 text-xs">
+              <i class="fa-brands fa-discord text-sm"></i>
+              <span>Discord Webhook (แจ้งเตือนบอสเรียลไทม์)</span>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-mono">ทำงานจากเว็บ 100%</span>
+          </div>
+          <p class="text-[11px] text-slate-300 leading-relaxed">
+            สร้าง Webhook จากห้อง Discord ที่ต้องการ (เช่น <code>#boss-alert</code>) โดยไปที่ <b>Server Settings ➔ Integrations ➔ Webhooks</b> แล้วคัดลอก URL มาวางที่นี่
+          </p>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Discord Webhook URL:</label>
+            <div class="flex gap-2">
+              <input type="url" id="discord-webhook-url-input"
+                placeholder="https://discord.com/api/webhooks/..."
+                class="flex-1 bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-indigo-400 focus:outline-none font-mono" />
+              <button type="button" onclick="testDiscordWebhook()"
+                class="apple-btn apple-btn-sapphire px-3 py-2 text-xs font-bold shrink-0 flex items-center gap-1.5 shadow-sm"
+                title="ส่งการ์ดทดสอบเข้า Discord">
+                <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                <span>ทดสอบ</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">Google Apps Script Webhook URL:</label>
-          <input type="url" id="sheet-webhook-url-input"
-            placeholder="https://script.google.com/macros/s/.../exec"
-            class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-emerald-400 focus:outline-none font-mono" />
+        <!-- Section 2: Google Sheets Webhook -->
+        <div class="p-3.5 bg-emerald-950/30 border border-emerald-500/30 rounded-2xl space-y-2.5">
+          <div class="font-bold text-emerald-300 flex items-center gap-1.5 text-xs">
+            <i class="fa-solid fa-table text-sm"></i>
+            <span>Google Sheets Webhook (บันทึกประวัติลงชีต)</span>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Google Apps Script Web App URL:</label>
+            <input type="url" id="sheet-webhook-url-input"
+              placeholder="https://script.google.com/macros/s/.../exec"
+              class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-emerald-400 focus:outline-none font-mono" />
+          </div>
         </div>
 
         <div class="flex items-center gap-2 pt-2">
-          <button type="button" onclick="closeSheetWebhookSettingsModal()" class="w-1/3 py-2.5 px-3 bg-slate-800 text-slate-300 font-semibold rounded-xl">ยกเลิก</button>
-          <button type="button" onclick="saveSheetWebhookUrl()" class="flex-1 py-2.5 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-check"></i> <span>บันทึกการตั้งค่า Webhook</span>
+          <button type="button" onclick="closeSheetWebhookSettingsModal()" class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition">ยกเลิก</button>
+          <button type="button" onclick="saveSheetWebhookUrl()" class="flex-1 py-2.5 px-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500 hover:from-indigo-400 hover:to-emerald-400 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-500/25 active:scale-95 transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-check"></i> <span>บันทึกการเชื่อมต่อทั้งหมด</span>
           </button>
         </div>
       </div>
@@ -12912,7 +12946,7 @@
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=2.9"></script>
+  <script src="boss_timer.js?v=3.0"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {

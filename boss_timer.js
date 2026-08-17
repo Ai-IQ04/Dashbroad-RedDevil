@@ -19,6 +19,7 @@ let bossTimerData = {}; // { [bossId]: { defeatedTime: ISOString, defeatedBy: st
 let bossDropLogs = [];  // [ { id, bossId, bossName, killTime, items: [], recordedBy, timestamp } ]
 let bossKillLogs = [];  // [ { id, bossId, bossName, level, map, killTime, killTimeFormatted, nextSpawnTime, nextSpawnFormatted, recordedBy, timestamp, timestampStr, dropItems, dropItemsText } ]
 let bossSheetWebhookUrl = localStorage.getItem('guild_boss_sheet_webhook') || '';
+let bossDiscordWebhookUrl = localStorage.getItem('guild_boss_discord_webhook') || '';
 let bossTimerInterval = null;
 let currentBossFilter = 'all';
 let currentBossSearch = '';
@@ -276,6 +277,14 @@ function initBossTimerModule() {
       if (snap.exists()) {
         bossSheetWebhookUrl = snap.val() || '';
         localStorage.setItem('guild_boss_sheet_webhook', bossSheetWebhookUrl);
+        updateWebhookStatusUi();
+      }
+    });
+
+    fbDb.ref('guild_app/boss_discord_webhook').on('value', snap => {
+      if (snap.exists()) {
+        bossDiscordWebhookUrl = snap.val() || '';
+        localStorage.setItem('guild_boss_discord_webhook', bossDiscordWebhookUrl);
         updateWebhookStatusUi();
       }
     });
@@ -846,8 +855,9 @@ function saveBossKillTime(bossId, killTimeISO, killerEmail, dropItemsList) {
     fbDb.ref('guild_app/boss_kill_logs').set(bossKillLogs);
   }
 
-  // 3. Send row to Google Sheets via Webhook (Background Async)
+  // 3. Send row to Google Sheets & Discord Webhook (Background Async)
   sendKillLogToGoogleSheet(killLogEntry);
+  sendKillLogToDiscordWebhook(killLogEntry, boss, killTimeISO, nextSpawn, killerEmail, dropItemsList);
 
   if (typeof addAuditLog === 'function') {
     addAuditLog('boss_kill', `ลงเวลาตายบอส "${boss.name}"`, `เวลา: ${formatDateTimeShort(defDate)} โดย: ${killerEmail}`, 'BossTimer');
@@ -1965,10 +1975,30 @@ function exportBossKillLogsToCsv() {
   showToast('📥 ส่งออกไฟล์ประวัติการลงเวลา (CSV) เรียบร้อยแล้ว!', 'success');
 }
 
+// ================= Discord Webhook & Google Sheets Integrations =================
+function updateWebhookStatusUi() {
+  const label = document.getElementById('history-webhook-status-label');
+  if (label) {
+    const hasDiscord = Boolean(bossDiscordWebhookUrl);
+    const hasSheet = Boolean(bossSheetWebhookUrl);
+    if (hasDiscord && hasSheet) {
+      label.textContent = 'Discord & Sheets: เชื่อมต่อแล้ว ✅';
+    } else if (hasDiscord) {
+      label.textContent = 'Discord: เชื่อมต่อแล้ว 🟣';
+    } else if (hasSheet) {
+      label.textContent = 'Sheets: เชื่อมต่อแล้ว 🟢';
+    } else {
+      label.textContent = 'ตั้งค่า Discord / Sheets ⚙️';
+    }
+  }
+}
+
 function openSheetWebhookSettingsModal() {
   const modal = document.getElementById('boss-sheet-config-modal');
-  const input = document.getElementById('sheet-webhook-url-input');
-  if (input) input.value = bossSheetWebhookUrl || '';
+  const sheetInput = document.getElementById('sheet-webhook-url-input');
+  const discordInput = document.getElementById('discord-webhook-url-input');
+  if (sheetInput) sheetInput.value = bossSheetWebhookUrl || '';
+  if (discordInput) discordInput.value = bossDiscordWebhookUrl || '';
   if (modal) modal.classList.remove('hidden');
 }
 
@@ -1978,18 +2008,128 @@ function closeSheetWebhookSettingsModal() {
 }
 
 function saveSheetWebhookUrl() {
-  const input = document.getElementById('sheet-webhook-url-input');
-  const url = input ? input.value.trim() : '';
+  const sheetInput = document.getElementById('sheet-webhook-url-input');
+  const discordInput = document.getElementById('discord-webhook-url-input');
 
-  bossSheetWebhookUrl = url;
-  localStorage.setItem('guild_boss_sheet_webhook', url);
+  const sheetUrl = sheetInput ? sheetInput.value.trim() : '';
+  const discordUrl = discordInput ? discordInput.value.trim() : '';
+
+  bossSheetWebhookUrl = sheetUrl;
+  bossDiscordWebhookUrl = discordUrl;
+
+  localStorage.setItem('guild_boss_sheet_webhook', sheetUrl);
+  localStorage.setItem('guild_boss_discord_webhook', discordUrl);
+
   if (typeof fbDb !== 'undefined' && fbDb) {
-    fbDb.ref('guild_app/boss_sheet_webhook').set(url);
+    fbDb.ref('guild_app/boss_sheet_webhook').set(sheetUrl);
+    fbDb.ref('guild_app/boss_discord_webhook').set(discordUrl);
   }
 
   updateWebhookStatusUi();
   closeSheetWebhookSettingsModal();
-  showToast(url ? '✅ บันทึกการเชื่อมต่อ Google Sheets เรียบร้อยแล้ว!' : 'ลบการเชื่อมต่อ Google Sheets แล้ว', 'success');
+  showToast('✅ บันทึกการเชื่อมต่อ Webhook เรียบร้อยแล้ว!', 'success');
+}
+
+// Send Boss Kill Embed to Discord Webhook
+async function sendKillLogToDiscordWebhook(logData, boss, killTimeISO, nextSpawn, killerEmail, dropItemsList) {
+  if (!bossDiscordWebhookUrl) return;
+
+  try {
+    const isGuild = GUILD_SCORING_BOSS_IDS.has(boss.id) || (boss.name && /lucus|bahel|libitina|rakajeth|tumier|neva|icarut|morti|motti|arena|camalia|world/i.test(boss.name));
+    const isHighTier = (boss.level && Number(String(boss.level).match(/\d+/)?.[0] || 0) >= 100);
+    // Colors: Gold for Guild Boss (0xF59E0B), Red for High-tier (0xF43F5E), Emerald for Normal (0x10B981)
+    const colorInt = isGuild ? 0xF59E0B : (isHighTier ? 0xF43F5E : 0x10B981);
+
+    const killUnix = Math.floor(new Date(killTimeISO).getTime() / 1000);
+    const nextSpawnUnix = nextSpawn ? Math.floor(nextSpawn.getTime() / 1000) : null;
+
+    const fields = [
+      { name: '🗺️ แผนที่ / สถานที่', value: boss.map || 'ไม่ระบุ', inline: true },
+      { name: '💀 เวลาตาย', value: `<t:${killUnix}:f>`, inline: true },
+      { name: '⏳ เกิดรอบถัดไป', value: nextSpawnUnix ? `<t:${nextSpawnUnix}:f>\n*(<t:${nextSpawnUnix}:R>)*` : 'รอลงเวลาตาย', inline: false }
+    ];
+
+    if (dropItemsList && dropItemsList.length > 0) {
+      fields.push({
+        name: '🎁 ไอเทมดรอป',
+        value: dropItemsList.map(item => `• **${item}**`).join('\n'),
+        inline: false
+      });
+    }
+
+    fields.push({
+      name: '👤 บันทึกโดย',
+      value: `\`${killerEmail || 'Admin'}\``,
+      inline: true
+    });
+
+    const embed = {
+      title: `⚔️ [บันทึกเวลาตาย] ${boss.name} (Lv.${boss.level || '??'})`,
+      color: colorInt,
+      fields: fields,
+      footer: {
+        text: '🛡️ LORD NINE • Dashboard RedDevil'
+      },
+      timestamp: new Date().toISOString()
+    };
+
+    if (boss.avatar) {
+      embed.thumbnail = { url: boss.avatar };
+    }
+
+    const payload = {
+      embeds: [embed]
+    };
+
+    await fetch(bossDiscordWebhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.warn('Discord Webhook send error:', err);
+  }
+}
+
+// Test Discord Webhook
+async function testDiscordWebhook() {
+  const input = document.getElementById('discord-webhook-url-input');
+  const url = input ? input.value.trim() : (bossDiscordWebhookUrl || '');
+  if (!url) {
+    showToast('กรุณาวาง Discord Webhook URL ก่อนกดทดสอบ', 'warning');
+    return;
+  }
+
+  try {
+    const payload = {
+      embeds: [{
+        title: '🧪 ทดสอบการเชื่อมต่อ Discord Webhook สำเร็จ! 🎉',
+        description: 'ระบบ Boss Timer & Dashboard สามารถส่งการแจ้งเตือนเข้าห้องนี้ได้เรียบร้อยแล้วครับ ⚔️🔥',
+        color: 0x10B981,
+        fields: [
+          { name: '⏰ เวลาที่ทดสอบ', value: `<t:${Math.floor(Date.now() / 1000)}:f>`, inline: true },
+          { name: '🛡️ สถานะ', value: '🟢 พร้อมใช้งาน 100%', inline: true }
+        ],
+        footer: { text: '🛡️ LORD NINE SYSTEM • Dashboard RedDevil' },
+        timestamp: new Date().toISOString()
+      }]
+    };
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok || res.status === 204) {
+      showToast('🎉 ส่งข้อความทดสอบเข้า Discord เรียบร้อยแล้ว!', 'success');
+    } else {
+      showToast(`⚠️ Discord ตอบกลับสถานะ: ${res.status}`, 'warning');
+    }
+  } catch (e) {
+    console.error('Discord Webhook test error:', e);
+    showToast('❌ ไม่สามารถส่งข้อความเข้า Discord ได้ (ตรวจสอบ URL อีกครั้ง)', 'danger');
+  }
 }
 
 // Drop Log Viewer Modal
@@ -2107,5 +2247,7 @@ window.openSheetWebhookSettingsModal = openSheetWebhookSettingsModal;
 window.closeSheetWebhookSettingsModal = closeSheetWebhookSettingsModal;
 window.saveSheetWebhookUrl = saveSheetWebhookUrl;
 window.sendKillLogToGoogleSheet = sendKillLogToGoogleSheet;
+window.sendKillLogToDiscordWebhook = sendKillLogToDiscordWebhook;
+window.testDiscordWebhook = testDiscordWebhook;
 window.updateWebhookStatusUi = updateWebhookStatusUi;
 
