@@ -1614,12 +1614,9 @@ Output strictly valid JSON with no markdown wrapping:
   populateModalFromGeminiData(data);
 }
 
-// Cached discovered model for ultra-fast subsequent requests
-let cachedGeminiModelEndpoint = null;
-
 // Dynamic Discovery: Ask Google AI Studio which models are active for this API key
 async function discoverActiveGeminiModel(apiKey) {
-  if (cachedGeminiModelEndpoint) return cachedGeminiModelEndpoint;
+  if (window.cachedGeminiModelEndpoint) return window.cachedGeminiModelEndpoint;
 
   const apiVersions = ['v1beta', 'v1'];
   for (const apiVer of apiVersions) {
@@ -1643,8 +1640,8 @@ async function discoverActiveGeminiModel(apiKey) {
 
           if (preferred) {
             console.log(`[Gemini Discovery] Found active model: ${preferred} via ${apiVer}`);
-            cachedGeminiModelEndpoint = { apiVer, model: preferred };
-            return cachedGeminiModelEndpoint;
+            window.cachedGeminiModelEndpoint = { apiVer, model: preferred };
+            return window.cachedGeminiModelEndpoint;
           }
         }
       }
@@ -1726,7 +1723,7 @@ async function callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiK
       }
 
       // Update cache with successful model!
-      cachedGeminiModelEndpoint = { apiVer: item.apiVer, model: item.model };
+      window.cachedGeminiModelEndpoint = { apiVer: item.apiVer, model: item.model };
 
       const cleanJsonStr = textOutput.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
       return JSON.parse(cleanJsonStr);
