@@ -2091,7 +2091,7 @@ async function checkAndSendDiscordSpawnAlerts() {
           embed5m.thumbnail = { url: boss.avatar };
         }
 
-        sendDiscordWebhookPayload({ embeds: [embed5m] });
+        sendDiscordWebhookPayload({ content: '<@&1508495658162851970>', embeds: [embed5m] });
       }
     }
 
@@ -2116,7 +2116,7 @@ async function checkAndSendDiscordSpawnAlerts() {
           embedSpawned.thumbnail = { url: boss.avatar };
         }
 
-        sendDiscordWebhookPayload({ embeds: [embedSpawned] });
+        sendDiscordWebhookPayload({ content: '<@&1508495658162851970>', embeds: [embedSpawned] });
       }
     }
   }
