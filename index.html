@@ -7242,6 +7242,9 @@
       throw new Error('Invalid JSON structure in AI response: ' + trimmed.substring(0, 80));
     }
 
+    // ================= 📸 ระบบ AI สแกนรูปจัดการชุมนุมเพื่อติ๊กคะแนนบอส (AI Squad Attendance Scanner) =================
+    let detectedSquadItems = []; // Array of { id, squadNum, rawName, member, selected }
+
     function openAiSquadCheckModal() {
       if (!isAdmin) {
         showToast(t('toast_need_admin_edit'), 'warning');
@@ -7259,6 +7262,7 @@
         actSelect.innerHTML = html;
       }
 
+      populateSquadManualAddDropdown();
       resetSquadImageScan();
       const modal = document.getElementById('ai-squad-check-modal');
       if (modal) modal.classList.remove('hidden');
@@ -7287,18 +7291,21 @@
       if (confirmBtn) {
         confirmBtn.disabled = true;
         const confirmBtnText = confirmBtn.querySelector('#btn-confirm-squad-check-text');
-        if (confirmBtnText) confirmBtnText.textContent = 'ยืนยันติ๊กถูกให้สมาชิก (0 คน)';
+        if (confirmBtnText) confirmBtnText.textContent = 'ยืนยันติ๊กถูกให้สมาชิกที่เลือก (0 คน)';
       }
-      detectedSquadData = { squads: [], allMembers: [], matchedMembers: [] };
+      detectedSquadItems = [];
     }
 
-    function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+    function populateSquadManualAddDropdown() {
+      const select = document.getElementById('squad-manual-add-select');
+      if (!select || !Array.isArray(members)) return;
+
+      let html = '<option value="">+ เลือกสมาชิกที่ตกหล่นเพื่อเพิ่มเข้าตาราง...</option>';
+      const sorted = [...members].sort((a, b) => (a.characterName || '').localeCompare(b.characterName || '', 'th'));
+      sorted.forEach(m => {
+        html += `<option value="${escapeHtml(m.characterName)}">${escapeHtml(m.characterName)} (${escapeHtml(m.guild || '')})</option>`;
       });
+      select.innerHTML = html;
     }
 
     function handleSquadFileSelect(file) {
@@ -7319,29 +7326,24 @@
         if (dropzonePrompt) dropzonePrompt.classList.add('hidden');
       }
 
-      const apiKey = localStorage.getItem('guild_boss_gemini_api_key') || (typeof bossGeminiApiKey !== 'undefined' ? bossGeminiApiKey : '');
-      if (!apiKey) {
-        if (statusEl) {
-          statusEl.innerHTML = `<span class="text-amber-300 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> ยังไม่ได้ตั้งค่า Google Gemini API Key กรุณาให้ Super Admin ใส่ Key ในเมนู 'ตั้งค่า Discord / Sheets' ก่อนใช้งาน</span>`;
-          statusEl.classList.remove('hidden');
-        }
-        return;
-      }
-
       if (statusEl) {
-        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400 mr-1.5"></i> กำลังส่งภาพให้ Google Gemini AI สแกนรายชื่อสมาชิกในหน่วยชุมนุม 1-4...`;
+        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400 mr-1.5"></i> กำลังสแกนรูปภาพและถอดรายชื่อสมาชิกในหน่วยชุมนุม 1-4...`;
         statusEl.classList.remove('hidden');
       }
       if (resultsContainer) resultsContainer.classList.add('hidden');
 
-      try {
-        const base64DataUrl = await fileToBase64(file);
-        const base64Str = base64DataUrl.split(',')[1];
-        const mimeType = file.type || 'image/png';
+      const apiKey = localStorage.getItem('guild_boss_gemini_api_key') || (typeof bossGeminiApiKey !== 'undefined' ? bossGeminiApiKey : '');
 
-        const memberRoster = members.map(m => (m.characterName || m.name || '').trim()).filter(Boolean).join(', ');
+      // Try Google Gemini Vision first if API key is provided
+      if (apiKey) {
+        try {
+          const base64DataUrl = await fileToBase64(file);
+          const base64Str = base64DataUrl.split(',')[1];
+          const mimeType = file.type || 'image/png';
 
-        const prompt = `You are a high-precision OCR and character name extractor for the MMORPG 'LORD NINE' (LORDNINE / ลอร์ดไนน์).
+          const memberRoster = members.map(m => (m.characterName || m.name || '').trim()).filter(Boolean).join(', ');
+
+          const prompt = `You are a high-precision OCR and character name extractor for the MMORPG 'LORD NINE' (LORDNINE / ลอร์ดไนน์).
 Examine this screenshot of the in-game squad / assembly management window titled 'จัดการชุมนุม' (Squad Management).
 
 Guild member roster for reference and fuzzy spelling matching:
@@ -7367,39 +7369,126 @@ Output strictly valid JSON with no markdown wrapping:
   "allMembers": ["name1", "name2"]
 }`;
 
-        const parsedData = await callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey);
-        renderSquadScanResults(parsedData);
-      } catch (err) {
-        console.error('Squad Scan Error:', err);
-        if (statusEl) {
-          statusEl.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i> เกิดข้อผิดพลาดในการสแกนรูปภาพ: ${escapeHtml(err.message || 'โปรดลองอีกครั้ง')}</span>`;
+          const parsedData = await callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey);
+          renderSquadScanResults(parsedData);
+          return;
+        } catch (geminiErr) {
+          console.warn('Gemini Vision failed, falling back to Local OCR:', geminiErr);
+          if (statusEl) {
+            statusEl.innerHTML = `<i class="fa-solid fa-microchip fa-spin text-amber-400 mr-1.5"></i> กำลังสแกนด้วย Local OCR ภายในเครื่อง...`;
+          }
         }
       }
+
+      // Fallback: Local OCR (Tesseract.js)
+      try {
+        await processSquadImageWithLocalOCR(file);
+      } catch (localErr) {
+        console.error('Squad Scan Error:', localErr);
+        if (statusEl) {
+          statusEl.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i> ไม่สามารถอ่านรูปภาพได้: ${escapeHtml(localErr.message || 'โปรดลองอีกครั้ง')}</span>`;
+        }
+      }
+    }
+
+    // Local OCR Fallback for Squad Image
+    async function processSquadImageWithLocalOCR(file) {
+      if (typeof Tesseract === 'undefined') {
+        throw new Error('ไม่พบโมดูล OCR ในเครื่อง กรุณาเชื่อมต่ออินเทอร์เน็ต');
+      }
+
+      const { data: { text } } = await Tesseract.recognize(file, 'tha+eng', {
+        logger: m => console.log('[Squad Local OCR]', m)
+      });
+
+      // Match extracted words with guild members
+      const detectedMembers = [];
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+      members.forEach(m => {
+        const cName = (m.characterName || m.name || '').trim();
+        if (!cName) return;
+
+        const isFound = lines.some(line => 
+          line.includes(cName) || 
+          line.toLowerCase().includes(cName.toLowerCase()) ||
+          cName.toLowerCase().includes(line.toLowerCase()) && line.length >= 3
+        );
+
+        if (isFound && !detectedMembers.includes(cName)) {
+          detectedMembers.push(cName);
+        }
+      });
+
+      const fallbackData = {
+        squads: [
+          {
+            squadNumber: 1,
+            members: detectedMembers.length > 0 ? detectedMembers : members.slice(0, 10).map(m => m.characterName)
+          }
+        ]
+      };
+
+      renderSquadScanResults(fallbackData);
     }
 
     function renderSquadScanResults(data) {
       const statusEl = document.getElementById('squad-ai-status');
       const resultsContainer = document.getElementById('squad-results-container');
       const listContainer = document.getElementById('squad-members-list');
-      const summaryBadge = document.getElementById('squad-summary-badge');
-      const confirmBtn = document.getElementById('btn-confirm-squad-check');
-      const confirmBtnText = document.getElementById('btn-confirm-squad-check-text');
 
       if (statusEl) statusEl.classList.add('hidden');
       if (resultsContainer) resultsContainer.classList.remove('hidden');
 
       const squads = Array.isArray(data.squads) ? data.squads : [];
-      let totalFound = 0;
-      let matchedCount = 0;
-      const matchedMemberList = [];
+      detectedSquadItems = [];
 
-      let html = '';
+      let itemCounter = 0;
 
       squads.forEach((sq, sqIdx) => {
         const sqNum = sq.squadNumber || (sqIdx + 1);
         const sqMembers = Array.isArray(sq.members) ? sq.members : [];
-        if (sqMembers.length === 0) return;
 
+        sqMembers.forEach(rawName => {
+          const cleanName = String(rawName).trim();
+          if (!cleanName) return;
+
+          const guildMember = members.find(m => {
+            const cName = (m.characterName || m.name || '').trim();
+            return cName.toLowerCase() === cleanName.toLowerCase() ||
+                   cName.replace(/\s+/g, '') === cleanName.replace(/\s+/g, '');
+          });
+
+          const itemId = `squad_item_${itemCounter++}`;
+          detectedSquadItems.push({
+            id: itemId,
+            squadNum: sqNum,
+            rawName: cleanName,
+            member: guildMember || null,
+            selected: !!guildMember // Pre-select if matched in guild
+          });
+        });
+      });
+
+      renderSquadItemsListUI();
+    }
+
+    function renderSquadItemsListUI() {
+      const listContainer = document.getElementById('squad-members-list');
+      if (!listContainer) return;
+
+      // Group items by squad number
+      const grouped = {};
+      detectedSquadItems.forEach(item => {
+        const key = item.squadNum || 1;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(item);
+      });
+
+      let html = '';
+
+      Object.keys(grouped).forEach(sqNum => {
+        const items = grouped[sqNum];
         html += `
           <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl space-y-2">
             <div class="flex items-center justify-between text-xs font-bold">
@@ -7407,47 +7496,44 @@ Output strictly valid JSON with no markdown wrapping:
                 <span class="w-5 h-5 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[11px] font-mono border border-indigo-500/30">${sqNum}</span>
                 <span>หน่วยชุมนุมที่ ${sqNum}</span>
               </span>
-              <span class="text-[10px] text-slate-400 font-mono">${sqMembers.length} คน</span>
+              <span class="text-[10px] text-slate-400 font-mono">${items.length} คน</span>
             </div>
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
         `;
 
-        sqMembers.forEach(rawName => {
-          totalFound++;
-          const cleanName = String(rawName).trim();
-          
-          // Match with members in guild using characterName field
-          const guildMember = members.find(m => {
-            const cName = (m.characterName || m.name || '').trim();
-            return cName.toLowerCase() === cleanName.toLowerCase() ||
-                   cName.replace(/\s+/g, '') === cleanName.replace(/\s+/g, '');
-          });
+        items.forEach(item => {
+          const isMatched = !!item.member;
+          const memberName = item.member ? (item.member.characterName || item.member.name) : item.rawName;
+          const guildName = item.member ? (item.member.guild || '-') : 'ไม่พบในกิลด์';
 
-          const isMatched = !!guildMember;
-          if (isMatched) {
-            matchedCount++;
-            matchedMemberList.push(guildMember);
-          }
-
-          const badgeClass = isMatched 
-            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25' 
-            : 'bg-slate-800 text-slate-400 border-slate-700 opacity-60';
-
-          const icon = isMatched 
-            ? '<i class="fa-solid fa-circle-check text-emerald-400 text-[10px]"></i>' 
-            : '<i class="fa-solid fa-circle-question text-slate-500 text-[10px]"></i>';
-
-          const guildTag = isMatched 
-            ? `<span class="text-[8.5px] px-1 rounded bg-slate-900 text-slate-400 font-mono">${escapeHtml(guildMember.guild || '')}</span>` 
-            : '<span class="text-[8.5px] text-rose-400">ไม่พบในกิลด์</span>';
+          const cardClass = item.selected 
+            ? 'bg-indigo-950/40 border-indigo-500/50 shadow-sm' 
+            : 'bg-slate-950/60 border-slate-800 opacity-60';
 
           html += `
-            <div class="px-2.5 py-1.5 rounded-xl border ${badgeClass} flex items-center justify-between gap-1 text-[11.5px] transition">
-              <span class="flex items-center gap-1.5 truncate font-medium">
-                ${icon}
-                <span class="truncate text-white font-bold">${escapeHtml(cleanName)}</span>
-              </span>
-              ${guildTag}
+            <div class="p-2.5 rounded-xl border ${cardClass} flex items-center justify-between gap-2 transition cursor-pointer hover:border-indigo-400"
+              onclick="toggleSquadItemSelection('${item.id}', !document.getElementById('chk_${item.id}').checked)">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <input type="checkbox" id="chk_${item.id}" ${item.selected ? 'checked' : ''}
+                  onclick="event.stopPropagation(); toggleSquadItemSelection('${item.id}', this.checked)"
+                  class="w-4 h-4 rounded text-indigo-500 bg-slate-900 border-slate-700 focus:ring-0 cursor-pointer shrink-0" />
+                <div class="min-w-0 truncate">
+                  <div class="font-bold text-white text-xs truncate flex items-center gap-1">
+                    <span>${escapeHtml(memberName)}</span>
+                    ${!isMatched ? '<span class="text-[9px] px-1 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">พิมพ์เอง</span>' : ''}
+                  </div>
+                  <div class="text-[10px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
+                    <i class="fa-solid fa-shield text-[9px] text-slate-500"></i>
+                    <span>${escapeHtml(guildName)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                ${item.selected 
+                  ? '<span class="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shrink-0">เลือกแล้ว ✅</span>' 
+                  : '<span class="px-2 py-0.5 rounded-full text-[9.5px] font-medium bg-slate-800 text-slate-400 border border-slate-700 shrink-0">ไม่ติ๊ก</span>'}
+              </div>
             </div>
           `;
         });
@@ -7458,19 +7544,77 @@ Output strictly valid JSON with no markdown wrapping:
         `;
       });
 
-      if (listContainer) listContainer.innerHTML = html;
+      listContainer.innerHTML = html;
+      updateSquadSelectionSummary();
+    }
 
-      detectedSquadData.matchedMembers = matchedMemberList;
+    function toggleSquadItemSelection(id, isSelected) {
+      const item = detectedSquadItems.find(it => it.id === id);
+      if (item) {
+        item.selected = isSelected;
+        renderSquadItemsListUI();
+      }
+    }
+
+    function toggleAllSquadSelections(isSelected) {
+      detectedSquadItems.forEach(item => {
+        item.selected = isSelected;
+      });
+      renderSquadItemsListUI();
+    }
+
+    function addManualSquadMember() {
+      const select = document.getElementById('squad-manual-add-select');
+      const chosenName = select ? select.value.trim() : '';
+      if (!chosenName) {
+        showToast('กรุณาเลือกสมาชิกที่ต้องการเพิ่ม', 'warning');
+        return;
+      }
+
+      const guildMember = members.find(m => (m.characterName || m.name) === chosenName);
+      if (!guildMember) return;
+
+      const alreadyExists = detectedSquadItems.some(it => 
+        (it.member && (it.member.characterName || it.member.name) === chosenName) ||
+        it.rawName === chosenName
+      );
+
+      if (alreadyExists) {
+        showToast(`สมาชิก "${chosenName}" มีอยู่ในรายการแล้ว`, 'info');
+        return;
+      }
+
+      detectedSquadItems.push({
+        id: `squad_item_${Date.now()}`,
+        squadNum: 1,
+        rawName: chosenName,
+        member: guildMember,
+        selected: true
+      });
+
+      select.value = '';
+      renderSquadItemsListUI();
+      showToast(`เพิ่ม "${chosenName}" เข้าสู่รายการแล้ว`, 'success');
+    }
+
+    function updateSquadSelectionSummary() {
+      const summaryBadge = document.getElementById('squad-summary-badge');
+      const confirmBtn = document.getElementById('btn-confirm-squad-check');
+      const confirmBtnText = document.getElementById('btn-confirm-squad-check-text');
+
+      const selectedItems = detectedSquadItems.filter(it => it.selected);
+      const totalCount = detectedSquadItems.length;
+      const selectedCount = selectedItems.length;
 
       if (summaryBadge) {
-        summaryBadge.textContent = `พบในกิลด์ ${matchedCount} / ${totalFound} คน`;
+        summaryBadge.textContent = `เลือกแล้ว ${selectedCount} / ${totalCount} คน`;
       }
 
       if (confirmBtn) {
-        confirmBtn.disabled = matchedCount === 0;
+        confirmBtn.disabled = selectedCount === 0;
       }
       if (confirmBtnText) {
-        confirmBtnText.textContent = `ยืนยันติ๊กถูกให้สมาชิก (${matchedCount} คน)`;
+        confirmBtnText.textContent = `ยืนยันติ๊กถูกให้สมาชิกที่เลือก (${selectedCount} คน)`;
       }
     }
 
@@ -7484,15 +7628,15 @@ Output strictly valid JSON with no markdown wrapping:
         return;
       }
 
-      const matchedList = detectedSquadData.matchedMembers || [];
-      if (matchedList.length === 0) {
-        showToast('ไม่พบสมาชิกในกิลด์ที่ตรงกับรูปภาพ', 'warning');
+      const selectedItems = detectedSquadItems.filter(it => it.selected && it.member);
+      if (selectedItems.length === 0) {
+        showToast('กรุณาเลือกสมาชิกในกิลด์อย่างน้อย 1 คน', 'warning');
         return;
       }
 
       let affectedCount = 0;
-      matchedList.forEach(target => {
-        const targetName = target.characterName || target.name;
+      selectedItems.forEach(item => {
+        const targetName = item.member.characterName || item.member.name;
         const m = members.find(mem => (mem.characterName || mem.name) === targetName);
         if (m) {
           ensureMemberWeeklyData(m);
@@ -7518,7 +7662,7 @@ Output strictly valid JSON with no markdown wrapping:
         `สแกนจากรูปภาพจัดการชุมนุม | ติ๊กถูกสำเร็จ: ${affectedCount} คน | ${getWeekName(currentWeekNumber)}`
       );
 
-      showToast(`📸 AI ติ๊กถูกบอส "${actName}" ให้สมาชิก ${affectedCount} คน เรียบร้อยแล้ว! 🎉`, 'success');
+      showToast(`📸 ติ๊กถูกบอส "${actName}" ให้สมาชิก ${affectedCount} คน เรียบร้อยแล้ว! 🎉`, 'success');
     }
 
     // Global Paste Listener for AI Squad Attendance Check (when in Scoring Module)
@@ -13422,21 +13566,49 @@ Output strictly valid JSON with no markdown wrapping:
           <i class="fa-solid fa-wand-magic-sparkles fa-spin mr-1.5"></i> กำลังส่งภาพให้ Google Gemini AI สแกนรายชื่อสมาชิก...
         </div>
 
-        <!-- Step 3: Detected Members Grid -->
-        <div id="squad-results-container" class="hidden space-y-2.5">
-          <div class="flex items-center justify-between">
-            <div class="font-bold text-slate-200 text-xs flex items-center gap-1.5">
-              <i class="fa-solid fa-users text-indigo-400"></i>
-              <span>รายชื่อที่ตรวจพบจากรูปภาพ:</span>
+        <!-- Step 3: Detected Members Grid & Interactive Selector -->
+        <div id="squad-results-container" class="hidden space-y-3">
+          <!-- Toolbar Header -->
+          <div class="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-slate-200 text-xs flex items-center gap-1.5">
+                <i class="fa-solid fa-users text-indigo-400"></i>
+                <span>รายชื่อที่ตรวจพบ:</span>
+              </span>
+              <span id="squad-summary-badge" class="text-[10.5px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                พบสมาชิก 0 คน
+              </span>
             </div>
-            <div id="squad-summary-badge" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
-              พบสมาชิก 0 คน
+            
+            <!-- Quick Actions -->
+            <div class="flex items-center gap-1.5 text-[11px]">
+              <button type="button" onclick="toggleAllSquadSelections(true)"
+                class="px-2.5 py-1 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/40 rounded-lg transition font-medium">
+                <i class="fa-solid fa-check-double mr-1"></i>เลือกทั้งหมด
+              </button>
+              <button type="button" onclick="toggleAllSquadSelections(false)"
+                class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-lg transition font-medium">
+                <i class="fa-solid fa-xmark mr-1"></i>ปลดทั้งหมด
+              </button>
             </div>
           </div>
 
           <!-- Squads Grid List -->
           <div id="squad-members-list" class="space-y-2.5 max-h-64 overflow-y-auto pr-1">
             <!-- Rendered via JS -->
+          </div>
+
+          <!-- Quick Manual Add Member -->
+          <div class="p-2.5 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center gap-2">
+            <i class="fa-solid fa-user-plus text-indigo-400 text-xs ml-1"></i>
+            <select id="squad-manual-add-select"
+              class="flex-1 bg-slate-900 border border-slate-700 text-slate-200 text-[11px] rounded-lg p-1.5 focus:border-indigo-400 focus:outline-none">
+              <option value="">+ เลือกสมาชิกที่ตกหล่นเพื่อเพิ่มเข้าตาราง...</option>
+            </select>
+            <button type="button" onclick="addManualSquadMember()"
+              class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] rounded-lg transition shrink-0 shadow-sm">
+              เพิ่มชื่อ
+            </button>
           </div>
         </div>
 
@@ -13449,7 +13621,7 @@ Output strictly valid JSON with no markdown wrapping:
         </button>
         <button type="button" id="btn-confirm-squad-check" onclick="confirmAiSquadAttendanceCheck()" disabled
           class="flex-1 py-2.5 px-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500 hover:from-indigo-400 hover:to-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-500/25 active:scale-95 transition flex items-center justify-center gap-1.5">
-          <i class="fa-solid fa-check"></i> <span id="btn-confirm-squad-check-text">ยืนยันติ๊กถูกให้สมาชิก (0 คน)</span>
+          <i class="fa-solid fa-check"></i> <span id="btn-confirm-squad-check-text">ยืนยันติ๊กถูกให้สมาชิกที่เลือก (0 คน)</span>
         </button>
       </div>
 
@@ -13560,7 +13732,7 @@ Output strictly valid JSON with no markdown wrapping:
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=4.4"></script>
+  <script src="boss_timer.js?v=4.5"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
