@@ -1059,30 +1059,41 @@ async function processKillConfirmImage(file) {
   const statusEl = document.getElementById('kill-confirm-ocr-status');
   const itemsBox = document.getElementById('kill-confirm-items-box');
 
+  const currentBoss = bossList.find(b => b.id === currentKillConfirmBossId);
+
   if (emptyBox) emptyBox.classList.add('hidden');
   if (filledBox) filledBox.classList.remove('hidden');
   if (previewImg) previewImg.src = URL.createObjectURL(file);
   if (statusEl) {
-    statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400"></i> กำลังสแกนอ่านชื่อบอส เวลา และไอเทมดรอปจากภาพ...`;
+    if (isBossLockedFromCard && currentBoss) {
+      statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400"></i> กำลังอ่านเวลาและไอเทมดรอปสำหรับ "${escapeHtml(currentBoss.name)}"...`;
+    } else {
+      statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400"></i> กำลังสแกนอ่านชื่อบอส เวลา และไอเทมดรอปจากภาพ...`;
+    }
   }
 
   // Priority 1: Gemini Vision if configured
   if (bossGeminiApiKey) {
     try {
       if (statusEl) {
-        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400"></i> ส่งภาพให้ Google Gemini AI วิเคราะห์บอสและของดรอป...`;
+        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400"></i> ส่งภาพให้ Google Gemini AI วิเคราะห์เวลาและของดรอป...`;
       }
       const { base64Str, mimeType } = await compressImageForGemini(file, 1600, 0.88);
       const bossCatalog = bossList.map(b => `- ID: ${b.id} | Name: ${b.name} | Map: ${b.map || ''}`).join('\n');
+      const targetHint = (isBossLockedFromCard && currentBoss) 
+        ? `\nNote: The user is recording kill time for '${currentBoss.name}'. DO NOT guess other bosses unless clearly different.` 
+        : '';
+
       const prompt = `You are a specialized game log OCR and data extractor for the MMORPG 'LORD NINE' (LORDNINE / ลอร์ดไนน์).
 Examine this screenshot of the game's drop / kill chat log.
+${targetHint}
 
 ### Boss Database:
 ${bossCatalog}
 
 ### Extraction Rules:
-1. 'killTime': Extract the 24-hour timestamp from the log line (e.g. '09:51', '19:46').
-2. 'bossId' & 'bossName': Determine which boss was defeated by matching the location after 'จาก' or from the boss name directly.
+1. 'killTime': Extract the 24-hour timestamp from the log line (e.g. '09:51', '19:46', '21:17').
+2. 'bossId' & 'bossName': Determine which boss was defeated if identifiable.
 3. 'dropItems': Extract EVERY item dropped in the screenshot. Format: "{ItemName} (ผู้รับ: {PlayerName})"
 
 Output strictly valid JSON with no markdown wrapping:
@@ -1142,8 +1153,11 @@ function applyExtractedBossData(data) {
   const minSelect = document.getElementById('kill-confirm-min');
   const dateInput = document.getElementById('kill-confirm-date');
 
-  // 1. Auto-select Boss ONLY if modal was opened without a locked boss card
-  if (!isBossLockedFromCard && !currentKillConfirmBossId) {
+  // 1. If boss was locked from card -> STRICTLY MAINTAIN THE CHOSEN BOSS
+  if (isBossLockedFromCard && currentKillConfirmBossId) {
+    updateKillConfirmBossHeader(currentKillConfirmBossId);
+  } else if (!isBossLockedFromCard && !currentKillConfirmBossId) {
+    // Only if opened from general scan with no boss pre-selected
     let matchedBoss = null;
     if (data.bossId) matchedBoss = bossList.find(b => b.id === data.bossId);
     if (!matchedBoss && data.bossName) {
@@ -1154,9 +1168,6 @@ function applyExtractedBossData(data) {
       currentKillConfirmBossId = matchedBoss.id;
       updateKillConfirmBossHeader(matchedBoss.id);
     }
-  } else if (currentKillConfirmBossId) {
-    // Firmly maintain the user's chosen boss from card
-    updateKillConfirmBossHeader(currentKillConfirmBossId);
   }
 
   // 2. Set Time & Date
@@ -1366,9 +1377,9 @@ function handleGlobalPasteForOCR(e) {
         return;
       }
 
-      // Case 2: AI OCR Modal is open or user is viewing the boss timer tab
-      const bossModule = document.getElementById('module-boss-timer');
-      const isBossTabActive = bossModule && !bossModule.classList.contains('hidden');
+      // Case 2: User is viewing the boss timer tab (outside any modal)
+      const bossContainer = document.getElementById('boss-timer-module-container');
+      const isBossTabActive = bossContainer && !bossContainer.classList.contains('hidden');
       if (isBossTabActive) {
         processImageForBossOCR(file);
       }
