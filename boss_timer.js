@@ -356,10 +356,19 @@ function renderBossTimerCards() {
   let html = '';
   // Set of Guild Activity / Scoring Bosses
   const GUILD_SCORING_BOSS_IDS = new Set([
-    'lucus', 'bahel', 'libitina', 'rakajeth', 'tumier', 'nevaeh', 'icaruthia', 'motti', 'guild_arena', 'camalia', 'world_boss'
+    'lucus', 'bahel', 'libitina', 'rakajeth', 'tumier', 'nevaeh', 'icaruthia', 'motti', 'guild_arena', 'camalia', 'world_boss', 'reddevil_guild_boss'
   ]);
 
   const isAdminActive = (typeof isAdmin !== 'undefined' && isAdmin);
+
+  // Helper to identify High-Level Boss (Level >= 100 or special high-tier raids)
+  function isHighLevelBoss(levelStr, bossId, bossName) {
+    if (bossId === 'world_boss' || (bossName && /world boss|arene|guild boss/i.test(bossName))) return true;
+    if (!levelStr) return false;
+    const nums = String(levelStr).match(/\d+/g);
+    if (nums && nums.some(n => Number(n) >= 100)) return true;
+    return false;
+  }
 
   // Sync toolbar admin controls
   const maintBtn = document.getElementById('btn-boss-maint-top');
@@ -385,29 +394,55 @@ function renderBossTimerCards() {
 
   filtered.forEach(b => {
     const isGuildActivity = GUILD_SCORING_BOSS_IDS.has(b.id) || (b.name && /lucus|bahel|libitina|rakajeth|tumier|neva|icarut|morti|motti|arena|camalia|world/i.test(b.name));
-    
-    // Boss Name Color & Size
-    const nameColorClass = isGuildActivity ? 'text-amber-400' : 'text-rose-500';
-    const typeBadge = isGuildActivity 
-      ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm flex items-center gap-1 shrink-0"><i class="fa-solid fa-star text-[7.5px] text-amber-400"></i> ${tBoss('boss_tag_guild', 'กิจกรรมกิลด์')}</span>`
-      : `<span class="px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-800/80 text-slate-400 border border-slate-700/60 shrink-0">${tBoss('boss_tag_field', 'บอสทั่วไป')}</span>`;
+    const isHighTier = isHighLevelBoss(b.level, b.id, b.name);
 
+    // 1. Color Palette based on Boss Tier
+    // High Tier (Lv. 100+): Red Theme
+    // Normal Boss (Lv. < 100): Green Theme
+    let nameColorClass = '';
+    let levelBadgeClass = '';
+    let typeBadge = '';
+    let avatarRingClass = '';
+    let cardBaseBorder = '';
+    let cardBaseBg = '';
+
+    if (isHighTier) {
+      nameColorClass = 'text-rose-400 font-black drop-shadow-[0_2px_8px_rgba(244,63,94,0.45)]';
+      levelBadgeClass = 'bg-rose-950/90 text-rose-300 border-rose-500/60 shadow-rose-950/60';
+      avatarRingClass = 'border-rose-500/60 ring-2 ring-rose-500/30 shadow-rose-950/60';
+      cardBaseBorder = 'border-rose-500/40 hover:border-rose-400 shadow-rose-950/30';
+      cardBaseBg = 'from-slate-900 via-slate-900/95 to-rose-950/30';
+      typeBadge = isGuildActivity
+        ? `<span class="px-2.5 py-0.5 rounded-full text-[9.5px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/50 shadow-sm flex items-center gap-1 shrink-0"><i class="fa-solid fa-crown text-[8px] text-rose-400"></i> ${tBoss('boss_tag_guild', 'บอสระดับสูง (กิจกรรมกิลด์)')}</span>`
+        : `<span class="px-2.5 py-0.5 rounded-full text-[9.5px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/50 shadow-sm flex items-center gap-1 shrink-0"><i class="fa-solid fa-skull-crossbones text-[8px] text-rose-400"></i> ${tBoss('boss_tag_high', 'บอสระดับสูง (Lv.100+)')}</span>`;
+    } else {
+      nameColorClass = 'text-emerald-400 font-black drop-shadow-[0_2px_8px_rgba(52,211,153,0.35)]';
+      levelBadgeClass = 'bg-emerald-950/90 text-emerald-300 border-emerald-500/60 shadow-emerald-950/60';
+      avatarRingClass = 'border-emerald-500/60 ring-2 ring-emerald-500/30 shadow-emerald-950/60';
+      cardBaseBorder = 'border-emerald-500/40 hover:border-emerald-400 shadow-emerald-950/30';
+      cardBaseBg = 'from-slate-900 via-slate-900/95 to-emerald-950/20';
+      typeBadge = `<span class="px-2.5 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm flex items-center gap-1 shrink-0"><i class="fa-solid fa-shield-halved text-[8px] text-emerald-400"></i> ${tBoss('boss_tag_field', 'บอสทั่วไป')}</span>`;
+    }
+
+    // 2. Status Badge and Active Glow
     let statusBadge = '';
-    let cardBorder = isGuildActivity ? 'border-amber-500/40' : 'border-slate-800/80';
-    let cardBg = isGuildActivity ? 'from-amber-950/20 via-slate-900/95 to-slate-950/95' : 'from-slate-900/90 to-slate-950/90';
+    let cardBorder = cardBaseBorder;
+    let cardBg = cardBaseBg;
 
     if (b.status === 'alive') {
-      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500/25 text-rose-300 border border-rose-500/50 animate-pulse flex items-center gap-1 shadow-md shadow-rose-950/40"><i class="fa-solid fa-circle text-[6px] text-rose-400"></i> ${tBoss('boss_status_spawned', 'เกิดแล้ว (ALIVE!)')}</span>`;
-      cardBorder = 'border-rose-500/60 shadow-rose-950/50';
-      cardBg = 'from-rose-950/40 via-slate-900/90 to-slate-950/90';
+      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white border border-rose-300 animate-pulse flex items-center gap-1 shadow-lg shadow-rose-600/50"><i class="fa-solid fa-circle text-[6px] text-rose-200"></i> ${tBoss('boss_status_spawned', 'เกิดแล้ว (ALIVE!)')}</span>`;
+      cardBorder = 'border-rose-500 ring-2 ring-rose-500/50 shadow-2xl shadow-rose-950/80';
+      cardBg = 'from-rose-950/60 via-slate-900 to-slate-950';
     } else if (b.status === 'soon') {
-      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/25 text-amber-300 border border-amber-500/50 animate-pulse flex items-center gap-1 shadow-md shadow-amber-950/40"><i class="fa-solid fa-clock text-[8px] text-amber-400"></i> ${tBoss('boss_status_soon', 'ใกล้เกิด (<30m)')}</span>`;
-      cardBorder = 'border-amber-500/60 shadow-amber-950/50';
-      cardBg = 'from-amber-950/30 via-slate-900/90 to-slate-950/90';
+      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/30 text-amber-300 border border-amber-400 animate-pulse flex items-center gap-1 shadow-md shadow-amber-950/60"><i class="fa-solid fa-clock text-[8px] text-amber-400"></i> ${tBoss('boss_status_soon', 'ใกล้เกิด (<30m)')}</span>`;
+      cardBorder = 'border-amber-400/80 ring-2 ring-amber-400/40 shadow-xl shadow-amber-950/60';
+      cardBg = 'from-amber-950/40 via-slate-900 to-slate-950';
     } else if (b.status === 'cooldown') {
-      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30 flex items-center gap-1"><i class="fa-solid fa-hourglass-half text-[8px] text-sky-400"></i> ${tBoss('boss_status_cooldown', 'รอเกิด')}</span>`;
+      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40 flex items-center gap-1"><i class="fa-solid fa-hourglass-half text-[8px] text-sky-400"></i> ${tBoss('boss_status_cooldown', 'รอเกิด')}</span>`;
     } else {
-      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-800/90 text-slate-400 border border-slate-700">⚪ ${tBoss('boss_status_unrecorded', 'ยังไม่ลงเวลา')}</span>`;
+      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-800/90 text-slate-400 border border-slate-700">⚪ ${tBoss('boss_status_unrecorded', 'ยังไม่ลงเวลา')}</span>`;
+      cardBorder = 'border-slate-800 hover:border-slate-700';
+      cardBg = 'from-slate-900/90 to-slate-950/90';
     }
 
     const countdownText = formatCountdown(b.diffMs, b.status);
@@ -416,8 +451,8 @@ function renderBossTimerCards() {
 
     // Boss Profile Avatar Thumbnail
     const avatarHtml = b.avatar
-      ? `<img src="${escapeHtml(b.avatar)}" alt="${escapeHtml(b.name)}" class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover border border-amber-500/40 shadow-lg ring-2 ring-amber-500/20 bg-slate-900 shrink-0" onerror="this.onerror=null; this.src=''; this.parentElement.innerHTML='<div class=\\'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xl text-amber-400\\'><i class=\\'fa-solid fa-dragon\\'></i></div>';" />`
-      : `<div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/80 flex items-center justify-center text-xl sm:text-2xl text-amber-400/90 shadow-inner shrink-0"><i class="fa-solid fa-dragon"></i></div>`;
+      ? `<img src="${escapeHtml(b.avatar)}" alt="${escapeHtml(b.name)}" class="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl object-cover border ${avatarRingClass} shadow-lg bg-slate-900 shrink-0" onerror="this.onerror=null; this.src=''; this.parentElement.innerHTML='<div class=\\'w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-slate-800 border ${avatarRingClass} flex items-center justify-center text-xl text-amber-400\\'><i class=\\'fa-solid fa-dragon\\'></i></div>';" />`
+      : `<div class="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border ${avatarRingClass} flex items-center justify-center text-xl sm:text-2xl text-amber-400/90 shadow-inner shrink-0"><i class="fa-solid fa-dragon"></i></div>`;
 
     // Action Buttons: Admin gets full controls + Edit; Member gets View Drop Log only
     let actionButtonsHtml = '';
@@ -425,7 +460,7 @@ function renderBossTimerCards() {
       actionButtonsHtml = `
         <div class="mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center gap-1.5">
           <button onclick="recordBossKillNow('${b.id}')"
-            class="flex-1 apple-btn apple-btn-ruby inline-flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-bold shadow-md shadow-rose-950/30"
+            class="flex-1 apple-btn apple-btn-ruby inline-flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-bold shadow-md shadow-rose-950/40 active:scale-95 transition"
             title="${tBoss('btn_record_kill_now', 'กดเมื่อบอสตายตอนนี้ทันที')}">
             <i class="fa-solid fa-skull text-[11px]"></i>
             <span>${tBoss('btn_record_kill_now', 'ตายตอนนี้')}</span>
@@ -461,9 +496,9 @@ function renderBossTimerCards() {
     }
 
     html += `
-      <div class="boss-card relative flex flex-col justify-between bg-gradient-to-b ${cardBg} border ${cardBorder} rounded-2xl p-4 shadow-xl backdrop-blur transition hover:scale-[1.01] hover:border-amber-400/60 duration-200">
+      <div class="boss-card relative flex flex-col justify-between bg-gradient-to-b ${cardBg} border ${cardBorder} rounded-3xl p-4 shadow-xl backdrop-blur-md transition hover:scale-[1.015] duration-200">
         <div>
-          <!-- Top Row: Status Badge -->
+          <!-- Top Row: Type & Status Badges -->
           <div class="flex items-center justify-between gap-1.5 mb-2.5">
             ${typeBadge}
             <div id="boss-status-badge-${b.id}">${statusBadge}</div>
@@ -471,45 +506,45 @@ function renderBossTimerCards() {
 
           <!-- Header with Avatar & Boss Details -->
           <div class="flex items-start gap-3 mb-2">
-            <div class="relative cursor-pointer group/avatar" onclick="${isAdminActive ? `openEditBossModal('${b.id}')` : `openBossDropLogModal('${b.id}')`}" title="${isAdminActive ? 'คลิกเพื่อแก้ไขรูปโปรไฟล์บอส' : escapeHtml(b.name)}">
+            <div class="relative cursor-pointer group/avatar shrink-0" onclick="${isAdminActive ? `openEditBossModal('${b.id}')` : `openBossDropLogModal('${b.id}')`}" title="${isAdminActive ? 'คลิกเพื่อแก้ไขรูปโปรไฟล์บอส' : escapeHtml(b.name)}">
               ${avatarHtml}
               ${isAdminActive ? `<div class="absolute inset-0 bg-black/60 rounded-2xl opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center text-white text-xs transition"><i class="fa-solid fa-camera"></i></div>` : ''}
             </div>
             <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-1.5 mb-0.5">
-                <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-lg bg-slate-900 text-amber-400 border border-slate-700/80 shadow-inner">Lv.${escapeHtml(b.level || '??')}</span>
+              <div class="flex items-center gap-1.5 mb-1">
+                <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg border shadow-inner ${levelBadgeClass}">Lv.${escapeHtml(b.level || '??')}</span>
               </div>
-              <h4 class="text-base sm:text-lg font-black tracking-tight leading-snug truncate ${nameColorClass}" title="${escapeHtml(b.name)}">
+              <h4 class="text-base sm:text-lg tracking-tight leading-tight truncate ${nameColorClass}" title="${escapeHtml(b.name)}">
                 ${escapeHtml(b.name)}
               </h4>
-              <p class="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+              <p class="text-[11px] text-slate-400 flex items-center gap-1 mt-1 font-medium">
                 <i class="fa-solid fa-location-dot text-slate-500 text-[10px]"></i>
                 <span class="truncate">${escapeHtml(b.map || (isEn ? 'Unassigned map' : 'ไม่ระบุแมพ'))}</span>
               </p>
             </div>
           </div>
 
-          <!-- Countdown Big Box -->
-          <div class="my-2.5 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/90 text-center shadow-inner">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">${tBoss('boss_countdown_label', 'นับถอยหลัง')}</span>
-            <div id="boss-cd-${b.id}" class="text-lg sm:text-xl font-black font-mono tracking-wider ${b.status === 'alive' ? 'text-rose-400 animate-pulse' : b.status === 'soon' ? 'text-amber-300 animate-pulse' : b.status === 'cooldown' ? 'text-sky-300' : 'text-slate-500'}">
+          <!-- Countdown Big Box (High Contrast & Clear Typography) -->
+          <div class="my-3 p-3 rounded-2xl bg-slate-950/90 border border-slate-800 shadow-inner text-center">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">${tBoss('boss_countdown_label', 'นับถอยหลัง')}</span>
+            <div id="boss-cd-${b.id}" class="text-lg sm:text-xl font-black font-mono tracking-wider ${b.status === 'alive' ? 'text-rose-400 animate-pulse drop-shadow-[0_0_8px_rgba(244,63,94,0.6)]' : b.status === 'soon' ? 'text-amber-300 animate-pulse drop-shadow-[0_0_8px_rgba(252,211,77,0.6)]' : b.status === 'cooldown' ? 'text-sky-300' : 'text-slate-500'}">
               ${countdownText}
             </div>
           </div>
 
           <!-- Metadata Grid (24-Hour Timestamps) -->
-          <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-300 pt-2 border-t border-slate-800/80">
-            <div>
-              <span class="text-slate-500 block text-[9.5px] font-medium">${tBoss('boss_respawn_cycle_label', 'ระยะเกิด:')}</span>
-              <span class="font-semibold text-amber-300/90">${escapeHtml(b.respawnLabel)}</span>
+          <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-300 pt-2.5 border-t border-slate-800/80">
+            <div class="bg-slate-950/50 p-2 rounded-xl border border-slate-800/60">
+              <span class="text-slate-500 block text-[9.5px] font-medium mb-0.5">${tBoss('boss_respawn_cycle_label', 'ระยะเกิด:')}</span>
+              <span class="font-bold text-amber-300/95 font-mono">${escapeHtml(b.respawnLabel)}</span>
             </div>
-            <div>
-              <span class="text-slate-500 block text-[9.5px] font-medium">${tBoss('boss_respawn_time_label', 'เกิดรอบถัดไป (24 ชม.):')}</span>
+            <div class="bg-slate-950/50 p-2 rounded-xl border border-slate-800/60">
+              <span class="text-slate-500 block text-[9.5px] font-medium mb-0.5">${tBoss('boss_respawn_time_label', 'เกิดรอบถัดไป:')}</span>
               <span id="boss-next-${b.id}" class="font-mono font-bold ${b.nextSpawn ? 'text-emerald-300' : 'text-slate-500'}">${nextSpawnStr}</span>
             </div>
-            <div class="col-span-2 text-slate-400 flex items-center justify-between text-[10.5px] pt-1">
-              <span>${tBoss('boss_defeated_time_label', 'ตายล่าสุด:')} <strong class="font-mono text-slate-300">${lastDefeatedStr}</strong></span>
-              ${b.note ? `<span class="text-amber-400/80 truncate max-w-[130px]" title="${escapeHtml(b.note)}">ℹ️ ${escapeHtml(b.note)}</span>` : ''}
+            <div class="col-span-2 text-slate-400 flex items-center justify-between text-[10.5px] pt-1 px-1">
+              <span>${tBoss('boss_defeated_time_label', 'ตายล่าสุด:')} <strong class="font-mono text-slate-200">${lastDefeatedStr}</strong></span>
+              ${b.note ? `<span class="text-amber-400/90 truncate max-w-[140px] font-medium" title="${escapeHtml(b.note)}">ℹ️ ${escapeHtml(b.note)}</span>` : ''}
             </div>
           </div>
         </div>
