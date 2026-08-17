@@ -8363,10 +8363,11 @@ Output strictly valid JSON with no markdown formatting.`;
       `);
     }
 
-    // Nong Devil Autonomous Action Handlers
+    // Nong Devil Autonomous Action Handlers (All Guarded by Admin Approval)
     function executeNongDevilBossKill(btn, payloadStr) {
       if (!isAdmin) {
-        showToast('เฉพาะ Admin เท่านั้นที่สั่งลงเวลาบอสได้ค่ะ', 'warning');
+        showToast('เฉพาะ Admin เท่านั้นที่สามารถอนุมัติและบันทึกเวลาบอสได้ค่ะ', 'warning');
+        if (typeof openAdminEmailModal === 'function') openAdminEmailModal();
         return;
       }
 
@@ -8383,10 +8384,8 @@ Output strictly valid JSON with no markdown formatting.`;
           btn.disabled = true;
           btn.classList.remove('from-rose-600', 'to-red-500');
           btn.classList.add('bg-emerald-700', 'opacity-90');
-          btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>บันทึกเวลาบอสสำเร็จเรียบร้อยค่ะ! 🎉</span>`;
+          btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>ส่งไปยังหน้าต่างตรวจสอบเพื่ออนุมัติแล้วค่ะ 🛡️</span>`;
         }
-
-        showToast(`😈 น้องเดวิลลงเวลาบอส "${data.bossName || 'บอส'}" ให้เรียบร้อยแล้วค่ะ! 🎉`, 'success');
       } catch (err) {
         console.error('Nong Devil Boss Kill Action Failed:', err);
         showToast('เกิดข้อผิดพลาดในการลงเวลาบอส: ' + err.message, 'warning');
@@ -8395,7 +8394,8 @@ Output strictly valid JSON with no markdown formatting.`;
 
     function executeNongDevilSquadCheck(btn, memberNamesStr, selectId) {
       if (!isAdmin) {
-        showToast('เฉพาะ Admin เท่านั้นที่สั่งเช็คชื่อได้ค่ะ', 'warning');
+        showToast('เฉพาะ Admin เท่านั้นที่สามารถอนุมัติและเช็คชื่อสมาชิกได้ค่ะ', 'warning');
+        if (typeof openAdminEmailModal === 'function') openAdminEmailModal();
         return;
       }
 
@@ -8409,34 +8409,49 @@ Output strictly valid JSON with no markdown formatting.`;
           return;
         }
 
-        let affectedCount = 0;
+        const actName = ACTIVITIES[actIdx]?.name || ACTIVITIES[actIdx]?.shortName || 'กิจกรรม';
+
+        // Count matched members first
+        const matchedList = [];
         detectedNames.forEach(rawName => {
           const cleanName = String(rawName).trim().toLowerCase();
           const m = members.find(mem => {
             const cName = (mem.characterName || mem.name || '').trim().toLowerCase();
             return cName === cleanName || cName.replace(/\s+/g, '') === cleanName.replace(/\s+/g, '');
           });
+          if (m) matchedList.push(m);
+        });
 
-          if (m) {
-            ensureMemberWeeklyData(m);
-            m.checks[actIdx] = true;
-            if (!Array.isArray(m.weeklyChecks[currentWeekNumber])) {
-              m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
-            }
-            m.weeklyChecks[currentWeekNumber][actIdx] = true;
-            affectedCount++;
+        if (matchedList.length === 0) {
+          showToast('ไม่พบรายชื่อสมาชิกในกิลด์ที่ตรงกับรูปภาพค่ะ', 'warning');
+          return;
+        }
+
+        // 🛡️ Admin Approval Confirmation Dialog
+        const confirmMsg = `⚠️ ขออนุมัติจาก Admin (Admin Approval):\n\nน้องเดวิลตรวจพบสมาชิกในภาพ ${matchedList.length} คน\nกำลังจะติ๊กถูกในกิจกรรม: "${actName}" (${getWeekName(currentWeekNumber)})\n\nท่านแอดมินอนุมัติให้บันทึกคะแนนลงระบบใช่หรือไม่?`;
+        if (!confirm(confirmMsg)) {
+          showToast('ยกเลิกการบันทึกข้อมูลแล้วค่ะ', 'info');
+          return;
+        }
+
+        let affectedCount = 0;
+        matchedList.forEach(m => {
+          ensureMemberWeeklyData(m);
+          m.checks[actIdx] = true;
+          if (!Array.isArray(m.weeklyChecks[currentWeekNumber])) {
+            m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
           }
+          m.weeklyChecks[currentWeekNumber][actIdx] = true;
+          affectedCount++;
         });
 
         saveData();
         renderTable();
         updateKPIs();
 
-        const actName = ACTIVITIES[actIdx]?.name || ACTIVITIES[actIdx]?.shortName || 'กิจกรรม';
-
         addAuditLog(
           'batch',
-          `น้องเดวิล AI ติ๊กบอส: ${actName}`,
+          `น้องเดวิล AI ติ๊กบอส: ${actName} (อนุมัติโดย ${currentAdminEmail || 'Admin'})`,
           `สแกนจากรูปภาพจัดการชุมนุม | ติ๊กถูกสำเร็จ: ${affectedCount} คน | ${getWeekName(currentWeekNumber)}`
         );
 
@@ -8444,10 +8459,10 @@ Output strictly valid JSON with no markdown formatting.`;
           btn.disabled = true;
           btn.classList.remove('from-indigo-600', 'to-purple-600');
           btn.classList.add('bg-emerald-700', 'opacity-90');
-          btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>ติ๊กถูกสำเร็จ ${affectedCount} คนแล้วค่ะ! 🎉</span>`;
+          btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>อนุมัติและติ๊กถูกสำเร็จ ${affectedCount} คนแล้วค่ะ! 🎉</span>`;
         }
 
-        showToast(`😈 น้องเดวิลติ๊กถูกบอส "${actName}" ให้สมาชิก ${affectedCount} คน เรียบร้อยแล้วค่ะ! 🎉`, 'success');
+        showToast(`😈 แอดมินอนุมัติเรียบร้อย! น้องเดวิลติ๊กถูก "${actName}" ให้ ${affectedCount} คนแล้วค่ะ 🎉`, 'success');
       } catch (err) {
         console.error('Nong Devil Squad Check Action Failed:', err);
         showToast('เกิดข้อผิดพลาดในการเช็คชื่อ: ' + err.message, 'warning');
@@ -8456,7 +8471,8 @@ Output strictly valid JSON with no markdown formatting.`;
 
     function executeNongDevilCpUpdate(btn, payloadStr) {
       if (!isAdmin) {
-        showToast('เฉพาะ Admin เท่านั้นที่สั่งอัปเดต CP ได้ค่ะ', 'warning');
+        showToast('เฉพาะ Admin เท่านั้นที่สามารถอนุมัติและอัปเดต CP ได้ค่ะ', 'warning');
+        if (typeof openAdminEmailModal === 'function') openAdminEmailModal();
         return;
       }
 
@@ -8481,6 +8497,14 @@ Output strictly valid JSON with no markdown formatting.`;
         }
 
         const oldCp = m.cp || 0;
+
+        // 🛡️ Admin Approval Confirmation Dialog
+        const confirmMsg = `⚠️ ขออนุมัติจาก Admin (Admin Approval):\n\nน้องเดวิลกำลังจะอัปเดตค่าพลัง CP ของ "${m.characterName || m.name}":\n• ค่าพลังเดิม: ${oldCp.toLocaleString()}\n• ค่าพลังใหม่: ${newCp.toLocaleString()}\n\nท่านแอดมินอนุมัติให้บันทึกข้อมูลใช่หรือไม่?`;
+        if (!confirm(confirmMsg)) {
+          showToast('ยกเลิกการอัปเดต CP แล้วค่ะ', 'info');
+          return;
+        }
+
         m.cp = newCp;
 
         saveData();
@@ -8489,7 +8513,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
         addAuditLog(
           'edit',
-          `น้องเดวิล AI อัปเดต CP: ${m.characterName}`,
+          `น้องเดวิล AI อัปเดต CP: ${m.characterName} (อนุมัติโดย ${currentAdminEmail || 'Admin'})`,
           `เปลี่ยน CP จาก ${oldCp.toLocaleString()} เป็น ${newCp.toLocaleString()}`,
           m.characterName
         );
@@ -8498,10 +8522,10 @@ Output strictly valid JSON with no markdown formatting.`;
           btn.disabled = true;
           btn.classList.remove('from-amber-600', 'to-orange-500');
           btn.classList.add('bg-emerald-700', 'opacity-90');
-          btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>อัปเดต CP เรียบร้อยค่ะ! (${newCp.toLocaleString()}) 🎉</span>`;
+          btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>อนุมัติและอัปเดต CP แล้วค่ะ! (${newCp.toLocaleString()}) 🎉</span>`;
         }
 
-        showToast(`😈 น้องเดวิลอัปเดต CP ของ "${m.characterName}" เป็น ${newCp.toLocaleString()} เรียบร้อยค่ะ! 🎉`, 'success');
+        showToast(`😈 แอดมินอนุมัติเรียบร้อย! อัปเดต CP ของ "${m.characterName}" เป็น ${newCp.toLocaleString()} แล้วค่ะ! 🎉`, 'success');
       } catch (err) {
         console.error('Nong Devil CP Action Failed:', err);
         showToast('เกิดข้อผิดพลาดในการอัปเดต CP: ' + err.message, 'warning');
