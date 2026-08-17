@@ -17,6 +17,8 @@ let bossList = [];
 let bossCustomConfigs = {}; // { [bossId]: { name, level, map, avatar, intervalHours, scheduleText, note } }
 let bossTimerData = {}; // { [bossId]: { defeatedTime: ISOString, defeatedBy: string, nextSpawnTime: ISOString, customNextSpawn: ISOString } }
 let bossDropLogs = [];  // [ { id, bossId, bossName, killTime, items: [], recordedBy, timestamp } ]
+let bossKillLogs = [];  // [ { id, bossId, bossName, level, map, killTime, killTimeFormatted, nextSpawnTime, nextSpawnFormatted, recordedBy, timestamp, timestampStr, dropItems, dropItemsText } ]
+let bossSheetWebhookUrl = localStorage.getItem('guild_boss_sheet_webhook') || '';
 let bossTimerInterval = null;
 let currentBossFilter = 'all';
 let currentBossSearch = '';
@@ -196,6 +198,11 @@ function initBossTimerModule() {
   const savedLogs = localStorage.getItem('guild_boss_drop_logs');
   bossDropLogs = savedLogs ? JSON.parse(savedLogs) : [];
 
+  const savedKillLogs = localStorage.getItem('guild_boss_kill_logs');
+  bossKillLogs = savedKillLogs ? JSON.parse(savedKillLogs) : [];
+
+  bossSheetWebhookUrl = localStorage.getItem('guild_boss_sheet_webhook') || '';
+
   // Listen to Firebase Realtime Database
   if (typeof fbDb !== 'undefined' && fbDb) {
     fbDb.ref('guild_app/boss_custom_configs').on('value', snap => {
@@ -221,6 +228,22 @@ function initBossTimerModule() {
       if (snap.exists()) {
         bossDropLogs = snap.val() || [];
         localStorage.setItem('guild_boss_drop_logs', JSON.stringify(bossDropLogs));
+      }
+    });
+
+    fbDb.ref('guild_app/boss_kill_logs').on('value', snap => {
+      if (snap.exists()) {
+        bossKillLogs = snap.val() || [];
+        localStorage.setItem('guild_boss_kill_logs', JSON.stringify(bossKillLogs));
+        renderBossKillHistoryList();
+      }
+    });
+
+    fbDb.ref('guild_app/boss_sheet_webhook').on('value', snap => {
+      if (snap.exists()) {
+        bossSheetWebhookUrl = snap.val() || '';
+        localStorage.setItem('guild_boss_sheet_webhook', bossSheetWebhookUrl);
+        updateWebhookStatusUi();
       }
     });
   }
@@ -724,8 +747,23 @@ function recordBossKillNow(bossId) {
   playChime();
 }
 
-// Save Boss Kill Time
-function saveBossKillTime(bossId, killTimeISO, killerEmail) {
+// Send Boss Kill Log row to Google Sheets via Webhook (Background Async)
+function sendKillLogToGoogleSheet(logData) {
+  if (!bossSheetWebhookUrl) return;
+  try {
+    fetch(bossSheetWebhookUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(logData)
+    }).catch(err => console.warn('Google Sheet Webhook send error:', err));
+  } catch (e) {
+    console.warn('Google Sheet Webhook exception:', e);
+  }
+}
+
+// Save Boss Kill Time & Create History Log (Firebase + Google Sheets)
+function saveBossKillTime(bossId, killTimeISO, killerEmail, dropItemsList) {
   const boss = bossList.find(b => b.id === bossId);
   if (!boss) return;
 
@@ -737,6 +775,7 @@ function saveBossKillTime(bossId, killTimeISO, killerEmail) {
     nextSpawn = calculateNextSpawnDate(boss, killTimeISO);
   }
 
+  // 1. Update Boss Active Status
   bossTimerData[bossId] = {
     defeatedTime: killTimeISO,
     nextSpawnTime: nextSpawn ? nextSpawn.toISOString() : null,
@@ -749,12 +788,41 @@ function saveBossKillTime(bossId, killTimeISO, killerEmail) {
     fbDb.ref('guild_app/boss_timers').set(bossTimerData);
   }
 
+  // 2. Append to Boss Kill History Log (Capped at 200 items)
+  const killLogEntry = {
+    id: 'kill_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    bossId: boss.id,
+    bossName: boss.name,
+    level: boss.level || '-',
+    map: boss.map || '-',
+    killTime: killTimeISO,
+    killTimeFormatted: formatDateTimeShort(defDate),
+    nextSpawnTime: nextSpawn ? nextSpawn.toISOString() : null,
+    nextSpawnFormatted: nextSpawn ? formatDateTimeShort(nextSpawn) : '-',
+    recordedBy: killerEmail || 'Admin',
+    timestamp: new Date().toISOString(),
+    timestampStr: formatDateTimeShort(new Date()),
+    dropItems: dropItemsList || [],
+    dropItemsText: (dropItemsList && dropItemsList.length > 0) ? dropItemsList.join(', ') : '-'
+  };
+
+  bossKillLogs.unshift(killLogEntry);
+  if (bossKillLogs.length > 200) bossKillLogs = bossKillLogs.slice(0, 200);
+  localStorage.setItem('guild_boss_kill_logs', JSON.stringify(bossKillLogs));
+  if (typeof fbDb !== 'undefined' && fbDb) {
+    fbDb.ref('guild_app/boss_kill_logs').set(bossKillLogs);
+  }
+
+  // 3. Send row to Google Sheets via Webhook (Background Async)
+  sendKillLogToGoogleSheet(killLogEntry);
+
   if (typeof addAuditLog === 'function') {
     addAuditLog('boss_kill', `ลงเวลาตายบอส "${boss.name}"`, `เวลา: ${formatDateTimeShort(defDate)} โดย: ${killerEmail}`, 'BossTimer');
   }
 
   renderBossTimerCards();
   updateUpcomingBossWidget();
+  renderBossKillHistoryList();
 }
 
 // Populate all 24-hour selects across modals
@@ -939,29 +1007,29 @@ function handleSaveKillConfirm(e) {
 
   const killerEmail = (typeof currentAdminEmail !== 'undefined' ? currentAdminEmail : 'Admin');
 
-  // 1. Save Boss Kill Time
-  saveBossKillTime(currentKillConfirmBossId, dt.toISOString(), killerEmail);
-
-  // 2. Save Drop Log if items provided
+  // 1. Extract Drop Items (if provided)
   const itemsText = document.getElementById('kill-confirm-items-text');
   const rawItems = itemsText ? itemsText.value.trim() : '';
-  if (rawItems) {
-    const itemsList = rawItems.split('\n').map(i => i.trim()).filter(i => i.length > 0);
-    if (itemsList.length > 0) {
-      const dropEntry = {
-        id: 'drop_' + Date.now(),
-        bossId: currentKillConfirmBossId,
-        bossName: bossName,
-        killTime: dt.toISOString(),
-        items: itemsList,
-        recordedBy: killerEmail,
-        timestamp: new Date().toISOString()
-      };
-      bossDropLogs.unshift(dropEntry);
-      localStorage.setItem('guild_boss_drop_logs', JSON.stringify(bossDropLogs));
-      if (typeof fbDb !== 'undefined' && fbDb) {
-        fbDb.ref('guild_app/boss_drop_logs').set(bossDropLogs);
-      }
+  const itemsList = rawItems ? rawItems.split('\n').map(i => i.trim()).filter(i => i.length > 0) : [];
+
+  // 2. Save Boss Kill Time & Create History Log (Firebase + Google Sheets)
+  saveBossKillTime(currentKillConfirmBossId, dt.toISOString(), killerEmail, itemsList);
+
+  // 3. Save Drop Log if items provided
+  if (itemsList.length > 0) {
+    const dropEntry = {
+      id: 'drop_' + Date.now(),
+      bossId: currentKillConfirmBossId,
+      bossName: bossName,
+      killTime: dt.toISOString(),
+      items: itemsList,
+      recordedBy: killerEmail,
+      timestamp: new Date().toISOString()
+    };
+    bossDropLogs.unshift(dropEntry);
+    localStorage.setItem('guild_boss_drop_logs', JSON.stringify(bossDropLogs));
+    if (typeof fbDb !== 'undefined' && fbDb) {
+      fbDb.ref('guild_app/boss_drop_logs').set(bossDropLogs);
     }
   }
 
@@ -1688,13 +1756,13 @@ function handleConfirmOcrSave(e) {
 
   const boss = bossList.find(b => b.id === bossId);
   const adminEmail = typeof currentAdminEmail !== 'undefined' ? currentAdminEmail : 'Admin';
+  const itemsList = itemsVal ? itemsVal.split('\n').map(i => i.trim()).filter(i => i.length > 0) : [];
 
-  // Save Boss Kill Time
-  saveBossKillTime(bossId, dt.toISOString(), adminEmail);
+  // 1. Save Boss Kill Time & Create History Log (Firebase + Google Sheets)
+  saveBossKillTime(bossId, dt.toISOString(), adminEmail, itemsList);
 
-  // Save Drop Log
-  if (itemsVal) {
-    const itemsList = itemsVal.split('\n').map(i => i.trim()).filter(i => i.length > 0);
+  // 2. Save Drop Log
+  if (itemsList.length > 0) {
     const dropEntry = {
       id: 'drop_' + Date.now(),
       bossId,
@@ -1719,6 +1787,176 @@ function handleConfirmOcrSave(e) {
 function closeBossAiOcrModal() {
   const modal = document.getElementById('boss-ai-ocr-modal');
   if (modal) modal.classList.add('hidden');
+}
+
+// ================= 📜 Boss Kill History & Google Sheets Webhook Functions =================
+
+function updateWebhookStatusUi() {
+  const statusLabel = document.getElementById('history-webhook-status-label');
+  if (statusLabel) {
+    if (bossSheetWebhookUrl) {
+      statusLabel.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> Google Sheets: เชื่อมต่อแล้ว</span>`;
+    } else {
+      statusLabel.innerHTML = `<span class="text-amber-400 font-bold"><i class="fa-solid fa-circle-exclamation"></i> Google Sheets: ยังไม่ตั้งค่า</span>`;
+    }
+  }
+}
+
+function openBossKillHistoryModal() {
+  updateWebhookStatusUi();
+  renderBossKillHistoryList();
+  const modal = document.getElementById('boss-kill-history-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeBossKillHistoryModal() {
+  const modal = document.getElementById('boss-kill-history-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function renderBossKillHistoryList() {
+  const container = document.getElementById('boss-kill-history-list');
+  const countBadge = document.getElementById('history-log-count-badge');
+  if (!container) return;
+
+  const searchInput = document.getElementById('history-search-input');
+  const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+  let filtered = bossKillLogs || [];
+  if (query) {
+    filtered = filtered.filter(log => 
+      (log.bossName && log.bossName.toLowerCase().includes(query)) ||
+      (log.map && log.map.toLowerCase().includes(query)) ||
+      (log.recordedBy && log.recordedBy.toLowerCase().includes(query)) ||
+      (log.dropItemsText && log.dropItemsText.toLowerCase().includes(query))
+    );
+  }
+
+  if (countBadge) countBadge.textContent = `${filtered.length} รายการ`;
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="py-12 text-center text-slate-500 space-y-2">
+        <i class="fa-solid fa-scroll text-3xl text-slate-600"></i>
+        <p class="text-xs font-medium">ยังไม่มีประวัติการลงเวลา หรือไม่พบข้อมูลที่ค้นหา</p>
+      </div>
+    `;
+    return;
+  }
+
+  const html = filtered.map(log => {
+    const isGuild = log.bossId === 'guild_arena' || log.bossId === 'reddevil_guild_boss';
+    const isHigh = !isGuild && Number(log.level) >= 100;
+    
+    let badgeClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+    let nameClass = 'text-emerald-400 font-bold';
+    if (isGuild) {
+      badgeClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+      nameClass = 'text-amber-300 font-black';
+    } else if (isHigh) {
+      badgeClass = 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+      nameClass = 'text-rose-400 font-black';
+    }
+
+    const dropItemsHtml = (log.dropItems && log.dropItems.length > 0)
+      ? `<div class="mt-1 flex flex-wrap gap-1">
+          ${log.dropItems.map(item => `<span class="px-2 py-0.5 rounded-md text-[10px] bg-amber-500/10 text-amber-300 border border-amber-500/30">🎁 ${escapeHtml(item)}</span>`).join('')}
+        </div>`
+      : '';
+
+    return `
+      <div class="p-3 bg-slate-950/70 hover:bg-slate-900/90 border border-slate-800/80 rounded-2xl transition flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div class="space-y-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="${nameClass} text-xs sm:text-sm">${escapeHtml(log.bossName)}</span>
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-mono border ${badgeClass}">Lv.${escapeHtml(log.level || '??')}</span>
+            <span class="text-[11px] text-slate-400"><i class="fa-solid fa-location-dot text-[9px] text-slate-500"></i> ${escapeHtml(log.map || '-')}</span>
+          </div>
+          <div class="flex items-center gap-3 text-[11px] text-slate-400 font-mono flex-wrap">
+            <span>💀 เวลาตาย: <b class="text-amber-300 font-sans">${escapeHtml(log.killTimeFormatted || '-')}</b></span>
+            <span>⏳ เกิดรอบถัดไป: <b class="text-sky-300 font-sans">${escapeHtml(log.nextSpawnFormatted || '-')}</b></span>
+          </div>
+          ${dropItemsHtml}
+        </div>
+        <div class="text-left sm:text-right shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-800/60">
+          <div class="text-[10.5px] text-slate-400">👤 บันทึกโดย: <b class="text-slate-300">${escapeHtml(log.recordedBy || 'Admin')}</b></div>
+          <div class="text-[10px] text-slate-500 font-mono">${escapeHtml(log.timestampStr || '')}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = html;
+}
+
+function clearAllBossKillLogsPrompt() {
+  if (confirm('คุณแน่ใจหรือไม่ว่าต้องการล้างประวัติการลงเวลาบอสทั้งหมด? (การกระทำนี้ไม่สามารถย้อนกลับได้)')) {
+    bossKillLogs = [];
+    localStorage.setItem('guild_boss_kill_logs', JSON.stringify([]));
+    if (typeof fbDb !== 'undefined' && fbDb) {
+      fbDb.ref('guild_app/boss_kill_logs').set([]);
+    }
+    renderBossKillHistoryList();
+    showToast('ล้างประวัติการลงเวลาบอสเรียบร้อยแล้ว', 'info');
+  }
+}
+
+function exportBossKillLogsToCsv() {
+  if (!bossKillLogs || bossKillLogs.length === 0) {
+    alert('ไม่มีข้อมูลประวัติการลงเวลาสำหรับส่งออก');
+    return;
+  }
+
+  const headers = ['วันที่บันทึก (Timestamp)', 'ชื่อบอส', 'เลเวล', 'สถานที่ (Map)', 'เวลาที่บอสตาย (24 ชม.)', 'เวลาเกิดรอบถัดไป', 'ผู้บันทึก (Admin)', 'รายการของดรอป'];
+  const rows = bossKillLogs.map(log => [
+    `"${(log.timestampStr || '').replace(/"/g, '""')}"`,
+    `"${(log.bossName || '').replace(/"/g, '""')}"`,
+    `"${(log.level || '').replace(/"/g, '""')}"`,
+    `"${(log.map || '').replace(/"/g, '""')}"`,
+    `"${(log.killTimeFormatted || '').replace(/"/g, '""')}"`,
+    `"${(log.nextSpawnFormatted || '').replace(/"/g, '""')}"`,
+    `"${(log.recordedBy || '').replace(/"/g, '""')}"`,
+    `"${(log.dropItemsText || '-').replace(/"/g, '""')}"`
+  ]);
+
+  const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `Boss_Kill_History_${new Date().toISOString().slice(0, 10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  showToast('📥 ส่งออกไฟล์ประวัติการลงเวลา (CSV) เรียบร้อยแล้ว!', 'success');
+}
+
+function openSheetWebhookSettingsModal() {
+  const modal = document.getElementById('boss-sheet-config-modal');
+  const input = document.getElementById('sheet-webhook-url-input');
+  if (input) input.value = bossSheetWebhookUrl || '';
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeSheetWebhookSettingsModal() {
+  const modal = document.getElementById('boss-sheet-config-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function saveSheetWebhookUrl() {
+  const input = document.getElementById('sheet-webhook-url-input');
+  const url = input ? input.value.trim() : '';
+
+  bossSheetWebhookUrl = url;
+  localStorage.setItem('guild_boss_sheet_webhook', url);
+  if (typeof fbDb !== 'undefined' && fbDb) {
+    fbDb.ref('guild_app/boss_sheet_webhook').set(url);
+  }
+
+  updateWebhookStatusUi();
+  closeSheetWebhookSettingsModal();
+  showToast(url ? '✅ บันทึกการเชื่อมต่อ Google Sheets เรียบร้อยแล้ว!' : 'ลบการเชื่อมต่อ Google Sheets แล้ว', 'success');
 }
 
 // Drop Log Viewer Modal
@@ -1827,4 +2065,14 @@ window.renderBossTimerCards = renderBossTimerCards;
 window.closeBossAiOcrModal = closeBossAiOcrModal;
 window.handleConfirmOcrSave = handleConfirmOcrSave;
 window.clearAllBossTimers = clearAllBossTimers;
+window.openBossKillHistoryModal = openBossKillHistoryModal;
+window.closeBossKillHistoryModal = closeBossKillHistoryModal;
+window.renderBossKillHistoryList = renderBossKillHistoryList;
+window.clearAllBossKillLogsPrompt = clearAllBossKillLogsPrompt;
+window.exportBossKillLogsToCsv = exportBossKillLogsToCsv;
+window.openSheetWebhookSettingsModal = openSheetWebhookSettingsModal;
+window.closeSheetWebhookSettingsModal = closeSheetWebhookSettingsModal;
+window.saveSheetWebhookUrl = saveSheetWebhookUrl;
+window.sendKillLogToGoogleSheet = sendKillLogToGoogleSheet;
+window.updateWebhookStatusUi = updateWebhookStatusUi;
 

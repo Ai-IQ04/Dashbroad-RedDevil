@@ -1222,6 +1222,13 @@
           <i class="fa-solid fa-gift text-amber-400"></i>
           <span data-i18n="btn_view_drop_logs">ประวัติดรอป</span>
         </button>
+
+        <button onclick="openBossKillHistoryModal()"
+          class="apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-slate-200 hover:text-white shadow-sm"
+          title="ดูประวัติการลงเวลาบอสย้อนหลังทั้งหมด & ส่งออก Google Sheets / Excel">
+          <i class="fa-solid fa-scroll text-amber-400"></i>
+          <span>ประวัติลงเวลา</span>
+        </button>
       </div>
 
       <!-- Search & Paste Hint -->
@@ -12643,9 +12650,116 @@
     </div>
   </div>
 
+  <!-- ================= 📜 หน้าต่างประวัติการลงเวลาบอสทั้งหมด (Boss Kill History Modal) ================= -->
+  <div id="boss-kill-history-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-3 sm:p-4 animate-fade-in">
+    <div class="w-full max-w-4xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-amber-500/50 rounded-3xl p-4 sm:p-6 shadow-2xl relative animate-scale-up max-h-[92vh] flex flex-col">
+      <button type="button" onclick="closeBossKillHistoryModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0 pr-8 flex-wrap gap-2">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-amber-500/20 text-amber-300 flex items-center justify-center text-lg border border-amber-500/30 shadow-md">
+            <i class="fa-solid fa-scroll"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm sm:text-base font-extrabold text-white">ประวัติการลงเวลาบอส (Kill History Logs)</h3>
+              <span id="history-log-count-badge" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">0 รายการ</span>
+            </div>
+            <p class="text-[11px] text-slate-400">บันทึกประวัติย้อนหลังเรียลไทม์ ซิงค์คู่ขนานลง Firebase และ Google Sheets</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="openSheetWebhookSettingsModal()" id="btn-open-sheet-config"
+            class="apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white">
+            <i class="fa-solid fa-table text-emerald-400"></i>
+            <span id="history-webhook-status-label">Google Sheets: เชื่อมต่อแล้ว</span>
+          </button>
+          <button type="button" onclick="exportBossKillLogsToCsv()"
+            class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold shadow-md shadow-emerald-950/40">
+            <i class="fa-solid fa-file-excel text-xs"></i>
+            <span>ส่งออก Excel / CSV</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter / Search Bar -->
+      <div class="py-2.5 flex items-center justify-between gap-2 shrink-0 border-b border-slate-800/80 flex-wrap">
+        <div class="relative flex-1 min-w-[200px] max-w-sm">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+          <input type="text" id="history-search-input" oninput="renderBossKillHistoryList()"
+            placeholder="ค้นหาชื่อบอส, แมพ, ผู้บันทึก..."
+            class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl pl-8 pr-3 py-1.5 focus:border-amber-400 focus:outline-none" />
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="clearAllBossKillLogsPrompt()"
+            class="text-[11px] text-rose-400/80 hover:text-rose-300 hover:underline transition">
+            <i class="fa-solid fa-trash-can mr-1"></i>ล้างประวัติทั้งหมด
+          </button>
+        </div>
+      </div>
+
+      <!-- Logs Table & Timeline Container -->
+      <div class="flex-1 overflow-y-auto py-2 pr-1 space-y-2">
+        <div id="boss-kill-history-list" class="space-y-2">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ⚙️ หน้าต่างตั้งค่า Google Sheets Webhook (Sheet Config Modal) ================= -->
+  <div id="boss-sheet-config-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md hidden p-4 animate-fade-in">
+    <div class="w-full max-w-lg bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-emerald-500/50 rounded-3xl p-6 shadow-2xl relative animate-scale-up max-h-[90vh] flex flex-col">
+      <button type="button" onclick="closeSheetWebhookSettingsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="flex items-center gap-3 pb-3 border-b border-slate-800 shrink-0">
+        <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl border border-emerald-500/40 shadow-md">
+          <i class="fa-solid fa-table"></i>
+        </div>
+        <div>
+          <h3 class="text-sm sm:text-base font-extrabold text-white">ตั้งค่าเชื่อมต่อ Google Sheets Webhook</h3>
+          <p class="text-[11px] text-slate-400">ส่งแถวประวัติลงเวลาบอสเข้า Google Sheet อัตโนมัติทุกครั้ง</p>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto py-3 space-y-3 pr-1 text-xs">
+        <div class="p-3 bg-emerald-950/30 border border-emerald-500/30 rounded-2xl space-y-1.5 text-emerald-200">
+          <div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> วิธีเชื่อมต่อง่ายๆ ใน 3 สเต็ป:</div>
+          <ol class="list-decimal list-inside space-y-1 text-[11px] text-slate-300">
+            <li>สร้างไฟล์ Google Sheets ใหม่ 1 ไฟล์</li>
+            <li>ไปที่เมนู <b>ส่วนขยาย (Extensions)</b> ➔ <b>Apps Script</b> ➔ วางโค้ดที่เตรียมไว้ ➔ กด <b>ทำให้ใช้งานได้ (Deploy) ➔ เป็นเว็บแอป (Web App)</b></li>
+            <li>คัดลอก <b>Web App URL</b> (ลงท้ายด้วย <code>/exec</code>) มาวางในช่องด้านล่างนี้ได้เลยครับ</li>
+          </ol>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Google Apps Script Webhook URL:</label>
+          <input type="url" id="sheet-webhook-url-input"
+            placeholder="https://script.google.com/macros/s/.../exec"
+            class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-emerald-400 focus:outline-none font-mono" />
+        </div>
+
+        <div class="flex items-center gap-2 pt-2">
+          <button type="button" onclick="closeSheetWebhookSettingsModal()" class="w-1/3 py-2.5 px-3 bg-slate-800 text-slate-300 font-semibold rounded-xl">ยกเลิก</button>
+          <button type="button" onclick="saveSheetWebhookUrl()" class="flex-1 py-2.5 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-check"></i> <span>บันทึกการตั้งค่า Webhook</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=2.5"></script>
+  <script src="boss_timer.js?v=2.6"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
