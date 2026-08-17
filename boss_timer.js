@@ -1618,7 +1618,7 @@ Output strictly valid JSON with no markdown wrapping:
 async function discoverActiveGeminiModel(apiKey) {
   if (window.cachedGeminiModelEndpoint) return window.cachedGeminiModelEndpoint;
 
-  const apiVersions = ['v1beta', 'v1'];
+  const apiVersions = ['v1', 'v1beta'];
   for (const apiVer of apiVersions) {
     try {
       const listRes = await fetch(`https://generativelanguage.googleapis.com/${apiVer}/models?key=${apiKey}`);
@@ -1651,7 +1651,7 @@ async function discoverActiveGeminiModel(apiKey) {
   }
 
   // Fallback defaults if ListModels is restricted
-  return { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' };
+  return { apiVer: 'v1', model: 'gemini-1.5-flash' };
 }
 
 // Universal Gemini Vision Caller with Model Discovery & Auto-Fallback
@@ -1661,17 +1661,14 @@ async function callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiK
   
   const candidateList = [
     { apiVer: discovered.apiVer, model: discovered.model },
-    { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' },
-    { apiVer: 'v1beta', model: 'gemini-1.5-flash' },
-    { apiVer: 'v1beta', model: 'gemini-1.5-flash-001' },
-    { apiVer: 'v1beta', model: 'gemini-1.5-flash-002' },
-    { apiVer: 'v1beta', model: 'gemini-2.0-flash' },
-    { apiVer: 'v1beta', model: 'gemini-2.0-flash-exp' },
-    { apiVer: 'v1beta', model: 'gemini-1.5-pro-latest' },
-    { apiVer: 'v1beta', model: 'gemini-1.5-pro' },
     { apiVer: 'v1', model: 'gemini-1.5-flash' },
     { apiVer: 'v1', model: 'gemini-1.5-pro' },
-    { apiVer: 'v1beta', model: 'gemini-pro-vision' }
+    { apiVer: 'v1', model: 'gemini-2.0-flash' },
+    { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' },
+    { apiVer: 'v1beta', model: 'gemini-1.5-flash' },
+    { apiVer: 'v1beta', model: 'gemini-2.0-flash' },
+    { apiVer: 'v1beta', model: 'gemini-1.5-pro-latest' },
+    { apiVer: 'v1beta', model: 'gemini-1.5-pro' }
   ];
 
   let lastError = null;
@@ -2311,16 +2308,17 @@ async function testGeminiApiKeyConnection() {
   }
 
   try {
-    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+    // 1. Test ListModels on v1
+    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${key}`);
     if (!listRes.ok) {
       const errJson = await listRes.json().catch(() => ({}));
       const errMessage = errJson?.error?.message || `HTTP ${listRes.status}`;
       
-      if (listRes.status === 404 || errMessage.includes('not found') || errMessage.includes('API_KEY_INVALID') || errMessage.includes('API key not valid')) {
+      if (listRes.status === 404 || listRes.status === 400 || listRes.status === 403 || errMessage.includes('not found') || errMessage.includes('API_KEY_INVALID') || errMessage.includes('API key not valid')) {
         statusEl.innerHTML = `
           <div class="p-2.5 rounded-xl bg-rose-950/60 border border-rose-500/50 text-rose-200 text-[11px] space-y-1.5 text-left">
             <div class="font-bold flex items-center gap-1.5 text-rose-300">
-              <i class="fa-solid fa-circle-xmark"></i> เชื่อมต่อไม่สำเร็จ (Google ปิดกั้นหรือยังไม่เปิดสิทธิ์)
+              <i class="fa-solid fa-circle-xmark"></i> เชื่อมต่อไม่สำเร็จ (${escapeHtml(errMessage)})
             </div>
             <div>คีย์นี้ยังไม่ได้รับสิทธิ์เข้าถึง Generative AI หรือสร้างจาก Cloud ทั่วไป</div>
             <div class="pt-1">
@@ -2338,18 +2336,26 @@ async function testGeminiApiKeyConnection() {
       .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
       .map(m => m.name.replace(/^models\//, ''));
 
-    if (activeModels.length === 0) {
-      statusEl.innerHTML = `<span class="text-amber-300"><i class="fa-solid fa-triangle-exclamation mr-1"></i> เชื่อมต่อได้ แต่ไม่พบโมเดล generateContent กรุณาสร้าง Key ใหม่ที่ Google AI Studio</span>`;
-      return;
+    // 2. Test live generateContent ping on v1/gemini-1.5-flash
+    const testGen = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: "Hello" }] }] })
+    });
+
+    if (!testGen.ok) {
+      const genErrJson = await testGen.json().catch(() => ({}));
+      const genErrMsg = genErrJson?.error?.message || `HTTP ${testGen.status}`;
+      throw new Error(`generateContent ping failed: ${genErrMsg}`);
     }
 
     statusEl.innerHTML = `
       <div class="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/50 text-emerald-200 text-[11px] text-left space-y-1">
         <div class="font-bold flex items-center gap-1.5 text-emerald-300 text-xs">
-          <i class="fa-solid fa-circle-check"></i> ✅ API Key ถูกต้อง 100%! เชื่อมต่อสำเร็จ
+          <i class="fa-solid fa-circle-check"></i> ✅ API Key ถูกต้อง 100%! เชื่อมต่อ v1 สำเร็จ
         </div>
         <div class="text-[10.5px] text-slate-300">
-          พบโมเดลพร้อมใช้งาน <span class="font-mono text-emerald-400 font-bold">${activeModels.length}</span> ตัว (เช่น <span class="font-mono text-purple-300">${activeModels.slice(0, 3).join(', ')}</span>)
+          พบโมเดลพร้อมใช้งาน <span class="font-mono text-emerald-400 font-bold">${activeModels.length}</span> ตัว (ทดสอบยิง <span class="font-mono text-purple-300">v1/gemini-1.5-flash</span> สำเร็จแล้ว)
         </div>
       </div>
     `;

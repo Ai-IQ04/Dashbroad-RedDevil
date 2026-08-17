@@ -7088,7 +7088,7 @@
     async function discoverActiveGeminiModel(apiKey) {
       if (window.cachedGeminiModelEndpoint) return window.cachedGeminiModelEndpoint;
 
-      const apiVersions = ['v1beta', 'v1'];
+      const apiVersions = ['v1', 'v1beta'];
       for (const apiVer of apiVersions) {
         try {
           const listRes = await fetch(`https://generativelanguage.googleapis.com/${apiVer}/models?key=${apiKey}`);
@@ -7121,7 +7121,7 @@
       }
 
       // Fallback defaults if ListModels is restricted
-      return { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' };
+      return { apiVer: 'v1', model: 'gemini-1.5-flash' };
     }
 
     // Universal Gemini Vision Caller with Model Discovery & Auto-Fallback
@@ -7131,17 +7131,14 @@
       
       const candidateList = [
         { apiVer: discovered.apiVer, model: discovered.model },
-        { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' },
-        { apiVer: 'v1beta', model: 'gemini-1.5-flash' },
-        { apiVer: 'v1beta', model: 'gemini-1.5-flash-001' },
-        { apiVer: 'v1beta', model: 'gemini-1.5-flash-002' },
-        { apiVer: 'v1beta', model: 'gemini-2.0-flash' },
-        { apiVer: 'v1beta', model: 'gemini-2.0-flash-exp' },
-        { apiVer: 'v1beta', model: 'gemini-1.5-pro-latest' },
-        { apiVer: 'v1beta', model: 'gemini-1.5-pro' },
         { apiVer: 'v1', model: 'gemini-1.5-flash' },
         { apiVer: 'v1', model: 'gemini-1.5-pro' },
-        { apiVer: 'v1beta', model: 'gemini-pro-vision' }
+        { apiVer: 'v1', model: 'gemini-2.0-flash' },
+        { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' },
+        { apiVer: 'v1beta', model: 'gemini-1.5-flash' },
+        { apiVer: 'v1beta', model: 'gemini-2.0-flash' },
+        { apiVer: 'v1beta', model: 'gemini-1.5-pro-latest' },
+        { apiVer: 'v1beta', model: 'gemini-1.5-pro' }
       ];
 
       let lastError = null;
@@ -13563,7 +13560,7 @@ Output strictly valid JSON with no markdown wrapping:
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=4.3"></script>
+  <script src="boss_timer.js?v=4.4"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
