@@ -235,6 +235,7 @@ function initBossTimerModule() {
   // Setup Paste Handler for instant OCR anywhere in Boss Tab
   window.addEventListener('paste', handleGlobalPasteForOCR);
 
+  populate24HourSelects();
   renderBossTimerCards();
   updateUpcomingBossWidget();
 }
@@ -720,21 +721,39 @@ function saveBossKillTime(bossId, killTimeISO, killerEmail) {
   updateUpcomingBossWidget();
 }
 
-// Quick presets for 24-Hour time input
+// Populate all 24-hour selects across modals
+function populate24HourSelects() {
+  const pad = n => String(n).padStart(2, '0');
+  const hourOptions = Array.from({ length: 24 }, (_, i) => `<option value="${pad(i)}">${pad(i)}</option>`).join('');
+  const minOptions = Array.from({ length: 60 }, (_, i) => `<option value="${pad(i)}">${pad(i)}</option>`).join('');
+
+  document.querySelectorAll('.picker-hour-select').forEach(sel => {
+    if (sel.children.length === 0) sel.innerHTML = hourOptions;
+  });
+  document.querySelectorAll('.picker-min-select').forEach(sel => {
+    if (sel.children.length === 0) sel.innerHTML = minOptions;
+  });
+}
+
+// Quick presets for 24-Hour time input (HH: 00-23, MM: 00-59)
 function applyQuickKillTime(minutesAgo) {
+  populate24HourSelects();
   const dateInput = document.getElementById('boss-custom-kill-date');
-  const timeInput = document.getElementById('boss-custom-kill-time');
-  if (!dateInput || !timeInput) return;
+  const hourSelect = document.getElementById('boss-custom-kill-hour');
+  const minSelect = document.getElementById('boss-custom-kill-min');
+  if (!dateInput || !hourSelect || !minSelect) return;
 
   const targetDate = new Date(Date.now() - (minutesAgo * 60 * 1000));
   const pad = n => String(n).padStart(2, '0');
   dateInput.value = `${targetDate.getFullYear()}-${pad(targetDate.getMonth() + 1)}-${pad(targetDate.getDate())}`;
-  timeInput.value = `${pad(targetDate.getHours())}:${pad(targetDate.getMinutes())}`;
+  hourSelect.value = pad(targetDate.getHours());
+  minSelect.value = pad(targetDate.getMinutes());
 }
 
-// Custom Kill Time Modal (24-Hour Format)
+// Custom Kill Time Modal (Strict 24-Hour Format)
 let currentEditBossId = null;
 function openCustomKillModal(bossId) {
+  populate24HourSelects();
   currentEditBossId = bossId;
   const boss = bossList.find(b => b.id === bossId);
   if (!boss) return;
@@ -761,12 +780,14 @@ function handleSaveCustomKill(e) {
   if (!currentEditBossId) return;
 
   const dateVal = document.getElementById('boss-custom-kill-date').value;
-  const timeVal = document.getElementById('boss-custom-kill-time').value;
-  if (!dateVal || !timeVal) return;
+  const hourVal = document.getElementById('boss-custom-kill-hour').value;
+  const minVal = document.getElementById('boss-custom-kill-min').value;
+  if (!dateVal || hourVal === '' || minVal === '') return;
 
+  const timeVal = `${hourVal}:${minVal}`;
   const dt = new Date(`${dateVal}T${timeVal}:00`);
   if (isNaN(dt.getTime())) {
-    alert('รูปแบบวันที่หรือเวลาไม่ถูกต้อง (กรุณากรอกแบบ 24 ชั่วโมง เช่น 14:30)');
+    alert('รูปแบบวันที่หรือเวลาไม่ถูกต้อง');
     return;
   }
 
@@ -779,6 +800,7 @@ function handleSaveCustomKill(e) {
 let editingBossAvatarData = null; // Stored Base64 or URL during modal editing
 
 function openEditBossModal(bossId) {
+  populate24HourSelects();
   currentEditBossId = bossId;
   const boss = bossList.find(b => b.id === bossId);
   if (!boss) return;
@@ -811,16 +833,19 @@ function openEditBossModal(bossId) {
   // Populate timer section in edit modal
   const timer = bossTimerData[bossId] || {};
   const editDefDateInput = document.getElementById('edit-boss-def-date');
-  const editDefTimeInput = document.getElementById('edit-boss-def-time');
+  const editDefHourSelect = document.getElementById('edit-boss-def-hour');
+  const editDefMinSelect = document.getElementById('edit-boss-def-min');
   const pad = n => String(n).padStart(2, '0');
 
   if (timer.defeatedTime) {
     const d = new Date(timer.defeatedTime);
     if (editDefDateInput) editDefDateInput.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-    if (editDefTimeInput) editDefTimeInput.value = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    if (editDefHourSelect) editDefHourSelect.value = pad(d.getHours());
+    if (editDefMinSelect) editDefMinSelect.value = pad(d.getMinutes());
   } else {
     if (editDefDateInput) editDefDateInput.value = '';
-    if (editDefTimeInput) editDefTimeInput.value = '';
+    if (editDefHourSelect) editDefHourSelect.value = '12';
+    if (editDefMinSelect) editDefMinSelect.value = '00';
   }
 
   if (modal) modal.classList.remove('hidden');
@@ -905,14 +930,17 @@ function clearBossAvatar() {
 }
 
 function applyQuickEditDefTime(minutesAgo) {
+  populate24HourSelects();
   const dateInput = document.getElementById('edit-boss-def-date');
-  const timeInput = document.getElementById('edit-boss-def-time');
-  if (!dateInput || !timeInput) return;
+  const hourSelect = document.getElementById('edit-boss-def-hour');
+  const minSelect = document.getElementById('edit-boss-def-min');
+  if (!dateInput || !hourSelect || !minSelect) return;
 
   const targetDate = new Date(Date.now() - (minutesAgo * 60 * 1000));
   const pad = n => String(n).padStart(2, '0');
   dateInput.value = `${targetDate.getFullYear()}-${pad(targetDate.getMonth() + 1)}-${pad(targetDate.getDate())}`;
-  timeInput.value = `${pad(targetDate.getHours())}:${pad(targetDate.getMinutes())}`;
+  hourSelect.value = pad(targetDate.getHours());
+  minSelect.value = pad(targetDate.getMinutes());
 }
 
 function handleSaveEditBoss(e) {
@@ -950,10 +978,11 @@ function handleSaveEditBoss(e) {
 
   // 2. Check if defeat time was modified in edit modal
   const editDefDateVal = document.getElementById('edit-boss-def-date').value;
-  const editDefTimeVal = document.getElementById('edit-boss-def-time').value;
+  const editDefHourVal = document.getElementById('edit-boss-def-hour').value;
+  const editDefMinVal = document.getElementById('edit-boss-def-min').value;
 
-  if (editDefDateVal && editDefTimeVal) {
-    const dt = new Date(`${editDefDateVal}T${editDefTimeVal}:00`);
+  if (editDefDateVal && editDefHourVal !== '' && editDefMinVal !== '') {
+    const dt = new Date(`${editDefDateVal}T${editDefHourVal}:${editDefMinVal}:00`);
     if (!isNaN(dt.getTime())) {
       saveBossKillTime(currentEditBossId, dt.toISOString(), (typeof currentAdminEmail !== 'undefined' ? currentAdminEmail : 'Admin'));
     }
@@ -990,9 +1019,7 @@ function resetSingleBossTimer(bossId) {
   }
 
   const editDefDateInput = document.getElementById('edit-boss-def-date');
-  const editDefTimeInput = document.getElementById('edit-boss-def-time');
   if (editDefDateInput) editDefDateInput.value = '';
-  if (editDefTimeInput) editDefTimeInput.value = '';
 
   renderBossTimerCards();
   updateUpcomingBossWidget();
@@ -1001,14 +1028,17 @@ function resetSingleBossTimer(bossId) {
 
 // ================= Server Maintenance Reset Modal =================
 function openMaintenanceModal() {
+  populate24HourSelects();
   const modal = document.getElementById('boss-maintenance-modal');
   const dateInput = document.getElementById('maint-reset-date');
-  const timeInput = document.getElementById('maint-reset-time');
+  const hourSelect = document.getElementById('maint-reset-hour');
+  const minSelect = document.getElementById('maint-reset-min');
 
   const now = new Date();
   const pad = n => String(n).padStart(2, '0');
   if (dateInput) dateInput.value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-  if (timeInput) timeInput.value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  if (hourSelect) hourSelect.value = pad(now.getHours());
+  if (minSelect) minSelect.value = pad(now.getMinutes());
 
   if (modal) modal.classList.remove('hidden');
 }
@@ -1021,10 +1051,11 @@ function closeMaintenanceModal() {
 function handleConfirmMaintenance(e) {
   if (e) e.preventDefault();
   const dateVal = document.getElementById('maint-reset-date').value;
-  const timeVal = document.getElementById('maint-reset-time').value;
-  if (!dateVal || !timeVal) return;
+  const hourVal = document.getElementById('maint-reset-hour').value;
+  const minVal = document.getElementById('maint-reset-min').value;
+  if (!dateVal || hourVal === '' || minVal === '') return;
 
-  const resetDt = new Date(`${dateVal}T${timeVal}:00`);
+  const resetDt = new Date(`${dateVal}T${hourVal}:${minVal}:00`);
   if (isNaN(resetDt.getTime())) {
     alert('วันที่หรือเวลาไม่ถูกต้อง');
     return;
@@ -1387,9 +1418,11 @@ function normalizeAndCleanThaiDropLog(rawText) {
 function parseOCRTextAndPopulateModal(rawText) {
   const statusEl = document.getElementById('ocr-progress-status');
   const resultBox = document.getElementById('ocr-result-form');
+  populate24HourSelects();
   const bossSelect = document.getElementById('ocr-boss-select');
   const dateInput = document.getElementById('ocr-kill-date');
-  const timeInput = document.getElementById('ocr-kill-time');
+  const hourSelect = document.getElementById('ocr-kill-hour');
+  const minSelect = document.getElementById('ocr-kill-min');
   const itemsText = document.getElementById('ocr-drop-items');
 
   if (statusEl) statusEl.classList.add('hidden');
@@ -1413,8 +1446,13 @@ function parseOCRTextAndPopulateModal(rawText) {
   if (dateInput) {
     dateInput.value = parsed.dateMatch || `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
   }
-  if (timeInput) {
-    timeInput.value = parsed.timeMatch || `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  if (parsed.timeMatch) {
+    const [hh, mm] = parsed.timeMatch.split(':');
+    if (hourSelect) hourSelect.value = hh;
+    if (minSelect) minSelect.value = mm;
+  } else {
+    if (hourSelect) hourSelect.value = pad(now.getHours());
+    if (minSelect) minSelect.value = pad(now.getMinutes());
   }
 
   // 3. Set Clean Items
@@ -1432,12 +1470,13 @@ function handleConfirmOcrSave(e) {
   if (e) e.preventDefault();
   const bossId = document.getElementById('ocr-boss-select').value;
   const dateVal = document.getElementById('ocr-kill-date').value;
-  const timeVal = document.getElementById('ocr-kill-time').value;
+  const hourVal = document.getElementById('ocr-kill-hour').value;
+  const minVal = document.getElementById('ocr-kill-min').value;
   const itemsVal = document.getElementById('ocr-drop-items').value.trim();
 
-  if (!bossId || !dateVal || !timeVal) return;
+  if (!bossId || !dateVal || hourVal === '' || minVal === '') return;
 
-  const dt = new Date(`${dateVal}T${timeVal}:00`);
+  const dt = new Date(`${dateVal}T${hourVal}:${minVal}:00`);
   if (isNaN(dt.getTime())) {
     alert('วันที่หรือเวลาไม่ถูกต้อง');
     return;
