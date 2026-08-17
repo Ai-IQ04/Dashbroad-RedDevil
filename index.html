@@ -13487,19 +13487,26 @@ Output strictly valid JSON with no markdown wrapping:
               <i class="fa-solid fa-wand-magic-sparkles text-sm text-purple-400"></i>
               <span>Google Gemini AI (สแกนรูปภาพ Log คมชัด 99.9%)</span>
             </div>
-            <a href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer"
-              class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 transition flex items-center gap-1 font-semibold">
-              <i class="fa-solid fa-key text-[9px]"></i> <span>รับ API Key ฟรี</span>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer"
+              class="text-[10px] px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 transition flex items-center gap-1 font-semibold">
+              <i class="fa-solid fa-key text-[9px]"></i> <span>รับ API Key ฟรีที่นี่ ↗</span>
             </a>
           </div>
           <p class="text-[11px] text-slate-300 leading-relaxed">
             ใช้พลัง AI ของ Google สแกนรูปภาพ Log ของบอสภาษาไทยโดยตรง ไม่เพี้ยน สระไม่ลอย พร้อมสกัดเวลาและไอเทมดรอปใส่ช่องให้อัตโนมัติ (ฟรี 1,500 ครั้ง/วัน)
           </p>
-          <div>
-            <label class="block text-[11px] font-bold text-slate-300 mb-1">Google Gemini API Key:</label>
-            <input type="password" id="gemini-api-key-input"
-              placeholder="AIzaSy..."
-              class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-purple-400 focus:outline-none font-mono" />
+          <div class="space-y-1.5">
+            <label class="block text-[11px] font-bold text-slate-300">Google Gemini API Key:</label>
+            <div class="flex items-center gap-2">
+              <input type="password" id="gemini-api-key-input"
+                placeholder="AIzaSy..."
+                class="flex-1 bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-purple-400 focus:outline-none font-mono" />
+              <button type="button" onclick="testGeminiApiKeyConnection()"
+                class="px-3 py-2.5 bg-purple-600/80 hover:bg-purple-600 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-md">
+                <i class="fa-solid fa-bolt"></i> <span>ทดสอบ Key</span>
+              </button>
+            </div>
+            <div id="gemini-test-status" class="hidden text-xs pt-1"></div>
           </div>
         </div>
 
@@ -13515,7 +13522,7 @@ Output strictly valid JSON with no markdown wrapping:
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=4.0"></script>
+  <script src="boss_timer.js?v=4.1"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {

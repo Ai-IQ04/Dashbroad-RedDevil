@@ -2245,7 +2245,80 @@ function openSheetWebhookSettingsModal() {
   if (sheetInput) sheetInput.value = bossSheetWebhookUrl || '';
   if (discordInput) discordInput.value = bossDiscordWebhookUrl || '';
   if (geminiInput) geminiInput.value = bossGeminiApiKey || '';
+  const testStatusEl = document.getElementById('gemini-test-status');
+  if (testStatusEl) {
+    testStatusEl.classList.add('hidden');
+    testStatusEl.innerHTML = '';
+  }
   if (modal) modal.classList.remove('hidden');
+}
+
+async function testGeminiApiKeyConnection() {
+  const input = document.getElementById('gemini-api-key-input');
+  const statusEl = document.getElementById('gemini-test-status');
+  const key = input ? input.value.trim() : '';
+
+  if (!key) {
+    if (statusEl) {
+      statusEl.innerHTML = `<span class="text-amber-300"><i class="fa-solid fa-triangle-exclamation mr-1"></i> กรุณาใส่ API Key ก่อนกดทดสอบ</span>`;
+      statusEl.classList.remove('hidden');
+    }
+    return;
+  }
+
+  if (statusEl) {
+    statusEl.innerHTML = `<span class="text-purple-300"><i class="fa-solid fa-spinner fa-spin mr-1"></i> กำลังทดสอบเชื่อมต่อกับ Google AI Studio...</span>`;
+    statusEl.classList.remove('hidden');
+  }
+
+  try {
+    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+    if (!listRes.ok) {
+      const errJson = await listRes.json().catch(() => ({}));
+      const errMessage = errJson?.error?.message || `HTTP ${listRes.status}`;
+      
+      if (listRes.status === 404 || errMessage.includes('not found') || errMessage.includes('API_KEY_INVALID') || errMessage.includes('API key not valid')) {
+        statusEl.innerHTML = `
+          <div class="p-2.5 rounded-xl bg-rose-950/60 border border-rose-500/50 text-rose-200 text-[11px] space-y-1.5 text-left">
+            <div class="font-bold flex items-center gap-1.5 text-rose-300">
+              <i class="fa-solid fa-circle-xmark"></i> เชื่อมต่อไม่สำเร็จ (Google ปิดกั้นหรือยังไม่เปิดสิทธิ์)
+            </div>
+            <div>คีย์นี้ยังไม่ได้รับสิทธิ์เข้าถึง Generative AI หรือสร้างจาก Cloud ทั่วไป</div>
+            <div class="pt-1">
+              👉 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-amber-300 underline font-bold hover:text-amber-200">คลิกที่นี่เพื่อไปกด Create API key ฟรีที่ Google AI Studio</a> แล้วคัดลอกมาใส่ใหม่อีกครั้งครับ
+            </div>
+          </div>
+        `;
+        return;
+      }
+      throw new Error(errMessage);
+    }
+
+    const listData = await listRes.json();
+    const activeModels = (listData.models || [])
+      .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+      .map(m => m.name.replace(/^models\//, ''));
+
+    if (activeModels.length === 0) {
+      statusEl.innerHTML = `<span class="text-amber-300"><i class="fa-solid fa-triangle-exclamation mr-1"></i> เชื่อมต่อได้ แต่ไม่พบโมเดล generateContent กรุณาสร้าง Key ใหม่ที่ Google AI Studio</span>`;
+      return;
+    }
+
+    statusEl.innerHTML = `
+      <div class="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/50 text-emerald-200 text-[11px] text-left space-y-1">
+        <div class="font-bold flex items-center gap-1.5 text-emerald-300 text-xs">
+          <i class="fa-solid fa-circle-check"></i> ✅ API Key ถูกต้อง 100%! เชื่อมต่อสำเร็จ
+        </div>
+        <div class="text-[10.5px] text-slate-300">
+          พบโมเดลพร้อมใช้งาน <span class="font-mono text-emerald-400 font-bold">${activeModels.length}</span> ตัว (เช่น <span class="font-mono text-purple-300">${activeModels.slice(0, 3).join(', ')}</span>)
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    if (statusEl) {
+      statusEl.innerHTML = `<span class="text-rose-400"><i class="fa-solid fa-circle-xmark mr-1"></i> เกิดข้อผิดพลาด: ${escapeHtml(err.message || 'ไม่สามารถเชื่อมต่อได้')}</span>`;
+    }
+  }
 }
 
 function closeSheetWebhookSettingsModal() {
