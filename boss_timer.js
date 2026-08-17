@@ -447,6 +447,9 @@ function renderBossTimerCards() {
   // Sync toolbar admin controls
   const maintBtn = document.getElementById('btn-boss-maint-top');
   const pasteHint = document.getElementById('boss-paste-hint');
+  const integrationsBtn = document.getElementById('btn-boss-integrations-top');
+  const isSuperAdminActive = (typeof isSuperAdmin !== 'undefined' && isSuperAdmin);
+
   if (maintBtn) {
     if (isAdminActive) {
       maintBtn.classList.remove('hidden');
@@ -463,6 +466,15 @@ function renderBossTimerCards() {
     } else {
       pasteHint.classList.add('hidden');
       pasteHint.classList.remove('md:inline');
+    }
+  }
+  if (integrationsBtn) {
+    if (isSuperAdminActive) {
+      integrationsBtn.classList.remove('hidden');
+      integrationsBtn.classList.add('inline-flex');
+    } else {
+      integrationsBtn.classList.add('hidden');
+      integrationsBtn.classList.remove('inline-flex');
     }
   }
 
@@ -2002,6 +2014,10 @@ function updateWebhookStatusUi() {
 }
 
 function openSheetWebhookSettingsModal() {
+  if (typeof isSuperAdmin !== 'undefined' && !isSuperAdmin) {
+    showToast('เฉพาะ Super Admin เท่านั้นที่สามารถตั้งค่า Webhook ได้', 'warning');
+    return;
+  }
   const modal = document.getElementById('boss-sheet-config-modal');
   const sheetInput = document.getElementById('sheet-webhook-url-input');
   const discordInput = document.getElementById('discord-webhook-url-input');
