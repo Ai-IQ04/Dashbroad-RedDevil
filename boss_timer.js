@@ -1495,36 +1495,40 @@ async function preprocessImageCanvas(file) {
         const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const d = imgData.data;
 
-        // 1. Calculate Average Luminance
-        let totalLum = 0;
+        // 1. Calculate Average Brightness
+        let totalVal = 0;
         const totalPixels = canvas.width * canvas.height;
         for (let i = 0; i < d.length; i += 4) {
-          totalLum += (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
+          const maxC = Math.max(d[i], d[i + 1], d[i + 2]);
+          totalVal += maxC;
         }
-        const avgLum = totalLum / totalPixels;
-        const isDarkBg = avgLum < 130;
+        const avgVal = totalVal / totalPixels;
+        const isDarkBg = avgVal < 140;
 
-        // 2. Grayscale, Invert if dark, and Enhance Contrast
+        // 2. Multi-color enhancement: preserve colored text (Blue, Purple, Green, Yellow, Orange, Red, Cyan)
         for (let i = 0; i < d.length; i += 4) {
-          let gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+          const r = d[i], g = d[i + 1], b = d[i + 2];
+          const maxC = Math.max(r, g, b);
+          const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+          let val = Math.max(maxC, lum); // Capture high saturation colored text and bright white text
 
           if (isDarkBg) {
-            // Invert: Light yellow/white text becomes dark on pure white
-            gray = 255 - gray;
+            // Invert: Light/vibrant text becomes dark on pure white background
+            val = 255 - val;
           }
 
-          // Contrast stretching & thresholding
-          if (gray > 160) {
-            gray = 255;
-          } else if (gray < 85) {
-            gray = 0;
+          // Dynamic thresholding
+          if (val > 180) {
+            val = 255;
+          } else if (val < 95) {
+            val = 0;
           } else {
-            gray = Math.round(((gray - 85) / 75) * 255);
+            val = Math.round(((val - 95) / 85) * 255);
           }
 
-          d[i] = gray;
-          d[i + 1] = gray;
-          d[i + 2] = gray;
+          d[i] = val;
+          d[i + 1] = val;
+          d[i + 2] = val;
         }
 
         ctx.putImageData(imgData, 0, 0);
@@ -1558,7 +1562,7 @@ async function processImageWithGeminiVision(file, apiKey) {
   const statusEl = document.getElementById('ocr-progress-status');
 
   if (statusEl) {
-    statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400"></i> กำลังส่งภาพให้ Google Gemini AI สแกนภาษาไทย (แม่นยำ 99.9%)...`;
+    statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400"></i> กำลังส่งภาพให้ Google Gemini AI สแกนภาษาไทยและสีไอเทม (แม่นยำ 99.9%)...`;
     statusEl.classList.remove('hidden');
   }
 
@@ -1566,25 +1570,45 @@ async function processImageWithGeminiVision(file, apiKey) {
   const base64Str = base64DataUrl.split(',')[1];
   const mimeType = file.type || 'image/png';
 
-  const bossCatalog = bossList.map(b => `${b.id}: ${b.name} (${b.map || ''})`).join('\n');
+  const bossCatalog = bossList.map(b => `- ID: ${b.id} | Name: ${b.name} | Map: ${b.map || ''}`).join('\n');
 
-  const prompt = `You are a high-precision game log OCR extractor for the MMORPG 'LORD NINE' (LORDNINE / ลอร์ดไนน์).
-Examine this screenshot of a boss kill log / drop log / system chat log.
+  const prompt = `You are a specialized game log OCR and data extractor for the MMORPG 'LORD NINE' (LORDNINE / ลอร์ดไนน์).
+Examine this screenshot of the game's drop / kill chat log.
 
-Boss catalog:
+### Game Log Structure:
+Each drop record in LORD NINE follows this structure (often wrapping across 1-2 lines):
+[HH:MM] {PlayerName in Yellow} ได้รับไอเทม {ItemName in ANY color: Blue, Cyan, Purple, Green, Orange, Gold, Red, White} {optional count e.g. '5 อัน' or 'x5'} จาก {Location / Dungeon Map in White}
+
+### Boss Database:
 ${bossCatalog}
 
-Extract the following information and output strictly valid JSON:
+### Extraction Rules:
+1. 'killTime': Extract the 24-hour timestamp from the log line (e.g. '09:51', '03:21', '14:20').
+2. 'bossId' & 'bossName': Determine which boss was defeated by matching the location after 'จาก' (e.g. 'สุสานใต้ดินไทริโอซา (ชั้น 2)' matches boss 'general_aquleus' (General Aquleus), 'สุสานใต้ดิน (ชั้น 1)' matches 'araneo', 'หุบเขาอูลาน' matches 'ego', etc.) or from the boss name directly.
+3. 'dropItems': Extract EVERY item dropped in the screenshot.
+   - Item names appear in various colors (Cyan, Blue, Purple, Green, Orange, Red, etc.) right after 'ได้รับไอเทม' up until 'จาก'.
+   - Extract the full clean Thai item name.
+   - Format each drop item as: "{ItemName}{count ? ' ' + count : ''} (ผู้รับ: {PlayerName})"
+   - Examples from this game:
+     * "กางเกงผ้าแห่งพายุโหดร้าย (ผู้รับ: ไข่ตุ๋น)"
+     * "กล่องเพาะเลี้ยงโฮมุน I (ผู้รับ: ไข่ตุ๋น)"
+     * "หินอัปเกรดเครื่องประดับ 5 อัน (ผู้รับ: ไข่ตุ๋น)"
+     * "เข็มขัดแห่งพายุโหดร้าย (ผู้รับ: ไข่ตุ๋น)"
+     * "ม้วนคัมภีร์เลื่อนขั้นผู้เชี่ยวชาญ (ผู้รับ: ไข่ตุ๋น)"
+     * "กางเกงหนังสัตว์รุ่งอรุณสีเทา (ผู้รับ: ไข่ตุ๋น)"
+     * "อะไหล่พาหนะ (ผู้รับ: ไข่ตุ๋น)"
+     * "หินถลุงอุปกรณ์ (ผู้รับ: ไข่ตุ๋น)"
+
+Output strictly valid JSON with no markdown wrapping:
 {
-  "bossId": "Matching boss ID from catalog above, or null if unknown",
-  "bossName": "Name of the boss defeated",
-  "killTime": "Time of kill in 24-hour HH:MM format from log (e.g. 03:21, 14:05, 19:30)",
-  "killDate": "Date in YYYY-MM-DD format if visible, or null",
+  "bossId": "matching boss ID or null",
+  "bossName": "matching boss name",
+  "killTime": "HH:MM",
+  "killDate": "YYYY-MM-DD or null",
   "dropItems": [
-    "Full clean Thai item name with count (e.g. x4) and receiver name if stated (e.g. 'ผ้าโพกศีรษะแห่งความศรัทธาที่เสื่อมทราม (ผู้รับ: ไข่ตุ๋น)')"
+    "Item name and receiver"
   ]
-}
-Ensure all Thai vowels, consonants, and tone marks are 100% correct without spelling distortions.`;
+}`;
 
   const payload = {
     contents: [
@@ -1648,7 +1672,7 @@ function populateModalFromGeminiData(data) {
     if (data.bossId) matched = bossList.find(b => b.id === data.bossId);
     if (!matched && data.bossName) {
       const bn = data.bossName.toLowerCase();
-      matched = bossList.find(b => b.name.toLowerCase().includes(bn) || bn.includes(b.name.toLowerCase()));
+      matched = bossList.find(b => b.name.toLowerCase().includes(bn) || bn.includes(b.name.toLowerCase()) || (b.map && b.map.toLowerCase().includes(bn)));
     }
     if (matched) bossSelect.value = matched.id;
   }
@@ -1706,7 +1730,7 @@ async function processImageForBossOCR(file) {
   // Option B: Fallback to Canvas Pre-processing + Tesseract.js
   try {
     if (statusEl) {
-      statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400"></i> กำลังปรับความคมชัดของภาพ (Canvas Pre-processing)...`;
+      statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400"></i> กำลังปรับความคมชัดของภาพ (Canvas Multi-color Pre-processing)...`;
       statusEl.classList.remove('hidden');
     }
 
@@ -1744,7 +1768,6 @@ function normalizeAndCleanThaiDropLog(rawText) {
 
   // 1. Text Normalization: Fix broken Thai vowels, floating spaces, tone marks
   let normalized = rawText
-    // Clean up common Thai vowel / tone artifacts
     .replace(/[\u200B-\u200D\uFEFF]/g, '')
     .replace(/ได[\s_]*ร[\s_]*บ/g, 'ได้รับ')
     .replace(/ได[\s_]*รับ/g, 'ได้รับ')
@@ -1764,8 +1787,9 @@ function normalizeAndCleanThaiDropLog(rawText) {
     .replace(/ศ[\s_]*รษะ/g, 'ศีรษะ')
     .replace(/ห[\s_]*บเขาอ[\s_]*ลาน/g, 'หุบเขาอูลาน')
     .replace(/หุบเขาอ[\s_]*ลาน/g, 'หุบเขาอูลาน')
+    .replace(/ส[\s_]*สานใต[\s_]*ด[\s_]*น/g, 'สุสานใต้ดิน')
+    .replace(/ไทริโอซา/g, 'ไทริโอซา')
     .replace(/ไข่ต[\s_]*น/g, 'ไข่ตุ๋น')
-    .replace(/ไข่ตุน/g, 'ไข่ตุ๋น')
     .replace(/ไข่ตุน/g, 'ไข่ตุ๋น')
     .replace(/เกราะแห[\s_]*ง/g, 'เกราะแห่ง')
     .replace(/อาว[\s_]*ธ/g, 'อาวุธ')
@@ -1777,37 +1801,31 @@ function normalizeAndCleanThaiDropLog(rawText) {
     .replace(/ช[\s_]*นส[\s_]*วน/g, 'ชิ้นส่วน')
     .replace(/กล[\s_]*อง/g, 'กล่อง');
 
-  // 2. Detect Date (DD/MM) & Time (HH:MM) - Prioritizing the front of the log lines
+  // Join multiline drops (lines without timestamps or player get merged with previous line)
+  const rawLines = normalized.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const consolidatedLines = [];
+  for (let l of rawLines) {
+    if (l.match(/^\s*\[?\d{1,2}[:.]\d{2}\]?/) || l.includes('ได้รับไอเทม')) {
+      consolidatedLines.push(l);
+    } else if (consolidatedLines.length > 0) {
+      consolidatedLines[consolidatedLines.length - 1] += ' ' + l;
+    } else {
+      consolidatedLines.push(l);
+    }
+  }
+
+  // 2. Detect Date (DD/MM) & Time (HH:MM)
   let extractedDate = null;
   let extractedTime = null;
 
-  const rawLines = normalized.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-
-  // A. Check for date + time in header (e.g. "17/08 03:21" or "17/08 03.21")
-  for (const line of rawLines) {
-    const dtMatch = line.match(/(\d{1,2})[\/.-](\d{1,2})\s+(\d{1,2})[:.](\d{2})/);
-    if (dtMatch) {
-      const d = dtMatch[1].padStart(2, '0');
-      const m = dtMatch[2].padStart(2, '0');
-      const currentYear = new Date().getFullYear();
-      extractedDate = `${currentYear}-${m}-${d}`;
-      extractedTime = `${dtMatch[3].padStart(2, '0')}:${dtMatch[4].padStart(2, '0')}`;
+  for (const line of consolidatedLines) {
+    const frontTimeMatch = line.match(/^\s*\[?\s*(\d{1,2})[:.](\d{2})\s*\]?/);
+    if (frontTimeMatch) {
+      extractedTime = `${frontTimeMatch[1].padStart(2, '0')}:${frontTimeMatch[2].padStart(2, '0')}`;
       break;
     }
   }
 
-  // B. If time not found from header, check the very FRONT of any log line: e.g. "[03:21]" or "03:21" or "[03.21]"
-  if (!extractedTime) {
-    for (const line of rawLines) {
-      const frontTimeMatch = line.match(/^\s*\[?\s*(\d{1,2})[:.](\d{2})\s*\]?/);
-      if (frontTimeMatch) {
-        extractedTime = `${frontTimeMatch[1].padStart(2, '0')}:${frontTimeMatch[2].padStart(2, '0')}`;
-        break;
-      }
-    }
-  }
-
-  // C. Fallback: Any timestamp in text
   if (!extractedTime) {
     const timeStampMatch = normalized.match(/\[?(\d{1,2})[:.](\d{2})\]?/);
     if (timeStampMatch) {
@@ -1815,18 +1833,7 @@ function normalizeAndCleanThaiDropLog(rawText) {
     }
   }
 
-  // D. Fallback: Date only (DD/MM)
-  if (!extractedDate) {
-    const dMatch = normalized.match(/(\d{1,2})[\/.-](\d{1,2})/);
-    if (dMatch) {
-      const d = dMatch[1].padStart(2, '0');
-      const m = dMatch[2].padStart(2, '0');
-      const currentYear = new Date().getFullYear();
-      extractedDate = `${currentYear}-${m}-${d}`;
-    }
-  }
-
-  // 3. Detect Boss (Check name or location keywords)
+  // 3. Detect Boss from name or dungeon location
   let matchedBoss = null;
   const lower = normalized.toLowerCase();
   for (const b of bossList) {
@@ -1836,58 +1843,34 @@ function normalizeAndCleanThaiDropLog(rawText) {
     }
   }
 
-  // Additional fuzzy keyword matching for Thai Boss names
   if (!matchedBoss) {
-    if (lower.includes('ego') || lower.includes('อีโก้') || lower.includes('อูลาน')) matchedBoss = bossList.find(b => b.id === 'ego');
+    if (lower.includes('สุสานใต้ดิน') && lower.includes('2')) matchedBoss = bossList.find(b => b.id === 'general_aquleus');
+    else if (lower.includes('สุสานใต้ดิน') && lower.includes('1')) matchedBoss = bossList.find(b => b.id === 'araneo');
+    else if (lower.includes('สุสานใต้ดิน') && lower.includes('3')) matchedBoss = bossList.find(b => b.id === 'milavy');
+    else if (lower.includes('ไทริโอซา')) matchedBoss = bossList.find(b => b.id === 'general_aquleus');
+    else if (lower.includes('ego') || lower.includes('อีโก้') || lower.includes('อูลาน')) matchedBoss = bossList.find(b => b.id === 'ego');
     else if (lower.includes('dalia') || lower.includes('ดาเลีย')) matchedBoss = bossList.find(b => b.id === 'lady_dalia');
     else if (lower.includes('vioren') || lower.includes('ไวโอเรน')) matchedBoss = bossList.find(b => b.id === 'vioren');
-    else if (lower.includes('venatus') || lower.includes('เวนาทัส')) matchedBoss = bossList.find(b => b.id === 'venatus');
-    else if (lower.includes('livera') || lower.includes('ลิเวร่า')) matchedBoss = bossList.find(b => b.id === 'livera');
     else if (lower.includes('undomiel') || lower.includes('อันโดเมียล')) matchedBoss = bossList.find(b => b.id === 'undomiel');
-    else if (lower.includes('araneo') || lower.includes('อารานีโอ')) matchedBoss = bossList.find(b => b.id === 'araneo');
-    else if (lower.includes('aquleus') || lower.includes('อควิลิอุส') || lower.includes('เจเนอรัล')) matchedBoss = bossList.find(b => b.id === 'general_aquleus');
-    else if (lower.includes('amentis') || lower.includes('อาเมนทิส')) matchedBoss = bossList.find(b => b.id === 'amentis');
-    else if (lower.includes('gareth') || lower.includes('การิธ')) matchedBoss = bossList.find(b => b.id === 'gareth');
-    else if (lower.includes('braudmore') || lower.includes('บรอดมอร์') || lower.includes('บารอน')) matchedBoss = bossList.find(b => b.id === 'baron_braudmore');
-    else if (lower.includes('catena') || lower.includes('คาเทน่า')) matchedBoss = bossList.find(b => b.id === 'catena');
-    else if (lower.includes('shuliar') || lower.includes('ชูเลียร์')) matchedBoss = bossList.find(b => b.id === 'shuliar');
-    else if (lower.includes('larba') || lower.includes('ลาบา')) matchedBoss = bossList.find(b => b.id === 'larba');
-    else if (lower.includes('titore') || lower.includes('ทิทอร์')) matchedBoss = bossList.find(b => b.id === 'titore');
-    else if (lower.includes('wannitas') || lower.includes('วานิตัส')) matchedBoss = bossList.find(b => b.id === 'wannitas');
-    else if (lower.includes('metus') || lower.includes('เมทัส')) matchedBoss = bossList.find(b => b.id === 'metus');
-    else if (lower.includes('duplican') || lower.includes('ดุปพลิแคน')) matchedBoss = bossList.find(b => b.id === 'duplican');
-    else if (lower.includes('asta') || lower.includes('แอสตา')) matchedBoss = bossList.find(b => b.id === 'asta');
-    else if (lower.includes('ordo') || lower.includes('ออร์โด')) matchedBoss = bossList.find(b => b.id === 'ordo');
-    else if (lower.includes('supore') || lower.includes('ซูพอร์')) matchedBoss = bossList.find(b => b.id === 'supore');
-    else if (lower.includes('secreta') || lower.includes('ซีเครต้า')) matchedBoss = bossList.find(b => b.id === 'secreta');
   }
 
   // 4. Extract Clean Drop Items with Receiver
-  const lines = normalized.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const items = [];
+  const itemLineRegex = /(?:\[\d{1,2}[:.]\d{2}\]\s*)?(.*?)\s*(?:ได[\s_]*รับ|ได้รับ)ไอเทม\s*(.*?)(?:\s*(?:จาก|in)\s*(.*))?$/i;
 
-  // Regex to match: [03:21]ไข่ตุ๋นได้รับไอเทมผ้าโพกศีรษะแห่งความศรัทธาที่เสื่อมทราม จากหุบเขาอูลาน
-  const itemLineRegex = /(?:\[\d{1,2}[:.]\d{2}\]\s*)?(.*?)\s*(?:ได[\s_]*รับ|ได้รับ)ไอเทม\s*(.*?)(?:\s*(?:จาก|in)\s*.*)?$/i;
-
-  for (let line of lines) {
+  for (let line of consolidatedLines) {
     const match = line.match(itemLineRegex);
     if (match) {
       let player = match[1].replace(/\[\d{1,2}[:.]\d{2}\]/g, '').trim();
       let itemName = match[2].trim();
 
-      // Clean up common suffix or count (e.g. 4อัน -> x4)
+      // Clean up common suffix or count (e.g. 5 อัน -> x5)
       itemName = itemName.replace(/(\d+)\s*อัน/g, 'x$1').replace(/(\d+)\s*ea/gi, 'x$1');
 
       if (player) {
         items.push(`${itemName} (ผู้รับ: ${player})`);
       } else {
         items.push(itemName);
-      }
-    } else {
-      // Fallback for clean item lines
-      const isHeaderOrMeta = line.toLowerCase().includes('ego') || line.toLowerCase().includes('บันทึกโดย') || line.length < 4;
-      if (!isHeaderOrMeta && !line.startsWith('[') && !line.includes('จาก')) {
-        items.push(line);
       }
     }
   }
