@@ -377,6 +377,45 @@ async function scanRegistrationHistory() {
   }
 }
 
+/**
+ * 👥 ฟังก์ชันดึงรายชื่อสมาชิกทุกคนใน Discord Server (Guild Members) ซิงค์ขึ้น Firebase
+ */
+async function syncDiscordServerMembers() {
+  try {
+    const guild = client.guilds.cache.first();
+    if (!guild) return;
+
+    const members = await guild.members.fetch();
+    const serverMembersData = {};
+
+    members.forEach(m => {
+      if (m.user.bot) return; // ไม่รวมบอท
+      serverMembersData[m.user.id] = {
+        discordId: m.user.id,
+        username: m.user.username,
+        displayName: m.displayName || m.user.username,
+        nickname: m.nickname || '',
+        roles: m.roles.cache.map(r => r.name).filter(r => r !== '@everyone'),
+        joinedTimestamp: m.joinedTimestamp,
+        joinedAt: m.joinedAt ? m.joinedAt.toISOString() : null,
+        active: true,
+        lastSeen: new Date().toISOString()
+      };
+    });
+
+    const endpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/discord_server_members.json`;
+    await fetch(endpoint, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(serverMembersData)
+    });
+
+    console.log(`👥 [Discord Sync] ซิงค์รายชื่อสมาชิกในเซิร์ฟเวอร์ Discord สำเร็จ: ${Object.keys(serverMembersData).length} คน`);
+  } catch (err) {
+    console.error('❌ Error syncing Discord server members:', err.message);
+  }
+}
+
 // 🟢 เมื่อบอทออนไลน์สำเร็จ
 client.once('clientReady', async () => {
   console.log('====================================================');
@@ -386,10 +425,27 @@ client.once('clientReady', async () => {
   console.log('====================================================');
 
   await scanRegistrationHistory();
+  await syncDiscordServerMembers();
 
   // ตรวจสอบและส่งแจ้งเตือนบอสทันทีเมื่อเปิดบอท และตรวจสอบซ้ำทุกๆ 15 วินาที
   await checkAndSendBossAlerts();
   setInterval(checkAndSendBossAlerts, 15000);
+
+  // ซิงค์รายชื่อสมาชิก Discord ทุกๆ 60 วินาที
+  setInterval(syncDiscordServerMembers, 60000);
+});
+
+// 👥 ดักฟังสมาชิกเข้าใหม่ / อัปเดตชื่อใน Discord
+client.on('guildMemberAdd', async (member) => {
+  console.log(`👋 มีสมาชิกใหม่เข้า Discord: ${member.user.tag}`);
+  await syncDiscordServerMembers();
+});
+
+client.on('guildMemberUpdate', async (oldMember, newMember) => {
+  if (oldMember.nickname !== newMember.nickname || oldMember.displayName !== newMember.displayName) {
+    console.log(`✏️ สมาชิกเปลี่ยนชื่อใน Discord: ${newMember.displayName}`);
+    await syncDiscordServerMembers();
+  }
 });
 
 // 📩 ดักฟังข้อความใหม่แบบ Real-Time
@@ -400,6 +456,7 @@ client.on('messageCreate', async (message) => {
   if (parsed) {
     console.log(`📩 พบสมาชิกใหม่ลงทะเบียน: ${parsed.characterName || parsed.email}`);
     await syncToFirebase(parsed);
+    await syncDiscordServerMembers();
     try {
       await message.react('🟢');
     } catch (e) { }

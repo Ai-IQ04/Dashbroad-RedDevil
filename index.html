@@ -5932,9 +5932,23 @@
         if (typeof updateCharEditBadge === 'function') updateCharEditBadge();
         if (typeof renderCharEditApprovalList === 'function') renderCharEditApprovalList();
       });
+
+      // 18. ดักฟังรายชื่อสมาชิกทั้งหมดใน Discord Server (Discord Server Members)
+      fbDb.ref('guild_app/discord_server_members').on('value', snapshot => {
+        const val = snapshot.val();
+        if (val && typeof val === 'object') {
+          discordServerMembers = val;
+          localStorage.setItem('guild_discord_server_members', JSON.stringify(discordServerMembers));
+        } else {
+          discordServerMembers = {};
+          localStorage.setItem('guild_discord_server_members', JSON.stringify({}));
+        }
+        renderTable();
+      });
     }
 
     let discordVerifiedMembers = JSON.parse(localStorage.getItem('guild_registered_members')) || {};
+    let discordServerMembers = JSON.parse(localStorage.getItem('guild_discord_server_members')) || {};
     let lockedWeeks = JSON.parse(localStorage.getItem('guild_locked_weeks')) || { 1: false, 2: false, 3: false, 4: false };
 
     function isWeekLocked(w = currentWeekNumber) {
@@ -6204,25 +6218,79 @@
       showToast(`🔓 ยืนยันสิทธิ์สำเร็จ! บันทึกการแก้ไขย้อนหลังใน "${wName}" เรียบร้อยแล้ว`, 'success');
     }
 
+    function cleanDiscordName(str) {
+      if (!str) return '';
+      return str
+        .toLowerCase()
+        .replace(/[\s\-_[\]().*:`\u200B]/g, '')
+        .replace(/^(btc|r|reddevil|bluedevil)/g, '');
+    }
+
     function getDiscordVerifiedData(member) {
-      if (!member || !discordVerifiedMembers || typeof discordVerifiedMembers !== 'object') return null;
+      if (!member) return null;
 
       const memEmail = (member.email || '').trim().toLowerCase();
-      const memName = (member.characterName || member.name || '').trim().toLowerCase();
+      const rawMemName = (member.characterName || member.name || '').trim();
+      const memName = cleanDiscordName(rawMemName);
 
-      const entries = Object.values(discordVerifiedMembers);
-      for (const item of entries) {
-        if (!item || typeof item !== 'object') continue;
-        const itemEmail = (item.email || '').trim().toLowerCase();
-        const itemName = (item.characterName || item.name || '').trim().toLowerCase();
+      // 1. ตรวจสอบในฐานข้อมูลที่ลงทะเบียนผ่านแบบฟอร์ม (Form Registration)
+      if (discordVerifiedMembers && typeof discordVerifiedMembers === 'object') {
+        const entries = Object.values(discordVerifiedMembers);
+        for (const item of entries) {
+          if (!item || typeof item !== 'object') continue;
+          const itemEmail = (item.email || '').trim().toLowerCase();
+          const rawItemName = (item.characterName || item.name || '').trim();
+          const itemName = cleanDiscordName(rawItemName);
 
-        if (memEmail && itemEmail && memEmail === itemEmail) {
-          return item;
-        }
-        if (memName && itemName && memName === itemName) {
-          return item;
+          if (memEmail && itemEmail && memEmail === itemEmail) {
+            return { ...item, matchSource: 'form_verified' };
+          }
+          if (memName && itemName && (memName === itemName || rawMemName.toLowerCase() === rawItemName.toLowerCase())) {
+            return { ...item, matchSource: 'form_verified' };
+          }
         }
       }
+
+      // 2. ตรวจสอบในรายชื่อสมาชิกเซิร์ฟเวอร์ Discord (Discord Server Members)
+      if (discordServerMembers && typeof discordServerMembers === 'object') {
+        const serverEntries = Object.values(discordServerMembers);
+        for (const sm of serverEntries) {
+          if (!sm || typeof sm !== 'object') continue;
+          const sNick = cleanDiscordName(sm.nickname);
+          const sDisp = cleanDiscordName(sm.displayName);
+          const sUser = cleanDiscordName(sm.username);
+
+          if (memName && (sNick === memName || sDisp === memName || sUser === memName)) {
+            return {
+              characterName: rawMemName,
+              discordName: sm.displayName || sm.nickname || sm.username,
+              discordTag: sm.username,
+              discordId: sm.discordId,
+              roles: sm.roles,
+              matchSource: 'server_member',
+              active: true,
+              verified: true
+            };
+          }
+
+          // การจับคู่แบบ Partial Match สำหรับชื่อที่มีความยาว 3 ตัวอักษรขึ้นไป (เช่น "xCOACH" ใน "R - xCOACH")
+          if (memName && memName.length >= 3) {
+            if ((sDisp && sDisp.includes(memName)) || (sNick && sNick.includes(memName))) {
+              return {
+                characterName: rawMemName,
+                discordName: sm.displayName || sm.nickname || sm.username,
+                discordTag: sm.username,
+                discordId: sm.discordId,
+                roles: sm.roles,
+                matchSource: 'server_member_partial',
+                active: true,
+                verified: true
+              };
+            }
+          }
+        }
+      }
+
       return null;
     }
 
@@ -6231,7 +6299,7 @@
       if (!verified) {
         return `
           <span class="inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded-full bg-zinc-900/80 border border-zinc-800 text-[9.5px] font-medium text-zinc-500 select-none opacity-60"
-                title="ยังไม่ได้ลงทะเบียนใน Discord">
+                title="ยังไม่พบข้อมูลใน Discord">
             <span class="w-1.5 h-1.5 rounded-full bg-zinc-600"></span>
             <span class="font-mono text-[9px]">Offline</span>
           </span>
@@ -6240,7 +6308,11 @@
 
       const emailStr = verified.email || member.email || '';
       const uidStr = verified.uid || verified.inGameMemberNo || '';
-      const tooltip = `✅ ยืนยันใน Discord แล้ว\nอีเมล: ${emailStr}${uidStr ? `\nUID: ${uidStr}` : ''}\nชื่อตัวละคร: ${verified.characterName || member.characterName}\nชื่อ Discord: ${verified.discordTag || verified.discordName || '-'}`;
+      const discordName = verified.discordTag || verified.discordName || '-';
+      const isFormVerified = verified.matchSource === 'form_verified';
+      const tooltip = isFormVerified
+        ? `✅ ยืนยันข้อมูลใน Discord แล้ว (Form Verified)\nอีเมล: ${emailStr}${uidStr ? `\nUID: ${uidStr}` : ''}\nชื่อตัวละคร: ${verified.characterName || member.characterName || member.name}\nDiscord: ${discordName}`
+        : `🟢 สมาชิกอยู่ใน Discord Server (Active)\nชื่อตัวละคร: ${member.characterName || member.name}\nDiscord: ${discordName}${verified.roles && verified.roles.length > 0 ? `\nRole: ${verified.roles.join(', ')}` : ''}`;
 
       return `
         <span class="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-[9.5px] font-bold text-emerald-300 shadow-sm shadow-emerald-500/10 cursor-help transition hover:bg-emerald-500/25 select-none"
