@@ -6392,6 +6392,13 @@
             manageAdminBtn.classList.remove('inline-flex');
           }
         }
+
+        // แสดงปุ่มเลขา AI น้องเดวิลเฉพาะ Admin
+        const nongDevilBtn = document.getElementById('nong-devil-floating-btn');
+        if (nongDevilBtn) {
+          nongDevilBtn.classList.remove('hidden');
+          nongDevilBtn.classList.add('flex');
+        }
       } else {
         toggleBtn.className = "apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm";
         toggleBtn.innerHTML = `<i class="fa-solid fa-lock text-slate-400 text-[11px]"></i><span>${t('mode_viewer')}</span>`;
@@ -6429,6 +6436,18 @@
           clearAuditLogsBtn.classList.remove('inline-flex');
         }
         if (manageAdminBtn) { manageAdminBtn.classList.add('hidden'); manageAdminBtn.classList.remove('inline-flex'); }
+
+        // ซ่อนปุ่มและปิดหน้าต่างเลขา AI น้องเดวิลเมื่อเป็นโหมด Viewer
+        const nongDevilBtn = document.getElementById('nong-devil-floating-btn');
+        if (nongDevilBtn) {
+          nongDevilBtn.classList.add('hidden');
+          nongDevilBtn.classList.remove('flex');
+        }
+        const nongDevilModal = document.getElementById('nong-devil-chat-modal');
+        if (nongDevilModal) {
+          nongDevilModal.classList.add('hidden');
+          nongDevilModal.classList.remove('flex');
+        }
 
         if (indicatorText) {
           indicatorText.className = "text-[10px] ml-2 px-2 py-0.5 rounded font-mono bg-slate-800 text-slate-400 border border-slate-700";
@@ -7696,6 +7715,12 @@ Output strictly valid JSON with no markdown wrapping:
     let nongDevilMessagesHistory = [];
 
     function toggleNongDevilChat(forceOpen = null) {
+      if (!isAdmin) {
+        showToast('เฉพาะ Admin เท่านั้นที่สามารถใช้งานเลขา AI น้องเดวิลได้ค่ะ 😈', 'warning');
+        if (typeof openAdminEmailModal === 'function') openAdminEmailModal();
+        return;
+      }
+
       const modal = document.getElementById('nong-devil-chat-modal');
       if (!modal) return;
 
@@ -14298,9 +14323,9 @@ Output strictly valid JSON with no markdown wrapping.`;
   </div>
 
   <!-- ================= 😈 น้องเดวิล: เลขา AI ประจำกิลด์ RedDevil (Floating Assistant) ================= -->
-  <!-- 1. Floating Action Button -->
+  <!-- 1. Floating Action Button (Admin Only) -->
   <div id="nong-devil-floating-btn" onclick="toggleNongDevilChat()"
-    class="fixed bottom-5 right-5 z-40 flex items-center gap-2 group cursor-pointer animate-fade-in">
+    class="hidden fixed bottom-5 right-5 z-40 items-center gap-2 group cursor-pointer animate-fade-in">
     <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md border border-rose-500/40 text-white text-xs font-bold shadow-xl group-hover:scale-105 transition duration-200">
       <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
       <span class="text-rose-300">น้องเดวิล (AI)</span>
