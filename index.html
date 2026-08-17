@@ -7342,7 +7342,7 @@
         const base64Str = base64DataUrl.split(',')[1];
         const mimeType = file.type || 'image/png';
 
-        const memberRoster = members.map(m => m.name).join(', ');
+        const memberRoster = members.map(m => (m.characterName || m.name || '').trim()).filter(Boolean).join(', ');
 
         const prompt = `You are a high-precision OCR and character name extractor for the MMORPG 'LORD NINE' (LORDNINE / ลอร์ดไนน์).
 Examine this screenshot of the in-game squad / assembly management window titled 'จัดการชุมนุม' (Squad Management).
@@ -7419,11 +7419,12 @@ Output strictly valid JSON with no markdown wrapping:
           totalFound++;
           const cleanName = String(rawName).trim();
           
-          // Match with members in guild
-          const guildMember = members.find(m => 
-            m.name.toLowerCase() === cleanName.toLowerCase() ||
-            m.name.replace(/\s+/g, '') === cleanName.replace(/\s+/g, '')
-          );
+          // Match with members in guild using characterName field
+          const guildMember = members.find(m => {
+            const cName = (m.characterName || m.name || '').trim();
+            return cName.toLowerCase() === cleanName.toLowerCase() ||
+                   cName.replace(/\s+/g, '') === cleanName.replace(/\s+/g, '');
+          });
 
           const isMatched = !!guildMember;
           if (isMatched) {
@@ -7494,7 +7495,8 @@ Output strictly valid JSON with no markdown wrapping:
 
       let affectedCount = 0;
       matchedList.forEach(target => {
-        const m = members.find(mem => mem.name === target.name);
+        const targetName = target.characterName || target.name;
+        const m = members.find(mem => (mem.characterName || mem.name) === targetName);
         if (m) {
           ensureMemberWeeklyData(m);
           m.checks[actIdx] = true;
@@ -13561,7 +13563,7 @@ Output strictly valid JSON with no markdown wrapping:
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=4.2"></script>
+  <script src="boss_timer.js?v=4.3"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
