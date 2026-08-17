@@ -1000,17 +1000,17 @@ function openBossKillConfirmModal(bossId) {
   populate24HourSelects();
 
   if (bossId) {
-    // Case 1: Opened from specific boss card -> Lock boss, set clean typography header
+    // Case 1: Opened from specific boss card -> Strictly lock to this boss
     isBossLockedFromCard = true;
     currentKillConfirmBossId = bossId;
     updateKillConfirmBossHeader(bossId);
   } else {
     // Case 2: General scan / paste -> AI auto-detects or defaults
     isBossLockedFromCard = false;
+    currentKillConfirmBossId = null;
     const defaultBoss = bossList[0];
-    currentKillConfirmBossId = defaultBoss ? defaultBoss.id : null;
-    if (currentKillConfirmBossId) {
-      updateKillConfirmBossHeader(currentKillConfirmBossId);
+    if (defaultBoss) {
+      updateKillConfirmBossHeader(defaultBoss.id);
     }
   }
 
@@ -1142,8 +1142,8 @@ function applyExtractedBossData(data) {
   const minSelect = document.getElementById('kill-confirm-min');
   const dateInput = document.getElementById('kill-confirm-date');
 
-  // 1. Auto-select Boss if detected (ONLY if boss is not locked from card)
-  if (!isBossLockedFromCard) {
+  // 1. Auto-select Boss ONLY if modal was opened without a locked boss card
+  if (!isBossLockedFromCard && !currentKillConfirmBossId) {
     let matchedBoss = null;
     if (data.bossId) matchedBoss = bossList.find(b => b.id === data.bossId);
     if (!matchedBoss && data.bossName) {
@@ -1154,6 +1154,9 @@ function applyExtractedBossData(data) {
       currentKillConfirmBossId = matchedBoss.id;
       updateKillConfirmBossHeader(matchedBoss.id);
     }
+  } else if (currentKillConfirmBossId) {
+    // Firmly maintain the user's chosen boss from card
+    updateKillConfirmBossHeader(currentKillConfirmBossId);
   }
 
   // 2. Set Time & Date
