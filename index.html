@@ -1207,9 +1207,9 @@
             <span class="text-[10px] font-bold text-amber-300 uppercase tracking-wider block"
               data-i18n="boss_stat_help">ระบบช่วยเหลือ</span>
             <div class="flex items-center gap-2 mt-1">
-              <button onclick="document.getElementById('boss-file-input').click()"
+              <button onclick="showToast('💡 กรุณาคลิกปุ่ม \'ตายตอนนี้\' ที่การ์ดบอสที่ต้องการบันทึกเวลาและวางรูปภาพครับ', 'info')"
                 class="apple-btn apple-btn-amber px-2 py-0.5 text-[10px] font-bold rounded-lg flex items-center gap-1 shadow-sm">
-                <i class="fa-solid fa-camera"></i> <span data-i18n="btn_scan_img">สแกนรูป</span>
+                <i class="fa-solid fa-camera"></i> <span data-i18n="btn_scan_img">วิธีสแกนรูป</span>
               </button>
               <button onclick="toggleBossSound()"
                 class="apple-btn apple-btn-slate px-2 py-0.5 text-[10px] font-bold rounded-lg flex items-center gap-1"
@@ -1218,8 +1218,6 @@
               </button>
             </div>
           </div>
-          <input type="file" id="boss-file-input" accept="image/*" class="hidden"
-            onchange="if(this.files[0]) processImageForBossOCR(this.files[0])" />
           <div
             class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-sm border border-amber-500/30">
             <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -15534,7 +15532,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=5.6"></script>
+  <script src="boss_timer.js?v=5.7"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {

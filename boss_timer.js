@@ -997,22 +997,14 @@ function updateKillConfirmBossHeader(bossId) {
 }
 
 function openBossKillConfirmModal(bossId) {
+  if (!bossId) {
+    showToast('กรุณาเลือกบอสที่ต้องการบันทึกเวลา', 'warning');
+    return;
+  }
   populate24HourSelects();
 
-  if (bossId) {
-    // Case 1: Opened from specific boss card -> Strictly lock to this boss
-    isBossLockedFromCard = true;
-    currentKillConfirmBossId = bossId;
-    updateKillConfirmBossHeader(bossId);
-  } else {
-    // Case 2: General scan / paste -> AI auto-detects or defaults
-    isBossLockedFromCard = false;
-    currentKillConfirmBossId = null;
-    const defaultBoss = bossList[0];
-    if (defaultBoss) {
-      updateKillConfirmBossHeader(defaultBoss.id);
-    }
-  }
+  currentKillConfirmBossId = bossId;
+  updateKillConfirmBossHeader(bossId);
 
   // Reset image / drop items
   clearKillConfirmImage();
@@ -1039,6 +1031,7 @@ function applyQuickKillConfirmTime(minutesAgo) {
 
   const targetDate = new Date(Date.now() - (minutesAgo * 60 * 1000));
   const pad = n => String(n).padStart(2, '0');
+
   dateInput.value = `${targetDate.getFullYear()}-${pad(targetDate.getMonth() + 1)}-${pad(targetDate.getDate())}`;
   hourSelect.value = pad(targetDate.getHours());
   minSelect.value = pad(targetDate.getMinutes());
@@ -1059,47 +1052,30 @@ async function processKillConfirmImage(file) {
   const statusEl = document.getElementById('kill-confirm-ocr-status');
   const itemsBox = document.getElementById('kill-confirm-items-box');
 
-  const currentBoss = bossList.find(b => b.id === currentKillConfirmBossId);
-
   if (emptyBox) emptyBox.classList.add('hidden');
   if (filledBox) filledBox.classList.remove('hidden');
   if (previewImg) previewImg.src = URL.createObjectURL(file);
   if (statusEl) {
-    if (isBossLockedFromCard && currentBoss) {
-      statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400"></i> กำลังอ่านเวลาและไอเทมดรอปสำหรับ "${escapeHtml(currentBoss.name)}"...`;
-    } else {
-      statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400"></i> กำลังสแกนอ่านชื่อบอส เวลา และไอเทมดรอปจากภาพ...`;
-    }
+    statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400"></i> กำลังอ่านเวลาและไอเทมดรอปจากภาพ...`;
   }
 
-  // Priority 1: Gemini Vision if configured
+  // Priority 1: Gemini Vision if configured (Extracts ONLY killTime & dropItems)
   if (bossGeminiApiKey) {
     try {
       if (statusEl) {
-        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400"></i> ส่งภาพให้ Google Gemini AI วิเคราะห์เวลาและของดรอป...`;
+        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400"></i> AI กำลังอ่านเวลาตายและของดรอป...`;
       }
       const { base64Str, mimeType } = await compressImageForGemini(file, 1600, 0.88);
-      const bossCatalog = bossList.map(b => `- ID: ${b.id} | Name: ${b.name} | Map: ${b.map || ''}`).join('\n');
-      const targetHint = (isBossLockedFromCard && currentBoss) 
-        ? `\nNote: The user is recording kill time for '${currentBoss.name}'. DO NOT guess other bosses unless clearly different.` 
-        : '';
 
       const prompt = `You are a specialized game log OCR and data extractor for the MMORPG 'LORD NINE' (LORDNINE / ลอร์ดไนน์).
 Examine this screenshot of the game's drop / kill chat log.
-${targetHint}
-
-### Boss Database:
-${bossCatalog}
 
 ### Extraction Rules:
 1. 'killTime': Extract the 24-hour timestamp from the log line (e.g. '09:51', '19:46', '21:17').
-2. 'bossId' & 'bossName': Determine which boss was defeated if identifiable.
-3. 'dropItems': Extract EVERY item dropped in the screenshot. Format: "{ItemName} (ผู้รับ: {PlayerName})"
+2. 'dropItems': Extract EVERY item dropped in the screenshot. Format: "{ItemName} (ผู้รับ: {PlayerName})"
 
 Output strictly valid JSON with no markdown wrapping:
 {
-  "bossId": "matching boss ID or null",
-  "bossName": "matching boss name",
   "killTime": "HH:MM",
   "killDate": "YYYY-MM-DD or null",
   "dropItems": ["Item name and receiver"]
@@ -1130,8 +1106,6 @@ Output strictly valid JSON with no markdown wrapping:
 
     const parsed = normalizeAndCleanThaiDropLog(text);
     applyExtractedBossData({
-      bossId: parsed.bossMatch ? parsed.bossMatch.id : null,
-      bossName: parsed.bossMatch ? parsed.bossMatch.name : null,
       killTime: parsed.timeMatch,
       killDate: parsed.dateMatch,
       dropItems: parsed.items.length > 0 ? parsed.items : text.split('\n').filter(l => l.trim().length > 3).slice(0, 5)
@@ -1153,24 +1127,12 @@ function applyExtractedBossData(data) {
   const minSelect = document.getElementById('kill-confirm-min');
   const dateInput = document.getElementById('kill-confirm-date');
 
-  // 1. If boss was locked from card -> STRICTLY MAINTAIN THE CHOSEN BOSS
-  if (isBossLockedFromCard && currentKillConfirmBossId) {
+  // Boss is 100% FIXED to the clicked card
+  if (currentKillConfirmBossId) {
     updateKillConfirmBossHeader(currentKillConfirmBossId);
-  } else if (!isBossLockedFromCard && !currentKillConfirmBossId) {
-    // Only if opened from general scan with no boss pre-selected
-    let matchedBoss = null;
-    if (data.bossId) matchedBoss = bossList.find(b => b.id === data.bossId);
-    if (!matchedBoss && data.bossName) {
-      const bn = data.bossName.toLowerCase();
-      matchedBoss = bossList.find(b => b.name.toLowerCase().includes(bn) || bn.includes(b.name.toLowerCase()) || (b.map && b.map.toLowerCase().includes(bn)));
-    }
-    if (matchedBoss) {
-      currentKillConfirmBossId = matchedBoss.id;
-      updateKillConfirmBossHeader(matchedBoss.id);
-    }
   }
 
-  // 2. Set Time & Date
+  // 1. Set Time & Date
   if (data.killTime && data.killTime.includes(':')) {
     const [hh, mm] = data.killTime.split(':');
     const pad = n => String(n).padStart(2, '0');
@@ -1181,7 +1143,7 @@ function applyExtractedBossData(data) {
     dateInput.value = data.killDate;
   }
 
-  // 3. Set Drop Items
+  // 2. Set Drop Items
   if (itemsBox) itemsBox.classList.remove('hidden');
   if (itemsText) {
     if (Array.isArray(data.dropItems) && data.dropItems.length > 0) {
@@ -2061,16 +2023,20 @@ function extractJsonFromGeminiResponse(text) {
 
 // Populate Modal Fields from Gemini AI Result (Unified)
 function populateModalFromGeminiData(data) {
-  if (!data) return;
-  openBossKillConfirmModal(data.bossId || null);
+  if (!data || !data.bossId) return;
+  openBossKillConfirmModal(data.bossId);
   applyExtractedBossData(data);
 }
 
-// Process Image with AI OCR (Gemini Vision 1st Priority, Tesseract.js Fallback) -> Opens Unified Modal
+// Process Image with AI OCR
 async function processImageForBossOCR(file) {
   if (!file) return;
-  openBossKillConfirmModal(null);
-  await processKillConfirmImage(file);
+  const modal = document.getElementById('boss-kill-confirm-modal');
+  if (modal && !modal.classList.contains('hidden')) {
+    await processKillConfirmImage(file);
+  } else {
+    showToast('💡 กรุณาคลิกปุ่ม "ตายตอนนี้" ที่การ์ดบอสที่ต้องการบันทึกก่อนวางรูปภาพครับ', 'info');
+  }
 }
 
 // Smart Thai Text Normalizer and Drop Log Cleaner
