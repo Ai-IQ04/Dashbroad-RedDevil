@@ -8427,7 +8427,8 @@ Output strictly valid JSON with no markdown wrapping:
       }).join('\n');
 
       // 4. Activities
-      const actList = Array.isArray(ACTIVITIES) ? ACTIVITIES.map((a, i) => `[${i}] ${a.name} (${a.day || '-'}) น้ำหนัก ${a.weight || 0}%`).join(', ') : '';
+      // 4. Activities Catalog with Details
+      const actList = Array.isArray(ACTIVITIES) ? ACTIVITIES.map((a, i) => `[${i}] ${a.name} (Day: ${a.day || '-'}, Short: ${a.shortName || a.name}, Weight: ${a.weight || 0}%)`).join('\n') : '';
 
       // 5. Saved Wishlist Count
       const savedCount = nongDevilFeedbackLogs.length;
@@ -8537,9 +8538,10 @@ You are equipped with autonomous capabilities to:
 2. Execute Boss Kill commands (e.g. "บอส Ego ตาย 14:30", "ลงเวลาบอส general_aquleus 15:30") by matching the boss name/ID from [BOSS DATABASE CATALOG].
 3. Search and summarize Member Profiles, CP, Wallet, UID from [MEMBER DIRECTORY].
 4. Analyze images (Boss kill drop logs, Squad Management attendance, Character CP profiles).
-5. Receive Admin Feature Requests & Wishlist ideas: analyze Why & How, propose technical implementation steps, and generate a ready-to-use coding prompt for an AI assistant/developer.
-6. Diagnose System Issues / Bugs reported by Admin: analyze Root Cause, suggest fixes, and generate a ready-to-use debug/fix prompt.
-7. Answer guild questions using live context.
+5. Check and register attendance for MULTIPLE Guild Activities & Bosses simultaneously (e.g. "ลงกิจกรรม Tumi Libi Raka วันอังคาร", "เช็คชื่อ Arena, Raka, Neva วันอาทิตย์") by matching activity indices from [ACTIVITIES LIST].
+6. Receive Admin Feature Requests & Wishlist ideas: analyze Why & How, propose technical implementation steps, and generate a ready-to-use coding prompt for an AI assistant/developer.
+7. Diagnose System Issues / Bugs reported by Admin: analyze Root Cause, suggest fixes, and generate a ready-to-use debug/fix prompt.
+8. Answer guild questions using live context.
 
 ${liveContext}
 
@@ -8558,7 +8560,18 @@ User Query: "${userText || 'วิเคราะห์รูปภาพนี�
   "dropItems": ["item 1 (ผู้รับ: xxx)", "item 2 (ผู้รับ: xxx)"]
 }
 
-2. If user asks to DRAFT / CREATE / GENERATE GUILD ANNOUNCEMENT (ร่างประกาศ / สร้างประกาศกิลด์วอร์ / ประกาศตีบอส / แจ้งเตือน) -> output JSON:
+2. If user asks to CHECK ATTENDANCE / REGISTER GUILD ACTIVITIES (e.g. "ลงกิจกรรม Tumi Libi Raka วันอังคาร", "เช็คชื่อ Arena, Raka วันอาทิตย์", or image is Squad Management จัดการชุมนุม) -> output JSON:
+{
+  "actionType": "squad_attendance",
+  "reply": "friendly explanation of detected activities, day, and members",
+  "detectedDay": "Tue",
+  "activityIndices": [4, 5, 6],
+  "activityNames": ["Tumier #Tue (Tumi)", "Libitina #Tue (Libi)", "Rakajeth #Tue (Raka)"],
+  "detectedCount": 18,
+  "members": ["name1", "name2", "name3"]
+}
+
+3. If user asks to DRAFT / CREATE / GENERATE GUILD ANNOUNCEMENT (ร่างประกาศ / สร้างประกาศกิลด์วอร์ / ประกาศตีบอส / แจ้งเตือน) -> output JSON:
 {
   "actionType": "announcement",
   "reply": "friendly explanation of the drafted announcement",
@@ -8566,7 +8579,7 @@ User Query: "${userText || 'วิเคราะห์รูปภาพนี�
   "content": "Full formatted Discord message text with Discord markdown, emojis, bullet points, role tags, and clear call-to-actions"
 }
 
-3. If user suggests a NEW FEATURE / IMPROVEMENT / WISHLIST IDEA -> output JSON:
+4. If user suggests a NEW FEATURE / IMPROVEMENT / WISHLIST IDEA -> output JSON:
 {
   "actionType": "feature_request",
   "reply": "friendly explanation of how this feature will benefit the guild",
@@ -8576,7 +8589,7 @@ User Query: "${userText || 'วิเคราะห์รูปภาพนี�
   "readyPrompt": "Detailed, professional instruction prompt in Thai ready to feed into AI code assistant to implement this feature"
 }
 
-4. If user reports a BUG / ISSUE / ERROR / QUESTION ABOUT SYSTEM FAILURE -> output JSON:
+5. If user reports a BUG / ISSUE / ERROR / QUESTION ABOUT SYSTEM FAILURE -> output JSON:
 {
   "actionType": "issue_report",
   "reply": "empathic acknowledgment and clear breakdown of the issue",
@@ -8584,14 +8597,6 @@ User Query: "${userText || 'วิเคราะห์รูปภาพนี�
   "rootCause": "Analysis of likely root cause (Why it happened)",
   "proposedFix": "Step-by-step solution to fix this issue",
   "readyPrompt": "Detailed, professional prompt in Thai ready to feed into AI code assistant to fix this bug"
-}
-
-5. If image is Squad Management (จัดการชุมนุม) -> output JSON:
-{
-  "actionType": "squad_attendance",
-  "reply": "friendly explanation of detected squad members",
-  "detectedCount": 18,
-  "members": ["name1", "name2", "name3"]
 }
 
 6. If image is Character CP Profile -> output JSON:
@@ -8720,36 +8725,102 @@ Output strictly valid JSON with no markdown formatting.`;
         `;
       }
 
-      // 2. Squad Attendance Action Card
+      // 2. Multi-Activity Squad Attendance Action Card
       else if (data.actionType === 'squad_attendance' && Array.isArray(data.members) && data.members.length > 0) {
         const memberNamesStr = encodeURIComponent(JSON.stringify(data.members));
-        let actOptions = '';
+        const uniqueCardId = `squad_multi_act_${Date.now()}`;
+        const detectedIndices = Array.isArray(data.activityIndices) ? data.activityIndices : [];
+        const detectedDay = data.detectedDay || (detectedIndices.length > 0 && ACTIVITIES[detectedIndices[0]] ? ACTIVITIES[detectedIndices[0]].day : 'Tue');
+
+        // Render Activity Checkbox Chips
+        let actChipsHtml = '';
         if (Array.isArray(ACTIVITIES)) {
           ACTIVITIES.forEach((act, idx) => {
-            actOptions += `<option value="${idx}">⚔️ ${escapeHtml(act.name)} (${escapeHtml(act.shortName || '')})</option>`;
+            const isPreChecked = detectedIndices.includes(idx);
+            const normDay = normalizeDay(act.day);
+            const isInitialDayMatch = (detectedDay === 'All' || normDay === detectedDay);
+
+            actChipsHtml += `
+              <label data-day="${normDay}" class="nong-act-chip-label flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs cursor-pointer font-bold select-none transition ${isPreChecked ? 'bg-indigo-500/25 border-indigo-400 text-indigo-200' : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'} ${isInitialDayMatch ? '' : 'hidden'}">
+                <input type="checkbox" name="nong-devil-act-choice" value="${idx}" ${isPreChecked ? 'checked' : ''}
+                  onchange="updateNongDevilActCardChoice(this, '${uniqueCardId}')"
+                  class="rounded border-slate-600 text-indigo-500 focus:ring-indigo-400 bg-slate-950" />
+                <span>${escapeHtml(act.shortName || act.name)}</span>
+                <span class="text-[9.5px] px-1 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-mono">${escapeHtml(act.day)}</span>
+              </label>
+            `;
           });
         }
 
-        const uniqueCardId = `squad_act_${Date.now()}`;
+        const preCheckedCount = detectedIndices.length > 0 ? detectedIndices.length : 1;
 
         actionCardHtml = `
-          <div class="mt-3 p-3.5 rounded-2xl bg-indigo-950/80 border border-indigo-500/60 space-y-2.5 text-left shadow-md">
-            <div class="font-bold text-indigo-300 flex items-center gap-1.5 text-sm">
-              <i class="fa-solid fa-users text-indigo-400"></i>
-              <span>ตรวจพบสมาชิกในหน่วยชุมนุม ${data.members.length} คน</span>
+          <div id="${uniqueCardId}" class="mt-3 p-3.5 rounded-2xl bg-indigo-950/90 border border-indigo-500/60 space-y-3 text-left shadow-lg">
+            <!-- Header: Detected Members Count -->
+            <div class="flex items-center justify-between pb-2 border-b border-indigo-900/60">
+              <div class="font-black text-indigo-300 flex items-center gap-1.5 text-sm">
+                <i class="fa-solid fa-users text-indigo-400"></i>
+                <span>ตรวจพบสมาชิก ${data.members.length} คน</span>
+              </div>
+              <span class="text-[10.5px] px-2 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30">
+                Multi-Activity Mode
+              </span>
             </div>
-            <div class="text-xs text-slate-200 font-mono truncate leading-relaxed">
-              รายชื่อ: ${escapeHtml(data.members.slice(0, 6).join(', '))}${data.members.length > 6 ? ` และอีก ${data.members.length - 6} คน` : ''}
+
+            <!-- Member Names Preview -->
+            <div class="text-[11.5px] text-slate-300 font-mono leading-relaxed bg-slate-950/60 p-2 rounded-xl border border-indigo-900/40">
+              <span class="text-indigo-400 font-bold">รายชื่อ:</span> ${escapeHtml(data.members.slice(0, 8).join(', '))}${data.members.length > 8 ? ` <span class="text-amber-400 font-bold">+อีก ${data.members.length - 8} คน</span>` : ''}
             </div>
+
+            <!-- 1. Day Selector Tabs -->
             <div class="space-y-1">
-              <label class="block text-[11px] text-slate-300 font-medium">เลือกกิจกรรม/บอสที่ต้องการเช็คชื่อ:</label>
-              <select id="${uniqueCardId}" class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl p-2 focus:border-indigo-400 focus:outline-none">
-                ${actOptions}
-              </select>
+              <label class="block text-[11px] text-indigo-300 font-bold flex items-center gap-1">
+                <i class="fa-solid fa-calendar-days text-indigo-400"></i> 1. เลือกวันของกิจกรรม:
+              </label>
+              <div class="flex items-center flex-wrap gap-1">
+                <button type="button" onclick="switchNongDevilActCardDay('${uniqueCardId}', 'Sun')" class="nong-day-tab-btn px-2.5 py-1 rounded-lg text-xs font-bold transition ${detectedDay === 'Sun' ? 'bg-indigo-500 text-white shadow-sm' : 'bg-slate-900 text-slate-300 border border-slate-700 hover:text-white'}">อาทิตย์ (Sun)</button>
+                <button type="button" onclick="switchNongDevilActCardDay('${uniqueCardId}', 'Tue')" class="nong-day-tab-btn px-2.5 py-1 rounded-lg text-xs font-bold transition ${detectedDay === 'Tue' ? 'bg-indigo-500 text-white shadow-sm' : 'bg-slate-900 text-slate-300 border border-slate-700 hover:text-white'}">อังคาร (Tue)</button>
+                <button type="button" onclick="switchNongDevilActCardDay('${uniqueCardId}', 'Wed')" class="nong-day-tab-btn px-2.5 py-1 rounded-lg text-xs font-bold transition ${detectedDay === 'Wed' ? 'bg-indigo-500 text-white shadow-sm' : 'bg-slate-900 text-slate-300 border border-slate-700 hover:text-white'}">พุธ (Wed)</button>
+                <button type="button" onclick="switchNongDevilActCardDay('${uniqueCardId}', 'Fri')" class="nong-day-tab-btn px-2.5 py-1 rounded-lg text-xs font-bold transition ${detectedDay === 'Fri' ? 'bg-indigo-500 text-white shadow-sm' : 'bg-slate-900 text-slate-300 border border-slate-700 hover:text-white'}">ศุกร์ (Fri)</button>
+                <button type="button" onclick="switchNongDevilActCardDay('${uniqueCardId}', 'Sat')" class="nong-day-tab-btn px-2.5 py-1 rounded-lg text-xs font-bold transition ${detectedDay === 'Sat' ? 'bg-indigo-500 text-white shadow-sm' : 'bg-slate-900 text-slate-300 border border-slate-700 hover:text-white'}">เสาร์ (Sat)</button>
+                <button type="button" onclick="switchNongDevilActCardDay('${uniqueCardId}', 'All')" class="nong-day-tab-btn px-2 py-1 rounded-lg text-xs font-bold transition ${detectedDay === 'All' ? 'bg-indigo-500 text-white shadow-sm' : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white'}">ทั้งหมด</button>
+              </div>
             </div>
-            <button type="button" onclick="executeNongDevilSquadCheck(this, '${memberNamesStr}', '${uniqueCardId}')"
-              class="w-full py-2.5 px-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/30 transition flex items-center justify-center gap-1.5 active:scale-95">
-              <i class="fa-solid fa-check"></i> <span>✅ ให้น้องเดวิลติ๊กถูกให้สมาชิกทุกคน</span>
+
+            <!-- Quick Day Presets (1-Click selection) -->
+            <div class="flex items-center flex-wrap gap-1 pt-0.5">
+              <span class="text-[10px] text-slate-400 font-medium mr-0.5">⚡ ปุ่มลัด:</span>
+              <button type="button" onclick="applyNongDevilPreset('${uniqueCardId}', 'tue_combo')" class="px-2 py-0.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 text-[10.5px] font-bold transition">
+                ⚡ อังคาร: Tumi + Libi + Raka
+              </button>
+              <button type="button" onclick="applyNongDevilPreset('${uniqueCardId}', 'fri_combo')" class="px-2 py-0.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 text-[10.5px] font-bold transition">
+                ⚡ ศุกร์: Arena + Icar
+              </button>
+              <button type="button" onclick="applyNongDevilPreset('${uniqueCardId}', 'sun_combo')" class="px-2 py-0.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 text-[10.5px] font-bold transition">
+                ⚡ อาทิตย์: Arena + Raka + Neva
+              </button>
+            </div>
+
+            <!-- 2. Interactive Activity Checkboxes -->
+            <div class="space-y-1.5 pt-1">
+              <div class="flex items-center justify-between">
+                <label class="text-[11px] text-indigo-300 font-bold flex items-center gap-1">
+                  <i class="fa-solid fa-shield-halved text-indigo-400"></i> 2. ติ๊กเลือกกิจกรรมที่ต้องการลง (เลือกพร้อมกันได้หลายตัว):
+                </label>
+                <button type="button" onclick="toggleAllVisibleActs('${uniqueCardId}')" class="text-[10px] text-indigo-300 hover:text-white underline font-medium">
+                  ติ๊กทั้งหมดในวันนี้นี้
+                </button>
+              </div>
+              <div id="${uniqueCardId}_chips_container" class="flex items-center flex-wrap gap-1.5 max-h-36 overflow-y-auto custom-scrollbar p-1">
+                ${actChipsHtml}
+              </div>
+            </div>
+
+            <!-- 3. Batch Action Button -->
+            <button type="button" onclick="executeNongDevilMultiActivityCheck(this, '${memberNamesStr}', '${uniqueCardId}')"
+              class="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-rose-600 hover:from-indigo-500 hover:to-rose-500 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2 active:scale-95">
+              <i class="fa-solid fa-bolt text-amber-300"></i>
+              <span>⚡ บันทึกเช็คชื่อลงกิจกรรม (<span id="${uniqueCardId}_badge_count">${preCheckedCount}</span> กิจกรรม • ${data.members.length} คน) ทันที</span>
             </button>
           </div>
         `;
@@ -9110,7 +9181,113 @@ Output strictly valid JSON with no markdown formatting.`;
       }
     }
 
-    function executeNongDevilSquadCheck(btn, memberNamesStr, selectId) {
+    // Nong Devil Multi-Activity Day Switcher
+    function switchNongDevilActCardDay(cardId, day) {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+
+      // Update tab buttons
+      const tabBtns = card.querySelectorAll('.nong-day-tab-btn');
+      tabBtns.forEach(b => {
+        const isMatch = b.textContent.includes(day) || (day === 'All' && b.textContent.includes('ทั้งหมด'));
+        if (isMatch) {
+          b.className = 'nong-day-tab-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-500 text-white shadow-sm transition';
+        } else {
+          b.className = 'nong-day-tab-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 text-slate-300 border border-slate-700 hover:text-white transition';
+        }
+      });
+
+      // Filter chips
+      const chips = card.querySelectorAll('.nong-act-chip-label');
+      chips.forEach(chip => {
+        const chipDay = chip.getAttribute('data-day');
+        if (day === 'All' || chipDay === day) {
+          chip.classList.remove('hidden');
+        } else {
+          chip.classList.add('hidden');
+        }
+      });
+    }
+
+    // Nong Devil Preset Applier (e.g. Tuesday Tumi + Libi + Raka)
+    function applyNongDevilPreset(cardId, preset) {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+
+      let targetDay = 'Tue';
+      let targetNames = [];
+
+      if (preset === 'tue_combo') {
+        targetDay = 'Tue';
+        targetNames = ['tumi', 'libi', 'raka', 'tumier', 'libitina', 'rakajeth'];
+      } else if (preset === 'fri_combo') {
+        targetDay = 'Fri';
+        targetNames = ['arena', 'icar', 'icarutia'];
+      } else if (preset === 'sun_combo') {
+        targetDay = 'Sun';
+        targetNames = ['arena', 'raka', 'neva', 'rakajeth'];
+      }
+
+      switchNongDevilActCardDay(cardId, targetDay);
+
+      const checkboxes = card.querySelectorAll('input[name="nong-devil-act-choice"]');
+      checkboxes.forEach(cb => {
+        const actIdx = parseInt(cb.value);
+        const act = ACTIVITIES[actIdx];
+        if (act && normalizeDay(act.day) === targetDay) {
+          const actSName = (act.shortName || act.name || '').toLowerCase();
+          const isMatch = targetNames.some(t => actSName.includes(t));
+          cb.checked = isMatch;
+          const parentLabel = cb.closest('.nong-act-chip-label');
+          if (parentLabel) {
+            if (isMatch) {
+              parentLabel.className = 'nong-act-chip-label flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs cursor-pointer font-bold select-none transition bg-indigo-500/25 border-indigo-400 text-indigo-200';
+            } else {
+              parentLabel.className = 'nong-act-chip-label flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs cursor-pointer font-bold select-none transition bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500';
+            }
+          }
+        }
+      });
+
+      updateNongDevilActCardCount(cardId);
+    }
+
+    function updateNongDevilActCardChoice(cb, cardId) {
+      const parentLabel = cb.closest('.nong-act-chip-label');
+      if (parentLabel) {
+        if (cb.checked) {
+          parentLabel.className = 'nong-act-chip-label flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs cursor-pointer font-bold select-none transition bg-indigo-500/25 border-indigo-400 text-indigo-200';
+        } else {
+          parentLabel.className = 'nong-act-chip-label flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs cursor-pointer font-bold select-none transition bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500';
+        }
+      }
+      updateNongDevilActCardCount(cardId);
+    }
+
+    function toggleAllVisibleActs(cardId) {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      const visibleChips = card.querySelectorAll('.nong-act-chip-label:not(.hidden) input[name="nong-devil-act-choice"]');
+      const allChecked = Array.from(visibleChips).every(cb => cb.checked);
+      visibleChips.forEach(cb => {
+        cb.checked = !allChecked;
+        updateNongDevilActCardChoice(cb, cardId);
+      });
+      updateNongDevilActCardCount(cardId);
+    }
+
+    function updateNongDevilActCardCount(cardId) {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      const checkedCount = card.querySelectorAll('input[name="nong-devil-act-choice"]:checked').length;
+      const badgeEl = document.getElementById(`${cardId}_badge_count`);
+      if (badgeEl) {
+        badgeEl.textContent = checkedCount;
+      }
+    }
+
+    // Execute Multi-Activity Attendance Registration
+    function executeNongDevilMultiActivityCheck(btn, memberNamesStr, cardId) {
       if (!isAdmin) {
         showToast('เฉพาะ Admin เท่านั้นที่สามารถอนุมัติและเช็คชื่อสมาชิกได้ค่ะ', 'warning');
         if (typeof openAdminEmailModal === 'function') openAdminEmailModal();
@@ -9118,18 +9295,16 @@ Output strictly valid JSON with no markdown formatting.`;
       }
 
       try {
-        const detectedNames = JSON.parse(decodeURIComponent(memberNamesStr));
-        const select = document.getElementById(selectId);
-        const actIdx = select ? parseInt(select.value) : 0;
+        const card = document.getElementById(cardId);
+        const checkedCheckboxes = card ? card.querySelectorAll('input[name="nong-devil-act-choice"]:checked') : [];
+        const selectedActIndices = Array.from(checkedCheckboxes).map(cb => parseInt(cb.value)).filter(n => !isNaN(n));
 
-        if (isNaN(actIdx) || actIdx < 0 || actIdx >= ACTIVITIES.length) {
-          showToast('กรุณาเลือกกิจกรรมที่ถูกต้องค่ะ', 'warning');
+        if (selectedActIndices.length === 0) {
+          showToast('กรุณาติ๊กเลือกกิจกรรมอย่างน้อย 1 กิจกรรมค่ะ', 'warning');
           return;
         }
 
-        const actName = ACTIVITIES[actIdx]?.name || ACTIVITIES[actIdx]?.shortName || 'กิจกรรม';
-
-        // Count matched members first
+        const detectedNames = JSON.parse(decodeURIComponent(memberNamesStr));
         const matchedList = [];
         detectedNames.forEach(rawName => {
           const cleanName = String(rawName).trim().toLowerCase();
@@ -9141,26 +9316,30 @@ Output strictly valid JSON with no markdown formatting.`;
         });
 
         if (matchedList.length === 0) {
-          showToast('ไม่พบรายชื่อสมาชิกในกิลด์ที่ตรงกับรูปภาพค่ะ', 'warning');
+          showToast('ไม่พบรายชื่อสมาชิกในกิลด์ที่ตรงกับรายชื่อที่สแกนค่ะ', 'warning');
           return;
         }
 
+        const selectedActNames = selectedActIndices.map(i => ACTIVITIES[i]?.shortName || ACTIVITIES[i]?.name || `#${i}`);
+
         // 🛡️ Admin Approval Confirmation Dialog
-        const confirmMsg = `⚠️ ขออนุมัติจาก Admin (Admin Approval):\n\nน้องเดวิลตรวจพบสมาชิกในภาพ ${matchedList.length} คน\nกำลังจะติ๊กถูกในกิจกรรม: "${actName}" (${getWeekName(currentWeekNumber)})\n\nท่านแอดมินอนุมัติให้บันทึกคะแนนลงระบบใช่หรือไม่?`;
+        const confirmMsg = `⚠️ ขออนุมัติจาก Admin (Admin Approval):\n\nน้องเดวิลตรวจพบสมาชิก ${matchedList.length} คน\nกำลังจะติ๊กถูกพร้อมกันใน ${selectedActIndices.length} กิจกรรม:\n[ ${selectedActNames.join(', ')} ] (${getWeekName(currentWeekNumber)})\n\nท่านแอดมินอนุมัติให้บันทึกคะแนนลงระบบใช่หรือไม่?`;
         if (!confirm(confirmMsg)) {
           showToast('ยกเลิกการบันทึกข้อมูลแล้วค่ะ', 'info');
           return;
         }
 
-        let affectedCount = 0;
+        let totalChecksAdded = 0;
         matchedList.forEach(m => {
           ensureMemberWeeklyData(m);
-          m.checks[actIdx] = true;
-          if (!Array.isArray(m.weeklyChecks[currentWeekNumber])) {
-            m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
-          }
-          m.weeklyChecks[currentWeekNumber][actIdx] = true;
-          affectedCount++;
+          selectedActIndices.forEach(actIdx => {
+            m.checks[actIdx] = true;
+            if (!Array.isArray(m.weeklyChecks[currentWeekNumber])) {
+              m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
+            }
+            m.weeklyChecks[currentWeekNumber][actIdx] = true;
+            totalChecksAdded++;
+          });
         });
 
         saveData();
@@ -9169,23 +9348,34 @@ Output strictly valid JSON with no markdown formatting.`;
 
         addAuditLog(
           'batch',
-          `น้องเดวิล AI ติ๊กบอส: ${actName} (อนุมัติโดย ${currentAdminEmail || 'Admin'})`,
-          `สแกนจากรูปภาพจัดการชุมนุม | ติ๊กถูกสำเร็จ: ${affectedCount} คน | ${getWeekName(currentWeekNumber)}`
+          `น้องเดวิล AI เช็คชื่อพร้อมกัน: ${selectedActNames.join(', ')} (${selectedActIndices.length} กิจกรรม)`,
+          `สมาชิกที่ได้คะแนน: ${matchedList.length} คน | รวม ${totalChecksAdded} เช็คลิสต์ | อนุมัติโดย ${currentAdminEmail || 'Admin'} | ${getWeekName(currentWeekNumber)}`
         );
 
         if (btn) {
           btn.disabled = true;
-          btn.classList.remove('from-indigo-600', 'to-purple-600');
-          btn.classList.add('bg-emerald-700', 'opacity-90');
-          btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>อนุมัติและติ๊กถูกสำเร็จ ${affectedCount} คนแล้วค่ะ! 🎉</span>`;
+          btn.className = 'w-full py-3 px-4 bg-emerald-700 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg transition flex items-center justify-center gap-2 opacity-95';
+          btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>อนุมัติและติ๊กถูกสำเร็จ (${selectedActNames.join(', ')}) ให้ ${matchedList.length} คนแล้วค่ะ! 🎉</span>`;
         }
 
-        showToast(`😈 แอดมินอนุมัติเรียบร้อย! น้องเดวิลติ๊กถูก "${actName}" ให้ ${affectedCount} คนแล้วค่ะ 🎉`, 'success');
+        showToast(`😈 น้องเดวิลติ๊กถูก ${selectedActNames.join(', ')} ให้สมาชิก ${matchedList.length} คนเรียบร้อยแล้วค่ะ! 🎉`, 'success');
       } catch (err) {
-        console.error('Nong Devil Squad Check Action Failed:', err);
+        console.error('Nong Devil Multi Activity Check Action Failed:', err);
         showToast('เกิดข้อผิดพลาดในการเช็คชื่อ: ' + err.message, 'warning');
       }
     }
+
+    function executeNongDevilSquadCheck(btn, memberNamesStr, selectId) {
+      executeNongDevilMultiActivityCheck(btn, memberNamesStr, selectId);
+    }
+
+    // Expose helpers globally
+    window.switchNongDevilActCardDay = switchNongDevilActCardDay;
+    window.applyNongDevilPreset = applyNongDevilPreset;
+    window.updateNongDevilActCardChoice = updateNongDevilActCardChoice;
+    window.toggleAllVisibleActs = toggleAllVisibleActs;
+    window.updateNongDevilActCardCount = updateNongDevilActCardCount;
+    window.executeNongDevilMultiActivityCheck = executeNongDevilMultiActivityCheck;
 
     function executeNongDevilCpUpdate(btn, payloadStr) {
       if (!isAdmin) {
