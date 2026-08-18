@@ -8229,8 +8229,8 @@ Output strictly valid JSON with no markdown wrapping:
 
       const greetingHtml = `
         <div class="flex items-start gap-3">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-lg shadow shrink-0 border border-rose-400/40 mt-0.5">
-            <span>😈</span>
+          <div class="w-10 h-10 flex items-center justify-center shrink-0 mt-0.5 filter drop-shadow-[0_2px_8px_rgba(244,63,94,0.5)]">
+            <img src="assets/nong_devil.png" alt="น้องเดวิล" class="w-full h-full object-contain" />
           </div>
           <div class="space-y-2 max-w-[92%] min-w-0">
             <div class="p-4 rounded-3xl rounded-tl-none bg-slate-900/95 border border-rose-500/40 text-slate-100 leading-relaxed text-[13px] shadow-xl break-words [word-break:break-word] space-y-2.5">
@@ -8238,69 +8238,84 @@ Output strictly valid JSON with no markdown wrapping:
                 <span>สวัสดีค่ะท่านหัวหน้ากิลด์และพี่ๆ แอดมินทุกคน! 😈✨</span>
               </div>
               <p class="text-slate-200">
-                หนูน้องเดวิล เลขา AI ประจำกิลด์ <b>RedDevil</b> พร้อมรับใช้และช่วยดูแลระบบกิลด์ให้ราบรื่นตลอด 24 ชั่วโมงแล้วค่ะ!
+                หนูน้องเดวิล เลขา AI ประจำกิลด์ <b>RedDevil</b> ยกระดับระบบอัจฉริยะแบบครบวงจร พร้อมรับใช้และช่วยดูแลงานแอดมินตลอด 24 ชั่วโมงแล้วค่ะ!
               </p>
 
               <div class="space-y-2 pt-1">
+                <!-- Feature 1: Drops & Boss Killer -->
                 <div class="bg-slate-950/70 p-2.5 rounded-2xl border border-slate-800 space-y-1">
                   <div class="font-bold text-amber-300 text-xs flex items-center gap-1.5">
-                    <span>🏰 1. ระบบเช็คชื่อ & คะแนนกิลด์ (Scoring & Attendance)</span>
+                    <span>🎁 1. ประวัติของดรอปสด & สั่งงานบอส (Live Drops & Boss Controller)</span>
                   </div>
                   <div class="text-[12px] text-slate-300 pl-4 space-y-0.5">
-                    • คำนวณคะแนนบอส, เปอร์เซ็นต์เข้าร่วม, และเกณฑ์ปันผลอัตโนมัติ<br>
-                    • 📸 <b>สแกนรูปชุมนุม (AI):</b> วางรูปตารางชุมนุมในเกม ติ๊กคะแนนให้ทั้งกิลด์ทันที<br>
-                    • 🏆 สรุปภาพ <b>Top 10</b> แชร์ลง LINE / Discord ในคลิกเดียว
+                    • <b>ถามของดรอปสด:</b> พิมพ์ <i>"วันนี้มีของอะไรดรอปบ้าง"</i> ดึงรายงาน 30 ชิ้นล่าสุดทันที<br>
+                    • <b>สั่งลงเวลาบอสผ่านแชท:</b> พิมพ์ <i>"บอส Ego ตาย 14:30"</i> หรือ <i>"ลงเวลาบอส General Aquleus 15:30"</i> ระบบสร้างการ์ดลงเวลาให้ในคลิกเดียว<br>
+                    • 📸 <b>สแกน Log บอส (AI):</b> วางรูปแชทในเกม ดึงเวลาตายและรายชื่อไอเทมดรอปอัตโนมัติ
                   </div>
                 </div>
 
+                <!-- Feature 2: Announcements -->
                 <div class="bg-slate-950/70 p-2.5 rounded-2xl border border-slate-800 space-y-1">
                   <div class="font-bold text-rose-400 text-xs flex items-center gap-1.5">
-                    <span>🐉 2. ระบบบอสไทม์เมอร์อัจฉริยะ (Smart Boss Timer)</span>
+                    <span>📢 2. ร่างประกาศกิลด์ & ส่ง Discord (Smart Announcement Generator)</span>
                   </div>
                   <div class="text-[12px] text-slate-300 pl-4 space-y-0.5">
-                    • คำนวณเวลารีสปอว์นบอส 45+ ตัว (ทั้ง Fixed Time และ Interval)<br>
-                    • 📸 <b>สแกนเวลาตาย & ของดรอป:</b> วางภาพสกรีนช็อต ดึงเวลาและไอเทมดรอปอัตโนมัติ<br>
-                    • 🔊 <b>แจ้งเตือนเสียงพูด (TTS)</b> ก่อนบอสเกิด และคำนวณเวลารีสปอว์น Real-Time บนหน้าจอ<br>
+                    • พิมพ์ <i>"ร่างประกาศกิลด์วอร์คืนนี้ 20:00"</i> หรือ <i>"ประกาศเตือนตีบอส World Boss"</i><br>
+                    • น้องเดวิลจัดรูปแบบสวยงาม พร้อมปุ่ม <b>[📋 คัดลอก]</b> และปุ่ม <b>[🚀 ส่งเข้า Discord ทันที]</b>
                   </div>
                 </div>
 
-                <div class="bg-slate-950/70 p-2.5 rounded-2xl border border-slate-800 space-y-1">
-                  <div class="font-bold text-indigo-400 text-xs flex items-center gap-1.5">
-                    <span>🤖 3. ระบบเชื่อมต่อ Discord Bot (Discord Integration)</span>
-                  </div>
-                  <div class="text-[12px] text-slate-300 pl-4 space-y-0.5">
-                    • ดักฟังสมาชิกที่ลงทะเบียนใน Discord ดึงชื่อตัวละคร, UID, Wallet, Email<br>
-                    • 🛡️ <b>คิวตรวจสอบในเกม:</b> ให้แอดมินเช็กตัวละครในเกมก่อนกดอนุมัติเข้าตารางในคลิกเดียว<br>
-                    • แสดงสถานะบอทออนไลน์แบบ Real-time ตลอดเวลา
-                  </div>
-                </div>
-
+                <!-- Feature 3: Dividend & Scoring -->
                 <div class="bg-slate-950/70 p-2.5 rounded-2xl border border-slate-800 space-y-1">
                   <div class="font-bold text-emerald-400 text-xs flex items-center gap-1.5">
-                    <span>🎁 4. ระบบร้านค้าของรางวัล & คำขอสมาชิก (Guild Store & Requests)</span>
+                    <span>💰 3. สรุปยอดปันผล & สถิติเช็คชื่อ (Dividend & Attendance Analytics)</span>
                   </div>
                   <div class="text-[12px] text-slate-300 pl-4 space-y-0.5">
-                    • จัดการระบบแลกของรางวัลด้วยแต้มสะสมประจำเดือน<br>
-                    • รวบรวมคำขอยื่นอุทธรณ์เช็คชื่อ, ขออัปเดต CP และขอแก้ไขข้อมูลตัวละคร
+                    • พิมพ์ <i>"สรุปยอดปันผลสัปดาห์นี้"</i> สรุปเกณฑ์เปอร์เซ็นต์และจัดกลุ่มกระเป๋า USDT<br>
+                    • 🚨 <b>ตรวจจับคนขาดกิจกรรม:</b> พิมพ์ <i>"เช็คคนขาดกิจกรรมสัปดาห์นี้"</i> หาสมาชิกที่คะแนนตกผิดปกติ
                   </div>
                 </div>
 
+                <!-- Feature 4: Member Directory & Squad OCR -->
                 <div class="bg-slate-950/70 p-2.5 rounded-2xl border border-slate-800 space-y-1">
-                  <div class="font-bold text-purple-400 text-xs flex items-center gap-1.5">
-                    <span>🛡️ 5. ความปลอดภัย & สำรองข้อมูล (Admin Security & Logs)</span>
+                  <div class="font-bold text-indigo-400 text-xs flex items-center gap-1.5">
+                    <span>👥 4. ค้นหาประวัติสมาชิก & สแกนรูปชุมนุม (Member Directory & OCR)</span>
                   </div>
                   <div class="text-[12px] text-slate-300 pl-4 space-y-0.5">
-                    • บันทึกประวัติการกระทำของแอดมิน (Audit Logs) ทุกรายการ<br>
-                    • ล็อก/ปลดล็อกรอบสัปดาห์ และสำรอง-กู้คืนข้อมูล (Backup & Restore)
+                    • <b>ค้นหาเดี่ยว:</b> พิมพ์ <i>"ค้นหา [ชื่อตัวละคร]"</i> แสดง CP, Wallet, UID, Discord ครบถ้วน<br>
+                    • 📸 <b>สแกนรูปตารางชุมนุม:</b> วางภาพจัดการชุมนุม ติ๊กเช็คชื่อให้ทั้งกิลด์ในคลิกเดียว<br>
+                    • 📸 <b>สแกนรูป CP โปรไฟล์:</b> อ่านและอัปเดตพลังตัวละครให้อัตโนมัติ
+                  </div>
+                </div>
+
+                <!-- Feature 5: Boss Hunting Route -->
+                <div class="bg-slate-950/70 p-2.5 rounded-2xl border border-slate-800 space-y-1">
+                  <div class="font-bold text-purple-400 text-xs flex items-center gap-1.5">
+                    <span>🐉 5. วางแผนเส้นทางล่าบอส & สรุปไทม์ไลน์ (Daily Boss Route)</span>
+                  </div>
+                  <div class="text-[12px] text-slate-300 pl-4 space-y-0.5">
+                    • พิมพ์ <i>"วางแผนล่าบอสคืนนี้"</i> หรือ <i>"บอสตัวต่อไปเกิดเมื่อไหร่"</i><br>
+                    • ประมวลผลเวลาเกิดของบอสทั้งวัน และไฮไลท์ช่วงเวลาที่บอสเกิดต่อเนื่อง
+                  </div>
+                </div>
+
+                <!-- Feature 6: Admin Diagnostics & Wishlist -->
+                <div class="bg-slate-950/70 p-2.5 rounded-2xl border border-slate-800 space-y-1">
+                  <div class="font-bold text-cyan-300 text-xs flex items-center gap-1.5">
+                    <span>🛡️ 6. สมุดบันทึกไอเดีย & วินิจฉัยระบบ (Wishlist & Bug Diagnostics)</span>
+                  </div>
+                  <div class="text-[12px] text-slate-300 pl-4 space-y-0.5">
+                    • พิมพ์เสนอไอเดียใหม่ หรือพิมพ์แจ้งปัญหาของระบบ<br>
+                    • น้องเดวิลวิเคราะห์ Why & How พร้อมร่างโค้ด Prompt สำหรับพัฒนาต่อได้ทันที
                   </div>
                 </div>
               </div>
 
               <div class="text-[12.5px] text-amber-200/90 pt-1 border-t border-slate-800 font-medium">
-                💬 <i>มีอะไรให้หนูช่วยตรวจสอบ วิเคราะห์ข้อมูล หรืออยากสอบถามเรื่องไหน พิมพ์บอกหนูในช่องแชทนี้ได้เลยนะคะ! 😈💖</i>
+                💬 <i>มีอะไรให้หนูช่วยพิมพ์สั่งหรือโยนรูปภาพมาในช่องแชทนี้ได้ตลอดเวลาเลยนะคะ! 😈💖</i>
               </div>
             </div>
-            <div class="text-[10px] text-slate-400 font-mono ml-1">น้องเดวิล • ออนไลน์พร้อมดูแลท่านแอดมิน 24 ชม. ค่ะ</div>
+            <div class="text-[10px] text-slate-400 font-mono ml-1">น้องเดวิล • เลขา AI ประจำกิลด์ RedDevil ออนไลน์ 24 ชม.</div>
           </div>
         </div>
       `;
@@ -8357,40 +8372,83 @@ Output strictly valid JSON with no markdown wrapping:
       const sortedMembers = [...(members || [])].sort((a, b) => (b.cp || 0) - (a.cp || 0));
       const top5Cp = sortedMembers.slice(0, 5).map((m, i) => `${i + 1}. ${m.characterName || m.name} (CP: ${(m.cp || 0).toLocaleString()}, กิลด์: ${m.guild || '-'})`).join('\n');
 
-      // 2. Boss timer status
+      // Member Directory (for search & inquiries)
+      const memberDirectory = (Array.isArray(members) ? members : []).map(m => 
+        `- ${m.characterName || m.name || '-'} | กิลด์: ${m.guild || '-'} | CP: ${(m.cp || 0).toLocaleString()} | Wallet: ${m.wallet || m.walletUsdt || '-'} | UID: ${m.uid || m.inGameMemberNo || '-'} | Discord: ${m.discordTag || m.discordName || '-'}`
+      ).slice(0, 60).join('\n');
+
+      // 2. Boss timer status & database catalog
       const now = new Date();
       const upcomingBosses = [];
       if (typeof bossList !== 'undefined' && Array.isArray(bossList)) {
         bossList.forEach(b => {
-          if (b.nextSpawnTime) {
-            const diffMs = new Date(b.nextSpawnTime) - now;
+          const timer = (typeof bossTimerData !== 'undefined' && bossTimerData[b.id]) ? bossTimerData[b.id] : {};
+          let nextSpawn = null;
+          if (timer.customNextSpawn) {
+            nextSpawn = new Date(timer.customNextSpawn);
+          } else if (typeof calculateNextSpawnDate === 'function') {
+            nextSpawn = calculateNextSpawnDate(b, timer.defeatedTime);
+          }
+          if (nextSpawn && !isNaN(nextSpawn.getTime())) {
+            const diffMs = nextSpawn.getTime() - now.getTime();
             const diffMins = Math.round(diffMs / 60000);
-            if (diffMins > -60 && diffMins < 360) {
-              upcomingBosses.push(`- บอส ${b.name} (Map: ${b.map || '-'}): เกิดเวลา ${new Date(b.nextSpawnTime).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} (อีก ${diffMins > 0 ? diffMins + ' นาที' : 'เกิดแล้ว ' + Math.abs(diffMins) + ' นาที'})`);
+            if (diffMins > -60 && diffMins < 720) {
+              upcomingBosses.push(`- บอส ${b.name} (ID: ${b.id}, Lv.${b.level || '?'}, Map: ${b.map || '-'}): เกิดเวลา ${nextSpawn.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} (${diffMins > 0 ? 'อีก ' + diffMins + ' นาที' : 'เกิดแล้ว ' + Math.abs(diffMins) + ' นาที'})`);
             }
           }
         });
       }
 
-      // 3. Activities
+      const bossCatalog = (typeof bossList !== 'undefined' && Array.isArray(bossList))
+        ? bossList.map(b => `${b.name} (id: ${b.id}, lv: ${b.level || '?'}, map: ${b.map || '-'})`).join(', ')
+        : '';
+
+      // 3. Drop Logs & Kill Logs (Real-time Drop History)
+      const rawDropLogs = (typeof bossDropLogs !== 'undefined' && Array.isArray(bossDropLogs)) ? bossDropLogs : (JSON.parse(localStorage.getItem('guild_boss_drop_logs')) || []);
+      const recentDrops = rawDropLogs.slice(0, 30).map(d => {
+        const timeStr = d.killTime ? new Date(d.killTime).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-';
+        const items = Array.isArray(d.items) ? d.items.join(', ') : (d.item || '-');
+        return `• [${timeStr}] บอส: ${d.bossName || '-'} ➔ ไอเทม: ${items} (บันทึกโดย: ${d.recordedBy || 'Admin'})`;
+      }).join('\n');
+
+      const rawKillLogs = (typeof bossKillLogs !== 'undefined' && Array.isArray(bossKillLogs)) ? bossKillLogs : (JSON.parse(localStorage.getItem('guild_boss_kill_logs')) || []);
+      const recentKills = rawKillLogs.slice(0, 15).map(k => {
+        return `• บอส: ${k.bossName || '-'} (Lv.${k.level || '?'}) ตายเวลา ${k.killTimeFormatted || '-'} | เกิดรอบถัดไป: ${k.nextSpawnFormatted || '-'}${k.dropItemsText && k.dropItemsText !== '-' ? ' | ดรอป: ' + k.dropItemsText : ''}`;
+      }).join('\n');
+
+      // 4. Activities
       const actList = Array.isArray(ACTIVITIES) ? ACTIVITIES.map((a, i) => `[${i}] ${a.name} (${a.day || '-'}) น้ำหนัก ${a.weight || 0}%`).join(', ') : '';
 
-      // 4. Saved Wishlist Count
+      // 5. Saved Wishlist Count
       const savedCount = nongDevilFeedbackLogs.length;
 
       return `
 [LIVE GUILD DATA CONTEXT]:
 - Guild Name: RedDevil
+- Current Date/Time: ${now.toLocaleDateString('th-TH')} ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.
 - Current Week: ${typeof getWeekName === 'function' ? getWeekName(currentWeekNumber) : 'สัปดาห์ปัจจุบัน'}
 - Total Guild Members: ${totalMembers} คน
 - Saved Wishlist / Issue Notes: ${savedCount} รายการ
-- Top 5 CP Rankings:
+
+[TOP 5 CP RANKINGS]:
 ${top5Cp || 'ไม่มีข้อมูล'}
 
-- Upcoming Bosses (ใกล้เกิด):
-${upcomingBosses.length > 0 ? upcomingBosses.join('\n') : 'ไม่มีบอสที่ระบุเวลาเกิดใน 6 ชั่วโมงนี้'}
+[UPCOMING BOSSES (ใกล้เกิด / เกิดแล้ว)]:
+${upcomingBosses.length > 0 ? upcomingBosses.join('\n') : 'ไม่มีบอสที่ระบุเวลาเกิดใน 12 ชั่วโมงนี้'}
 
-- Activities list:
+[BOSS DATABASE CATALOG (IDs and Names)]:
+${bossCatalog || 'ไม่มีข้อมูล'}
+
+[RECENT DROP LOGS (ประวัติของดรอป 30 รายการล่าสุด)]:
+${recentDrops || 'ยังไม่มีประวัติของดรอปในระบบ'}
+
+[RECENT BOSS KILL HISTORY]:
+${recentKills || 'ยังไม่มีประวัติการลงเวลาตาย'}
+
+[MEMBER DIRECTORY]:
+${memberDirectory || 'ไม่มีข้อมูล'}
+
+[ACTIVITIES LIST]:
 ${actList || 'ไม่มี'}
 `;
     }
@@ -8465,10 +8523,13 @@ ${actList || 'ไม่มี'}
         const prompt = `You are "น้องเดวิล" (Nong Devil), the smart, polite, and enthusiastic AI Secretary for the "RedDevil" guild in the MMORPG "LORD NINE".
 You speak natural, lively Thai with emojis (😈, 🔥, ⚔️, 👑, ✨).
 You are equipped with autonomous capabilities to:
-1. Analyze images (Boss kill logs, Squad Management attendance, Character CP profiles)
-2. Receive Admin Feature Requests & Wishlist ideas: analyze Why & How, propose technical implementation steps, and generate a ready-to-use coding prompt for an AI assistant/developer.
-3. Diagnose System Issues / Bugs reported by Admin: analyze Root Cause, suggest fixes, and generate a ready-to-use debug/fix prompt.
-4. Answer guild questions using live context.
+1. Read and summarize Drop Logs & Kill Logs accurately using [RECENT DROP LOGS] and [RECENT BOSS KILL HISTORY].
+2. Execute Boss Kill commands (e.g. "บอส Ego ตาย 14:30", "ลงเวลาบอส general_aquleus 15:30") by matching the boss name/ID from [BOSS DATABASE CATALOG].
+3. Search and summarize Member Profiles, CP, Wallet, UID from [MEMBER DIRECTORY].
+4. Analyze images (Boss kill drop logs, Squad Management attendance, Character CP profiles).
+5. Receive Admin Feature Requests & Wishlist ideas: analyze Why & How, propose technical implementation steps, and generate a ready-to-use coding prompt for an AI assistant/developer.
+6. Diagnose System Issues / Bugs reported by Admin: analyze Root Cause, suggest fixes, and generate a ready-to-use debug/fix prompt.
+7. Answer guild questions using live context.
 
 ${liveContext}
 
@@ -8476,7 +8537,26 @@ User Query: "${userText || 'วิเคราะห์รูปภาพนี�
 
 ### Task & Intent Detection Rules (Output strictly valid JSON with no markdown wrapping):
 
-1. If user suggests a NEW FEATURE / IMPROVEMENT / WISHLIST IDEA -> output JSON:
+1. If user asks to RECORD / SET / UPDATE BOSS KILL TIME (Text command or Image) -> output JSON:
+{
+  "actionType": "boss_kill",
+  "reply": "friendly explanation of detected boss and time",
+  "bossId": "matching boss ID from catalog (e.g. ego, general_aquleus, vioren, etc.)",
+  "bossName": "Thai boss name",
+  "killTime": "HH:MM (24-hour format)",
+  "killDate": "YYYY-MM-DD or today",
+  "dropItems": ["item 1 (ผู้รับ: xxx)", "item 2 (ผู้รับ: xxx)"]
+}
+
+2. If user asks to DRAFT / CREATE / GENERATE GUILD ANNOUNCEMENT (ร่างประกาศ / สร้างประกาศกิลด์วอร์ / ประกาศตีบอส / แจ้งเตือน) -> output JSON:
+{
+  "actionType": "announcement",
+  "reply": "friendly explanation of the drafted announcement",
+  "title": "Title in Thai with emojis (e.g. 📢 [RedDevil] รวมพลกิลด์วอร์คืนนี้ 20:00 น. 🔥)",
+  "content": "Full formatted Discord message text with Discord markdown, emojis, bullet points, role tags, and clear call-to-actions"
+}
+
+3. If user suggests a NEW FEATURE / IMPROVEMENT / WISHLIST IDEA -> output JSON:
 {
   "actionType": "feature_request",
   "reply": "friendly explanation of how this feature will benefit the guild",
@@ -8486,7 +8566,7 @@ User Query: "${userText || 'วิเคราะห์รูปภาพนี�
   "readyPrompt": "Detailed, professional instruction prompt in Thai ready to feed into AI code assistant to implement this feature"
 }
 
-2. If user reports a BUG / ISSUE / ERROR / QUESTION ABOUT SYSTEM FAILURE -> output JSON:
+4. If user reports a BUG / ISSUE / ERROR / QUESTION ABOUT SYSTEM FAILURE -> output JSON:
 {
   "actionType": "issue_report",
   "reply": "empathic acknowledgment and clear breakdown of the issue",
@@ -8496,18 +8576,7 @@ User Query: "${userText || 'วิเคราะห์รูปภาพนี�
   "readyPrompt": "Detailed, professional prompt in Thai ready to feed into AI code assistant to fix this bug"
 }
 
-3. If image is Boss Kill / Drop Log -> output JSON:
-{
-  "actionType": "boss_kill",
-  "reply": "friendly explanation of detected boss and drops",
-  "bossId": "matching boss ID or generic",
-  "bossName": "Thai boss name",
-  "killTime": "HH:MM",
-  "killDate": "YYYY-MM-DD or today",
-  "dropItems": ["item 1 (ผู้รับ: xxx)", "item 2 (ผู้รับ: xxx)"]
-}
-
-4. If image is Squad Management (จัดการชุมนุม) -> output JSON:
+5. If image is Squad Management (จัดการชุมนุม) -> output JSON:
 {
   "actionType": "squad_attendance",
   "reply": "friendly explanation of detected squad members",
@@ -8515,7 +8584,7 @@ User Query: "${userText || 'วิเคราะห์รูปภาพนี�
   "members": ["name1", "name2", "name3"]
 }
 
-5. If image is Character CP Profile -> output JSON:
+6. If image is Character CP Profile -> output JSON:
 {
   "actionType": "cp_update",
   "reply": "friendly explanation",
@@ -8523,10 +8592,10 @@ User Query: "${userText || 'วิเคราะห์รูปภาพนี�
   "cp": 182000
 }
 
-6. If general text chat or questions -> output JSON:
+7. If user asks about Drop Logs / Member Search / Dividend Summary / AFK Diagnostics / Daily Boss Hunting Route / Guild Questions / General Chat -> output JSON:
 {
   "actionType": "general_chat",
-  "reply": "helpful, polite, and well-formatted Thai answer with markdown bullets if helpful"
+  "reply": "helpful, polite, and well-formatted Thai answer with clear markdown formatting, bullet points or tables where appropriate"
 }
 
 Output strictly valid JSON with no markdown formatting.`;
@@ -8598,8 +8667,8 @@ Output strictly valid JSON with no markdown formatting.`;
         </div>
       ` : `
         <div class="flex items-start gap-3" id="${bubbleId}">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-lg shadow shrink-0 border border-rose-400/40 mt-0.5">
-            <span>😈</span>
+          <div class="w-9 h-9 rounded-xl bg-slate-900/90 border border-rose-500/50 flex items-center justify-center shadow-md shrink-0 mt-0.5 overflow-hidden p-1">
+            <img src="assets/nong_devil.png" alt="น้องเดวิล" class="w-full h-full object-contain" />
           </div>
           <div class="space-y-1.5 max-w-[88%] min-w-0">
             <div class="p-3.5 rounded-2xl rounded-tl-none bg-slate-900/95 border border-slate-700/80 text-slate-100 leading-relaxed text-[13.5px] shadow-lg break-words [word-break:break-word]">
@@ -8780,11 +8849,140 @@ Output strictly valid JSON with no markdown formatting.`;
         `;
       }
 
+      // 6. Smart Announcement Card
+      else if (data.actionType === 'announcement' && (data.content || data.title)) {
+        const textContent = data.content || data.reply || '';
+        const textEsc = encodeURIComponent(textContent);
+        const discordPayload = {
+          content: '<@&1508495658162851970>',
+          embeds: [{
+            title: data.title || '📢 [RedDevil] ประกาศจากกิลด์',
+            description: textContent,
+            color: 0xDC2626,
+            footer: { text: '🛡️ RedDevil Guild Announcement System' },
+            timestamp: new Date().toISOString()
+          }]
+        };
+        const discordPayloadEsc = encodeURIComponent(JSON.stringify(discordPayload));
+
+        actionCardHtml = `
+          <div class="mt-3 p-3.5 rounded-2xl bg-gradient-to-b from-indigo-950/90 to-slate-900 border border-indigo-500/60 space-y-2.5 text-left shadow-lg">
+            <div class="flex items-center justify-between border-b border-indigo-500/30 pb-2">
+              <div class="font-bold text-indigo-300 flex items-center gap-1.5 text-sm">
+                <i class="fa-solid fa-bullhorn text-amber-400"></i>
+                <span>${escapeHtml(data.title || 'ร่างประกาศกิลด์')}</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[9.5px] font-mono bg-indigo-500/20 text-indigo-200 border border-indigo-500/40">Announcement</span>
+            </div>
+            <div class="text-xs text-slate-200 leading-relaxed bg-slate-950/80 p-3 rounded-xl border border-slate-800 font-sans max-h-56 overflow-y-auto whitespace-pre-line select-text">
+              ${escapeHtml(textContent)}
+            </div>
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button type="button" onclick="copyNongDevilAnnouncement(this, '${textEsc}')"
+                class="py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-indigo-200 text-xs font-bold rounded-xl border border-indigo-500/40 transition flex items-center justify-center gap-1.5 active:scale-95">
+                <i class="fa-solid fa-copy"></i> <span>📋 คัดลอกข้อความ</span>
+              </button>
+              <button type="button" onclick="sendNongDevilAnnouncementToDiscord(this, '${discordPayloadEsc}')"
+                class="py-2.5 px-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/30 transition flex items-center justify-center gap-1.5 active:scale-95">
+                <i class="fa-brands fa-discord text-sm"></i> <span>🚀 ส่งเข้า Discord</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
       const formattedReply = replyText.replace(/\n/g, '<br/>');
       appendNongDevilMessage('assistant', `
         <div>${formattedReply}</div>
         ${actionCardHtml}
       `);
+    }
+
+    function copyNongDevilAnnouncement(btn, textEsc) {
+      try {
+        const text = decodeURIComponent(textEsc);
+        navigator.clipboard.writeText(text).then(() => {
+          if (btn) {
+            const oldHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>คัดลอกสำเร็จ!</span>`;
+            setTimeout(() => { btn.innerHTML = oldHtml; }, 2500);
+          }
+          showToast('คัดลอกข้อความประกาศเรียบร้อยแล้วค่ะ! 📋', 'success');
+        }).catch(() => {
+          fallbackCopyTextToClipboard(text);
+          showToast('คัดลอกข้อความเรียบร้อยแล้วค่ะ!', 'success');
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function sendNongDevilAnnouncementToDiscord(btn, payloadEsc) {
+      if (!isAdmin) {
+        showToast('เฉพาะ Admin เท่านั้นที่สามารถส่งประกาศเข้า Discord ได้ค่ะ', 'warning');
+        return;
+      }
+      try {
+        const payload = JSON.parse(decodeURIComponent(payloadEsc));
+        const targetChannelId = '1539252263132860516';
+        const targetRoleId = '1508495658162851970';
+        const roleMention = `<@&${targetRoleId}>`;
+
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-amber-300"></i> <span>กำลังส่งเข้า Discord...</span>`;
+        }
+
+        let sentSuccess = false;
+
+        // 1. ส่งผ่าน Discord Bot (ผ่าน Firebase ไปยังห้อง 1539252263132860516)
+        if (typeof fbDb !== 'undefined' && fbDb) {
+          const announceData = {
+            id: 'ann_' + Date.now(),
+            timestamp: Date.now(),
+            channelId: targetChannelId,
+            mentionTag: roleMention,
+            title: payload.embeds?.[0]?.title || '📢 [RedDevil] ประกาศจากกิลด์',
+            content: payload.embeds?.[0]?.description || payload.content || '',
+            author: (typeof currentAdminEmail !== 'undefined' ? currentAdminEmail : 'Admin')
+          };
+          await fbDb.ref('guild_app/bot_commands/send_announcement').set(announceData);
+          sentSuccess = true;
+        }
+
+        // 2. ถ้ามีการตั้งค่า Discord Webhook URL ให้ยิงผ่าน Webhook ด้วย
+        const webhookUrl = localStorage.getItem('guild_boss_discord_webhook') || (typeof bossDiscordWebhookUrl !== 'undefined' ? bossDiscordWebhookUrl : '');
+        if (webhookUrl) {
+          payload.content = roleMention;
+          const res = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok || res.status === 204) {
+            sentSuccess = true;
+          }
+        }
+
+        if (sentSuccess) {
+          if (btn) {
+            btn.classList.remove('from-indigo-600', 'to-purple-600');
+            btn.classList.add('bg-emerald-700');
+            btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>ส่งเข้าห้อง Discord แล้ว! ✅</span>`;
+          }
+          showToast('🎉 ส่งประกาศเข้าห้อง Discord และแท็กบทบาทเรียบร้อยแล้วค่ะ!', 'success');
+          if (typeof playChime === 'function') playChime();
+        } else {
+          throw new Error('ไม่สามารถส่งประกาศได้ กรุณาตรวจสอบว่าบอทออนไลน์หรือตั้งค่า Webhook');
+        }
+      } catch (err) {
+        console.error('Send Announcement Error:', err);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-300"></i> <span>ส่งไม่สำเร็จ ลองใหม่</span>`;
+        }
+        showToast('ส่งไม่สำเร็จ: ' + err.message, 'danger');
+      }
     }
 
     // Action Helpers for Wishlist and Diagnostics
@@ -15788,23 +15986,23 @@ Output strictly valid JSON with no markdown formatting.`;
   </div>
 
   <!-- ================= 😈 น้องเดวิล: เลขา AI ประจำกิลด์ RedDevil (Floating Assistant) ================= -->
-  <!-- 1. Floating Action Button (Admin Only) -->
+  <!-- 1. Floating Trigger Button (Frameless Cute Character) -->
   <div id="nong-devil-floating-btn" onclick="toggleNongDevilChat()"
-    class="hidden fixed bottom-5 right-5 z-40 items-center gap-2 group cursor-pointer animate-fade-in">
+    class="hidden fixed bottom-5 right-5 z-40 items-center gap-2 group cursor-pointer animate-fade-in select-none">
     <div
-      class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md border border-rose-500/40 text-white text-xs font-bold shadow-xl group-hover:scale-105 transition duration-200">
+      class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/95 backdrop-blur-md border border-rose-500/50 text-white text-xs font-bold shadow-2xl group-hover:scale-105 transition duration-200">
       <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
       <span class="text-rose-300">น้องเดวิล (AI)</span>
       <span class="text-[10px] text-slate-400 font-normal">พร้อมช่วยค่ะ 😈</span>
     </div>
     <div
-      class="relative w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-600 via-red-500 to-amber-500 text-white flex items-center justify-center text-2xl shadow-2xl shadow-rose-600/40 border border-rose-400/50 group-hover:scale-110 active:scale-95 transition-all duration-200">
-      <span class="relative z-10 text-2xl">😈</span>
+      class="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center group-hover:scale-110 active:scale-95 transition-all duration-300">
+      <img src="assets/nong_devil.png" alt="น้องเดวิล"
+        class="w-full h-full object-contain filter drop-shadow-[0_6px_16px_rgba(244,63,94,0.65)] hover:drop-shadow-[0_8px_24px_rgba(244,63,94,0.9)] transition-all duration-300" />
       <span
-        class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-slate-950 flex items-center justify-center">
+        class="absolute top-1 right-1 sm:top-2 sm:right-2 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-950 flex items-center justify-center z-20 shadow-md">
         <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
       </span>
-      <div class="absolute inset-0 rounded-2xl bg-rose-500/30 animate-ping pointer-events-none opacity-60"></div>
     </div>
   </div>
 
@@ -15817,8 +16015,8 @@ Output strictly valid JSON with no markdown formatting.`;
       class="p-3.5 bg-gradient-to-r from-slate-900 via-rose-950/60 to-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
       <div class="flex items-center gap-2.5">
         <div
-          class="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-xl shadow-md border border-rose-400/40 shrink-0">
-          <span>😈</span>
+          class="relative w-10 h-10 rounded-xl bg-slate-900/90 border border-rose-500/50 flex items-center justify-center shadow-md shrink-0 overflow-hidden p-1">
+          <img src="assets/nong_devil.png" alt="น้องเดวิล" class="w-full h-full object-contain" />
           <span
             class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-950"></span>
         </div>
@@ -15859,25 +16057,33 @@ Output strictly valid JSON with no markdown formatting.`;
     <!-- Quick Action Prompts Row -->
     <div id="nong-devil-quick-chips"
       class="px-3 py-2 bg-slate-900/90 border-t border-slate-800/80 flex items-center gap-1.5 overflow-x-auto text-[11px] shrink-0 no-scrollbar">
+      <button type="button" onclick="sendNongDevilQuickPrompt('วันนี้มีของดรอปอะไรบ้าง สรุปให้หน่อย')"
+        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-amber-950/60 text-amber-300 border border-slate-700 hover:border-amber-500/40 whitespace-nowrap transition flex items-center gap-1">
+        🎁 ของดรอปล่าสุด
+      </button>
+      <button type="button" onclick="sendNongDevilQuickPrompt('ร่างประกาศกิลด์วอร์คืนนี้ 20:00 น. ให้หน่อย')"
+        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-rose-950/60 text-rose-300 border border-slate-700 hover:border-rose-500/40 whitespace-nowrap transition flex items-center gap-1">
+        📢 ร่างประกาศกิลด์วอร์
+      </button>
       <button type="button" onclick="sendNongDevilQuickPrompt('บอสตัวต่อไปเกิดกี่โมง? มีตัวไหนใกล้เกิดบ้าง')"
-        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-rose-950/50 text-rose-200 border border-slate-700 hover:border-rose-500/40 whitespace-nowrap transition">
-        🕒 บอสตัวต่อไปเกิดเมื่อไหร่?
+        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-purple-950/60 text-purple-300 border border-slate-700 hover:border-purple-500/40 whitespace-nowrap transition flex items-center gap-1">
+        🕒 บอสใกล้เกิด
+      </button>
+      <button type="button" onclick="sendNongDevilQuickPrompt('สรุปยอดปันผลสัปดาห์นี้และจัดกลุ่มกระเป๋าให้หน่อย')"
+        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-emerald-950/60 text-emerald-300 border border-slate-700 hover:border-emerald-500/40 whitespace-nowrap transition flex items-center gap-1">
+        💰 สรุปยอดปันผล
+      </button>
+      <button type="button" onclick="sendNongDevilQuickPrompt('เช็คสมาชิกที่ขาดกิจกรรมหรือคะแนนต่ำกว่าเกณฑ์ให้หน่อย')"
+        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-red-950/60 text-red-300 border border-slate-700 hover:border-red-500/40 whitespace-nowrap transition flex items-center gap-1">
+        🚨 เช็คคนขาดกิจกรรม
       </button>
       <button type="button" onclick="sendNongDevilQuickPrompt('สรุปอันดับ CP สูงสุด 5 คนแรกในกิลด์ให้หน่อย')"
-        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-amber-950/50 text-amber-200 border border-slate-700 hover:border-amber-500/40 whitespace-nowrap transition">
-        👑 อันดับ CP สูงสุด
-      </button>
-      <button type="button" onclick="sendNongDevilQuickPrompt('สรุปภาพรวมคะแนนเช็คชื่อสัปดาห์นี้ให้หน่อย')"
-        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-indigo-950/50 text-indigo-200 border border-slate-700 hover:border-indigo-500/40 whitespace-nowrap transition">
-        📊 สรุปคะแนนเช็คชื่อ
+        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-indigo-950/60 text-indigo-300 border border-slate-700 hover:border-indigo-500/40 whitespace-nowrap transition flex items-center gap-1">
+        👑 อันดับ CP กิลด์
       </button>
       <button type="button" onclick="sendNongDevilQuickPrompt('ดูสมุดบันทึกไอเดียและปัญหาของแอดมิน')"
-        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-purple-950/50 text-purple-200 border border-slate-700 hover:border-purple-500/40 whitespace-nowrap transition">
-        📖 สมุดบันทึกไอเดีย & ปัญหา
-      </button>
-      <button type="button" onclick="sendNongDevilQuickPrompt('โยนรูปภาพให้น้องช่วยทำงานอย่างไรได้บ้าง?')"
-        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-emerald-950/50 text-emerald-200 border border-slate-700 hover:border-emerald-500/40 whitespace-nowrap transition">
-        📸 วิธีโยนรูปภาพ
+        class="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-cyan-950/60 text-cyan-300 border border-slate-700 hover:border-cyan-500/40 whitespace-nowrap transition flex items-center gap-1">
+        📖 สมุดบันทึกแอดมิน
       </button>
     </div>
 

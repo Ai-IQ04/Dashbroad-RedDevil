@@ -2013,8 +2013,15 @@ function extractJsonFromGeminiResponse(text) {
 
 // Populate Modal Fields from Gemini AI Result (Unified)
 function populateModalFromGeminiData(data) {
-  if (!data || !data.bossId) return;
-  openBossKillConfirmModal(data.bossId);
+  if (!data) return;
+  let targetBossId = data.bossId;
+  if ((!targetBossId || !bossList.some(b => b.id === targetBossId)) && data.bossName && Array.isArray(bossList)) {
+    const q = data.bossName.toLowerCase().trim();
+    const found = bossList.find(b => b.name.toLowerCase() === q || b.id.toLowerCase() === q || b.name.toLowerCase().includes(q));
+    if (found) targetBossId = found.id;
+  }
+  if (!targetBossId) return;
+  openBossKillConfirmModal(targetBossId);
   applyExtractedBossData(data);
 }
 

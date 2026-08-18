@@ -249,24 +249,61 @@ async function sendHeartbeat(memberCount = 0) {
   } catch (e) { }
 }
 
-// ⚡ ดักฟังคำสั่งซิงค์ด่วนจากปุ่มหน้าเว็บ Dashboard
+// ⚡ ดักฟังคำสั่งจากหน้าเว็บ Dashboard (ซิงค์ด่วน & ส่งประกาศจากน้องเดวิล)
 function listenForDashboardCommands() {
-  let lastSeenTrigger = Date.now();
+  let lastSeenSyncTrigger = Date.now();
+  let lastSeenAnnouncementId = '';
+
   setInterval(async () => {
     try {
-      const endpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/sync_trigger.json`;
-      const res = await fetch(endpoint);
-      if (res.ok) {
-        const trigger = await res.json();
-        if (trigger && Number(trigger) > lastSeenTrigger) {
-          lastSeenTrigger = Number(trigger);
+      // 1. ซิงค์ด่วน
+      const syncEndpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/sync_trigger.json`;
+      const syncRes = await fetch(syncEndpoint);
+      if (syncRes.ok) {
+        const trigger = await syncRes.json();
+        if (trigger && Number(trigger) > lastSeenSyncTrigger) {
+          lastSeenSyncTrigger = Number(trigger);
           console.log('⚡ [Dashboard Trigger] ได้รับคำสั่งกดซิงค์ข้อมูลจากหน้าเว็บ...');
           await syncDiscordServerMembers();
           await scanRegistrationHistory();
         }
       }
+
+      // 2. ส่งประกาศจากน้องเดวิล (Nong Devil Announcement)
+      const announceEndpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/send_announcement.json`;
+      const announceRes = await fetch(announceEndpoint);
+      if (announceRes.ok) {
+        const item = await announceRes.json();
+        if (item && item.id && item.id !== lastSeenAnnouncementId && (Date.now() - (item.timestamp || 0) < 60000)) {
+          lastSeenAnnouncementId = item.id;
+          const channelId = item.channelId || CONFIG.ANNOUNCEMENT_CHANNEL_ID || '1539252263132860516';
+          const mentionTag = item.mentionTag || CONFIG.MENTION_TAG || '<@&1508495658162851970>';
+
+          const channel = client.channels.cache.get(channelId) || await client.channels.fetch(channelId).catch(() => null);
+          if (channel) {
+            const embed = {
+              title: item.title || '📢 [RedDevil] ประกาศจากกิลด์',
+              description: item.content || '',
+              color: 0xDC2626,
+              footer: { text: '🛡️ RedDevil Guild Announcement System • น้องเดวิล AI' },
+              timestamp: new Date().toISOString()
+            };
+            if (item.author) {
+              embed.author = { name: `ประกาศโดย Admin: ${item.author}` };
+            }
+
+            await channel.send({
+              content: mentionTag,
+              embeds: [embed]
+            });
+            console.log(`📢 [Announcement Sent] ส่งประกาศเข้าห้อง ${channel.name || channelId} สำเร็จ (Mention: ${mentionTag})`);
+          } else {
+            console.warn(`⚠️ [Announcement Error] ไม่พบห้อง Discord ID: ${channelId}`);
+          }
+        }
+      }
     } catch (e) { }
-  }, 4000);
+  }, 3000);
 }
 
 // 🟢 เมื่อบอทออนไลน์สำเร็จ
