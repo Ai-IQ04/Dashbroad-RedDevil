@@ -1271,6 +1271,13 @@
           </button>
         </div>
 
+        <button id="btn-boss-raid-plan-top" onclick="openBossRaidPlannerModal()"
+          class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold shadow-sm"
+          title="จัดกลุ่มบอสและวางแผนลำดับตีบอสหลังเซิร์ฟเวอร์เปิด พร้อมคัดลอกข้อความลง Discord">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>จัดกลุ่มตีบอส (Raid Route)</span>
+        </button>
+
         <button id="btn-boss-maint-top" onclick="openMaintenanceModal()"
           class="hidden apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold shadow-sm"
           title="รีเซ็ตเวลาบอสทั้งหมดพร้อมกันหลังเซิร์ฟเวอร์เปิด (คำนวณตามคอลัมน์ E)"
@@ -1280,23 +1287,23 @@
         </button>
 
         <button onclick="openBossDropLogModal('')"
-          class="apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm"
+          class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm"
           title="ดูประวัติไอเทมดรอปทั้งหมด" data-i18n-title="tooltip_view_drops">
-          <i class="fa-solid fa-gift text-amber-400"></i>
+          <i class="fa-solid fa-gift"></i>
           <span data-i18n="btn_view_drop_logs">ประวัติดรอป</span>
         </button>
 
         <button onclick="openBossKillHistoryModal()"
-          class="apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-slate-200 hover:text-white shadow-sm"
+          class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm"
           title="ดูประวัติการลงเวลาบอสย้อนหลังทั้งหมด & ส่งออก Google Sheets / Excel">
-          <i class="fa-solid fa-scroll text-amber-400"></i>
+          <i class="fa-solid fa-scroll"></i>
           <span>ประวัติลงเวลา</span>
         </button>
 
         <button id="btn-boss-integrations-top" onclick="openSheetWebhookSettingsModal()"
-          class="hidden apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-indigo-300 hover:text-white shadow-sm"
+          class="hidden apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm"
           title="ตั้งค่าเชื่อมต่อ Discord Webhook และ Google Sheets (เฉพาะ Super Admin)">
-          <i class="fa-brands fa-discord text-indigo-400"></i>
+          <i class="fa-brands fa-discord"></i>
           <span class="hidden sm:inline">ตั้งค่า Discord / Sheets</span>
         </button>
       </div>
@@ -1709,13 +1716,16 @@
           <select id="audit-filter-type" onchange="renderAuditLogsList()"
             class="bg-slate-900 border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-white focus:outline-none focus:border-amber-500">
             <option value="all">📂 ทุกประเภท</option>
-            <option value="check">✅ เช็คชื่อ / ติ๊กถูก</option>
-            <option value="cp">⚡ แก้ไขค่าพลัง CP</option>
+            <option value="check">✅ เช็คชื่อ & อุทธรณ์</option>
+            <option value="cp">⚡ แก้ไข & คำขอ CP</option>
             <option value="member">👤 ข้อมูลสมาชิก</option>
-            <option value="batch">📋 ติ๊กถูก All ตามกิลด์</option>
-            <option value="clear">🧹 ล้างข้อมูล</option>
+            <option value="batch">📋 ติ๊กถูก All / AI สแกน</option>
+            <option value="boss">⚔️ บอสไทม์เมอร์</option>
+            <option value="store">🎁 ร้านค้า & แต้ม</option>
+            <option value="week">🔒 ปิดรอบ & สัปดาห์</option>
             <option value="guild">🛡️ จัดการกิลด์</option>
             <option value="admin">🔑 สิทธิ์ Admin</option>
+            <option value="clear">🧹 ล้างข้อมูล / สำรอง</option>
           </select>
           <select id="audit-filter-week" onchange="renderAuditLogsList()"
             class="bg-slate-900 border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-white focus:outline-none focus:border-amber-500">
@@ -9280,6 +9290,10 @@ Output strictly valid JSON with no markdown formatting.`;
         renderAuditLogsList();
       }
     }
+    window.addAuditLog = addAuditLog;
+    window.recordAuditLog = function(actionType, actionDesc, detail = '', target = '') {
+      addAuditLog('store', actionDesc || actionType, detail, target);
+    };
 
     function openAuditLogsModal() {
       if (!isAdmin) {
@@ -9315,7 +9329,32 @@ Output strictly valid JSON with no markdown formatting.`;
           (log.detail || '').toLowerCase().includes(search) ||
           (log.targetMember || '').toLowerCase().includes(search);
 
-        const matchType = (filterType === 'all') || (log.category === filterType);
+        let matchType = (filterType === 'all');
+        if (!matchType) {
+          if (filterType === 'check') {
+            matchType = (log.category === 'check');
+          } else if (filterType === 'cp') {
+            matchType = (log.category === 'cp' || log.category === 'edit');
+          } else if (filterType === 'member') {
+            matchType = (log.category === 'member' || log.category === 'member_add' || log.category === 'member_edit');
+          } else if (filterType === 'batch') {
+            matchType = (log.category === 'batch');
+          } else if (filterType === 'boss') {
+            matchType = (log.category && log.category.startsWith('boss_'));
+          } else if (filterType === 'store') {
+            matchType = (log.category === 'store' || log.category === 'points_adjust' || log.category === 'points_reset' || log.category === 'test_orders_cleared' || log.category === 'all_test_orders_cleared');
+          } else if (filterType === 'week') {
+            matchType = (log.category === 'week_locked' || log.category === 'week_unlocked' || log.category === 'retroactive_edit');
+          } else if (filterType === 'guild') {
+            matchType = (log.category === 'guild');
+          } else if (filterType === 'admin') {
+            matchType = (log.category === 'admin');
+          } else if (filterType === 'clear') {
+            matchType = (log.category === 'clear');
+          } else {
+            matchType = (log.category === filterType);
+          }
+        }
         const matchWeek = (filterWeek === 'all') || (String(log.weekNumber) === String(filterWeek));
 
         return matchSearch && matchType && matchWeek;
@@ -9339,10 +9378,29 @@ Output strictly valid JSON with no markdown formatting.`;
       const CATEGORY_META = {
         check: { icon: 'fa-solid fa-circle-check', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30', label: 'เช็คชื่อ' },
         cp: { icon: 'fa-solid fa-bolt', color: 'text-amber-400 bg-amber-500/10 border-amber-500/30', label: 'แก้ไข CP' },
+        edit: { icon: 'fa-solid fa-bolt', color: 'text-amber-400 bg-amber-500/10 border-amber-500/30', label: 'แก้ไข CP' },
         member: { icon: 'fa-solid fa-user-pen', color: 'text-sky-400 bg-sky-500/10 border-sky-500/30', label: 'สมาชิก' },
+        member_add: { icon: 'fa-solid fa-user-plus', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30', label: 'เพิ่มสมาชิก' },
+        member_edit: { icon: 'fa-solid fa-user-gear', color: 'text-sky-400 bg-sky-500/10 border-sky-500/30', label: 'แก้ไขสมาชิก' },
         batch: { icon: 'fa-solid fa-list-check', color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30', label: 'ติ๊กถูก All' },
-        clear: { icon: 'fa-solid fa-broom', color: 'text-rose-400 bg-rose-500/10 border-rose-500/30', label: 'ล้างข้อมูล' },
-        guild: { icon: 'fa-solid fa-shield-cat', color: 'text-teal-400 bg-teal-500/10 border-teal-500/30', label: 'กิลด์' },
+        boss_kill: { icon: 'fa-solid fa-skull-crossbones', color: 'text-rose-400 bg-rose-500/10 border-rose-500/30', label: 'ลงเวลาบอส' },
+        boss_edit_config: { icon: 'fa-solid fa-sliders', color: 'text-orange-400 bg-orange-500/10 border-orange-500/30', label: 'แก้ข้อมูลบอส' },
+        boss_maintenance: { icon: 'fa-solid fa-wrench', color: 'text-amber-400 bg-amber-500/10 border-amber-500/30', label: 'รีเซ็ตเปิดเซิร์ฟ' },
+        boss_clear_all: { icon: 'fa-solid fa-trash-can', color: 'text-rose-400 bg-rose-500/10 border-rose-500/30', label: 'ล้างเวลาบอส' },
+        boss_single_reset: { icon: 'fa-solid fa-rotate-left', color: 'text-rose-400 bg-rose-500/10 border-rose-500/30', label: 'ล้างบอสรายตัว' },
+        boss_drop_delete: { icon: 'fa-solid fa-eraser', color: 'text-rose-400 bg-rose-500/10 border-rose-500/30', label: 'ลบไอเทมดรอป' },
+        boss_kill_clear: { icon: 'fa-solid fa-dumpster-fire', color: 'text-rose-400 bg-rose-500/10 border-rose-500/30', label: 'ล้างประวัติบอส' },
+        boss_raid_plan: { icon: 'fa-solid fa-layer-group', color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30', label: 'แผนล่าบอส' },
+        store: { icon: 'fa-solid fa-gift', color: 'text-pink-400 bg-pink-500/10 border-pink-500/30', label: 'ร้านค้าของรางวัล' },
+        points_adjust: { icon: 'fa-solid fa-coins', color: 'text-amber-300 bg-amber-500/10 border-amber-500/30', label: 'ปรับแต้มพิเศษ' },
+        points_reset: { icon: 'fa-solid fa-rotate-left', color: 'text-slate-300 bg-slate-800 border-slate-700', label: 'รีเซ็ตแต้ม' },
+        test_orders_cleared: { icon: 'fa-solid fa-broom', color: 'text-rose-400 bg-rose-500/10 border-rose-500/30', label: 'ล้างคำขอทดสอบ' },
+        all_test_orders_cleared: { icon: 'fa-solid fa-broom', color: 'text-rose-400 bg-rose-500/10 border-rose-500/30', label: 'ล้างคำขอทั้งหมด' },
+        week_locked: { icon: 'fa-solid fa-lock', color: 'text-orange-400 bg-orange-500/10 border-orange-500/30', label: 'ปิดรอบสัปดาห์' },
+        week_unlocked: { icon: 'fa-solid fa-lock-open', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30', label: 'ปลดล็อกสัปดาห์' },
+        retroactive_edit: { icon: 'fa-solid fa-clock-rotate-left', color: 'text-purple-400 bg-purple-500/10 border-purple-500/30', label: 'แก้ไขย้อนหลัง' },
+        clear: { icon: 'fa-solid fa-broom', color: 'text-rose-400 bg-rose-500/10 border-rose-500/30', label: 'ล้าง/สำรองข้อมูล' },
+        guild: { icon: 'fa-solid fa-shield-cat', color: 'text-teal-400 bg-teal-500/10 border-teal-500/30', label: 'จัดการกิลด์' },
         admin: { icon: 'fa-solid fa-key', color: 'text-purple-400 bg-purple-500/10 border-purple-500/30', label: 'สิทธิ์ Admin' }
       };
 
@@ -11288,6 +11346,16 @@ Output strictly valid JSON with no markdown formatting.`;
       savePendingCpRequests();
       renderCpApprovalList();
       closeRejectCpModal();
+
+      if (typeof addAuditLog === 'function') {
+        addAuditLog(
+          'cp',
+          `ปฏิเสธคำขออัปเดต CP: "${req.characterName}"`,
+          `เหตุผล: ${reason} | สัปดาห์: ${getWeekName(req.weekNumber || currentWeekNumber)} | โดย Admin: ${currentAdminEmail || 'Admin'}`,
+          req.characterName
+        );
+      }
+
       showToast(t('toast_cp_rejected', { name: req.characterName }) + ` (เหตุผล: ${reason})`, 'info');
     }
 
@@ -11428,6 +11496,15 @@ Output strictly valid JSON with no markdown formatting.`;
       req.processedBy = currentAdminEmail || 'Admin';
       savePendingCpRequests();
       renderCpApprovalList();
+
+      if (typeof addAuditLog === 'function') {
+        addAuditLog(
+          'cp',
+          `อนุมัติคำขออัปเดต CP: "${req.characterName}"`,
+          `เปลี่ยน CP เป็น: ${Number(req.newCp).toLocaleString()} | สัปดาห์: ${getWeekName(req.weekNumber || currentWeekNumber)} | โดย Admin: ${currentAdminEmail || 'Admin'}`,
+          req.characterName
+        );
+      }
     }
 
     function rejectCpRequest(requestId) {
@@ -12902,8 +12979,13 @@ Output strictly valid JSON with no markdown formatting.`;
       storeRewardLogs.unshift(logEntry);
       saveStoreData();
 
-      if (typeof recordAuditLog === 'function') {
-        recordAuditLog('REWARD_REQUEST', `ส่งคำขอแลกของรางวัล "${item.name}" (ใช้ ${item.cost} PTS) ให้ตัวละคร "${charName}" (ยืนยัน PIN ถูกต้อง)`);
+      if (typeof addAuditLog === 'function') {
+        addAuditLog(
+          'store',
+          `ส่งคำขอแลกของรางวัล "${item.name}" (ใช้ ${item.cost} PTS)`,
+          `สำหรับตัวละคร "${charName}" (ยืนยัน PIN ถูกต้อง)`,
+          charName
+        );
       }
 
       showToast(`ส่งคำขอแลก "${item.name}" เรียบร้อยแล้ว! รอดำเนินการสุ่ม/อนุมัติจาก Admin`, 'success');
@@ -12921,8 +13003,13 @@ Output strictly valid JSON with no markdown formatting.`;
       delete memberPins[charName];
       saveMemberPins();
 
-      if (typeof recordAuditLog === 'function') {
-        recordAuditLog('PIN_RESET', `รีเซ็ตรหัส PIN ของตัวละคร "${charName}" โดย ${currentAdminEmail}`);
+      if (typeof addAuditLog === 'function') {
+        addAuditLog(
+          'store',
+          `รีเซ็ตรหัส PIN ของตัวละคร "${charName}"`,
+          `โดย Admin: ${currentAdminEmail || 'Admin'}`,
+          charName
+        );
       }
 
       showToast(t('toast_pin_reset_success', { name: charName }), 'success');
@@ -13187,8 +13274,12 @@ Output strictly valid JSON with no markdown formatting.`;
       item.stock = Math.max(0, item.stock - drawCount);
       saveStoreData();
 
-      if (typeof recordAuditLog === 'function') {
-        recordAuditLog('REWARD_RANDOM_DRAW', `สุ่มผู้โชคดีรับของรางวัล "${item.name}" จำนวน ${drawCount} ท่าน: ${winners.map(w => w.memberName).join(', ')} โดย ${currentAdminEmail}`);
+      if (typeof addAuditLog === 'function') {
+        addAuditLog(
+          'store',
+          `สุ่มผู้โชคดีรับของรางวัล "${item.name}" (${drawCount} ท่าน)`,
+          `ผู้ได้รับ: ${winners.map(w => w.memberName).join(', ')} | โดย Admin: ${currentAdminEmail || 'Admin'}`
+        );
       }
 
       showToast(`สุ่มผู้โชคดีสำหรับ "${item.name}" สำเร็จ (${drawCount} ท่าน) ส่งต่อไปยังแผงรอส่งของในเกมเรียบร้อย!`, 'success');
@@ -13217,8 +13308,13 @@ Output strictly valid JSON with no markdown formatting.`;
 
       saveStoreData();
 
-      if (typeof recordAuditLog === 'function') {
-        recordAuditLog('REWARD_APPROVE', `อนุมัติคำขอแลกของรางวัล "${req.itemName}" ให้แก่ "${req.memberName}" (รอส่งของในเกม) โดย ${currentAdminEmail}`);
+      if (typeof addAuditLog === 'function') {
+        addAuditLog(
+          'store',
+          `อนุมัติคำขอแลกของรางวัล "${req.itemName}"`,
+          `ให้แก่ "${req.memberName}" (รอส่งของในเกม) | โดย Admin: ${currentAdminEmail || 'Admin'}`,
+          req.memberName
+        );
       }
 
       showToast(`อนุมัติคำขอของ "${req.memberName}" แล้ว (ย้ายไปรอส่งของในเกม)`, 'success');
@@ -13240,8 +13336,13 @@ Output strictly valid JSON with no markdown formatting.`;
 
       saveStoreData();
 
-      if (typeof recordAuditLog === 'function') {
-        recordAuditLog('REWARD_REJECT', `ปฏิเสธคำขอแลกของรางวัล "${req.itemName}" ของ "${req.memberName}" โดย ${currentAdminEmail}`);
+      if (typeof addAuditLog === 'function') {
+        addAuditLog(
+          'store',
+          `ปฏิเสธคำขอแลกของรางวัล "${req.itemName}"`,
+          `ของ "${req.memberName}" | โดย Admin: ${currentAdminEmail || 'Admin'}`,
+          req.memberName
+        );
       }
 
       showToast(`ปฏิเสธคำขอของ "${req.memberName}" แล้ว (แต้มถูกคืนเข้าบัญชี)`, 'info');
@@ -13262,8 +13363,13 @@ Output strictly valid JSON with no markdown formatting.`;
 
       saveStoreData();
 
-      if (typeof recordAuditLog === 'function') {
-        recordAuditLog('REWARD_DELIVERED', `ยืนยันการส่งของรางวัลในเกม "${req.itemName}" ให้แก่ "${req.memberName}" สำเร็จ โดย ${currentAdminEmail}`);
+      if (typeof addAuditLog === 'function') {
+        addAuditLog(
+          'store',
+          `ยืนยันการส่งของรางวัลในเกม "${req.itemName}"`,
+          `ให้แก่ "${req.memberName}" สำเร็จ | โดย Admin: ${currentAdminEmail || 'Admin'}`,
+          req.memberName
+        );
       }
 
       showToast(t('toast_marked_delivered', { name: req.memberName }), 'success');
@@ -13295,8 +13401,12 @@ Output strictly valid JSON with no markdown formatting.`;
       saveStoreData();
       saveData();
 
-      if (typeof recordAuditLog === 'function') {
-        recordAuditLog('MONTHLY_POINTS_RESET', `รีเซ็ตคะแนนรอบเดือนใหม่และล้างรอบกิจกรรมประจำเดือน โดย ${currentAdminEmail}`);
+      if (typeof addAuditLog === 'function') {
+        addAuditLog(
+          'store',
+          `รีเซ็ตคะแนนรอบเดือนใหม่และล้างรอบกิจกรรม`,
+          `โดย Admin: ${currentAdminEmail || 'Admin'}`
+        );
       }
 
       showToast(t('toast_monthly_points_reset'), 'success');
@@ -15412,6 +15522,187 @@ Output strictly valid JSON with no markdown formatting.`;
     </div>
   </div>
 
+  <!-- ================= 🗂️ หน้าต่างจัดกลุ่มบอส & ลำดับการตีหลังเปิดเซิร์ฟ (Boss Raid Route Planner Modal) ================= -->
+  <div id="boss-raid-planner-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-2 sm:p-4 animate-fade-in">
+    <div
+      class="w-full max-w-5xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-amber-500/50 rounded-3xl p-4 sm:p-6 shadow-2xl relative animate-scale-up max-h-[94vh] flex flex-col font-sarabun text-slate-200 overflow-hidden">
+      
+      <!-- Close Button -->
+      <button type="button" onclick="closeBossRaidPlannerModal()"
+        class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 z-10 transition">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <!-- Header (Amber Gold Theme) -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0 pr-8 flex-wrap gap-2">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600 text-slate-950 flex items-center justify-center text-xl shadow-lg shadow-amber-500/20 border border-amber-400/50 font-black">
+            <i class="fa-solid fa-layer-group"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm sm:text-base font-black text-white tracking-wide">
+                วางแผนจัดกลุ่มบอส &amp; ลำดับการตี (Boss Raid Route Planner)
+              </h3>
+              <span id="raid-total-bosses-badge"
+                class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                0 ตัวในแผน
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400">
+              จัดกลุ่มบอสฟิลด์ (Interval 22 ตัว) เป็นชุดๆ หลังเปิดเซิร์ฟเวอร์ พร้อมคัดลอกข้อความประกาศลง Discord ทันที
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Body: 2 Columns on large screens -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 py-3 flex-1 overflow-y-auto min-h-0 pr-1">
+        
+        <!-- Left Column: Sets Builder & Compact Boss Chips (7 cols) -->
+        <div class="lg:col-span-7 flex flex-col gap-3 min-w-0">
+          
+          <!-- Configuration Bar -->
+          <div class="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-3 space-y-2.5 shadow-sm">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+              <div class="sm:col-span-8">
+                <label class="block text-[11px] font-bold text-slate-300 mb-1">📢 หัวข้อประกาศ:</label>
+                <input type="text" id="raid-plan-title" value="📢 แผนการล่าบอสหลังเปิดเซิร์ฟเวอร์ (Server Reset)"
+                  oninput="updateRaidDiscordPreview()"
+                  placeholder="ระบุหัวข้อประกาศ..."
+                  class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-1.5 focus:border-amber-400 focus:outline-none" />
+              </div>
+              <div class="sm:col-span-4">
+                <label class="block text-[11px] font-bold text-amber-300 mb-1">⏰ เวลารวมพล / เริ่ม:</label>
+                <input type="text" id="raid-plan-meeting-time" value="พร้อมลุยทันทีหลังเซิร์ฟเปิด"
+                  oninput="updateRaidDiscordPreview()"
+                  placeholder="เช่น 18:00 น."
+                  class="w-full bg-slate-900 border border-slate-700 text-amber-200 text-xs rounded-xl px-3 py-1.5 focus:border-amber-400 focus:outline-none font-mono" />
+              </div>
+            </div>
+
+            <!-- Smart Auto-Organize Presets Toolbar (Amber Theme) -->
+            <div class="pt-2 border-t border-slate-800/60 flex items-center justify-between flex-wrap gap-1.5">
+              <span class="text-[10.5px] font-bold text-amber-400/90 flex items-center gap-1">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> จัดกลุ่มด่วน (Auto Preset):
+              </span>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <button type="button" onclick="autoOrganizeRaidSets('level')"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition shadow-sm"
+                  title="แบ่งเป็น ชุดบอส Lv.95-100, ชุดบอส Lv.85-93, ชุดบอสทั่วไป Lv.60-80">
+                  👑 แยกตาม Level
+                </button>
+                <button type="button" onclick="autoOrganizeRaidSets('spawn_time')"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition shadow-sm"
+                  title="เรียงตามรอบเวลาเกิดเร็วไปช้า (10h ➔ 62h)">
+                  ⚡ เรียงตามเวลาเกิด
+                </button>
+                <button type="button" onclick="autoOrganizeRaidSets('map')"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition shadow-sm"
+                  title="จัดกลุ่มตามโซนแผนที่ใกล้กัน เพื่อเดินทัพง่าย">
+                  🗺️ แยกตามโซนแมพ
+                </button>
+                <button type="button" onclick="resetRaidPlannerSets()"
+                  class="px-2 py-1 rounded-lg text-[11px] text-slate-400 hover:text-amber-300 bg-slate-900 border border-slate-800 transition"
+                  title="ล้างข้อมูลและเริ่มใหม่">
+                  <i class="fa-solid fa-rotate-left"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Sets Container with Compact Boss Chips -->
+          <div id="raid-planner-sets-container" class="space-y-2.5 flex-1 overflow-y-auto pr-1 min-h-[220px]">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- Add New Set Button -->
+          <button type="button" onclick="addNewRaidSet()"
+            class="w-full py-2 border-2 border-dashed border-amber-500/30 hover:border-amber-400 rounded-2xl text-xs font-bold text-amber-300/80 hover:text-amber-200 bg-amber-950/20 hover:bg-amber-950/40 transition flex items-center justify-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>+ เพิ่มชุดการตีบอสใหม่ (Add New Set)</span>
+          </button>
+        </div>
+
+        <!-- Right Column: Discord & In-Game Chat Preview & Action Buttons (5 cols) -->
+        <div class="lg:col-span-5 flex flex-col gap-3 min-w-0">
+          
+          <!-- Format & Separator Options -->
+          <div class="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-3 space-y-2 shadow-sm">
+            <div class="flex items-center justify-between flex-wrap gap-1.5">
+              <label class="text-[11px] font-bold text-amber-300 flex items-center gap-1">
+                <i class="fa-solid fa-arrows-split-up-and-left text-amber-400"></i> ตัวคั่นลำดับบอส:
+              </label>
+              <div class="flex items-center gap-1">
+                <button type="button" onclick="setRaidFormatSeparator('arrow')" id="btn-sep-arrow"
+                  class="px-2 py-0.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 border border-amber-400 shadow-sm transition">
+                  ➔ ลูกศร
+                </button>
+                <button type="button" onclick="setRaidFormatSeparator('slash')" id="btn-sep-slash"
+                  class="px-2 py-0.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white transition">
+                  / สแลช
+                </button>
+                <button type="button" onclick="setRaidFormatSeparator('greater')" id="btn-sep-greater"
+                  class="px-2 py-0.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white transition">
+                  &gt; ชี้
+                </button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[11px] text-slate-300">
+              <label class="flex items-center gap-1.5 cursor-pointer select-none">
+                <input type="checkbox" id="raid-show-set-names" checked onchange="updateRaidDiscordPreview()"
+                  class="rounded border-slate-700 text-amber-500 focus:ring-amber-400 bg-slate-900" />
+                <span>แสดงชื่อชุด (เช่น ชุด 1: ...)</span>
+              </label>
+              <label class="flex items-center gap-1.5 cursor-pointer select-none">
+                <input type="checkbox" id="raid-show-header" onchange="updateRaidDiscordPreview()"
+                  class="rounded border-slate-700 text-amber-500 focus:ring-amber-400 bg-slate-900" />
+                <span>แสดงหัวข้อ &amp; เวลา</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Preview Card (In-Game Chat & Discord Friendly) -->
+          <div class="bg-[#1e1f22] border border-amber-500/30 rounded-2xl p-3 flex-1 flex flex-col min-h-[250px] shadow-xl relative overflow-hidden">
+            <!-- Header Mockup -->
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-[#2b2d31]">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-xs font-bold text-white">ข้อความสำหรับแชทเกมส์ &amp; Discord</span>
+              </div>
+              <span class="text-[10px] text-amber-400/90 font-mono">In-Game Ready</span>
+            </div>
+
+            <!-- Preview Textarea -->
+            <textarea id="raid-discord-preview-text" readonly
+              class="w-full flex-1 bg-[#2b2d31]/90 text-[#e6edf3] font-mono text-xs leading-relaxed p-2.5 rounded-xl border border-transparent focus:border-amber-400 focus:outline-none resize-none select-all custom-scrollbar"></textarea>
+          </div>
+
+          <!-- Action Buttons Bar (Amber / Gold Theme) -->
+          <div class="space-y-2 pt-1">
+            <button type="button" onclick="copyDiscordRaidAnnouncement()"
+              class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2 active:scale-98 transition">
+              <i class="fa-regular fa-copy text-base"></i>
+              <span>📋 คัดลอกข้อความนำไปโพสต์ในแชทเกมส์ / Discord</span>
+            </button>
+
+            <button type="button" id="btn-raid-send-webhook" onclick="sendRaidAnnouncementToDiscordWebhook()"
+              class="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-white border border-amber-500/30 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+              <i class="fa-solid fa-paper-plane text-xs"></i>
+              <span>🚀 ยิงข้อความเข้า Discord Webhook อัตโนมัติ</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
   <!-- ================= 📜 หน้าต่างประวัติการลงเวลาบอสทั้งหมด (Boss Kill History Modal) ================= -->
   <div id="boss-kill-history-modal"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-3 sm:p-4 animate-fade-in">
@@ -16115,15 +16406,99 @@ Output strictly valid JSON with no markdown formatting.`;
 
   </div>
 
+  <!-- Auto Update Notification Banner & Detection Script -->
+  <div id="app-auto-update-banner" class="fixed top-4 left-1/2 -translate-x-1/2 z-[99999] hidden max-w-md w-[92%] sm:w-auto">
+    <div class="bg-slate-900/95 backdrop-blur-xl border border-amber-500/80 rounded-2xl p-3.5 shadow-2xl shadow-amber-500/20 text-white flex items-center gap-3 animate-bounce-subtle">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-slate-950 text-base font-black shrink-0 shadow-md shadow-amber-500/30">
+        <i class="fa-solid fa-arrows-rotate fa-spin"></i>
+      </div>
+      <div class="flex-1 min-w-0 pr-1">
+        <h4 class="text-xs font-black text-amber-300 flex items-center gap-1">
+          <span>✨ ตรวจพบการอัปเดตระบบใหม่!</span>
+        </h4>
+        <p class="text-[11px] text-slate-300 mt-0.5 leading-tight">
+          รีเฟรชหน้าเว็บอัตโนมัติใน <span id="app-update-countdown" class="font-mono font-black text-amber-400 text-xs">5</span> วินาที...
+        </p>
+      </div>
+      <button onclick="window.location.reload(true)"
+        class="apple-btn apple-btn-amber px-3 py-1.5 text-xs font-black shrink-0 whitespace-nowrap shadow-md">
+        🔄 รีเฟรชเลย
+      </button>
+    </div>
+  </div>
+
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=5.7"></script>
+  <script src="boss_timer.js?v=6.0"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
         initBossTimerModule();
       }
     });
+
+    (function initAutoUpdateChecker() {
+      const CURRENT_BUILD = 1787068820000;
+      let updateFound = false;
+      let countdownTimer = null;
+
+      function triggerUpdateNotice(newBuild) {
+        if (updateFound) return;
+        updateFound = true;
+        console.log('[AutoUpdate] New version detected:', newBuild);
+
+        const banner = document.getElementById('app-auto-update-banner');
+        const countdownEl = document.getElementById('app-update-countdown');
+        if (banner) {
+          banner.classList.remove('hidden');
+        }
+
+        let secondsLeft = 5;
+        if (countdownTimer) clearInterval(countdownTimer);
+        countdownTimer = setInterval(() => {
+          secondsLeft--;
+          if (countdownEl) countdownEl.textContent = secondsLeft;
+          if (secondsLeft <= 0) {
+            clearInterval(countdownTimer);
+            window.location.reload(true);
+          }
+        }, 1000);
+      }
+
+      async function checkVersionFile() {
+        try {
+          const res = await fetch(`version.json?t=${Date.now()}`, { cache: 'no-store' });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.buildTime && data.buildTime > CURRENT_BUILD) {
+              triggerUpdateNotice(data.buildTime);
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (typeof fbDb !== 'undefined') {
+        try {
+          fbDb.ref('guild_app/app_build').on('value', (snap) => {
+            const remoteBuild = snap.val();
+            if (remoteBuild && typeof remoteBuild === 'number' && remoteBuild > CURRENT_BUILD) {
+              triggerUpdateNotice(remoteBuild);
+            }
+          });
+        } catch (e) {}
+      }
+
+      setInterval(checkVersionFile, 3 * 60 * 1000);
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          checkVersionFile();
+        }
+      });
+      window.addEventListener('focus', checkVersionFile);
+
+      setTimeout(checkVersionFile, 8000);
+    })();
   </script>
 </body>
 

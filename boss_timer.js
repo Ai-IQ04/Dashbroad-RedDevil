@@ -523,14 +523,14 @@ function renderBossTimerCards() {
       cardBaseBg = 'from-slate-900 via-slate-900/95 to-amber-950/25';
       typeBadge = `<span class="px-2.5 py-0.5 rounded-full text-[9.5px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-sm flex items-center gap-1 shrink-0"><i class="fa-solid fa-star text-[8px] text-amber-400"></i> ${tBoss('boss_tag_guild', 'กิจกรรมกิลด์')}</span>`;
     } else if (isHighTier) {
-      nameColorClass = 'text-rose-400 font-black drop-shadow-[0_2px_8px_rgba(244,63,94,0.45)]';
+      nameColorClass = 'text-rose-300 font-black drop-shadow-[0_2px_10px_rgba(244,63,94,0.6)]';
       levelBadgeClass = 'bg-rose-950/90 text-rose-300 border-rose-500/60 shadow-rose-950/60';
       avatarRingClass = 'border-rose-500/60 ring-2 ring-rose-500/30 shadow-rose-950/60';
       cardBaseBorder = 'border-rose-500/40 hover:border-rose-400 shadow-rose-950/30';
       cardBaseBg = 'from-slate-900 via-slate-900/95 to-rose-950/30';
       typeBadge = `<span class="px-2.5 py-0.5 rounded-full text-[9.5px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/50 shadow-sm flex items-center gap-1 shrink-0"><i class="fa-solid fa-skull-crossbones text-[8px] text-rose-400"></i> ${tBoss('boss_tag_high', 'บอสระดับสูง (Lv.100+)')}</span>`;
     } else {
-      nameColorClass = 'text-emerald-400 font-black drop-shadow-[0_2px_8px_rgba(52,211,153,0.35)]';
+      nameColorClass = 'text-emerald-300 font-black drop-shadow-[0_2px_10px_rgba(52,211,153,0.5)]';
       levelBadgeClass = 'bg-emerald-950/90 text-emerald-300 border-emerald-500/60 shadow-emerald-950/60';
       avatarRingClass = 'border-emerald-500/60 ring-2 ring-emerald-500/30 shadow-emerald-950/60';
       cardBaseBorder = 'border-emerald-500/40 hover:border-emerald-400 shadow-emerald-950/30';
@@ -560,13 +560,13 @@ function renderBossTimerCards() {
     }
 
     const countdownText = formatCountdown(b.diffMs, b.status);
-    const lastDefeatedStr = b.timer.defeatedTime ? formatDateTimeShort(new Date(b.timer.defeatedTime)) : '-';
-    const nextSpawnStr = b.nextSpawn ? formatDateTimeShort(b.nextSpawn) : (b.respawnType === 'interval' ? tBoss('boss_wait_record', 'รอลงเวลาตาย') : '-');
+    const lastDefeatedHtml = b.timer.defeatedTime ? formatBossLastDefeatedDisplay(new Date(b.timer.defeatedTime)) : '-';
+    const nextSpawnHtml = b.nextSpawn ? formatBossNextSpawnDisplay(b.nextSpawn) : (b.respawnType === 'interval' ? `<span class="text-slate-500 text-[10.5px]">${tBoss('boss_wait_record', 'รอลงเวลาตาย')}</span>` : '-');
 
     // Boss Profile Avatar Thumbnail
     const avatarHtml = b.avatar
-      ? `<img src="${escapeHtml(b.avatar)}" alt="${escapeHtml(b.name)}" class="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl object-cover border ${avatarRingClass} shadow-lg bg-slate-900 shrink-0" onerror="this.onerror=null; this.src=''; this.parentElement.innerHTML='<div class=\\'w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-slate-800 border ${avatarRingClass} flex items-center justify-center text-xl text-amber-400\\'><i class=\\'fa-solid fa-dragon\\'></i></div>';" />`
-      : `<div class="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border ${avatarRingClass} flex items-center justify-center text-xl sm:text-2xl text-amber-400/90 shadow-inner shrink-0"><i class="fa-solid fa-dragon"></i></div>`;
+      ? `<img src="${escapeHtml(b.avatar)}" alt="${escapeHtml(b.name)}" class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border ${avatarRingClass} shadow-lg bg-slate-900 shrink-0" onerror="this.onerror=null; this.src=''; this.parentElement.innerHTML='<div class=\\'w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-800 border ${avatarRingClass} flex items-center justify-center text-xl text-amber-400\\'><i class=\\'fa-solid fa-dragon\\'></i></div>';" />`
+      : `<div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border ${avatarRingClass} flex items-center justify-center text-xl sm:text-2xl text-amber-400/90 shadow-inner shrink-0"><i class="fa-solid fa-dragon"></i></div>`;
 
     // Action Buttons: Admin gets Kill Confirm + Edit + Drop Log; Member gets View Drop Log only
     let actionButtonsHtml = '';
@@ -621,13 +621,13 @@ function renderBossTimerCards() {
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-1.5 mb-1">
-                <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg border shadow-inner ${levelBadgeClass}">Lv.${escapeHtml(b.level || '??')}</span>
+                <span class="text-[10.5px] font-mono font-black px-2 py-0.5 rounded-lg border shadow-inner ${levelBadgeClass}">Lv.${escapeHtml(b.level || '??')}</span>
               </div>
-              <h4 class="text-base sm:text-lg tracking-tight leading-tight truncate ${nameColorClass}" title="${escapeHtml(b.name)}">
+              <h4 class="text-lg sm:text-xl font-black tracking-tight leading-snug truncate ${nameColorClass}" title="${escapeHtml(b.name)}">
                 ${escapeHtml(b.name)}
               </h4>
-              <p class="text-[11px] text-slate-400 flex items-center gap-1 mt-1 font-medium">
-                <i class="fa-solid fa-location-dot text-slate-500 text-[10px]"></i>
+              <p class="text-[11.5px] text-slate-300 flex items-center gap-1 mt-1 font-semibold">
+                <i class="fa-solid fa-location-dot text-amber-400 text-[10px]"></i>
                 <span class="truncate">${escapeHtml(b.map || (isEn ? 'Unassigned map' : 'ไม่ระบุแมพ'))}</span>
               </p>
             </div>
@@ -641,18 +641,18 @@ function renderBossTimerCards() {
             </div>
           </div>
 
-          <!-- Metadata Grid (24-Hour Timestamps) -->
+          <!-- Metadata Grid (24-Hour Timestamps with Today / Tomorrow) -->
           <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-300 pt-2.5 border-t border-slate-800/80">
-            <div class="bg-slate-950/50 p-2 rounded-xl border border-slate-800/60">
-              <span class="text-slate-500 block text-[9.5px] font-medium mb-0.5">${tBoss('boss_respawn_cycle_label', 'ระยะเกิด:')}</span>
-              <span class="font-bold text-amber-300/95 font-mono">${escapeHtml(b.respawnLabel)}</span>
+            <div class="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80 shadow-inner flex flex-col items-center justify-center text-center">
+              <span class="text-slate-400 block text-[9.5px] font-bold mb-0.5">${tBoss('boss_respawn_cycle_label', 'ระยะเกิด:')}</span>
+              <span class="font-black text-amber-300 font-mono text-xs sm:text-[13px] tracking-wide">${escapeHtml(b.respawnLabel)}</span>
             </div>
-            <div class="bg-slate-950/50 p-2 rounded-xl border border-slate-800/60">
-              <span class="text-slate-500 block text-[9.5px] font-medium mb-0.5">${tBoss('boss_respawn_time_label', 'เกิดรอบถัดไป:')}</span>
-              <span id="boss-next-${b.id}" class="font-mono font-bold ${b.nextSpawn ? 'text-emerald-300' : 'text-slate-500'}">${nextSpawnStr}</span>
+            <div class="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80 shadow-inner flex flex-col items-center justify-center text-center">
+              <span class="text-slate-400 block text-[9.5px] font-bold mb-0.5">${tBoss('boss_respawn_time_label', 'เกิดรอบถัดไป:')}</span>
+              <div id="boss-next-${b.id}" class="font-mono flex items-center justify-center flex-wrap leading-tight text-center w-full">${nextSpawnHtml}</div>
             </div>
             <div class="col-span-2 text-slate-400 flex items-center justify-between text-[10.5px] pt-1 px-1">
-              <span>${tBoss('boss_defeated_time_label', 'ตายล่าสุด:')} <strong class="font-mono text-slate-200">${lastDefeatedStr}</strong></span>
+              <span>${tBoss('boss_defeated_time_label', 'ตายล่าสุด:')} <span class="font-mono">${lastDefeatedHtml}</span></span>
               ${b.note ? `<span class="text-amber-400/90 truncate max-w-[140px] font-medium" title="${escapeHtml(b.note)}">ℹ️ ${escapeHtml(b.note)}</span>` : ''}
             </div>
           </div>
@@ -707,6 +707,64 @@ function formatDateTimeShort(d) {
   const hours = pad(d.getHours());
   const min = pad(d.getMinutes());
   return `${day}/${month} ${hours}:${min}${isEn ? '' : ' น.'}`;
+}
+
+// Format Next Spawn Display (Supports Today / Tomorrow / Date & TH / EN with High-Contrast Typography)
+function formatBossNextSpawnDisplay(d) {
+  if (!d || isNaN(d.getTime())) return '-';
+  const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
+  const now = new Date();
+
+  const pad = n => String(n).padStart(2, '0');
+  const hours = pad(d.getHours());
+  const min = pad(d.getMinutes());
+  const timeStr = `${hours}:${min}${isEn ? '' : ' น.'}`;
+
+  // Calculate day difference
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const targetDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round((targetDay.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+
+  let dayPrefixHtml = '';
+  if (diffDays === 0) {
+    dayPrefixHtml = `<span class="text-amber-300 font-extrabold mr-1 text-[11px]">${isEn ? 'Today' : 'วันนี้'}</span>`;
+  } else if (diffDays === 1) {
+    dayPrefixHtml = `<span class="text-sky-300 font-extrabold mr-1 text-[11px]">${isEn ? 'Tomorrow' : 'พรุ่งนี้'}</span>`;
+  } else if (diffDays === -1) {
+    dayPrefixHtml = `<span class="text-rose-400 font-extrabold mr-1 text-[11px]">${isEn ? 'Yesterday' : 'เมื่อวาน'}</span>`;
+  } else {
+    const day = pad(d.getDate());
+    const month = pad(d.getMonth() + 1);
+    dayPrefixHtml = `<span class="text-slate-300 font-bold mr-1 text-[11px]">${day}/${month}</span>`;
+  }
+
+  return `${dayPrefixHtml}<span class="text-emerald-400 font-black text-xs sm:text-[13px] tracking-wide drop-shadow-[0_0_6px_rgba(52,211,153,0.35)]">${timeStr}</span>`;
+}
+
+// Format Last Defeated Display (Today / Yesterday / Date)
+function formatBossLastDefeatedDisplay(d) {
+  if (!d || isNaN(d.getTime())) return '-';
+  const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
+  const now = new Date();
+
+  const pad = n => String(n).padStart(2, '0');
+  const hours = pad(d.getHours());
+  const min = pad(d.getMinutes());
+  const timeStr = `${hours}:${min}${isEn ? '' : ' น.'}`;
+
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const targetDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round((targetDay.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+
+  if (diffDays === 0) {
+    return `<span class="text-slate-300 font-semibold">${isEn ? 'Today' : 'วันนี้'}</span> <span class="font-bold text-slate-100">${timeStr}</span>`;
+  } else if (diffDays === -1) {
+    return `<span class="text-slate-400">${isEn ? 'Yesterday' : 'เมื่อวาน'}</span> <span class="font-bold text-slate-200">${timeStr}</span>`;
+  } else {
+    const day = pad(d.getDate());
+    const month = pad(d.getMonth() + 1);
+    return `<span class="text-slate-400">${day}/${month}</span> <span class="font-bold text-slate-200">${timeStr}</span>`;
+  }
 }
 
 // Update Active Countdowns Every Second
@@ -1579,6 +1637,12 @@ function resetSingleBossTimer(bossId) {
 
   renderBossTimerCards();
   updateUpcomingBossWidget();
+
+  const adminEmail = (typeof currentAdminEmail !== 'undefined' && currentAdminEmail) ? currentAdminEmail : 'Admin';
+  if (typeof addAuditLog === 'function') {
+    addAuditLog('boss_single_reset', `ล้างเวลาบอส "${bossName}" กลับเป็นค่าเริ่มต้น`, `โดย: ${adminEmail}`, 'BossTimer');
+  }
+
   showToast(`🗑️ ล้างเวลาของ "${bossName}" เรียบร้อยแล้ว`, 'info');
 }
 
@@ -2278,6 +2342,10 @@ function clearAllBossKillLogsPrompt() {
       fbDb.ref('guild_app/boss_kill_logs').set([]);
     }
     renderBossKillHistoryList();
+    const adminEmail = (typeof currentAdminEmail !== 'undefined' && currentAdminEmail) ? currentAdminEmail : 'Admin';
+    if (typeof addAuditLog === 'function') {
+      addAuditLog('boss_kill_clear', 'ล้างประวัติการลงเวลาบอสทั้งหมด', `โดย: ${adminEmail}`, 'BossTimer');
+    }
     showToast('ล้างประวัติการลงเวลาบอสเรียบร้อยแล้ว', 'info');
   }
 }
@@ -2658,10 +2726,24 @@ function deleteBossDropLog(logId) {
 
   if (!confirm('คุณต้องการลบรายการบันทึกไอเทมดรอปนี้ใช่หรือไม่?')) return;
 
+  const deletedLog = bossDropLogs.find(l => l.id === logId);
+  const bossName = deletedLog ? (deletedLog.bossName || deletedLog.bossId) : 'บอส';
+  const dropInfo = deletedLog && Array.isArray(deletedLog.items) ? deletedLog.items.map(i => `${i.name || i.itemName} x${i.qty || i.quantity || 1}`).join(', ') : '';
+
   bossDropLogs = bossDropLogs.filter(l => l.id !== logId);
   localStorage.setItem('guild_boss_drop_logs', JSON.stringify(bossDropLogs));
   if (typeof fbDb !== 'undefined' && fbDb) {
     fbDb.ref('guild_app/boss_drop_logs').set(bossDropLogs);
+  }
+
+  const adminEmail = (typeof currentAdminEmail !== 'undefined' && currentAdminEmail) ? currentAdminEmail : 'Admin';
+  if (typeof addAuditLog === 'function') {
+    addAuditLog(
+      'boss_drop_delete',
+      `ลบรายการบันทึกไอเทมดรอปของบอส "${bossName}"`,
+      `${dropInfo ? `ไอเทม: ${dropInfo} | ` : ''}โดย Admin: ${adminEmail}`,
+      'BossTimer'
+    );
   }
 
   showToast('🗑️ ลบรายการบันทึกไอเทมดรอปเรียบร้อยแล้วค่ะ', 'success');
@@ -2741,4 +2823,496 @@ window.sendKillLogToGoogleSheet = sendKillLogToGoogleSheet;
 window.checkAndSendDiscordSpawnAlerts = checkAndSendDiscordSpawnAlerts;
 window.testDiscordWebhook = testDiscordWebhook;
 window.updateWebhookStatusUi = updateWebhookStatusUi;
+
+// ==============================================================================
+// ==============================================================================
+// 🗂️ ระบบวางแผนจัดกลุ่มบอส & ลำดับการตีหลังเปิดเซิร์ฟ (Boss Raid Route Planner)
+// ==============================================================================
+
+// รายการบอสฟิลด์ 22 ตัวที่นับรอบเกิดหลังเซิร์ฟเปิด (ไม่รวมบอสตามเวลา & กิจกรรมกิลด์)
+function getIntervalFieldBosses() {
+  return bossList.filter(b => b.respawnType === 'interval' && b.id !== 'guild_arena' && b.id !== 'reddevil_guild_boss')
+    .sort((a, b) => (parseInt(b.level) || 0) - (parseInt(a.level) || 0));
+}
+
+let raidPlannerSets = JSON.parse(localStorage.getItem('guild_boss_raid_sets')) || [
+  { id: 1, name: '🔥 ชุดที่ 1 : บอสระดับสูง (Lv.95 - 100)', bossIds: ['asta', 'ordo', 'secreta', 'supore', 'catena', 'gareth', 'larba', 'titore', 'shuliar'] },
+  { id: 2, name: '⚡ ชุดที่ 2 : บอสระดับกลาง (Lv.85 - 93)', bossIds: ['wannitas', 'metus', 'duplican', 'baron_braudmore', 'amentis', 'general_aquleus', 'lady_dalia'] },
+  { id: 3, name: '🎯 ชุดที่ 3 : บอสทั่วไป (Lv.60 - 80)', bossIds: ['undomiel', 'livera', 'araneo', 'ego', 'vioren', 'venatus'] }
+];
+
+function saveRaidPlannerSets() {
+  localStorage.setItem('guild_boss_raid_sets', JSON.stringify(raidPlannerSets));
+  if (typeof fbDb !== 'undefined' && fbDb) {
+    fbDb.ref('guild_app/boss_raid_sets').set(raidPlannerSets);
+  }
+}
+
+function openBossRaidPlannerModal() {
+  const modal = document.getElementById('boss-raid-planner-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  renderRaidPlannerSets();
+  updateRaidDiscordPreview();
+}
+
+function closeBossRaidPlannerModal() {
+  const modal = document.getElementById('boss-raid-planner-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
+
+function addNewRaidSet() {
+  const newId = Date.now();
+  const setNumber = raidPlannerSets.length + 1;
+  raidPlannerSets.push({
+    id: newId,
+    name: `⚔️ ชุดที่ ${setNumber}`,
+    bossIds: []
+  });
+  saveRaidPlannerSets();
+  renderRaidPlannerSets();
+  updateRaidDiscordPreview();
+  showToast(`เพิ่ม "ชุดที่ ${setNumber}" เรียบร้อยแล้ว`, 'info');
+}
+
+function removeRaidSet(setId) {
+  if (raidPlannerSets.length <= 1) {
+    showToast('ต้องมีอย่างน้อย 1 ชุดการตีบอสครับ', 'warning');
+    return;
+  }
+  raidPlannerSets = raidPlannerSets.filter(s => s.id !== setId);
+  saveRaidPlannerSets();
+  renderRaidPlannerSets();
+  updateRaidDiscordPreview();
+}
+
+function updateRaidSetName(setId, newName) {
+  const set = raidPlannerSets.find(s => s.id === setId);
+  if (set) {
+    set.name = newName.trim() || `ชุดการตีบอส`;
+    saveRaidPlannerSets();
+    updateRaidDiscordPreview();
+  }
+}
+
+function toggleBossInRaidSet(setId, bossId) {
+  const set = raidPlannerSets.find(s => s.id === setId);
+  if (!set) return;
+
+  if (set.bossIds.includes(bossId)) {
+    // ลบออกจากชุดนี้
+    set.bossIds = set.bossIds.filter(id => id !== bossId);
+  } else {
+    // ถอดออกจากชุดอื่นก่อน (ถ้ามี) เพื่อไม่ให้บอสซ้ำชุดกัน
+    raidPlannerSets.forEach(otherSet => {
+      otherSet.bossIds = (otherSet.bossIds || []).filter(id => id !== bossId);
+    });
+    set.bossIds.push(bossId);
+  }
+
+  saveRaidPlannerSets();
+  renderRaidPlannerSets();
+  updateRaidDiscordPreview();
+}
+
+function removeBossFromRaidSet(setId, bossId) {
+  const set = raidPlannerSets.find(s => s.id === setId);
+  if (!set) return;
+  set.bossIds = set.bossIds.filter(id => id !== bossId);
+  saveRaidPlannerSets();
+  renderRaidPlannerSets();
+  updateRaidDiscordPreview();
+}
+
+function clearAllBossesInSet(setId) {
+  const set = raidPlannerSets.find(s => s.id === setId);
+  if (!set) return;
+  set.bossIds = [];
+  saveRaidPlannerSets();
+  renderRaidPlannerSets();
+  updateRaidDiscordPreview();
+}
+
+function renderRaidPlannerSets() {
+  const container = document.getElementById('raid-planner-sets-container');
+  const totalBadge = document.getElementById('raid-total-bosses-badge');
+  if (!container) return;
+
+  const fieldBosses = getIntervalFieldBosses();
+
+  let totalBossesCount = 0;
+  raidPlannerSets.forEach(s => { totalBossesCount += (s.bossIds || []).length; });
+  if (totalBadge) {
+    totalBadge.textContent = `${totalBossesCount} / ${fieldBosses.length} ตัวในแผน (${raidPlannerSets.length} ชุด)`;
+  }
+
+  let html = '';
+  raidPlannerSets.forEach((set, sIdx) => {
+    const bossCount = (set.bossIds || []).length;
+
+    html += `
+      <div class="bg-slate-950/90 border border-amber-500/30 hover:border-amber-500/50 rounded-2xl p-3.5 space-y-3 shadow-md transition font-sarabun">
+        
+        <!-- Set Header Bar -->
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex items-center gap-2 flex-1 min-w-[200px]">
+            <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center text-xs font-black font-mono shrink-0">
+              #${sIdx + 1}
+            </span>
+            <input type="text" value="${escapeHtml(set.name)}" 
+              onchange="updateRaidSetName(${set.id}, this.value)"
+              class="bg-slate-900 border border-slate-700/80 hover:border-amber-500/60 focus:border-amber-400 text-xs font-bold text-amber-200 rounded-xl px-2.5 py-1 flex-1 focus:outline-none transition"
+              placeholder="ชื่อชุดการตีบอส..." />
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold shrink-0 border border-amber-500/30">
+              ${bossCount} ตัว
+            </span>
+          </div>
+
+          <div class="flex items-center gap-1 shrink-0">
+            ${bossCount > 0 ? `
+              <button type="button" onclick="clearAllBossesInSet(${set.id})"
+                class="px-2 py-0.5 text-[10.5px] text-slate-400 hover:text-amber-300 hover:bg-slate-800 rounded-lg transition"
+                title="ล้างบอสทั้งหมดในชุดนี้">
+                ล้างชุดนี้
+              </button>
+            ` : ''}
+            <button type="button" onclick="removeRaidSet(${set.id})" 
+              class="p-1 text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 rounded-lg transition text-xs"
+              title="ลบชุดนี้">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bosses Selected Inside This Set (Compact Chips) -->
+        <div>
+          <div class="text-[10.5px] font-bold text-slate-400 mb-1.5 flex items-center justify-between">
+            <span>บอสในชุดนี้ (คลิกเพื่อนำออก):</span>
+            <span class="text-[10px] text-amber-400/80 font-mono">${bossCount} รายการ</span>
+          </div>
+          
+          <div class="flex flex-wrap gap-1.5 p-2 bg-slate-900/80 rounded-xl border border-slate-800/80 min-h-[42px] items-center">
+            ${bossCount === 0 ? `
+              <div class="text-[11px] text-slate-500 w-full text-center py-1">
+                คลิกเลือกการ์ดบอสจากรายการด้านล่าง เพื่อเพิ่มเข้าชุดนี้ ⬇️
+              </div>
+            ` : (set.bossIds || []).map((bossId, bIdx) => {
+              const b = bossList.find(x => x.id === bossId) || { id: bossId, name: bossId, level: '??' };
+              return `
+                <button type="button" onclick="removeBossFromRaidSet(${set.id}, '${b.id}')"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500 text-slate-950 font-black text-xs shadow-md border border-amber-400 hover:bg-amber-400 active:scale-95 transition group"
+                  title="คลิกเพื่อนำ ${b.name} ออกจากชุดนี้">
+                  <span class="text-[10px] font-mono opacity-80">${bIdx + 1}.</span>
+                  <span>${escapeHtml(b.name)}</span>
+                  <span class="px-1.5 py-0.2 rounded text-[9.5px] bg-black/30 text-amber-200 font-mono">Lv.${b.level}</span>
+                  <i class="fa-solid fa-xmark text-[10px] opacity-70 group-hover:opacity-100 group-hover:text-rose-950"></i>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Compact Boss Picker Grid (22 Interval Field Bosses - Name & Level Only) -->
+        <div class="pt-1">
+          <div class="text-[10.5px] font-bold text-amber-300/90 mb-1.5 flex items-center gap-1">
+            <i class="fa-solid fa-hand-pointer text-amber-400"></i> เลือกบอสเข้าชุดนี้ (คลิกเพื่อเพิ่ม/สลับ):
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
+            ${fieldBosses.map(b => {
+              const isCurrentSet = (set.bossIds || []).includes(b.id);
+              const otherSetOwner = raidPlannerSets.find(s => s.id !== set.id && (s.bossIds || []).includes(b.id));
+
+              let btnClass = 'bg-slate-900/90 text-slate-300 border-slate-700/80 hover:border-amber-400 hover:text-amber-200 hover:bg-slate-800';
+              let badgeHtml = `<span class="text-[9.5px] font-mono px-1 py-0.2 rounded bg-slate-800 text-slate-400">Lv.${b.level}</span>`;
+
+              if (isCurrentSet) {
+                btnClass = 'bg-amber-500 text-slate-950 font-black border-amber-300 shadow-md shadow-amber-500/20';
+                badgeHtml = `<span class="text-[9.5px] font-mono px-1 py-0.2 rounded bg-slate-950/40 text-slate-950 font-black">✓ ในชุดนี้</span>`;
+              } else if (otherSetOwner) {
+                const sNum = raidPlannerSets.indexOf(otherSetOwner) + 1;
+                btnClass = 'bg-slate-950 text-slate-400 border-slate-800/80 hover:border-amber-400/60 hover:text-slate-200 opacity-60 hover:opacity-100';
+                badgeHtml = `<span class="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-800 text-amber-400 border border-slate-700">#${sNum}</span>`;
+              }
+
+              return `
+                <button type="button" onclick="toggleBossInRaidSet(${set.id}, '${b.id}')"
+                  class="flex items-center justify-between px-2 py-1.5 rounded-xl border text-[11px] transition active:scale-95 ${btnClass}"
+                  title="${escapeHtml(b.name)} (Lv.${b.level}) • ${escapeHtml(b.map || '')}">
+                  <span class="truncate font-bold mr-1">${escapeHtml(b.name)}</span>
+                  ${badgeHtml}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function resetRaidPlannerSets() {
+  if (!confirm('คุณต้องการรีเซ็ตชุดการตีบอสทั้งหมดกลับสู่ค่าเริ่มต้นใช่หรือไม่?')) return;
+  raidPlannerSets = [
+    { id: 1, name: '🔥 ชุดที่ 1 : บอสระดับสูง (Lv.95 - 100)', bossIds: ['asta', 'ordo', 'secreta', 'supore', 'catena', 'gareth', 'larba', 'titore', 'shuliar'] },
+    { id: 2, name: '⚡ ชุดที่ 2 : บอสระดับกลาง (Lv.85 - 93)', bossIds: ['wannitas', 'metus', 'duplican', 'baron_braudmore', 'amentis', 'general_aquleus', 'lady_dalia'] },
+    { id: 3, name: '🎯 ชุดที่ 3 : บอสทั่วไป (Lv.60 - 80)', bossIds: ['undomiel', 'livera', 'araneo', 'ego', 'vioren', 'venatus'] }
+  ];
+  saveRaidPlannerSets();
+  renderRaidPlannerSets();
+  updateRaidDiscordPreview();
+  showToast('รีเซ็ตชุดการตีบอสเรียบร้อยแล้ว', 'info');
+}
+
+function autoOrganizeRaidSets(strategy) {
+  const fieldBosses = getIntervalFieldBosses();
+
+  if (strategy === 'level') {
+    // Group 1: Lv. 95 - 100 (9 ตัว)
+    // Group 2: Lv. 85 - 93 (7 ตัว)
+    // Group 3: Lv. 60 - 80 (6 ตัว)
+    const set1 = [];
+    const set2 = [];
+    const set3 = [];
+
+    fieldBosses.forEach(b => {
+      const lvl = parseInt(b.level) || 0;
+      if (lvl >= 95) {
+        set1.push(b.id);
+      } else if (lvl >= 85) {
+        set2.push(b.id);
+      } else {
+        set3.push(b.id);
+      }
+    });
+
+    raidPlannerSets = [
+      { id: 1, name: '👑 ชุดที่ 1 : บอสระดับสูง (Lv.95 - 100)', bossIds: set1 },
+      { id: 2, name: '⚡ ชุดที่ 2 : บอสระดับกลาง (Lv.85 - 93)', bossIds: set2 },
+      { id: 3, name: '🎯 ชุดที่ 3 : บอสทั่วไป (Lv.60 - 80)', bossIds: set3 }
+    ];
+    showToast('จัดกลุ่ม 22 บอสฟิลด์ตามระดับ Level สำเร็จ!', 'success');
+  } else if (strategy === 'spawn_time') {
+    // เรียงตามชั่วโมงเกิดเร็วไปช้า (10h ➔ 62h)
+    const sorted = [...fieldBosses].sort((a, b) => {
+      const intA = a.intervalHours || 999;
+      const intB = b.intervalHours || 999;
+      return intA - intB;
+    });
+
+    const chunkSize = Math.ceil(sorted.length / 3);
+    raidPlannerSets = [
+      { id: 1, name: '⚡ ชุดที่ 1 : เกิดไวสุด (10h - 24h)', bossIds: sorted.slice(0, chunkSize).map(b => b.id) },
+      { id: 2, name: '⏳ ชุดที่ 2 : เกิดปานกลาง (29h - 37h)', bossIds: sorted.slice(chunkSize, chunkSize * 2).map(b => b.id) },
+      { id: 3, name: '🛡️ ชุดที่ 3 : เกิดช้าสุด (48h - 62h)', bossIds: sorted.slice(chunkSize * 2).map(b => b.id) }
+    ];
+    showToast('จัดกลุ่มบอสตามรอบเวลาเกิด (Interval) สำเร็จ!', 'success');
+  } else if (strategy === 'map') {
+    const zone1 = []; // ทุ่งหญ้าแดง & ดอนแห่งการปฏิวัติ
+    const zone2 = []; // ดินแดนมรณะ & ซากของสงคราม & สมรภูมิ
+    const zone3 = []; // เนินเขาอัสดง & สุสาน & ทะเลสาบ & แอ่งน้ำ & หุบเขา & ห้องทดลอง
+
+    fieldBosses.forEach(b => {
+      const m = b.map || '';
+      if (m.includes('ทุ่งหญ้าแดง') || m.includes('ดอนแห่งการปฏิวัติ')) {
+        zone1.push(b.id);
+      } else if (m.includes('ดินแดนมรณะ') || m.includes('ซากของสงคราม') || m.includes('สมรภูมิ') || m.includes('โบราณสถาน')) {
+        zone2.push(b.id);
+      } else {
+        zone3.push(b.id);
+      }
+    });
+
+    raidPlannerSets = [
+      { id: 1, name: '🗺️ ชุดที่ 1 : โซนทุ่งหญ้าแดง & ดอนแห่งการปฏิวัติ', bossIds: zone1 },
+      { id: 2, name: '🗺️ ชุดที่ 2 : โซนดินแดนมรณะ & ซากสงคราม & สมรภูมิ', bossIds: zone2 },
+      { id: 3, name: '🗺️ ชุดที่ 3 : โซนเนินเขาอัสดง & สุสาน & อื่นๆ', bossIds: zone3 }
+    ];
+    showToast('จัดกลุ่มบอสตามโซนแผนที่สำเร็จ!', 'success');
+  }
+
+  saveRaidPlannerSets();
+  renderRaidPlannerSets();
+  updateRaidDiscordPreview();
+}
+
+let currentRaidSeparator = 'arrow'; // 'arrow' | 'slash' | 'greater'
+
+function setRaidFormatSeparator(sep) {
+  currentRaidSeparator = sep;
+  const btnArrow = document.getElementById('btn-sep-arrow');
+  const btnSlash = document.getElementById('btn-sep-slash');
+  const btnGreater = document.getElementById('btn-sep-greater');
+
+  const activeClass = 'px-2 py-0.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 border border-amber-400 shadow-sm transition';
+  const inactiveClass = 'px-2 py-0.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white transition';
+
+  if (btnArrow) btnArrow.className = (sep === 'arrow') ? activeClass : inactiveClass;
+  if (btnSlash) btnSlash.className = (sep === 'slash') ? activeClass : inactiveClass;
+  if (btnGreater) btnGreater.className = (sep === 'greater') ? activeClass : inactiveClass;
+
+  updateRaidDiscordPreview();
+}
+
+function generateDiscordRaidAnnouncementText() {
+  const showHeader = document.getElementById('raid-show-header')?.checked || false;
+  const showSetNames = document.getElementById('raid-show-set-names')?.checked ?? true;
+  const title = (document.getElementById('raid-plan-title')?.value || '').trim();
+  const meetingTime = (document.getElementById('raid-plan-meeting-time')?.value || '').trim();
+
+  let sepChar = ' ➔ ';
+  if (currentRaidSeparator === 'slash') sepChar = ' / ';
+  else if (currentRaidSeparator === 'greater') sepChar = ' > ';
+
+  let lines = [];
+
+  if (showHeader) {
+    if (title) lines.push(`📢 ${title}`);
+    if (meetingTime) lines.push(`⏰ เวลารวมพล: ${meetingTime}`);
+    lines.push('----------------------------------------');
+  }
+
+  raidPlannerSets.forEach((set, sIdx) => {
+    const bossIds = set.bossIds || [];
+    if (bossIds.length === 0) return;
+
+    const bossNames = bossIds.map(bossId => {
+      const b = bossList.find(x => x.id === bossId);
+      return b ? b.name : bossId;
+    });
+
+    const chainText = bossNames.join(sepChar);
+
+    if (showSetNames) {
+      lines.push(`ชุดที่ ${sIdx + 1}: ${chainText}`);
+    } else {
+      lines.push(chainText);
+    }
+  });
+
+  return lines.join('\n');
+}
+
+function updateRaidDiscordPreview() {
+  const previewEl = document.getElementById('raid-discord-preview-text');
+  if (previewEl) {
+    previewEl.value = generateDiscordRaidAnnouncementText();
+  }
+}
+
+function copyDiscordRaidAnnouncement() {
+  const text = generateDiscordRaidAnnouncementText();
+  if (!text) {
+    showToast('ไม่มีข้อมูลประกาศสำหรับคัดลอก', 'warning');
+    return;
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('📋 คัดลอกข้อความแผนการตีบอสเรียบร้อยแล้ว! นำไป Paste ในแชทเกมส์ หรือ Discord ได้เลย 🎉', 'success');
+    }).catch(() => {
+      fallbackCopyText(text);
+    });
+  } else {
+    fallbackCopyText(text);
+  }
+
+  const adminEmail = (typeof currentAdminEmail !== 'undefined' && currentAdminEmail) ? currentAdminEmail : 'Admin';
+  if (typeof addAuditLog === 'function') {
+    addAuditLog('boss_raid_plan', 'คัดลอกข้อความแผนการตีบอสลง Discord/แชทเกมส์', `โดย: ${adminEmail}`, 'BossTimer');
+  }
+}
+
+function fallbackCopyText(text) {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.style.position = 'fixed';
+  textArea.style.left = '-999999px';
+  textArea.style.top = '-999999px';
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  try {
+    document.execCommand('copy');
+    showToast('📋 คัดลอกข้อความสำเร็จแล้ว! 🎉', 'success');
+  } catch (err) {
+    showToast('ไม่สามารถคัดลอกอัตโนมัติได้ กรุณากดเลือกข้อความในกล่องแล้วกด Ctrl + C ครับ', 'warning');
+  }
+  document.body.removeChild(textArea);
+}
+
+async function sendRaidAnnouncementToDiscordWebhook() {
+  const webhookUrl = bossDiscordWebhookUrl || localStorage.getItem('guild_boss_discord_webhook');
+  if (!webhookUrl) {
+    showToast('ยังไม่ได้ตั้งค่า Discord Webhook กรุณากดปุ่ม "ตั้งค่า Discord / Sheets" ด้านบนเพื่อใส่ Webhook URL ก่อนครับ', 'warning');
+    openSheetWebhookSettingsModal();
+    return;
+  }
+
+  const text = generateDiscordRaidAnnouncementText();
+  if (!text) return;
+
+  const btn = document.getElementById('btn-raid-send-webhook');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>กำลังส่งข้อความเข้า Discord...</span>`;
+  }
+
+  try {
+    const payload = {
+      content: '```text\n' + text + '\n```',
+      username: '😈 BlueDevil & RedDevil Boss Tracker',
+      avatar_url: 'https://cdn-icons-png.flaticon.com/512/3408/3408590.png'
+    };
+
+    const res = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      showToast('🚀 ส่งประกาศแผนการตีบอสเข้าห้อง Discord สำเร็จเรียบร้อยแล้ว! 🎉', 'success');
+      const adminEmail = (typeof currentAdminEmail !== 'undefined' && currentAdminEmail) ? currentAdminEmail : 'Admin';
+      if (typeof addAuditLog === 'function') {
+        addAuditLog('boss_raid_plan', 'ยิงประกาศแผนการตีบอสเข้า Discord Webhook', `โดย: ${adminEmail}`, 'BossTimer');
+      }
+    } else {
+      showToast(`❌ ส่งเข้า Discord ไม่สำเร็จ (HTTP ${res.status}) ตรวจสอบ Webhook URL อีกครั้ง`, 'error');
+    }
+  } catch (err) {
+    console.error('Discord Webhook Error:', err);
+    showToast('❌ เกิดข้อผิดพลาดในการส่ง Webhook: ' + err.message, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fa-solid fa-paper-plane text-xs"></i> <span>🚀 ยิงข้อความเข้า Discord Webhook อัตโนมัติ</span>`;
+    }
+  }
+}
+
+// Raid Route Planner window exports
+window.openBossRaidPlannerModal = openBossRaidPlannerModal;
+window.closeBossRaidPlannerModal = closeBossRaidPlannerModal;
+window.addNewRaidSet = addNewRaidSet;
+window.removeRaidSet = removeRaidSet;
+window.updateRaidSetName = updateRaidSetName;
+window.toggleBossInRaidSet = toggleBossInRaidSet;
+window.removeBossFromRaidSet = removeBossFromRaidSet;
+window.clearAllBossesInSet = clearAllBossesInSet;
+window.resetRaidPlannerSets = resetRaidPlannerSets;
+window.autoOrganizeRaidSets = autoOrganizeRaidSets;
+window.setRaidFormatSeparator = setRaidFormatSeparator;
+window.updateRaidDiscordPreview = updateRaidDiscordPreview;
+window.copyDiscordRaidAnnouncement = copyDiscordRaidAnnouncement;
+window.sendRaidAnnouncementToDiscordWebhook = sendRaidAnnouncementToDiscordWebhook;
+
+
 
