@@ -270,7 +270,7 @@ function listenForDashboardCommands() {
 }
 
 // 🟢 เมื่อบอทออนไลน์สำเร็จ
-client.once('clientReady', async () => {
+client.once('ready', async () => {
   console.log('====================================================');
   console.log(`🤖 บอทเชื่อมต่อ Discord สำเร็จในชื่อ: ${client.user.tag}`);
   console.log(`🔥 ฐานข้อมูล Firebase: ${CONFIG.FIREBASE_DB_URL}`);

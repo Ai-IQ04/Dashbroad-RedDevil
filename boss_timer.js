@@ -27,6 +27,7 @@ let currentBossFilter = 'all';
 let currentBossSearch = '';
 let isBossSoundEnabled = localStorage.getItem('guild_boss_sound_enabled') !== 'false';
 let activeAppModule = 'scoring'; // 'scoring' | 'boss_timer'
+let currentEditBossId = null;
 
 // 45+ Boss definitions from Google Sheet
 const DEFAULT_BOSS_DATABASE = [
@@ -319,6 +320,7 @@ function initBossTimerModule() {
   }, 1000);
 
   // Setup Paste Handler for instant OCR anywhere in Boss Tab
+  window.removeEventListener('paste', handleGlobalPasteForOCR);
   window.addEventListener('paste', handleGlobalPasteForOCR);
 
   populate24HourSelects();
@@ -1670,18 +1672,6 @@ function clearAllBossTimers() {
   showToast('🗑️ ล้างเวลาบอสทั้งหมดเรียบร้อยแล้ว (สถานะ: ยังไม่ลงเวลา)', 'info');
 }
 
-// AI OCR Image Handler
-function handleGlobalPasteForOCR(event) {
-  if (activeAppModule !== 'boss_timer') return;
-  const items = (event.clipboardData || event.originalEvent.clipboardData).items;
-  for (const item of items) {
-    if (item.type.indexOf('image') !== -1) {
-      const file = item.getAsFile();
-      processImageForBossOCR(file);
-      break;
-    }
-  }
-}
 
 // Preprocess image for OCR: upscale 2.5x, invert dark game background, increase contrast, binarize
 async function preprocessImageCanvas(file) {
@@ -2177,9 +2167,6 @@ function handleConfirmOcrSave(e) {
   handleSaveKillConfirm(e);
 }
 
-function closeBossAiOcrModal() {
-  closeBossKillConfirmModal();
-}
 
 function closeBossAiOcrModal() {
   const modal = document.getElementById('boss-ai-ocr-modal');
@@ -2188,16 +2175,6 @@ function closeBossAiOcrModal() {
 
 // ================= 📜 Boss Kill History & Google Sheets Webhook Functions =================
 
-function updateWebhookStatusUi() {
-  const statusLabel = document.getElementById('history-webhook-status-label');
-  if (statusLabel) {
-    if (bossSheetWebhookUrl) {
-      statusLabel.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> Google Sheets: เชื่อมต่อแล้ว</span>`;
-    } else {
-      statusLabel.innerHTML = `<span class="text-amber-400 font-bold"><i class="fa-solid fa-circle-exclamation"></i> Google Sheets: ยังไม่ตั้งค่า</span>`;
-    }
-  }
-}
 
 function openBossKillHistoryModal() {
   updateWebhookStatusUi();
@@ -2720,7 +2697,7 @@ window.switchAppModule = switchAppModule;
 window.recordBossKillNow = recordBossKillNow;
 window.openBossKillConfirmModal = openBossKillConfirmModal;
 window.closeBossKillConfirmModal = closeBossKillConfirmModal;
-window.onKillConfirmBossSelectChange = onKillConfirmBossSelectChange;
+
 window.applyQuickKillConfirmTime = applyQuickKillConfirmTime;
 window.handleKillConfirmFileSelect = handleKillConfirmFileSelect;
 window.clearKillConfirmImage = clearKillConfirmImage;

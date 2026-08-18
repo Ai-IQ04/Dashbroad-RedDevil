@@ -879,7 +879,8 @@
             <button id="btn-admin-discord-sync" onclick="openDiscordRegistrationsModal()"
               class="apple-btn bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/60 text-indigo-200 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm font-bold cursor-pointer"
               title="คลิกเพื่อดูรายชื่อที่ลงทะเบียนจาก Discord และตรวจสอบก่อนเพิ่มเข้าตาราง">
-              <span id="discord-bot-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+              <span id="discord-bot-status-dot"
+                class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
               <i id="discord-sync-icon" class="fa-brands fa-discord text-indigo-400 text-xs shrink-0"></i>
               <span id="discord-bot-status-text">คิวลงทะเบียนดิส</span>
             </button>
@@ -1216,7 +1217,8 @@
             <span class="text-[10px] font-bold text-amber-300 uppercase tracking-wider block"
               data-i18n="boss_stat_help">ระบบช่วยเหลือ</span>
             <div class="flex items-center gap-2 mt-1">
-              <button onclick="showToast('💡 กรุณาคลิกปุ่ม \'ตายตอนนี้\' ที่การ์ดบอสที่ต้องการบันทึกเวลาและวางรูปภาพครับ', 'info')"
+              <button
+                onclick="showToast('💡 กรุณาคลิกปุ่ม \'ตายตอนนี้\' ที่การ์ดบอสที่ต้องการบันทึกเวลาและวางรูปภาพครับ', 'info')"
                 class="apple-btn apple-btn-amber px-2 py-0.5 text-[10px] font-bold rounded-lg flex items-center gap-1 shadow-sm">
                 <i class="fa-solid fa-camera"></i> <span data-i18n="btn_scan_img">วิธีสแกนรูป</span>
               </button>
@@ -6065,7 +6067,7 @@
 
     function setDiscordRegFilter(filterType) {
       currentDiscordRegFilter = filterType;
-      
+
       const btnAll = document.getElementById('btn-dreg-filter-all');
       const btnPending = document.getElementById('btn-dreg-filter-pending');
       const btnInTable = document.getElementById('btn-dreg-filter-intable');
@@ -6155,10 +6157,10 @@
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="font-extrabold text-white text-sm">${escapeHtml(it.charName)}</span>
                   <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${guildColor}">${escapeHtml(it.guild || 'RedDevil')}</span>
-                  ${it.isInTable 
-                    ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40">🟢 อยู่ในตารางกิลด์แล้ว</span>'
-                    : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">🟡 รอตรวจในเกม</span>'
-                  }
+                  ${it.isInTable
+            ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40">🟢 อยู่ในตารางกิลด์แล้ว</span>'
+            : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">🟡 รอตรวจในเกม</span>'
+          }
                 </div>
                 <div class="flex items-center gap-2.5 text-[11px] text-slate-400 mt-1 flex-wrap font-mono">
                   <span><i class="fa-brands fa-discord text-indigo-400"></i> ${escapeHtml(it.discordTag || it.discordName || 'Discord')}</span>
@@ -14794,9 +14796,11 @@ Output strictly valid JSON with no markdown formatting.`;
         </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-center justify-between gap-2">
-            <span id="kill-confirm-header-tag" class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">🐉 บันทึกเวลาบอส</span>
+            <span id="kill-confirm-header-tag" class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">🐉
+              บันทึกเวลาบอส</span>
             <span
-              class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 shrink-0">24 hr</span>
+              class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 shrink-0">24
+              hr</span>
           </div>
           <div class="flex items-center gap-2 mt-0.5">
             <h3 id="kill-confirm-boss-name-text" class="text-base sm:text-lg font-black text-white truncate">
@@ -15719,7 +15723,8 @@ Output strictly valid JSON with no markdown formatting.`;
       <div
         class="p-4 bg-gradient-to-r from-indigo-950 via-slate-900 to-purple-950 border-b border-indigo-500/30 flex items-center justify-between shrink-0">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center text-indigo-300 text-xl shadow">
+          <div
+            class="w-10 h-10 rounded-2xl bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center text-indigo-300 text-xl shadow">
             <i class="fa-brands fa-discord"></i>
           </div>
           <div>
@@ -15761,9 +15766,14 @@ Output strictly valid JSON with no markdown formatting.`;
           </div>
         </div>
         <div class="flex items-center gap-1.5 text-xs font-semibold">
-          <button onclick="setDiscordRegFilter('all')" id="btn-dreg-filter-all" class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white transition">ทั้งหมด</button>
-          <button onclick="setDiscordRegFilter('pending')" id="btn-dreg-filter-pending" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition">🟡 รอตรวจสอบในเกม</button>
-          <button onclick="setDiscordRegFilter('in_table')" id="btn-dreg-filter-intable" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition">🟢 อยู่ในตารางแล้ว</button>
+          <button onclick="setDiscordRegFilter('all')" id="btn-dreg-filter-all"
+            class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white transition">ทั้งหมด</button>
+          <button onclick="setDiscordRegFilter('pending')" id="btn-dreg-filter-pending"
+            class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition">🟡
+            รอตรวจสอบในเกม</button>
+          <button onclick="setDiscordRegFilter('in_table')" id="btn-dreg-filter-intable"
+            class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition">🟢
+            อยู่ในตารางแล้ว</button>
         </div>
       </div>
 
