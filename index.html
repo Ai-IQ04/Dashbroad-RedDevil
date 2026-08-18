@@ -8935,7 +8935,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
         let sentSuccess = false;
 
-        // 1. ส่งผ่าน Discord Bot (ผ่าน Firebase ไปยังห้อง 1539252263132860516)
+        // ส่งคำสั่งให้ Discord Bot (bot.js) ผ่าน Firebase ไปยังห้องประกาศ 1539252263132860516 โดยตรง
         if (typeof fbDb !== 'undefined' && fbDb) {
           const announceData = {
             id: 'ann_' + Date.now(),
@@ -8950,30 +8950,16 @@ Output strictly valid JSON with no markdown formatting.`;
           sentSuccess = true;
         }
 
-        // 2. ถ้ามีการตั้งค่า Discord Webhook URL ให้ยิงผ่าน Webhook ด้วย
-        const webhookUrl = localStorage.getItem('guild_boss_discord_webhook') || (typeof bossDiscordWebhookUrl !== 'undefined' ? bossDiscordWebhookUrl : '');
-        if (webhookUrl) {
-          payload.content = roleMention;
-          const res = await fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          if (res.ok || res.status === 204) {
-            sentSuccess = true;
-          }
-        }
-
         if (sentSuccess) {
           if (btn) {
             btn.classList.remove('from-indigo-600', 'to-purple-600');
             btn.classList.add('bg-emerald-700');
-            btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>ส่งเข้าห้อง Discord แล้ว! ✅</span>`;
+            btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>ส่งเข้าห้องประกาศแล้ว! ✅</span>`;
           }
-          showToast('🎉 ส่งประกาศเข้าห้อง Discord และแท็กบทบาทเรียบร้อยแล้วค่ะ!', 'success');
+          showToast('🎉 ส่งประกาศไปยังห้อง ' + targetChannelId + ' เรียบร้อยแล้วค่ะ!', 'success');
           if (typeof playChime === 'function') playChime();
         } else {
-          throw new Error('ไม่สามารถส่งประกาศได้ กรุณาตรวจสอบว่าบอทออนไลน์หรือตั้งค่า Webhook');
+          throw new Error('ไม่สามารถเชื่อมต่อฐานข้อมูล Firebase ได้ กรุณารีเฟรชหน้าเว็บแล้วลองใหม่ค่ะ');
         }
       } catch (err) {
         console.error('Send Announcement Error:', err);
