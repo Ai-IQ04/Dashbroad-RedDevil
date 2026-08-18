@@ -16628,14 +16628,17 @@ Output strictly valid JSON with no markdown formatting.`;
     });
 
     (function initAutoUpdateChecker() {
-      const CURRENT_BUILD = 1787068820000;
+      let currentLoadedBuild = null;
       let updateFound = false;
       let countdownTimer = null;
+      const pageLoadedAt = Date.now();
 
       function triggerUpdateNotice(newBuild) {
+        // Safety guard: do not trigger within 10 seconds of page load
+        if (Date.now() - pageLoadedAt < 10000) return;
         if (updateFound) return;
         updateFound = true;
-        console.log('[AutoUpdate] New version detected:', newBuild);
+        console.log('[AutoUpdate] Real update detected:', newBuild);
 
         const banner = document.getElementById('app-auto-update-banner');
         const countdownEl = document.getElementById('app-update-countdown');
@@ -16660,34 +16663,32 @@ Output strictly valid JSON with no markdown formatting.`;
           const res = await fetch(`version.json?t=${Date.now()}`, { cache: 'no-store' });
           if (res.ok) {
             const data = await res.json();
-            if (data && data.buildTime && data.buildTime > CURRENT_BUILD) {
-              triggerUpdateNotice(data.buildTime);
+            if (data && data.buildTime) {
+              if (currentLoadedBuild === null) {
+                // Initialize baseline version on page load (never popup on first load/refresh)
+                currentLoadedBuild = data.buildTime;
+              } else if (data.buildTime > currentLoadedBuild) {
+                // Real update deployed after page was opened
+                triggerUpdateNotice(data.buildTime);
+              }
             }
           }
         } catch (e) {}
       }
 
-      if (typeof fbDb !== 'undefined') {
-        try {
-          fbDb.ref('guild_app/app_build').on('value', (snap) => {
-            const remoteBuild = snap.val();
-            if (remoteBuild && typeof remoteBuild === 'number' && remoteBuild > CURRENT_BUILD) {
-              triggerUpdateNotice(remoteBuild);
-            }
-          });
-        } catch (e) {}
-      }
+      // Initial check on load sets baseline without showing popup
+      checkVersionFile();
 
+      // Check periodically every 3 minutes
       setInterval(checkVersionFile, 3 * 60 * 1000);
 
+      // Check when returning to tab
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
           checkVersionFile();
         }
       });
       window.addEventListener('focus', checkVersionFile);
-
-      setTimeout(checkVersionFile, 8000);
     })();
   </script>
 </body>
