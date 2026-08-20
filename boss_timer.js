@@ -21,6 +21,10 @@ let bossKillLogs = [];  // [ { id, bossId, bossName, level, map, killTime, killT
 let bossSheetWebhookUrl = localStorage.getItem('guild_boss_sheet_webhook') || '';
 let bossDiscordWebhookUrl = localStorage.getItem('guild_boss_discord_webhook') || '';
 let bossGeminiApiKey = localStorage.getItem('guild_boss_gemini_api_key') || '';
+// Discord Role ID สำหรับ @mention ในข้อความแจ้งเตือน (ค่าเริ่มต้นเป็น Role เดิมที่เคย hardcode ไว้)
+let bossDiscordRoleId = localStorage.getItem('guild_boss_discord_role_id') || '1508495658162851970';
+// สถานะเปิด/ปิดการแจ้งเตือน Discord เมื่อลงเวลาบอสตาย (ค่าเริ่มต้น: เปิด)
+let bossKillDiscordEnabled = localStorage.getItem('guild_boss_kill_discord_enabled') !== 'false';
 let sentDiscordAlerts = new Set();
 let bossTimerInterval = null;
 let currentBossFilter = 'all';
@@ -31,7 +35,7 @@ let currentEditBossId = null;
 
 // 45+ Boss definitions from Google Sheet
 const DEFAULT_BOSS_DATABASE = [
-  { id: 'world_boss', name: 'World Boss', level: '60-105', map: 'World Boss', respawnType: 'fixed', scheduleText: 'Daily 10:00/19:00', fixedTimes: [{days: [0,1,2,3,4,5,6], time: '10:00'}, {days: [0,1,2,3,4,5,6], time: '19:00'}], note: 'World Boss' },
+  { id: 'world_boss', name: 'World Boss', level: '60-105', map: 'World Boss', respawnType: 'fixed', scheduleText: 'Daily 10:00/19:00', fixedTimes: [{ days: [0, 1, 2, 3, 4, 5, 6], time: '10:00' }, { days: [0, 1, 2, 3, 4, 5, 6], time: '19:00' }], note: 'World Boss' },
   { id: 'vioren', name: 'Vioren', level: '65', map: 'ทะเลสาบจันทร์เสี้ยว', respawnType: 'interval', intervalHours: 10, note: 'ทะเลสาบจันทร์เสี้ยว' },
   { id: 'venatus', name: 'Venatus', level: '60', map: 'แอ่งน้ำปนเปื้อน', respawnType: 'interval', intervalHours: 10, note: 'แอ่งน้ำปนเปื้อน' },
   { id: 'lady_dalia', name: 'Lady Dalia', level: '85', map: 'เนินเขาอัสดง', respawnType: 'interval', intervalHours: 18, note: 'เนินเขาอัสดง' },
@@ -54,27 +58,27 @@ const DEFAULT_BOSS_DATABASE = [
   { id: 'ordo', name: 'Ordo', level: '100', map: 'ทุ่งหญ้าแดง', respawnType: 'interval', intervalHours: 62, note: 'ทุ่งหญ้าแดง' },
   { id: 'secreta', name: 'Secreta', level: '100', map: 'ทุ่งหญ้าแดง', respawnType: 'interval', intervalHours: 62, note: 'ทุ่งหญ้าแดง' },
   { id: 'supore', name: 'Supore', level: '100', map: 'ทุ่งหญ้าแดง', respawnType: 'interval', intervalHours: 62, note: 'ทุ่งหญ้าแดง' },
-  { id: 'clemantis', name: 'Clemantis', level: '70', map: 'แอ่งน้ำปนเปื้อน', respawnType: 'fixed', scheduleText: 'Mon 10:30 / Thu 18:00', fixedTimes: [{days: [1], time: '10:30'}, {days: [4], time: '18:00'}], note: 'แอ่งน้ำปนเปื้อน' },
-  { id: 'saphirus', name: 'Saphirus', level: '80', map: 'ทะเลสาบจันทร์เสี้ยว', respawnType: 'fixed', scheduleText: 'Sun 16:00 / Tue 10:30', fixedTimes: [{days: [0], time: '16:00'}, {days: [2], time: '10:30'}], note: 'ทะเลสาบจันทร์เสี้ยว' },
-  { id: 'neutro', name: 'Neutro', level: '80', map: 'ทะเลทรายกรีดร้อง', respawnType: 'fixed', scheduleText: 'Tue 18:00 / Thu 10:30', fixedTimes: [{days: [2], time: '18:00'}, {days: [4], time: '10:30'}], note: 'ทะเลทรายกรีดร้อง' },
-  { id: 'thymele', name: 'Thymele', level: '85', map: 'เนินเขาอัสดง', respawnType: 'fixed', scheduleText: 'Mon 18:00 / Wed 10:30', fixedTimes: [{days: [1], time: '18:00'}, {days: [3], time: '10:30'}], note: 'เนินเขาอัสดง' },
-  { id: 'roderick', name: 'Roderick', level: '95', map: 'ทางระบายน้ำ ชั้น 1', respawnType: 'fixed', scheduleText: 'Fri 18:00', fixedTimes: [{days: [5], time: '18:00'}], note: 'ทางระบายน้ำ ชั้น 1' },
-  { id: 'auraq', name: 'Auraq', level: '100', map: 'ทางระบายน้ำ ชั้น 2', respawnType: 'fixed', scheduleText: 'Fri 21:00 / Wed 20:00', fixedTimes: [{days: [5], time: '21:00'}, {days: [3], time: '20:00'}], note: 'ทางระบายน้ำ ชั้น 2' },
-  { id: 'milavy', name: 'Milavy', level: '90', map: 'สุสานใต้ดิน ชั้น 3', respawnType: 'fixed', scheduleText: 'Sat 14:00', fixedTimes: [{days: [6], time: '14:00'}], note: 'สุสานใต้ดิน ชั้น 3' },
-  { id: 'ringor', name: 'Ringor', level: '95', map: 'สมรภูมิศักดิ์สิทธิ์', respawnType: 'fixed', scheduleText: 'Sat 16:00', fixedTimes: [{days: [6], time: '16:00'}], note: 'สมรภูมิศักดิ์สิทธิ์' },
-  { id: 'chaiflock', name: 'Chaiflock', level: '120', map: 'ทุ่งหญ้าแดง', respawnType: 'fixed', scheduleText: 'Sun 14:00', fixedTimes: [{days: [0], time: '14:00'}], note: 'ทุ่งหญ้าแดง' },
-  { id: 'benji', name: 'Benji', level: '120', map: 'ทุ่งหญ้าแดง', respawnType: 'fixed', scheduleText: 'Sun 20:00', fixedTimes: [{days: [0], time: '20:00'}], note: 'ทุ่งหญ้าแดง' },
-  { id: 'tumier', name: 'Tumier', level: '140', map: 'ทางระบายน้ำ ชั้น 3', respawnType: 'fixed', scheduleText: 'Tue 20:55', fixedTimes: [{days: [2], time: '20:55'}], note: 'ทางระบายน้ำ ชั้น 3' },
-  { id: 'nevaeh', name: 'Nevaeh', level: '140', map: 'KRANSIA', respawnType: 'fixed', scheduleText: 'Sun 21:00', fixedTimes: [{days: [0], time: '21:00'}], note: 'KRANSIA' },
-  { id: 'icaruthia', name: 'Icaruthia', level: '135', map: 'KRANSIA', respawnType: 'fixed', scheduleText: 'Tue 20:00 / Fri 20:00', fixedTimes: [{days: [2], time: '20:00'}, {days: [5], time: '20:00'}], note: 'KRANSIA' },
-  { id: 'motti', name: 'Motti', level: '135', map: 'KRANSIA', respawnType: 'fixed', scheduleText: 'Wed 18:00 / Sat 18:00', fixedTimes: [{days: [3], time: '18:00'}, {days: [6], time: '18:00'}], note: 'KRANSIA' },
-  { id: 'libitina', name: 'Libitina', level: '130', map: 'โบสถ์แห่งบ่วงบัญชาชั่วนิรันดร์', respawnType: 'fixed', scheduleText: 'Tue 20:50 / Sat 20:30', fixedTimes: [{days: [2], time: '20:50'}, {days: [6], time: '20:30'}], note: 'โบสถ์แห่งบ่วงบัญชาชั่วนิรันดร์' },
-  { id: 'rakajeth', name: 'Rakajeth', level: '130', map: 'อาญาแห่งเซเครต้า', respawnType: 'fixed', scheduleText: 'Tue 21:00 / Sun 20:05', fixedTimes: [{days: [2], time: '21:00'}, {days: [0], time: '20:05'}], note: 'อาญาแห่งเซเครต้า' },
-  { id: 'bahel', name: 'Bahel', level: '140', map: 'รอยแยกแห่งการกัดกร่อน', respawnType: 'fixed', scheduleText: 'Fri 02:00', fixedTimes: [{days: [5], time: '02:00'}], note: 'รอยแยกแห่งการกัดกร่อน' },
-  { id: 'lucus', name: 'Lucus', level: '145', map: 'เตาหลอมแห่งความเงียบงัน', respawnType: 'fixed', scheduleText: 'Sat 21:00', fixedTimes: [{days: [6], time: '21:00'}], note: 'เตาหลอมแห่งความเงียบงัน' },
-  { id: 'camalia', name: 'Camalia', level: '135', map: 'ห้องทดลอง', respawnType: 'fixed', scheduleText: 'Fri 19:05', fixedTimes: [{days: [5], time: '19:05'}], note: 'ห้องทดลอง' },
-  { id: 'guild_arena', name: 'Guild Arena', level: '00', map: 'Guild Base', respawnType: 'fixed', scheduleText: 'Fri/Sat/Sun 19:25', fixedTimes: [{days: [5,6,0], time: '19:25'}], note: 'Guild Base' },
-  { id: 'reddevil_guild_boss', name: 'RedDevil Guild Boss', level: '00', map: 'Guild Base', respawnType: 'fixed', scheduleText: 'Sun 19:05', fixedTimes: [{days: [0], time: '19:05'}], note: 'Guild Base' }
+  { id: 'clemantis', name: 'Clemantis', level: '70', map: 'แอ่งน้ำปนเปื้อน', respawnType: 'fixed', scheduleText: 'Mon 10:30 / Thu 18:00', fixedTimes: [{ days: [1], time: '10:30' }, { days: [4], time: '18:00' }], note: 'แอ่งน้ำปนเปื้อน' },
+  { id: 'saphirus', name: 'Saphirus', level: '80', map: 'ทะเลสาบจันทร์เสี้ยว', respawnType: 'fixed', scheduleText: 'Sun 16:00 / Tue 10:30', fixedTimes: [{ days: [0], time: '16:00' }, { days: [2], time: '10:30' }], note: 'ทะเลสาบจันทร์เสี้ยว' },
+  { id: 'neutro', name: 'Neutro', level: '80', map: 'ทะเลทรายกรีดร้อง', respawnType: 'fixed', scheduleText: 'Tue 18:00 / Thu 10:30', fixedTimes: [{ days: [2], time: '18:00' }, { days: [4], time: '10:30' }], note: 'ทะเลทรายกรีดร้อง' },
+  { id: 'thymele', name: 'Thymele', level: '85', map: 'เนินเขาอัสดง', respawnType: 'fixed', scheduleText: 'Mon 18:00 / Wed 10:30', fixedTimes: [{ days: [1], time: '18:00' }, { days: [3], time: '10:30' }], note: 'เนินเขาอัสดง' },
+  { id: 'roderick', name: 'Roderick', level: '95', map: 'ทางระบายน้ำ ชั้น 1', respawnType: 'fixed', scheduleText: 'Fri 18:00', fixedTimes: [{ days: [5], time: '18:00' }], note: 'ทางระบายน้ำ ชั้น 1' },
+  { id: 'auraq', name: 'Auraq', level: '100', map: 'ทางระบายน้ำ ชั้น 2', respawnType: 'fixed', scheduleText: 'Fri 21:00 / Wed 20:00', fixedTimes: [{ days: [5], time: '21:00' }, { days: [3], time: '20:00' }], note: 'ทางระบายน้ำ ชั้น 2' },
+  { id: 'milavy', name: 'Milavy', level: '90', map: 'สุสานใต้ดิน ชั้น 3', respawnType: 'fixed', scheduleText: 'Sat 14:00', fixedTimes: [{ days: [6], time: '14:00' }], note: 'สุสานใต้ดิน ชั้น 3' },
+  { id: 'ringor', name: 'Ringor', level: '95', map: 'สมรภูมิศักดิ์สิทธิ์', respawnType: 'fixed', scheduleText: 'Sat 16:00', fixedTimes: [{ days: [6], time: '16:00' }], note: 'สมรภูมิศักดิ์สิทธิ์' },
+  { id: 'chaiflock', name: 'Chaiflock', level: '120', map: 'ทุ่งหญ้าแดง', respawnType: 'fixed', scheduleText: 'Sun 14:00', fixedTimes: [{ days: [0], time: '14:00' }], note: 'ทุ่งหญ้าแดง' },
+  { id: 'benji', name: 'Benji', level: '120', map: 'ทุ่งหญ้าแดง', respawnType: 'fixed', scheduleText: 'Sun 20:00', fixedTimes: [{ days: [0], time: '20:00' }], note: 'ทุ่งหญ้าแดง' },
+  { id: 'tumier', name: 'Tumier', level: '140', map: 'ทางระบายน้ำ ชั้น 3', respawnType: 'fixed', scheduleText: 'Tue 20:55', fixedTimes: [{ days: [2], time: '20:55' }], note: 'ทางระบายน้ำ ชั้น 3' },
+  { id: 'nevaeh', name: 'Nevaeh', level: '140', map: 'KRANSIA', respawnType: 'fixed', scheduleText: 'Sun 21:00', fixedTimes: [{ days: [0], time: '21:00' }], note: 'KRANSIA' },
+  { id: 'icaruthia', name: 'Icaruthia', level: '135', map: 'KRANSIA', respawnType: 'fixed', scheduleText: 'Tue 20:00 / Fri 20:00', fixedTimes: [{ days: [2], time: '20:00' }, { days: [5], time: '20:00' }], note: 'KRANSIA' },
+  { id: 'motti', name: 'Motti', level: '135', map: 'KRANSIA', respawnType: 'fixed', scheduleText: 'Wed 18:00 / Sat 18:00', fixedTimes: [{ days: [3], time: '18:00' }, { days: [6], time: '18:00' }], note: 'KRANSIA' },
+  { id: 'libitina', name: 'Libitina', level: '130', map: 'โบสถ์แห่งบ่วงบัญชาชั่วนิรันดร์', respawnType: 'fixed', scheduleText: 'Tue 20:50 / Sat 20:30', fixedTimes: [{ days: [2], time: '20:50' }, { days: [6], time: '20:30' }], note: 'โบสถ์แห่งบ่วงบัญชาชั่วนิรันดร์' },
+  { id: 'rakajeth', name: 'Rakajeth', level: '130', map: 'อาญาแห่งเซเครต้า', respawnType: 'fixed', scheduleText: 'Tue 21:00 / Sun 20:05', fixedTimes: [{ days: [2], time: '21:00' }, { days: [0], time: '20:05' }], note: 'อาญาแห่งเซเครต้า' },
+  { id: 'bahel', name: 'Bahel', level: '140', map: 'รอยแยกแห่งการกัดกร่อน', respawnType: 'fixed', scheduleText: 'Fri 02:00', fixedTimes: [{ days: [5], time: '02:00' }], note: 'รอยแยกแห่งการกัดกร่อน' },
+  { id: 'lucus', name: 'Lucus', level: '145', map: 'เตาหลอมแห่งความเงียบงัน', respawnType: 'fixed', scheduleText: 'Sat 21:00', fixedTimes: [{ days: [6], time: '21:00' }], note: 'เตาหลอมแห่งความเงียบงัน' },
+  { id: 'camalia', name: 'Camalia', level: '135', map: 'ห้องทดลอง', respawnType: 'fixed', scheduleText: 'Fri 19:05', fixedTimes: [{ days: [5], time: '19:05' }], note: 'ห้องทดลอง' },
+  { id: 'guild_arena', name: 'Guild Arena', level: '00', map: 'Guild Base', respawnType: 'fixed', scheduleText: 'Fri/Sat/Sun 19:25', fixedTimes: [{ days: [5, 6, 0], time: '19:25' }], note: 'Guild Base' },
+  { id: 'reddevil_guild_boss', name: 'RedDevil Guild Boss', level: '00', map: 'Guild Base', respawnType: 'fixed', scheduleText: 'Sun 19:05', fixedTimes: [{ days: [0], time: '19:05' }], note: 'Guild Base' }
 ];
 
 // Helper to rebuild bossList merged with custom configs
@@ -116,12 +120,35 @@ function playBossAlertSound() {
   }
 }
 
+// เล่นเสียง "สำเร็จ" (chime) เมื่อบันทึกข้อมูลสำเร็จ
+// - ใช้ Web Audio API สร้างเสียงสั้นๆ (ไม่ต้องใช้ไฟล์เสียง)
+// - ฟังก์ชันนี้ถูกเรียกจากหลายจุด เช่น บันทึกเวลาตาย, แก้ไขบอส, รีเซ็ตไทม์เมอร์
+function playChime() {
+  if (!isBossSoundEnabled) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
+    osc.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.12); // E6
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.5);
+  } catch (e) {
+    console.warn('Chime play error:', e);
+  }
+}
+
 // Module Switcher
 function switchAppModule(moduleName) {
   activeAppModule = moduleName;
   try {
     localStorage.setItem('guild_active_app_module', moduleName);
-  } catch (e) {}
+  } catch (e) { }
 
   const scoringContainer = document.getElementById('scoring-module-container');
   const scoringSubHeader = document.getElementById('scoring-sub-header');
@@ -201,18 +228,24 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
     return nextSpawn;
   }
 
-  // 2. Fixed schedule bosses: คำนวณเวลารอบถัดไปตามตารางเวลาเสมอ (ไม่ค้างสถานะ)
+  // 2. Fixed schedule bosses: คำนวณเวลารอบถัดไปตามตารางเวลา
+  //    - ใช้ defeatedTime เป็นจุดเริ่มต้นค้นหารอบถัดไป (ถ้ามี) เพื่อให้รอบถัดไปถูกต้องตามเวลาตายจริง
+  //    - ถ้าไม่มี defeatedTime ให้ค้นหาจากเวลาปัจจุบัน
   if (boss.respawnType === 'fixed' && Array.isArray(boss.fixedTimes)) {
+    // จุดเริ่มต้นค้นหา: ใช้เวลาตาย (ถ้ามี) หรือเวลาปัจจุบัน
+    const searchStart = (defTimestamp > 0) ? defTimestamp : now.getTime();
+
     let nearest = null;
     for (let offset = 0; offset <= 7; offset++) {
-      const checkDate = new Date(now.getTime() + offset * 24 * 3600 * 1000);
+      const checkDate = new Date(searchStart + offset * 24 * 3600 * 1000);
       const dayOfWeek = checkDate.getDay(); // 0 = Sun, 1 = Mon ...
 
       for (const ft of boss.fixedTimes) {
         if (ft.days.includes(dayOfWeek)) {
           const [h, m] = ft.time.split(':').map(Number);
           const candidate = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate(), h, m, 0, 0);
-          if (candidate > now) {
+          // ต้องเป็นเวลาที่มากกว่าเวลาตาย (ข้ามรอบที่ผ่านไปแล้ว) และมากกว่าเวลาปัจจุบัน
+          if (candidate.getTime() > defTimestamp && candidate > now) {
             if (!nearest || candidate < nearest) {
               nearest = candidate;
             }
@@ -224,6 +257,18 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
   }
 
   return null;
+}
+
+// Helper: คำนวณเวลาที่บอสจะเกิดรอบถัดไป (รวมตรรกะซ้ำซ้อนไว้ที่เดียว)
+// - ถ้ามี customNextSpawn (Admin ตั้งเวลาเอง) ให้ใช้ค่านั้น
+// - ถ้าไม่มี ให้คำนวณจาก defeatedTime ตามประเภทของบอส (interval / fixed)
+function getBossNextSpawn(boss) {
+  const timer = bossTimerData[boss.id] || {};
+  if (timer.customNextSpawn) {
+    const custom = new Date(timer.customNextSpawn);
+    if (!isNaN(custom.getTime())) return custom;
+  }
+  return calculateNextSpawnDate(boss, timer.defeatedTime);
 }
 
 // Initialize Boss Data
@@ -296,6 +341,22 @@ function initBossTimerModule() {
       }
     });
 
+    // โหลด Discord Role ID จาก Firebase (สำหรับ @mention ในข้อความแจ้งเตือน)
+    fbDb.ref('guild_app/boss_discord_role_id').on('value', snap => {
+      if (snap.exists()) {
+        bossDiscordRoleId = snap.val() || '1508495658162851970';
+        localStorage.setItem('guild_boss_discord_role_id', bossDiscordRoleId);
+      }
+    });
+
+    // โหลดสถานะเปิด/ปิดการแจ้งเตือน Discord เมื่อลงเวลาบอสตายจาก Firebase
+    fbDb.ref('guild_app/boss_kill_discord_enabled').on('value', snap => {
+      if (snap.exists()) {
+        bossKillDiscordEnabled = snap.val() !== false;
+        localStorage.setItem('guild_boss_kill_discord_enabled', String(bossKillDiscordEnabled));
+      }
+    });
+
     fbDb.ref('guild_app/boss_gemini_api_key').on('value', snap => {
       if (snap.exists()) {
         bossGeminiApiKey = snap.val() || '';
@@ -333,7 +394,7 @@ function initBossTimerModule() {
     if (savedModule === 'boss_timer') {
       switchAppModule('boss_timer');
     }
-  } catch (e) {}
+  } catch (e) { }
 }
 
 // Render Boss Cards
@@ -346,14 +407,8 @@ function renderBossTimerCards() {
   let soonCount = 0;
 
   const bossStatuses = bossList.map(boss => {
-    const timer = bossTimerData[boss.id] || {};
-    let nextSpawn = null;
-
-    if (timer.customNextSpawn) {
-      nextSpawn = new Date(timer.customNextSpawn);
-    } else {
-      nextSpawn = calculateNextSpawnDate(boss, timer.defeatedTime);
-    }
+    // ใช้ helper getBossNextSpawn() เพื่อรวมตรรกะคำนวณเวลากำเนิดไว้ที่เดียว
+    let nextSpawn = getBossNextSpawn(boss);
 
     let status = 'unrecorded'; // 'alive' | 'soon' | 'cooldown' | 'unrecorded'
     let diffMs = null;
@@ -375,7 +430,11 @@ function renderBossTimerCards() {
     const hrUnit = isEn ? ' hrs' : ' ชม.';
     return {
       ...boss,
-      timer,
+      // ข้อมูลไทม์เมอร์ของบอสตัวนี้ (defeatedTime, nextSpawnTime, customNextSpawn)
+      // - เดิมเขียนแค่ `timer,` ซึ่งตัวแปร timer ไม่ได้ถูกประกาศในฟังก์ชันนี้
+      //   ทำให้เกิด ReferenceError: timer is not defined → ฟังก์ชันหยุดทำงาน → ไม่มีการ์ดบอสแสดง
+      // - แก้เป็น bossTimerData[boss.id] เพื่อให้ได้ข้อมูลไทม์เมอร์ที่ถูกต้องของบอสแต่ละตัว
+      timer: bossTimerData[boss.id] || {},
       nextSpawn,
       status,
       diffMs,
@@ -455,7 +514,9 @@ function renderBossTimerCards() {
     'lucus', 'bahel', 'libitina', 'rakajeth', 'tumier', 'nevaeh', 'icaruthia', 'motti', 'guild_arena', 'camalia', 'world_boss', 'reddevil_guild_boss'
   ]);
 
-  const isAdminActive = (typeof isAdmin !== 'undefined' && isAdmin);
+  // ใช้ isBossTimerAdmin() เพื่อให้สอดคล้องกับเช็คสิทธิ์อื่นๆ ในโมดูล
+  // (Admin ทุก role: superadmin, admin, boss_admin ควบคุมบอสไทม์เมอร์ได้)
+  const isAdminActive = (typeof isBossTimerAdmin !== 'undefined' && isBossTimerAdmin());
 
   // Helper to identify High-Level Boss (Level >= 100 or special high-tier raids)
   function isHighLevelBoss(levelStr, bossId, bossName) {
@@ -678,7 +739,7 @@ function formatCountdown(diffMs, status) {
     const h = Math.floor(elapsedSec / 3600);
     const m = Math.floor((elapsedSec % 3600) / 60);
     const s = elapsedSec % 60;
-    return `SPAWNED (+${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')})`;
+    return `SPAWNED (+${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')})`;
   }
 
   if (diffMs <= 0 || isNaN(diffMs)) return '--:--:--';
@@ -692,9 +753,9 @@ function formatCountdown(diffMs, status) {
   const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
   const dUnit = isEn ? 'd ' : ' วัน ';
   if (d > 0) {
-    return `${d}${dUnit}${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    return `${d}${dUnit}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   }
-  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
 // Format DateTime Short (24-Hour Format: DD/MM HH:MM น.)
@@ -775,8 +836,8 @@ function updateCountdowns() {
     const cdEl = document.getElementById(`boss-cd-${boss.id}`);
     if (!cdEl) return;
 
-    const timer = bossTimerData[boss.id] || {};
-    let nextSpawn = timer.customNextSpawn ? new Date(timer.customNextSpawn) : calculateNextSpawnDate(boss, timer.defeatedTime);
+    // ใช้ helper getBossNextSpawn() เพื่อรวมตรรกะคำนวณเวลากำเนิดไว้ที่เดียว
+    let nextSpawn = getBossNextSpawn(boss);
     if (!nextSpawn || isNaN(nextSpawn.getTime())) {
       cdEl.textContent = '--:--:--';
       cdEl.className = "text-base sm:text-lg font-black font-mono tracking-wider text-slate-500";
@@ -815,13 +876,8 @@ function updateUpcomingBossWidget() {
   const recordedBosses = [];
 
   bossList.forEach(b => {
-    const timer = bossTimerData[b.id] || {};
-    let nextSpawn = null;
-    if (timer.customNextSpawn) {
-      nextSpawn = new Date(timer.customNextSpawn);
-    } else {
-      nextSpawn = calculateNextSpawnDate(b, timer.defeatedTime);
-    }
+    // ใช้ helper getBossNextSpawn() เพื่อรวมตรรกะคำนวณเวลากำเนิดไว้ที่เดียว
+    let nextSpawn = getBossNextSpawn(b);
     if (nextSpawn && !isNaN(nextSpawn.getTime())) {
       const diffMs = nextSpawn.getTime() - now.getTime();
       recordedBosses.push({ boss: b, nextSpawn, diffMs });
@@ -905,44 +961,72 @@ function recordBossKillNow(bossId) {
   openBossDoubleCheckModal(pendingKillConfirmData);
 }
 
-// Send Boss Kill Log row to Google Sheets via Webhook (Background Async - Only when drop items exist!)
+// Send Boss Kill Log row to Google Sheets via Webhook (Background Async)
+// - ส่ง kill_log ทุกครั้งที่ลงเวลาบอสตาย (รวมถึงเมื่อไม่มีไอเทมดรอป)
+// - ส่ง drop_log เพิ่มเติมเมื่อมีไอเทมดรอป (เพื่อบันทึกรายละเอียดไอเทม)
 function sendKillLogToGoogleSheet(logData) {
   if (!bossSheetWebhookUrl) return;
+  if (!logData) return;
 
-  // 📦 ส่งไปยัง Google Sheets เฉพาะเมื่อมีรายการไอเทมดรอปเท่านั้น (Drop Items Only)
-  if (!logData || !Array.isArray(logData.dropItems) || logData.dropItems.length === 0) {
-    return;
-  }
+  const dropItems = Array.isArray(logData.dropItems) ? logData.dropItems : [];
+  const killTimeStr = logData.killTimeFormatted || (logData.killTime ? formatDateTimeShort(new Date(logData.killTime)) : '-');
+  const timestampStr = logData.timestampStr || formatDateTimeShort(new Date());
 
   try {
-    const payload = {
-      action: 'drop_log',
+    // 1. ส่ง kill_log ทุกครั้ง (บันทึกการลงเวลาตายของบอส)
+    const killPayload = {
+      action: 'kill_log',
       bossId: logData.bossId || '',
       bossName: logData.bossName || '',
+      level: logData.level || '-',
       map: logData.map || '-',
-      killTime: logData.killTimeFormatted || (logData.killTime ? formatDateTimeShort(new Date(logData.killTime)) : '-'),
+      killTime: killTimeStr,
+      nextSpawnTime: logData.nextSpawnFormatted || '-',
       recordedBy: logData.recordedBy || 'Admin',
-      timestamp: logData.timestampStr || formatDateTimeShort(new Date()),
-      dropItems: logData.dropItems,
-      dropItemsText: logData.dropItemsText || logData.dropItems.join(', '),
-      itemsCount: logData.dropItems.length,
-      // Array of detailed rows for Google Apps Script to loop appendRow
-      rows: logData.dropItems.map(item => ({
-        timestamp: logData.timestampStr || formatDateTimeShort(new Date()),
-        bossName: logData.bossName || '',
-        map: logData.map || '-',
-        killTime: logData.killTimeFormatted || (logData.killTime ? formatDateTimeShort(new Date(logData.killTime)) : '-'),
-        item: item,
-        recordedBy: logData.recordedBy || 'Admin'
-      }))
+      timestamp: timestampStr,
+      dropItems: dropItems,
+      dropItemsText: logData.dropItemsText || (dropItems.length > 0 ? dropItems.join(', ') : '-'),
+      itemsCount: dropItems.length
     };
 
     fetch(bossSheetWebhookUrl, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(err => console.warn('Google Sheet Webhook send error:', err));
+      body: JSON.stringify(killPayload)
+    }).catch(err => console.warn('Google Sheet kill_log send error:', err));
+
+    // 2. ส่ง drop_log เพิ่มเติมเฉพาะเมื่อมีไอเทมดรอป (เพื่อบันทึกรายละเอียดไอเทมแต่ละชิ้น)
+    if (dropItems.length > 0) {
+      const dropPayload = {
+        action: 'drop_log',
+        bossId: logData.bossId || '',
+        bossName: logData.bossName || '',
+        map: logData.map || '-',
+        killTime: killTimeStr,
+        recordedBy: logData.recordedBy || 'Admin',
+        timestamp: timestampStr,
+        dropItems: dropItems,
+        dropItemsText: logData.dropItemsText || dropItems.join(', '),
+        itemsCount: dropItems.length,
+        // Array of detailed rows for Google Apps Script to loop appendRow
+        rows: dropItems.map(item => ({
+          timestamp: timestampStr,
+          bossName: logData.bossName || '',
+          map: logData.map || '-',
+          killTime: killTimeStr,
+          item: item,
+          recordedBy: logData.recordedBy || 'Admin'
+        }))
+      };
+
+      fetch(bossSheetWebhookUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dropPayload)
+      }).catch(err => console.warn('Google Sheet drop_log send error:', err));
+    }
   } catch (e) {
     console.warn('Google Sheet Webhook exception:', e);
   }
@@ -971,7 +1055,10 @@ function saveBossKillTime(bossId, killTimeISO, killerEmail, dropItemsList) {
 
   localStorage.setItem('guild_boss_timers', JSON.stringify(bossTimerData));
   if (typeof fbDb !== 'undefined' && fbDb) {
-    fbDb.ref('guild_app/boss_timers').set(bossTimerData);
+    // ใช้ .update() เฉพาะ key ของบอสตัวนี้ แทน .set() ทั้ง object
+    // เพื่อลด race condition เมื่อ Admin หลายคนลงเวลาตายพร้อมกัน
+    // (การ .set() ทั้ง object จะเขียนทับข้อมูลของบอสตัวอื่นที่เพิ่งถูกแก้ไข)
+    fbDb.ref('guild_app/boss_timers/' + bossId).update(bossTimerData[bossId]);
   }
 
   // 2. Append to Boss Kill History Log (Capped at 200 items)
@@ -1001,6 +1088,11 @@ function saveBossKillTime(bossId, killTimeISO, killerEmail, dropItemsList) {
 
   // 3. Send row to Google Sheets (Background Async)
   sendKillLogToGoogleSheet(killLogEntry);
+
+  // 4. ส่งการ์ดแจ้งเตือน Discord เมื่อลงเวลาบอสตาย (Background Async)
+  // - ฟังก์ชันนี้จะเช็คสถานะเปิด/ปิด (bossKillDiscordEnabled) และ Webhook URL เอง
+  // - ถ้าปิดการแจ้งเตือนหรือยังไม่ได้ตั้ง Webhook URL ฟังก์ชันจะข้ามไปโดยอัตโนมัติ
+  sendBossKillDiscordAlert(killLogEntry);
 
   if (typeof addAuditLog === 'function') {
     addAuditLog('boss_kill', `ลงเวลาตายบอส "${boss.name}"`, `เวลา: ${formatDateTimeShort(defDate)} โดย: ${killerEmail}`, 'BossTimer');
@@ -1057,6 +1149,11 @@ function updateKillConfirmBossHeader(bossId) {
 }
 
 function openBossKillConfirmModal(bossId) {
+  // เช็คสิทธิ์: เฉพาะ Admin เท่านั้นที่เปิดบันทึกเวลาบอสได้
+  if (typeof isBossTimerAdmin !== 'undefined' && !isBossTimerAdmin()) {
+    showToast('เฉพาะ Admin เท่านั้นที่สามารถบันทึกเวลาบอสได้ค่ะ', 'warning');
+    return;
+  }
   if (!bossId) {
     showToast('กรุณาเลือกบอสที่ต้องการบันทึกเวลา', 'warning');
     return;
@@ -1239,6 +1336,11 @@ let pendingKillConfirmData = null;
 
 function handleSaveKillConfirm(e) {
   if (e) e.preventDefault();
+  // เช็คสิทธิ์: เฉพาะ Admin เท่านั้นที่บันทึกเวลาบอสได้
+  if (typeof isBossTimerAdmin !== 'undefined' && !isBossTimerAdmin()) {
+    showToast('เฉพาะ Admin เท่านั้นที่สามารถบันทึกเวลาบอสได้ค่ะ', 'warning');
+    return;
+  }
   const bossSelect = document.getElementById('kill-confirm-boss-select');
   const bossId = bossSelect ? bossSelect.value : currentKillConfirmBossId;
   if (!bossId) {
@@ -1347,6 +1449,11 @@ function closeBossDoubleCheckModal() {
 }
 
 function commitSaveBossKillConfirm() {
+  // เช็คสิทธิ์: เฉพาะ Admin เท่านั้นที่ยืนยันบันทึกเวลาบอสได้
+  if (typeof isBossTimerAdmin !== 'undefined' && !isBossTimerAdmin()) {
+    showToast('เฉพาะ Admin เท่านั้นที่สามารถยืนยันบันทึกเวลาบอสได้ค่ะ', 'warning');
+    return;
+  }
   if (!pendingKillConfirmData) return;
 
   const { bossId, bossName, killDateTime, killerEmail, itemsList } = pendingKillConfirmData;
@@ -1382,6 +1489,12 @@ function commitSaveBossKillConfirm() {
 
 // Global Paste Handler: Supports Ctrl+V across the boss tab & inside modal
 function handleGlobalPasteForOCR(e) {
+  // เช็คสิทธิ์: เฉพาะ Admin เท่านั้นที่ใช้ OCR วางรูปอ่านข้อมูลบอสได้
+  if (typeof isBossTimerAdmin !== 'undefined' && !isBossTimerAdmin()) {
+    return;
+  }
+  // เช็คว่าอยู่ในโมดูลบอสไทม์เมอร์เท่านั้น (ไม่รบกวนการวางรูปในโมดูลอื่น เช่น Scoring)
+  if (activeAppModule !== 'boss_timer') return;
   if (!e.clipboardData || !e.clipboardData.items) return;
 
   for (let i = 0; i < e.clipboardData.items.length; i++) {
@@ -1414,6 +1527,11 @@ function handleGlobalPasteForOCR(e) {
 let editingBossAvatarData = null; // Stored Base64 or URL during modal editing
 
 function openEditBossModal(bossId) {
+  // เช็คสิทธิ์: เฉพาะ Admin เท่านั้นที่แก้ไขข้อมูลบอสได้
+  if (typeof isBossTimerAdmin !== 'undefined' && !isBossTimerAdmin()) {
+    showToast('เฉพาะ Admin เท่านั้นที่สามารถแก้ไขข้อมูลบอสได้ค่ะ', 'warning');
+    return;
+  }
   populate24HourSelects();
   currentEditBossId = bossId;
   const boss = bossList.find(b => b.id === bossId);
@@ -1559,6 +1677,11 @@ function applyQuickEditDefTime(minutesAgo) {
 
 function handleSaveEditBoss(e) {
   if (e) e.preventDefault();
+  // เช็คสิทธิ์: เฉพาะ Admin เท่านั้นที่บันทึกการแก้ไขบอสได้
+  if (typeof isBossTimerAdmin !== 'undefined' && !isBossTimerAdmin()) {
+    showToast('เฉพาะ Admin เท่านั้นที่สามารถแก้ไขข้อมูลบอสได้ค่ะ', 'warning');
+    return;
+  }
   if (!currentEditBossId) return;
 
   const nameVal = document.getElementById('edit-boss-name').value.trim();
@@ -1617,6 +1740,11 @@ function handleSaveEditBoss(e) {
 }
 
 function resetSingleBossTimer(bossId) {
+  // เช็คสิทธิ์: เฉพาะ Admin เท่านั้นที่รีเซ็ตไทม์เมอร์บอสได้
+  if (typeof isBossTimerAdmin !== 'undefined' && !isBossTimerAdmin()) {
+    showToast('เฉพาะ Admin เท่านั้นที่สามารถรีเซ็ตไทม์เมอร์บอสได้ค่ะ', 'warning');
+    return;
+  }
   const targetId = bossId || currentEditBossId;
   if (!targetId) return;
   const boss = bossList.find(b => b.id === targetId);
@@ -1670,6 +1798,11 @@ function closeMaintenanceModal() {
 
 function handleConfirmMaintenance(e) {
   if (e) e.preventDefault();
+  // เช็คสิทธิ์: เฉพาะ Admin เท่านั้นที่รีเซ็ตเวลาบอสหลังเมนเทนได้
+  if (typeof isBossTimerAdmin !== 'undefined' && !isBossTimerAdmin()) {
+    showToast('เฉพาะ Admin เท่านั้นที่สามารถรีเซ็ตเวลาบอสหลังเมนเทนได้ค่ะ', 'warning');
+    return;
+  }
   const dateVal = document.getElementById('maint-reset-date').value;
   const hourVal = document.getElementById('maint-reset-hour').value;
   const minVal = document.getElementById('maint-reset-min').value;
@@ -1717,6 +1850,11 @@ function handleConfirmMaintenance(e) {
 
 // Clear all recorded timers back to clean unrecorded state
 function clearAllBossTimers() {
+  // เช็คสิทธิ์: เฉพาะ Admin เท่านั้นที่ล้างเวลาบอสทั้งหมดได้
+  if (typeof isBossTimerAdmin !== 'undefined' && !isBossTimerAdmin()) {
+    showToast('เฉพาะ Admin เท่านั้นที่สามารถล้างเวลาบอสทั้งหมดได้ค่ะ', 'warning');
+    return;
+  }
   if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการล้างเวลาบอสทั้งหมดกลับสู่สถานะ "ยังไม่ลงเวลา"?')) return;
 
   bossTimerData = {};
@@ -1930,7 +2068,7 @@ async function discoverActiveGeminiModel(apiKey) {
 
         if (available.length > 0) {
           // Priority: 3.5-flash > 3.6-flash > 3.7-flash > 3-flash > 3.1-flash > flash-latest > any flash > first available
-          const preferred = 
+          const preferred =
             available.find(m => /gemini-3\.5-flash/i.test(m)) ||
             available.find(m => /gemini-3\.6-flash/i.test(m)) ||
             available.find(m => /gemini-3\.7-flash/i.test(m)) ||
@@ -1960,7 +2098,7 @@ async function discoverActiveGeminiModel(apiKey) {
 async function callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey) {
   // 1. First attempt: Use Dynamically Discovered Model
   const discovered = await discoverActiveGeminiModel(apiKey);
-  
+
   const candidateList = [
     { apiVer: discovered.apiVer, model: discovered.model },
     { apiVer: 'v1beta', model: 'gemini-3.5-flash' },
@@ -2044,14 +2182,14 @@ function extractJsonFromGeminiResponse(text) {
   // 1. Direct JSON parse
   try {
     return JSON.parse(trimmed);
-  } catch (e) {}
+  } catch (e) { }
 
   // 2. Extract code block ```json ... ``` or ``` ... ```
   const blockMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
   if (blockMatch && blockMatch[1]) {
     try {
       return JSON.parse(blockMatch[1].trim());
-    } catch (e) {}
+    } catch (e) { }
   }
 
   // 3. Extract JSON object { ... }
@@ -2060,7 +2198,7 @@ function extractJsonFromGeminiResponse(text) {
   if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
     try {
       return JSON.parse(trimmed.substring(firstBrace, lastBrace + 1));
-    } catch (e) {}
+    } catch (e) { }
   }
 
   // 4. Extract JSON array [ ... ]
@@ -2069,7 +2207,7 @@ function extractJsonFromGeminiResponse(text) {
   if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
     try {
       return JSON.parse(trimmed.substring(firstBracket, lastBracket + 1));
-    } catch (e) {}
+    } catch (e) { }
   }
 
   throw new Error('Invalid JSON structure in AI response: ' + trimmed.substring(0, 80));
@@ -2094,9 +2232,33 @@ async function processImageForBossOCR(file) {
   if (!file) return;
   const modal = document.getElementById('boss-kill-confirm-modal');
   if (modal && !modal.classList.contains('hidden')) {
+    // ถ้า modal เปิดอยู่แล้ว ให้ประมวลผลรูปภาพใน modal ปัจจุบัน
     await processKillConfirmImage(file);
   } else {
-    showToast('💡 กรุณาคลิกปุ่ม "ตายตอนนี้" ที่การ์ดบอสที่ต้องการบันทึกก่อนวางรูปภาพครับ', 'info');
+    // ถ้ายังไม่มี modal เปิด ให้เลือกบอสที่ใกล้เกิดที่สุด (alive/soon) แล้วเปิด modal อัตโนมัติ
+    // เพื่อให้ผู้ใช้วางรูปภาพได้ทันทีโดยไม่ต้องคลิกปุ่ม "ตายตอนนี้" ก่อน
+    const now = new Date();
+    let targetBoss = null;
+    let targetDiff = Infinity;
+
+    bossList.forEach(boss => {
+      const nextSpawn = getBossNextSpawn(boss);
+      if (!nextSpawn || isNaN(nextSpawn.getTime())) return;
+      const diff = nextSpawn.getTime() - now.getTime();
+      // เลือกบอสที่ใกล้เกิดที่สุด (diff น้อยที่สุด) โดยเฉพาะบอสที่เกิดแล้วหรือใกล้เกิด
+      if (diff < targetDiff) {
+        targetDiff = diff;
+        targetBoss = boss;
+      }
+    });
+
+    if (targetBoss) {
+      // เปิด modal ของบอสที่ใกล้เกิดที่สุด แล้วประมวลผลรูปภาพ
+      openBossKillConfirmModal(targetBoss.id);
+      await processKillConfirmImage(file);
+    } else {
+      showToast('💡 ยังไม่มีข้อมูลบอสที่ลงเวลาตาย กรุณาคลิกปุ่ม "ตายตอนนี้" ที่การ์ดบอสก่อนวางรูปภาพครับ', 'info');
+    }
   }
 }
 
@@ -2269,7 +2431,7 @@ function renderBossKillHistoryList() {
 
   let filtered = bossKillLogs || [];
   if (query) {
-    filtered = filtered.filter(log => 
+    filtered = filtered.filter(log =>
       (log.bossName && log.bossName.toLowerCase().includes(query)) ||
       (log.map && log.map.toLowerCase().includes(query)) ||
       (log.recordedBy && log.recordedBy.toLowerCase().includes(query)) ||
@@ -2292,7 +2454,7 @@ function renderBossKillHistoryList() {
   const html = filtered.map(log => {
     const isGuild = log.bossId === 'guild_arena' || log.bossId === 'reddevil_guild_boss';
     const isHigh = !isGuild && Number(log.level) >= 100;
-    
+
     let badgeClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
     let nameClass = 'text-emerald-400 font-bold';
     if (isGuild) {
@@ -2335,6 +2497,11 @@ function renderBossKillHistoryList() {
 }
 
 function clearAllBossKillLogsPrompt() {
+  // เช็คสิทธิ์: เฉพาะ Admin เท่านั้นที่ล้างประวัติการลงเวลาบอสได้
+  if (typeof isBossTimerAdmin !== 'undefined' && !isBossTimerAdmin()) {
+    showToast('เฉพาะ Admin เท่านั้นที่สามารถล้างประวัติการลงเวลาบอสได้ค่ะ', 'warning');
+    return;
+  }
   if (confirm('คุณแน่ใจหรือไม่ว่าต้องการล้างประวัติการลงเวลาบอสทั้งหมด? (การกระทำนี้ไม่สามารถย้อนกลับได้)')) {
     bossKillLogs = [];
     localStorage.setItem('guild_boss_kill_logs', JSON.stringify([]));
@@ -2411,6 +2578,8 @@ function openSheetWebhookSettingsModal() {
   if (sheetInput) sheetInput.value = bossSheetWebhookUrl || '';
   if (discordInput) discordInput.value = bossDiscordWebhookUrl || '';
   if (geminiInput) geminiInput.value = bossGeminiApiKey || '';
+  // อัปเดตสถานะสวิตช์เปิด/ปิดการแจ้งเตือน Discord เมื่อลงเวลาบอสตาย
+  updateBossKillDiscordToggleUi();
   const testStatusEl = document.getElementById('gemini-test-status');
   if (testStatusEl) {
     testStatusEl.classList.add('hidden');
@@ -2443,7 +2612,7 @@ async function testGeminiApiKeyConnection() {
     if (!listRes.ok) {
       const errJson = await listRes.json().catch(() => ({}));
       const errMessage = errJson?.error?.message || `HTTP ${listRes.status}`;
-      
+
       if (listRes.status === 404 || listRes.status === 400 || listRes.status === 403 || errMessage.includes('not found') || errMessage.includes('API_KEY_INVALID') || errMessage.includes('API key not valid')) {
         statusEl.innerHTML = `
           <div class="p-2.5 rounded-xl bg-rose-950/60 border border-rose-500/50 text-rose-200 text-[11px] space-y-1.5 text-left">
@@ -2501,6 +2670,39 @@ function closeSheetWebhookSettingsModal() {
   if (modal) modal.classList.add('hidden');
 }
 
+// อัปเดต UI ของสวิตช์เปิด/ปิดการแจ้งเตือน Discord เมื่อลงเวลาบอสตาย
+function updateBossKillDiscordToggleUi() {
+  const toggle = document.getElementById('boss-kill-discord-toggle');
+  if (!toggle) return;
+  const knob = toggle.querySelector('span');
+  if (bossKillDiscordEnabled) {
+    // เปิด: พื้นหลังสีเขียว + ลูกบิดเลื่อนไปขวา
+    toggle.style.backgroundColor = '#10b981';
+    toggle.setAttribute('aria-pressed', 'true');
+    if (knob) knob.style.transform = 'translateX(20px)';
+  } else {
+    // ปิด: พื้นหลังสีเทา + ลูกบิดอยู่ซ้าย
+    toggle.style.backgroundColor = '#334155';
+    toggle.setAttribute('aria-pressed', 'false');
+    if (knob) knob.style.transform = 'translateX(0)';
+  }
+}
+
+// สลับเปิด/ปิดการแจ้งเตือน Discord เมื่อลงเวลาบอสตาย (บันทึกทันที)
+function toggleBossKillDiscordAlert() {
+  if (typeof isSuperAdmin !== 'undefined' && !isSuperAdmin) {
+    showToast('เฉพาะ Super Admin เท่านั้นที่สามารถตั้งค่าได้', 'warning');
+    return;
+  }
+  bossKillDiscordEnabled = !bossKillDiscordEnabled;
+  localStorage.setItem('guild_boss_kill_discord_enabled', String(bossKillDiscordEnabled));
+  if (typeof fbDb !== 'undefined' && fbDb) {
+    fbDb.ref('guild_app/boss_kill_discord_enabled').set(bossKillDiscordEnabled);
+  }
+  updateBossKillDiscordToggleUi();
+  showToast(bossKillDiscordEnabled ? '🔔 เปิดการแจ้งเตือน Discord เมื่อลงเวลาบอสตายแล้ว' : '🔕 ปิดการแจ้งเตือน Discord เมื่อลงเวลาบอสตายแล้ว', 'info');
+}
+
 function saveSheetWebhookUrl() {
   const sheetInput = document.getElementById('sheet-webhook-url-input');
   const discordInput = document.getElementById('discord-webhook-url-input');
@@ -2543,22 +2745,88 @@ async function sendDiscordWebhookPayload(payload) {
   }
 }
 
+// ส่งการ์ดแจ้งเตือน Discord เมื่อลงเวลาบอสตาย (เรียกจาก saveBossKillTime)
+// - เช็คสถานะเปิด/ปิด (bossKillDiscordEnabled) และ Webhook URL ก่อนส่ง
+// - แสดงชื่อบอส, เวลาตาย, เวลากำเนิดรอบถัดไป, ผู้บันทึก และไอเทมดรอป (ถ้ามี)
+function sendBossKillDiscordAlert(killLogEntry) {
+  // ถ้าปิดการแจ้งเตือน หรือยังไม่ได้ตั้งค่า Webhook URL ให้ข้ามไปเงียบๆ
+  if (!bossKillDiscordEnabled) return;
+  if (!bossDiscordWebhookUrl) return;
+  if (!killLogEntry) return;
+
+  try {
+    const bossName = killLogEntry.bossName || 'บอส';
+    const level = killLogEntry.level || '??';
+    const map = killLogEntry.map || '-';
+    const killTimeStr = killLogEntry.killTimeFormatted || '-';
+    const nextSpawnStr = killLogEntry.nextSpawnFormatted || '-';
+    const recordedBy = killLogEntry.recordedBy || 'Admin';
+    const dropItems = Array.isArray(killLogEntry.dropItems) ? killLogEntry.dropItems : [];
+
+    // สร้าง description ของไอเทมดรอป (ถ้ามี)
+    let dropText = '';
+    if (dropItems.length > 0) {
+      dropText = `\n> ▎ 💎 **Drop Items**: ${dropItems.join(', ')}`;
+    }
+
+    // สร้าง Embed แจ้งเตือน (ใช้สีเขียว/ม่วง เพื่อแยกจากระบบแจ้งเตือนบอสเกิด)
+    const embed = {
+      color: 0x8B5CF6, // สีม่วง
+      author: { name: 'LORDNINE S.6' },
+      title: `💀 BOSS DOWN • Lv.${level}, ${bossName}`,
+      description: `> ▎ 🗺️ **Map**: \`${map}\`\n> ▎ 💀 **Kill Time**: ${killTimeStr}\n> ▎ ⏳ **Next Spawn**: ${nextSpawnStr}\n> ▎ 👤 **Recorded By**: ${recordedBy}${dropText}`,
+      footer: { text: '🛡️ LORD NINE SYSTEM • Dashboard RedDevil' },
+      timestamp: new Date().toISOString()
+    };
+
+    // เพิ่มรูปบอส (ถ้ามี) โดยค้นหาจาก bossList
+    // หมายเหตุ: Discord รับเฉพาะ URL ที่เป็น http/https เท่านั้น
+    // ถ้า avatar เป็น base64 data URI (data:image/...) จะทำให้ Discord ตอบ 400
+    // จึงต้องเช็คว่าเป็น URL จริงก่อนถึงจะใส่ thumbnail ได้
+    const boss = bossList.find(b => b.id === killLogEntry.bossId);
+    if (boss && boss.avatar && /^https?:\/\//i.test(boss.avatar)) {
+      embed.thumbnail = { url: boss.avatar };
+    }
+
+    sendDiscordWebhookPayload({ embeds: [embed] });
+  } catch (e) {
+    console.warn('Boss Kill Discord Alert error:', e);
+  }
+}
+
 // Check & Send Realtime Discord Spawn Alerts (5-Min Soon Warning & Spawned Alert)
 async function checkAndSendDiscordSpawnAlerts() {
   if (!bossDiscordWebhookUrl) return;
 
   const now = new Date();
+  const nowMs = now.getTime();
+
+  // ล้าง sentDiscordAlerts ที่เก่าเกินไป (spawn ที่ผ่านไปแล้วเกิน 30 นาที)
+  // เพื่อไม่ให้ Set โตขึ้นเรื่อยๆ โดยไม่มีขีดจำกัด
+  const expiredKeys = [];
+  sentDiscordAlerts.forEach(key => {
+    // รูปแบบ key: `${bossId}_5m_${spawnUnix}` หรือ `${bossId}_spawned_${spawnUnix}`
+    const parts = key.split('_');
+    const spawnUnix = Number(parts[parts.length - 1]);
+    if (!isNaN(spawnUnix) && (spawnUnix * 1000) < (nowMs - 30 * 60 * 1000)) {
+      expiredKeys.push(key);
+    }
+  });
+  expiredKeys.forEach(k => sentDiscordAlerts.delete(k));
+
+  // สร้างข้อความ @mention จาก Role ID ที่ตั้งค่าไว้ (ไม่ hardcode)
+  const roleMention = bossDiscordRoleId ? `<@&${bossDiscordRoleId}>` : '';
 
   for (const boss of bossList) {
-    const timer = bossTimerData[boss.id] || {};
-    let nextSpawn = timer.customNextSpawn ? new Date(timer.customNextSpawn) : calculateNextSpawnDate(boss, timer.defeatedTime);
+    // ใช้ helper getBossNextSpawn() เพื่อรวมตรรกะคำนวณเวลากำเนิดไว้ที่เดียว
+    let nextSpawn = getBossNextSpawn(boss);
 
     if (!nextSpawn || isNaN(nextSpawn.getTime())) continue;
 
-    const diffMs = nextSpawn.getTime() - now.getTime();
+    const diffMs = nextSpawn.getTime() - nowMs;
     const spawnUnix = Math.floor(nextSpawn.getTime() / 1000);
     const pad = n => String(n).padStart(2, '0');
-    const timeHHmm = `${pad(nextSpawn.getHours())}:${pad(nextSpawn.getMinutes())} น.`;
+    const timeHHmm = `${pad(nextSpawn.getHours())}:${pad(nextSpawn.getMinutes())}`;
     const bossDisplayName = `Lv.${boss.level || '??'}, ${boss.name}`;
 
     // 🟡 1. แจ้งเตือนก่อนเกิด 5 นาที (เหลือ 0 ถึง 5 นาที)
@@ -2574,15 +2842,16 @@ async function checkAndSendDiscordSpawnAlerts() {
           color: 0xFFD700, // สีเหลืองทอง
           author: { name: 'LORDNINE S.6' },
           title: `⏳ SOON • ${bossDisplayName}`,
-          description: `# 🕖 ${timeHHmm}\n\n> ▎ 🗺️ **แผนที่**: \`${boss.map || '-'}\`\n> ▎ ⏳ **เตรียมตัว!** อีก 5 นาทีบอสจะเกิด (<t:${spawnUnix}:R>)`,
+          description: `# 🕖 ${timeHHmm}\n\n> ▎ 🗺️ **Map**: \`${boss.map || '-'}\`\n> ▎ ⏳ **Get ready!** Boss spawns in 5 minutes (<t:${spawnUnix}:R>)`,
           footer: { text: '🛡️ LORD NINE SYSTEM • Dashboard RedDevil' },
           timestamp: nextSpawn.toISOString()
         };
-        if (boss.avatar) {
+        // ใส่ thumbnail เฉพาะเมื่อ avatar เป็น URL http/https จริง (Discord ไม่รับ base64 data URI)
+        if (boss.avatar && /^https?:\/\//i.test(boss.avatar)) {
           embed5m.thumbnail = { url: boss.avatar };
         }
 
-        sendDiscordWebhookPayload({ content: '<@&1508495658162851970>', embeds: [embed5m] });
+        sendDiscordWebhookPayload({ content: roleMention, embeds: [embed5m] });
       }
     }
 
@@ -2599,15 +2868,16 @@ async function checkAndSendDiscordSpawnAlerts() {
           color: 0xFF2A2A, // สีแดงสด
           author: { name: 'LORDNINE S.6' },
           title: `🔴 SPAWN • ${bossDisplayName}`,
-          description: `# 🕖 ${timeHHmm}\n\n> ▎ 🗺️ **แผนที่**: \`${boss.map || '-'}\`\n> ▎ 🚨 **บอสเกิดแล้ว!** ออกล่าได้ทันที`,
+          description: `# 🕖 ${timeHHmm}\n\n> ▎ 🗺️ **Map**: \`${boss.map || '-'}\`\n> ▎ 🚨 **Boss has spawned!** Hunt it now`,
           footer: { text: '🛡️ LORD NINE SYSTEM • Dashboard RedDevil' },
           timestamp: now.toISOString()
         };
-        if (boss.avatar) {
+        // ใส่ thumbnail เฉพาะเมื่อ avatar เป็น URL http/https จริง (Discord ไม่รับ base64 data URI)
+        if (boss.avatar && /^https?:\/\//i.test(boss.avatar)) {
           embedSpawned.thumbnail = { url: boss.avatar };
         }
 
-        sendDiscordWebhookPayload({ content: '<@&1508495658162851970>', embeds: [embedSpawned] });
+        sendDiscordWebhookPayload({ content: roleMention, embeds: [embedSpawned] });
       }
     }
   }
@@ -2672,7 +2942,8 @@ function openBossDropLogModal(bossId) {
     if (logs.length === 0) {
       list.innerHTML = `<div class="p-6 text-center text-slate-500 text-xs">ยังไม่มีบันทึกไอเทมดรอปสำหรับบอสตัวนี้</div>`;
     } else {
-      const isUserAdmin = typeof isAdmin !== 'undefined' ? isAdmin : false;
+      // ใช้ isBossTimerAdmin() เพื่อให้สอดคล้องกับเช็คสิทธิ์อื่นๆ ในโมดูล
+      const isUserAdmin = typeof isBossTimerAdmin !== 'undefined' ? isBossTimerAdmin() : false;
 
       list.innerHTML = logs.map(l => `
         <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl space-y-2 shadow-sm relative group">
@@ -2719,7 +2990,7 @@ function closeBossDropLogModal() {
 }
 
 function deleteBossDropLog(logId) {
-  if (typeof isAdmin !== 'undefined' && !isAdmin) {
+  if (typeof isBossTimerAdmin !== 'undefined' && !isBossTimerAdmin()) {
     showToast('เฉพาะ Admin เท่านั้นที่สามารถลบ Log ไอเทมได้ค่ะ', 'warning');
     return;
   }
@@ -2849,6 +3120,11 @@ function saveRaidPlannerSets() {
 }
 
 function openBossRaidPlannerModal() {
+  // เช็คสิทธิ์: เฉพาะ Admin เท่านั้นที่เปิด Raid Planner ได้
+  if (typeof isBossTimerAdmin !== 'undefined' && !isBossTimerAdmin()) {
+    showToast('เฉพาะ Admin เท่านั้นที่สามารถเปิด Raid Planner ได้ค่ะ', 'warning');
+    return;
+  }
   const modal = document.getElementById('boss-raid-planner-modal');
   if (!modal) return;
   modal.classList.remove('hidden');
@@ -3001,8 +3277,8 @@ function renderRaidPlannerSets() {
                 คลิกเลือกการ์ดบอสจากรายการด้านล่าง เพื่อเพิ่มเข้าชุดนี้ ⬇️
               </div>
             ` : (set.bossIds || []).map((bossId, bIdx) => {
-              const b = bossList.find(x => x.id === bossId) || { id: bossId, name: bossId, level: '??' };
-              return `
+      const b = bossList.find(x => x.id === bossId) || { id: bossId, name: bossId, level: '??' };
+      return `
                 <button type="button" onclick="removeBossFromRaidSet(${set.id}, '${b.id}')"
                   class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500 text-slate-950 font-black text-xs shadow-md border border-amber-400 hover:bg-amber-400 active:scale-95 transition group"
                   title="คลิกเพื่อนำ ${b.name} ออกจากชุดนี้">
@@ -3012,7 +3288,7 @@ function renderRaidPlannerSets() {
                   <i class="fa-solid fa-xmark text-[10px] opacity-70 group-hover:opacity-100 group-hover:text-rose-950"></i>
                 </button>
               `;
-            }).join('')}
+    }).join('')}
           </div>
         </div>
 
@@ -3024,22 +3300,22 @@ function renderRaidPlannerSets() {
 
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
             ${fieldBosses.map(b => {
-              const isCurrentSet = (set.bossIds || []).includes(b.id);
-              const otherSetOwner = raidPlannerSets.find(s => s.id !== set.id && (s.bossIds || []).includes(b.id));
+      const isCurrentSet = (set.bossIds || []).includes(b.id);
+      const otherSetOwner = raidPlannerSets.find(s => s.id !== set.id && (s.bossIds || []).includes(b.id));
 
-              let btnClass = 'bg-slate-900/90 text-slate-300 border-slate-700/80 hover:border-amber-400 hover:text-amber-200 hover:bg-slate-800';
-              let badgeHtml = `<span class="text-[9.5px] font-mono px-1 py-0.2 rounded bg-slate-800 text-slate-400">Lv.${b.level}</span>`;
+      let btnClass = 'bg-slate-900/90 text-slate-300 border-slate-700/80 hover:border-amber-400 hover:text-amber-200 hover:bg-slate-800';
+      let badgeHtml = `<span class="text-[9.5px] font-mono px-1 py-0.2 rounded bg-slate-800 text-slate-400">Lv.${b.level}</span>`;
 
-              if (isCurrentSet) {
-                btnClass = 'bg-amber-500 text-slate-950 font-black border-amber-300 shadow-md shadow-amber-500/20';
-                badgeHtml = `<span class="text-[9.5px] font-mono px-1 py-0.2 rounded bg-slate-950/40 text-slate-950 font-black">✓ ในชุดนี้</span>`;
-              } else if (otherSetOwner) {
-                const sNum = raidPlannerSets.indexOf(otherSetOwner) + 1;
-                btnClass = 'bg-slate-950 text-slate-400 border-slate-800/80 hover:border-amber-400/60 hover:text-slate-200 opacity-60 hover:opacity-100';
-                badgeHtml = `<span class="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-800 text-amber-400 border border-slate-700">#${sNum}</span>`;
-              }
+      if (isCurrentSet) {
+        btnClass = 'bg-amber-500 text-slate-950 font-black border-amber-300 shadow-md shadow-amber-500/20';
+        badgeHtml = `<span class="text-[9.5px] font-mono px-1 py-0.2 rounded bg-slate-950/40 text-slate-950 font-black">✓ ในชุดนี้</span>`;
+      } else if (otherSetOwner) {
+        const sNum = raidPlannerSets.indexOf(otherSetOwner) + 1;
+        btnClass = 'bg-slate-950 text-slate-400 border-slate-800/80 hover:border-amber-400/60 hover:text-slate-200 opacity-60 hover:opacity-100';
+        badgeHtml = `<span class="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-800 text-amber-400 border border-slate-700">#${sNum}</span>`;
+      }
 
-              return `
+      return `
                 <button type="button" onclick="toggleBossInRaidSet(${set.id}, '${b.id}')"
                   class="flex items-center justify-between px-2 py-1.5 rounded-xl border text-[11px] transition active:scale-95 ${btnClass}"
                   title="${escapeHtml(b.name)} (Lv.${b.level}) • ${escapeHtml(b.map || '')}">
@@ -3047,7 +3323,7 @@ function renderRaidPlannerSets() {
                   ${badgeHtml}
                 </button>
               `;
-            }).join('')}
+    }).join('')}
           </div>
         </div>
 

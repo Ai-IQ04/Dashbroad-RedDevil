@@ -1,4 +1,20 @@
+# ไฟล์ config ที่มีข้อมูลลับ (ห้าม push ขึ้น GitHub)
 bot_config.json
 .env
+
+# โฟลเดอร์ dependencies
 node_modules/
+
+# โฟลเดอร์สำรองข้อมูล
 back up/
+
+# โฟลเดอร์/ไฟล์ภายในของเครื่องมือพัฒนา (ไม่ควร push)
+.continue/
+.roo/
+.vscode/
+plans/
+git_diff_output.txt
+boss_timer_summary.md
+
+# ไฟล์สคริปต์ชั่วคราว
+_check_refs.js

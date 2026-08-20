@@ -1,0 +1,26 @@
+{
+    "name": "GuildApp - ระบบจัดการคะแนน & เช็คชื่อกิลด์",
+    "short_name": "GuildApp",
+    "description": "ระบบจัดการคะแนน & เช็คชื่อกิลด์ BlueDevil & RedDevil พร้อมโมดูลบอสไทม์เมอร์",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#080c14",
+    "theme_color": "#e9edf4",
+    "lang": "th",
+    "icons": [
+        {
+            "src": "https://cdn-icons-png.flaticon.com/512/3408/3408591.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "https://cdn-icons-png.flaticon.com/512/3408/3408591.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ]
+}

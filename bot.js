@@ -16,7 +16,30 @@ const { Client, GatewayIntentBits, Partials, EmbedBuilder, AttachmentBuilder } =
 const fs = require('fs');
 const path = require('path');
 
-// ⚙️ โหลดการตั้งค่าจาก bot_config.json
+function loadDotEnvFile() {
+  const envPath = path.join(__dirname, '.env');
+  if (!fs.existsSync(envPath)) return;
+
+  try {
+    const lines = fs.readFileSync(envPath, 'utf8').split(/\r?\n/);
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#') || !trimmed.includes('=')) continue;
+      const eqIndex = trimmed.indexOf('=');
+      const key = trimmed.slice(0, eqIndex).trim();
+      const value = trimmed.slice(eqIndex + 1).trim().replace(/^["']|["']$/g, '');
+      if (key && process.env[key] === undefined) {
+        process.env[key] = value;
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ ไม่สามารถอ่านไฟล์ .env ได้:', e.message);
+  }
+}
+
+loadDotEnvFile();
+
+// ⚙️ โหลดการตั้งค่าจาก bot_config.json และ environment variables
 let CONFIG = {
   DISCORD_BOT_TOKEN: '',
   REGISTRATION_CHANNEL_ID: '',
@@ -34,6 +57,16 @@ try {
 } catch (e) {
   console.error('❌ ไม่สามารถอ่านไฟล์ bot_config.json ได้:', e.message);
 }
+
+CONFIG = {
+  ...CONFIG,
+  DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN || CONFIG.DISCORD_BOT_TOKEN,
+  REGISTRATION_CHANNEL_ID: process.env.REGISTRATION_CHANNEL_ID || CONFIG.REGISTRATION_CHANNEL_ID,
+  BOSS_ALERT_CHANNEL_ID: process.env.BOSS_ALERT_CHANNEL_ID || CONFIG.BOSS_ALERT_CHANNEL_ID,
+  ANNOUNCEMENT_CHANNEL_ID: process.env.ANNOUNCEMENT_CHANNEL_ID || CONFIG.ANNOUNCEMENT_CHANNEL_ID,
+  MENTION_TAG: process.env.MENTION_TAG || CONFIG.MENTION_TAG,
+  FIREBASE_DB_URL: process.env.FIREBASE_DB_URL || CONFIG.FIREBASE_DB_URL
+};
 
 // 🤖 สร้าง Client บอท
 const client = new Client({
@@ -246,7 +279,9 @@ async function sendHeartbeat(memberCount = 0) {
         lastHeartbeat: new Date().toISOString()
       })
     });
-  } catch (e) { }
+  } catch (e) {
+    console.warn('⚠️ [Heartbeat] ส่งสถานะขึ้น Firebase ไม่สำเร็จ:', e.message);
+  }
 }
 
 // ⚡ ดักฟังคำสั่งจากหน้าเว็บ Dashboard (ซิงค์ด่วน & ส่งประกาศจากน้องเดวิล)
@@ -279,7 +314,10 @@ function listenForDashboardCommands() {
           const channelId = item.channelId || CONFIG.ANNOUNCEMENT_CHANNEL_ID || '1539252263132860516';
           const mentionTag = item.mentionTag || CONFIG.MENTION_TAG || '<@&1508495658162851970>';
 
-          const channel = client.channels.cache.get(channelId) || await client.channels.fetch(channelId).catch(() => null);
+          const channel = client.channels.cache.get(channelId) || await client.channels.fetch(channelId).catch(err => {
+            console.warn(`⚠️ [Announcement Error] ดึงห้อง Discord ID ${channelId} ไม่สำเร็จ:`, err.message);
+            return null;
+          });
           if (channel) {
             const embed = {
               title: item.title || '📢 [RedDevil] ประกาศจากกิลด์',
@@ -302,7 +340,9 @@ function listenForDashboardCommands() {
           }
         }
       }
-    } catch (e) { }
+    } catch (e) {
+      console.warn('⚠️ [Dashboard Commands] อ่านหรือประมวลผลคำสั่งจาก Firebase ไม่สำเร็จ:', e.message);
+    }
   }, 3000);
 }
 
@@ -348,7 +388,9 @@ client.on('messageCreate', async (message) => {
     await syncDiscordServerMembers();
     try {
       await message.react('🟢');
-    } catch (e) { }
+    } catch (e) {
+      console.warn(`⚠️ ไม่สามารถ react ข้อความลงทะเบียน ${message.id} ได้:`, e.message);
+    }
   }
 });
 
@@ -356,5 +398,5 @@ client.on('messageCreate', async (message) => {
 if (CONFIG.DISCORD_BOT_TOKEN && !CONFIG.DISCORD_BOT_TOKEN.startsWith('วาง_')) {
   client.login(CONFIG.DISCORD_BOT_TOKEN);
 } else {
-  console.error('⚠️ กรุณาตรวจสอบรหัส Bot Token ในไฟล์ bot_config.json ให้ถูกต้อง');
+  console.error('⚠️ กรุณาตั้งค่า DISCORD_BOT_TOKEN ในไฟล์ .env, environment variable หรือ bot_config.json ให้ถูกต้อง');
 }
