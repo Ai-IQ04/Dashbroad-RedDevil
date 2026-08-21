@@ -665,8 +665,11 @@ function renderBossTimerCards() {
       `;
     }
 
+    // คลาสพิเศษสำหรับการ์ดบอสกิจกรรม (กิจกรรมกิลด์) เพื่อใช้ปรับสไตล์ "การ์เดี้ยน" เฉพาะการ์ดนี้
+    const guildCardClass = isGuildActivity ? ' boss-card-guild' : '';
+
     html += `
-      <div class="boss-card relative flex flex-col justify-between bg-gradient-to-b ${cardBg} border ${cardBorder} rounded-3xl p-4 shadow-xl backdrop-blur-md transition hover:scale-[1.015] duration-200">
+      <div class="boss-card${guildCardClass} relative flex flex-col justify-between bg-gradient-to-b ${cardBg} border ${cardBorder} rounded-3xl p-4 shadow-xl backdrop-blur-md transition hover:scale-[1.015] duration-200">
         <div>
           <!-- Top Row: Type & Status Badges -->
           <div class="flex items-center justify-between gap-1.5 mb-2.5">

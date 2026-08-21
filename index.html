@@ -2060,6 +2060,103 @@
       box-shadow: 10px 10px 20px rgba(163, 174, 190, 0.45), -8px -8px 18px rgba(255, 255, 255, 0.82) !important;
     }
 
+    /* ===== Light Mode: ปรับเงาของปุ่มแอคชันและป้ายบนการ์ดบอสให้ไม่สว่างเกินไป =====
+       เดิมกฎ .apple-btn / .shadow-sm / .shadow-inner ข้างบนใช้ !important ทับเงา
+       ด้วยสีขาวความทึบสูง (0.82-0.9) ทำให้ปุ่มและป้ายบนการ์ดบอสดูสว่าง/แปลก
+       จึงเพิ่มกฎเฉพาะ light mode นี้เพื่อลดความสว่างเงาเฉพาะส่วนบนการ์ดบอส
+       (ไม่แตะเงาของการ์ดทั้งใบ) */
+
+    /* 1) ปุ่มแอคชันบนการ์ดบอส (ตายตอนนี้ / แก้ไข / ดรอป) */
+    body:not(.neo-dark) .boss-card .apple-btn {
+      box-shadow: 4px 4px 10px rgba(163, 174, 190, 0.35), -3px -3px 8px rgba(255, 255, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+    }
+
+    /* 2) ป้ายสถานะ/ประเภท/ระดับบอส (badge) บนการ์ดบอส */
+    body:not(.neo-dark) .boss-card span[class*="shadow-sm"],
+    body:not(.neo-dark) .boss-card span[class*="shadow-md"],
+    body:not(.neo-dark) .boss-card span[class*="shadow-lg"] {
+      box-shadow: 2px 2px 6px rgba(163, 174, 190, 0.28), -2px -2px 5px rgba(255, 255, 255, 0.4) !important;
+    }
+
+    /* 3) กล่องนับถอยหลัง / metadata / ระดับบอส (shadow-inner) บนการ์ดบอส */
+    body:not(.neo-dark) .boss-card [class*="shadow-inner"] {
+      box-shadow: inset 3px 3px 7px rgba(163, 174, 190, 0.25), inset -3px -3px 7px rgba(255, 255, 255, 0.35) !important;
+    }
+
+    /* 4) กล่องพื้นหลังโปรไฟล์บอส (avatar) บนการ์ดบอส — มีรูปใช้ shadow-lg, ไม่มีรูปใช้ shadow-inner */
+    body:not(.neo-dark) .boss-card img[class*="shadow-lg"],
+    body:not(.neo-dark) .boss-card div[class*="shadow-lg"] {
+      box-shadow: 3px 3px 8px rgba(163, 174, 190, 0.3), -3px -3px 7px rgba(255, 255, 255, 0.4) !important;
+    }
+
+    /* ===== Light Mode: สไตล์ "การ์เดี้ยน" สำหรับการ์ดบอสกิจกรรม (พื้นผิวไล่เฉดส้ม-ขาวเงางามทั้งใบ) =====
+       ใช้คลาส .boss-card-guild ที่ boss_timer.js เพิ่มให้เฉพาะการ์ดบอสกิจกรรม (กิจกรรมกิลด์)
+       เพื่อให้การ์ดดูพรีเมี่ยม เงางาม ด้วยโทนสีส้ม-ขาว */
+
+    /* 1) พื้นหลังไล่เฉดส้ม-ขาวเงางาม + ขอบส้มอ่อน + เงาเงางามพรีเมี่ยม */
+    body:not(.neo-dark) .boss-card.boss-card-guild {
+      background-image: linear-gradient(160deg, #fff7ed 0%, #ffedd5 30%, #fed7aa 62%, #fdba74 100%) !important;
+      background-color: #ffedd5 !important;
+      border-color: rgba(251, 146, 60, 0.55) !important;
+      box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.22), 12px 12px 26px rgba(234, 88, 12, 0.16), -8px -8px 18px rgba(255, 255, 255, 0.92), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+    }
+
+    /* 2) ชื่อบอส / แมพ / ข้อความหลักให้เข้มขึ้นเพื่ออ่านง่ายบนพื้นส้ม-ขาว */
+    body:not(.neo-dark) .boss-card.boss-card-guild h4,
+    body:not(.neo-dark) .boss-card.boss-card-guild p {
+      color: #7c2d12 !important;
+      -webkit-text-fill-color: #7c2d12 !important;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+    }
+
+    /* 3) ไอคอนตำแหน่ง (location) ให้เป็นสีส้มเข้ม */
+    body:not(.neo-dark) .boss-card.boss-card-guild p i {
+      color: #ea580c !important;
+    }
+
+    /* 4) ระดับบอส (Lv.) ให้เป็นสไตล์ส้ม-ขาวเงางาม */
+    body:not(.neo-dark) .boss-card.boss-card-guild span[class*="shadow-inner"] {
+      background: linear-gradient(145deg, #fff7ed, #fed7aa) !important;
+      color: #9a3412 !important;
+      border-color: rgba(251, 146, 60, 0.5) !important;
+      box-shadow: inset 2px 2px 5px rgba(234, 88, 12, 0.18), inset -2px -2px 5px rgba(255, 255, 255, 0.9) !important;
+    }
+
+    /* 5) กล่องนับถอยหลัง / metadata ให้เป็นพื้นส้มอ่อนเงางาม (แทนพื้นเข้มเดิม) */
+    body:not(.neo-dark) .boss-card.boss-card-guild div[class*="shadow-inner"] {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.85), rgba(254, 215, 170, 0.75)) !important;
+      border-color: rgba(251, 146, 60, 0.3) !important;
+      box-shadow: inset 3px 3px 7px rgba(234, 88, 12, 0.14), inset -3px -3px 7px rgba(255, 255, 255, 0.85) !important;
+    }
+
+    /* 6) ข้อความในกล่องนับถอยหลัง / metadata ให้เข้มขึ้น */
+    body:not(.neo-dark) .boss-card.boss-card-guild div[class*="shadow-inner"] span,
+    body:not(.neo-dark) .boss-card.boss-card-guild div[class*="shadow-inner"] div {
+      color: #7c2d12 !important;
+    }
+
+    /* 7) คงขอบ/เงาสถานะ alive (แดง) และ soon (เหลือง) สำหรับการ์ดบอสกิจกรรม
+          เพื่อให้ยังเห็นสถานะชัดเจนบนพื้นส้ม-ขาว */
+    body:not(.neo-dark) .boss-card.boss-card-guild[class*="border-rose-500"] {
+      box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.35), 12px 12px 26px rgba(234, 88, 12, 0.16), -8px -8px 18px rgba(255, 255, 255, 0.92), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+    }
+
+    body:not(.neo-dark) .boss-card.boss-card-guild[class*="border-amber-400"] {
+      box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.3), 12px 12px 26px rgba(234, 88, 12, 0.16), -8px -8px 18px rgba(255, 255, 255, 0.92), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+    }
+
+    /* 8) ป้าย "กิจกรรมกิลด์" (typeBadge) ให้เข้ากับธีมส้ม-ขาว อ่านง่ายขึ้น */
+    body:not(.neo-dark) .boss-card.boss-card-guild span[class*="bg-amber-500/20"] {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(254, 215, 170, 0.9)) !important;
+      color: #9a3412 !important;
+      border-color: rgba(251, 146, 60, 0.55) !important;
+      box-shadow: 0 1px 3px rgba(234, 88, 12, 0.2) !important;
+    }
+
+    body:not(.neo-dark) .boss-card.boss-card-guild span[class*="bg-amber-500/20"] i {
+      color: #ea580c !important;
+    }
+
     body:not(.neo-dark) input,
     body:not(.neo-dark) select,
     body:not(.neo-dark) textarea,
