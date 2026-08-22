@@ -333,6 +333,12 @@ function getBossNextSpawn(boss) {
   return calculateNextSpawnDate(boss, timer.defeatedTime);
 }
 
+function getBossTimerSourceLabel(boss, timer, isEn) {
+  if (timer && timer.customNextSpawn) return isEn ? 'Admin custom time' : 'เวลา Admin ตั้งเอง';
+  if (boss.respawnType === 'interval') return isEn ? `Interval ${boss.intervalHours}h` : `นับจากเวลาตาย ${boss.intervalHours} ชม.`;
+  return isEn ? `Fixed • ${boss.scheduleText || 'Schedule'}` : `ตาราง固定 • ${boss.scheduleText || 'ตามตาราง'}`;
+}
+
 // Initialize Boss Data
 function initBossTimerModule() {
   bossCustomConfigs = parseStoredJson('guild_boss_custom_configs', {});
@@ -503,7 +509,8 @@ function renderBossTimerCards() {
       nextSpawn,
       status,
       diffMs,
-      respawnLabel: boss.respawnType === 'interval' ? (boss.intervalHours + hrUnit) : (boss.scheduleText || 'Fixed')
+      respawnLabel: boss.respawnType === 'interval' ? (boss.intervalHours + hrUnit) : (boss.scheduleText || 'Fixed'),
+      sourceLabel: getBossTimerSourceLabel(boss, bossTimerData[boss.id] || {}, isEn)
     };
   });
 
@@ -751,6 +758,7 @@ function renderBossTimerCards() {
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-1.5 mb-1">
                 <span class="text-[10.5px] font-mono font-black px-2 py-0.5 rounded-lg border shadow-inner ${levelBadgeClass}">Lv.${escapeHtml(b.level || '??')}</span>
+                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-slate-800/80 text-slate-400 border border-slate-700 truncate max-w-[170px]" title="${escapeHtml(b.sourceLabel)}">${escapeHtml(b.sourceLabel)}</span>
               </div>
               <h4 class="text-lg sm:text-xl font-black tracking-tight leading-snug truncate ${nameColorClass}" title="${escapeHtml(b.name)}">
                 ${escapeHtml(b.name)}
