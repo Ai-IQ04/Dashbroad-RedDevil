@@ -11301,7 +11301,7 @@ Output strictly valid JSON with no markdown wrapping:
         bossList.forEach(b => {
           const timer = (typeof bossTimerData !== 'undefined' && bossTimerData[b.id]) ? bossTimerData[b.id] : {};
           let nextSpawn = null;
-          if (timer.customNextSpawn) {
+          if (timer.customNextSpawn && b.id !== 'world_boss') {
             nextSpawn = new Date(timer.customNextSpawn);
           } else if (typeof calculateNextSpawnDate === 'function') {
             nextSpawn = calculateNextSpawnDate(b, timer.defeatedTime);
@@ -20432,7 +20432,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=6.0"></script>
+  <script src="boss_timer.js?v=6.1"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {

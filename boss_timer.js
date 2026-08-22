@@ -326,7 +326,9 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
 // - ถ้าไม่มี ให้คำนวณจาก defeatedTime ตามประเภทของบอส (interval / fixed)
 function getBossNextSpawn(boss) {
   const timer = bossTimerData[boss.id] || {};
-  if (timer.customNextSpawn) {
+  // World Boss always follows the official daily 10:00 / 19:00 schedule.
+  // Ignore legacy customNextSpawn values that can otherwise override it.
+  if (timer.customNextSpawn && boss.id !== 'world_boss') {
     const custom = new Date(timer.customNextSpawn);
     if (!isNaN(custom.getTime())) return custom;
   }
