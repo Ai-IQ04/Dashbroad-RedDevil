@@ -52,7 +52,7 @@ function parseStoredJson(key, fallback) {
 
 // 45+ Boss definitions from Google Sheet
 const DEFAULT_BOSS_DATABASE = [
-  { id: 'world_boss', name: 'World Boss', level: '60-105', map: 'World Boss', respawnType: 'fixed', scheduleText: 'Daily 10:00', fixedTimes: [{ days: [0, 1, 2, 3, 4, 5, 6], time: '10:00' }], note: 'World Boss' },
+  { id: 'world_boss', name: 'World Boss', level: '60-105', map: 'World Boss', respawnType: 'fixed', scheduleText: 'Daily 10:00 / 19:00', fixedTimes: [{ days: [0, 1, 2, 3, 4, 5, 6], time: '10:00' }, { days: [0, 1, 2, 3, 4, 5, 6], time: '19:00' }], note: 'World Boss' },
   { id: 'vioren', name: 'Vioren', level: '65', map: 'ทะเลสาบจันทร์เสี้ยว', respawnType: 'interval', intervalHours: 10, note: 'ทะเลสาบจันทร์เสี้ยว' },
   { id: 'venatus', name: 'Venatus', level: '60', map: 'แอ่งน้ำปนเปื้อน', respawnType: 'interval', intervalHours: 10, note: 'แอ่งน้ำปนเปื้อน' },
   { id: 'lady_dalia', name: 'Lady Dalia', level: '85', map: 'เนินเขาอัสดง', respawnType: 'interval', intervalHours: 18, note: 'เนินเขาอัสดง' },
