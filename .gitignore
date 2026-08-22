@@ -1,7 +1,6 @@
 # ไฟล์ config ที่มีข้อมูลลับ (ห้าม push ขึ้น GitHub)
 bot_config.json
 .env
-google-sheets-config.js
 google-apps-script.private.gs
 
 # โฟลเดอร์ dependencies
