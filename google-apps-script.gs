@@ -578,7 +578,7 @@ const BOSS_ALERT_WARNING_MS = 5 * 60 * 1000;
 const BOSS_ALERT_SPAWN_GRACE_MS = 15 * 60 * 1000;
 
 const BOSS_ALERT_FIXED_SCHEDULES = [
-  { id: 'world_boss', name: 'World Boss', map: 'World Boss', times: [{ days: [0,1,2,3,4,5,6], time: '10:00' }, { days: [0,1,2,3,4,5,6], time: '19:00' }] },
+  { id: 'world_boss', name: 'World Boss', map: 'World Boss', times: [{ days: [0,1,2,3,4,5,6], time: '10:00' }] },
   { id: 'clemantis', name: 'Clemantis', map: 'แอ่งน้ำปนเปื้อน', times: [{ days: [1], time: '10:30' }, { days: [4], time: '18:00' }] },
   { id: 'saphirus', name: 'Saphirus', map: 'ทะเลสาบจันทร์เสี้ยว', times: [{ days: [0], time: '16:00' }, { days: [2], time: '10:30' }] },
   { id: 'neutro', name: 'Neutro', map: 'ทะเลทรายกรีดร้อง', times: [{ days: [2], time: '18:00' }, { days: [4], time: '10:30' }] },
