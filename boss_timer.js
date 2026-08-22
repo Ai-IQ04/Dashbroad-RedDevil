@@ -32,6 +32,13 @@ let currentBossSearch = '';
 let isBossSoundEnabled = localStorage.getItem('guild_boss_sound_enabled') !== 'false';
 let activeAppModule = 'scoring'; // 'scoring' | 'boss_timer'
 let currentEditBossId = null;
+// Use Firebase server time so alerts are not affected by the user's device clock.
+let bossServerTimeOffsetMs = 0;
+const BOSS_WARNING_WINDOW_MS = 5 * 60 * 1000;
+
+function getBossNow() {
+  return new Date(Date.now() + bossServerTimeOffsetMs);
+}
 
 function parseStoredJson(key, fallback) {
   try {
@@ -265,7 +272,7 @@ function formatBangkokClock(date) {
 
 // Calculate Next Spawn Date
 function calculateNextSpawnDate(boss, defeatedDateStr) {
-  const now = new Date();
+  const now = getBossNow();
   const defDate = defeatedDateStr ? new Date(defeatedDateStr) : null;
   const defTimestamp = (defDate && !isNaN(defDate.getTime())) ? defDate.getTime() : 0;
 
@@ -340,6 +347,13 @@ function initBossTimerModule() {
 
   // Listen to Firebase Realtime Database
   if (typeof fbDb !== 'undefined' && fbDb) {
+    fbDb.ref('.info/serverTimeOffset').on('value', snap => {
+      const offset = Number(snap.val());
+      bossServerTimeOffsetMs = Number.isFinite(offset) ? offset : 0;
+      updateCountdowns();
+      updateUpcomingBossWidget();
+    });
+
     fbDb.ref('guild_app/boss_custom_configs').on('value', snap => {
       if (snap.exists()) {
         bossCustomConfigs = snap.val() || {};
@@ -451,7 +465,7 @@ function renderBossTimerCards() {
   const container = document.getElementById('boss-cards-grid');
   if (!container) return;
 
-  const now = new Date();
+  const now = getBossNow();
   let aliveCount = 0;
   let soonCount = 0;
 
@@ -815,10 +829,11 @@ function formatDateTimeShort(d) {
   if (!d || isNaN(d.getTime())) return '-';
   const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
   const pad = n => String(n).padStart(2, '0');
-  const day = pad(d.getDate());
-  const month = pad(d.getMonth() + 1);
-  const hours = pad(d.getHours());
-  const min = pad(d.getMinutes());
+  const bangkok = getBangkokDateParts(d);
+  const day = pad(bangkok.day);
+  const month = pad(bangkok.month);
+  const hours = pad(bangkok.hour);
+  const min = pad(bangkok.minute);
   return `${day}/${month} ${hours}:${min}${isEn ? '' : ' น.'}`;
 }
 
@@ -826,17 +841,19 @@ function formatDateTimeShort(d) {
 function formatBossNextSpawnDisplay(d) {
   if (!d || isNaN(d.getTime())) return '-';
   const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
-  const now = new Date();
+  const now = getBossNow();
 
   const pad = n => String(n).padStart(2, '0');
-  const hours = pad(d.getHours());
-  const min = pad(d.getMinutes());
+  const targetBangkok = getBangkokDateParts(d);
+  const nowBangkok = getBangkokDateParts(now);
+  const hours = pad(targetBangkok.hour);
+  const min = pad(targetBangkok.minute);
   const timeStr = `${hours}:${min}${isEn ? '' : ' น.'}`;
 
   // Calculate day difference
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const targetDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const diffDays = Math.round((targetDay.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+  const today = Date.UTC(nowBangkok.year, nowBangkok.month - 1, nowBangkok.day);
+  const targetDay = Date.UTC(targetBangkok.year, targetBangkok.month - 1, targetBangkok.day);
+  const diffDays = Math.round((targetDay - today) / (24 * 60 * 60 * 1000));
 
   let dayPrefixHtml = '';
   if (diffDays === 0) {
@@ -846,8 +863,8 @@ function formatBossNextSpawnDisplay(d) {
   } else if (diffDays === -1) {
     dayPrefixHtml = `<span class="text-rose-400 font-extrabold mr-1 text-[11px]">${isEn ? 'Yesterday' : 'เมื่อวาน'}</span>`;
   } else {
-    const day = pad(d.getDate());
-    const month = pad(d.getMonth() + 1);
+    const day = pad(targetBangkok.day);
+    const month = pad(targetBangkok.month);
     dayPrefixHtml = `<span class="text-slate-300 font-bold mr-1 text-[11px]">${day}/${month}</span>`;
   }
 
@@ -858,24 +875,26 @@ function formatBossNextSpawnDisplay(d) {
 function formatBossLastDefeatedDisplay(d) {
   if (!d || isNaN(d.getTime())) return '-';
   const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
-  const now = new Date();
+  const now = getBossNow();
 
   const pad = n => String(n).padStart(2, '0');
-  const hours = pad(d.getHours());
-  const min = pad(d.getMinutes());
+  const targetBangkok = getBangkokDateParts(d);
+  const nowBangkok = getBangkokDateParts(now);
+  const hours = pad(targetBangkok.hour);
+  const min = pad(targetBangkok.minute);
   const timeStr = `${hours}:${min}${isEn ? '' : ' น.'}`;
 
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const targetDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const diffDays = Math.round((targetDay.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+  const today = Date.UTC(nowBangkok.year, nowBangkok.month - 1, nowBangkok.day);
+  const targetDay = Date.UTC(targetBangkok.year, targetBangkok.month - 1, targetBangkok.day);
+  const diffDays = Math.round((targetDay - today) / (24 * 60 * 60 * 1000));
 
   if (diffDays === 0) {
     return `<span class="text-slate-300 font-semibold">${isEn ? 'Today' : 'วันนี้'}</span> <span class="font-bold text-slate-100">${timeStr}</span>`;
   } else if (diffDays === -1) {
     return `<span class="text-slate-400">${isEn ? 'Yesterday' : 'เมื่อวาน'}</span> <span class="font-bold text-slate-200">${timeStr}</span>`;
   } else {
-    const day = pad(d.getDate());
-    const month = pad(d.getMonth() + 1);
+    const day = pad(targetBangkok.day);
+    const month = pad(targetBangkok.month);
     return `<span class="text-slate-400">${day}/${month}</span> <span class="font-bold text-slate-200">${timeStr}</span>`;
   }
 }
@@ -883,7 +902,7 @@ function formatBossLastDefeatedDisplay(d) {
 // Update Active Countdowns Every Second
 function updateCountdowns() {
   if (activeAppModule !== 'boss_timer') return;
-  const now = new Date();
+  const now = getBossNow();
   bossList.forEach(boss => {
     const cdEl = document.getElementById(`boss-cd-${boss.id}`);
     if (!cdEl) return;
@@ -924,7 +943,7 @@ function updateUpcomingBossWidget() {
   const timerBadgeEl = document.getElementById('widget-boss-timer');
   const genericTextWidget = document.getElementById('upcoming-boss-text');
 
-  const now = new Date();
+  const now = getBossNow();
   const recordedBosses = [];
 
   bossList.forEach(b => {
@@ -2850,7 +2869,7 @@ function sendBossKillDiscordAlert(killLogEntry) {
 async function checkAndSendDiscordSpawnAlerts() {
   if (!bossDiscordWebhookUrl) return;
 
-  const now = new Date();
+  const now = getBossNow();
   const nowMs = now.getTime();
 
   // ล้าง sentDiscordAlerts ที่เก่าเกินไป (spawn ที่ผ่านไปแล้วเกิน 30 นาที)
@@ -2882,7 +2901,7 @@ async function checkAndSendDiscordSpawnAlerts() {
     const bossDisplayName = `Lv.${boss.level || '??'}, ${boss.name}`;
 
     // 🟡 1. แจ้งเตือนก่อนเกิด 5 นาที (เหลือ 0 ถึง 5 นาที)
-    if (diffMs > 0 && diffMs <= 5 * 60 * 1000) {
+    if (diffMs > 0 && diffMs <= BOSS_WARNING_WINDOW_MS) {
       const alertKey = `${boss.id}_5m_${spawnUnix}`;
       if (!sentDiscordAlerts.has(alertKey)) {
         sentDiscordAlerts.add(alertKey);
