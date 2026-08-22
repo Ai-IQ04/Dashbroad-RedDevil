@@ -2821,11 +2821,11 @@ async function sendDiscordWebhookPayload(payload) {
 // - แสดงชื่อบอส, เวลาตาย, เวลากำเนิดรอบถัดไป, ผู้บันทึก และไอเทมดรอป (ถ้ามี)
 function getDiscordDropStyle(item) {
   const text = String(item || '').toLowerCase();
-  if (/legendary|ตำนาน|สีส้ม|ทอง|orange|gold/.test(text)) return { icon: '🟧', label: 'Legendary' };
-  if (/epic|มหากาพย์|สีม่วง|ม่วง|purple|violet/.test(text)) return { icon: '🟪', label: 'Epic' };
-  if (/rare|หายาก|สีน้ำเงิน|ฟ้า|blue/.test(text)) return { icon: '🟦', label: 'Rare' };
-  if (/uncommon|เขียว|สีเขียว|green/.test(text)) return { icon: '🟩', label: 'Uncommon' };
-  return { icon: '⬜', label: 'Item' };
+  if (/legendary|ตำนาน|สีส้ม|ทอง|orange|gold/.test(text)) return { icon: '🟧', label: 'Legendary', color: 0xF59E0B };
+  if (/epic|มหากาพย์|สีม่วง|ม่วง|purple|violet/.test(text)) return { icon: '🟪', label: 'Epic', color: 0xA855F7 };
+  if (/rare|หายาก|สีน้ำเงิน|ฟ้า|blue/.test(text)) return { icon: '🟦', label: 'Rare', color: 0x3B82F6 };
+  if (/uncommon|เขียว|สีเขียว|green/.test(text)) return { icon: '🟩', label: 'Uncommon', color: 0x22C55E };
+  return { icon: '⬜', label: 'Item', color: 0xCBD5E1 };
 }
 
 function formatDiscordDropFields(dropItems) {
@@ -2837,7 +2837,7 @@ function formatDiscordDropFields(dropItems) {
   });
   return ['Legendary', 'Epic', 'Rare', 'Uncommon', 'Item'].filter(label => grouped[label]).map(label => {
     const group = grouped[label];
-    return { name: `${group.style.icon} ${label} × ${group.items.length}`, value: group.items.map(item => `• ${item}`).join('\n').slice(0, 1024), inline: false };
+    return { name: `${group.style.icon} ${label} × ${group.items.length}`, value: group.items.map(item => `• ${item}`).join('\n').slice(0, 1024), inline: false, rarityColor: group.style.color };
   });
 }
 
@@ -2877,17 +2877,21 @@ function sendBossKillDiscordAlert(killLogEntry) {
     // ถ้า avatar เป็น base64 data URI (data:image/...) จะทำให้ Discord ตอบ 400
     // จึงต้องเช็คว่าเป็น URL จริงก่อนถึงจะใส่ thumbnail ได้
     embed.description = `🗺️ **Map**: \`${map}\`\n💀 **Kill Time**: ${killTimeStr}\n⏳ **Next Spawn**: ${nextSpawnStr}\n👤 **Recorded By**: ${recordedBy}`;
-    embed.fields = dropItems.length > 0 ? [
-      { name: `🎁 DROP ITEMS • ${dropItems.length} รายการ`, value: '🟧 Legendary  🟪 Epic  🟦 Rare  🟩 Uncommon  ⬜ Item', inline: false },
-      ...formatDiscordDropFields(dropItems)
-    ] : [{ name: '🎁 DROP ITEMS', value: 'ไม่มีข้อมูลไอเทมดรอป', inline: false }];
+    const dropFields = formatDiscordDropFields(dropItems);
+    embed.fields = [{ name: `🎁 DROP ITEMS • ${dropItems.length} รายการ`, value: 'แยกตามระดับสีในรายการถัดไป', inline: false }];
 
     const boss = bossList.find(b => b.id === killLogEntry.bossId);
     if (boss && boss.avatar && /^https?:\/\//i.test(boss.avatar)) {
       embed.thumbnail = { url: boss.avatar };
     }
 
-    sendDiscordWebhookPayload({ embeds: [embed] });
+    const rarityEmbeds = dropFields.map(field => ({
+      color: field.rarityColor,
+      title: field.name,
+      description: field.value,
+      footer: { text: 'LORD NINE SYSTEM • Drop Rarity' }
+    }));
+    sendDiscordWebhookPayload({ embeds: [embed, ...rarityEmbeds] });
   } catch (e) {
     console.warn('Boss Kill Discord Alert error:', e);
   }
