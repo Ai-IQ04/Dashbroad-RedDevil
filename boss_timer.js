@@ -307,7 +307,10 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
             second: 0
           });
 
-          if (candidate.getTime() > defTimestamp && candidate > now) {
+          // Fixed-schedule bosses follow the timetable regardless of the
+          // recorded defeat time. Defeat time is history only; it must not
+          // push a future 10:00 slot to 19:00.
+          if (candidate > now) {
             if (!nearest || candidate < nearest) {
               nearest = candidate;
             }
@@ -695,7 +698,11 @@ function renderBossTimerCards() {
     }
 
     const countdownText = formatCountdown(b.diffMs, b.status);
-    const lastDefeatedHtml = b.timer.defeatedTime ? formatBossLastDefeatedDisplay(new Date(b.timer.defeatedTime)) : '-';
+    const defeatedDate = b.timer.defeatedTime ? new Date(b.timer.defeatedTime) : null;
+    const defeatedIsFuture = defeatedDate && !isNaN(defeatedDate.getTime()) && defeatedDate.getTime() > now.getTime() + 60 * 1000;
+    const lastDefeatedHtml = defeatedIsFuture
+      ? `<span class="text-rose-300" title="เวลาตายมากกว่าเวลาปัจจุบัน">⚠️ เวลาอนาคต</span>`
+      : (defeatedDate ? formatBossLastDefeatedDisplay(defeatedDate) : '-');
     const nextSpawnHtml = b.nextSpawn ? formatBossNextSpawnDisplay(b.nextSpawn) : (b.respawnType === 'interval' ? `<span class="text-slate-500 text-[10.5px]">${tBoss('boss_wait_record', 'รอลงเวลาตาย')}</span>` : '-');
 
     // Boss Profile Avatar Thumbnail

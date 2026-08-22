@@ -670,9 +670,8 @@ function fetchBossAlertFirebase_(path) {
 }
 
 function nextFixedBossSpawn_(times, now, defeatedTime) {
-  const defeated = defeatedTime ? new Date(defeatedTime) : null;
-  const minimum = defeated && !isNaN(defeated.getTime()) && defeated > now ? defeated : now;
-  const base = getBangkokParts_(minimum);
+  // Fixed schedules are independent of defeat history.
+  const base = getBangkokParts_(now);
   for (let dayOffset = 0; dayOffset <= 8; dayOffset++) {
     const dayDate = new Date(Date.UTC(base.year, base.month - 1, base.day + dayOffset));
     const dayOfWeek = dayDate.getUTCDay();
@@ -680,7 +679,7 @@ function nextFixedBossSpawn_(times, now, defeatedTime) {
       if (times[i].days.indexOf(dayOfWeek) < 0) continue;
       const hm = times[i].time.split(':').map(Number);
       const candidate = new Date(Date.UTC(base.year, base.month - 1, base.day + dayOffset, hm[0], hm[1], 0) - 7 * 60 * 60 * 1000);
-      if (candidate.getTime() > now.getTime() && (!defeated || candidate.getTime() > defeated.getTime())) return candidate;
+      if (candidate.getTime() > now.getTime()) return candidate;
     }
   }
   return null;
