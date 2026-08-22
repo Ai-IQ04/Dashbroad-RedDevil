@@ -2829,16 +2829,19 @@ function getDiscordDropStyle(item) {
 }
 
 function formatDiscordDropFields(dropItems) {
-  const grouped = {};
-  dropItems.forEach(item => {
-    const style = getDiscordDropStyle(item);
-    if (!grouped[style.label]) grouped[style.label] = { style, items: [] };
-    grouped[style.label].items.push(String(item).replace(/\s+/g, ' ').trim());
-  });
-  return ['Legendary', 'Epic', 'Rare', 'Uncommon', 'Item'].filter(label => grouped[label]).map(label => {
-    const group = grouped[label];
-    return { name: `${group.style.icon} ${label} × ${group.items.length}`, value: group.items.map(item => `• ${item}`).join('\n').slice(0, 1024), inline: false, rarityColor: group.style.color };
-  });
+  let receiver = '';
+  const items = dropItems.map(item => {
+    const text = String(item || '').replace(/\s+/g, ' ').trim();
+    const match = text.match(/\((?:ผู้รับ|recipient|receiver)\s*:\s*([^)]*)\)/i);
+    if (!receiver && match && match[1]) receiver = match[1].trim();
+    return text.replace(/\s*\((?:ผู้รับ|recipient|receiver)\s*:\s*[^)]*\)/gi, '').trim();
+  }).filter(Boolean);
+  const receiverLine = receiver ? `👤 **ผู้รับ:** ${receiver}\n\n` : '';
+  return [{
+    name: `🎁 DROP ITEMS • ${items.length} รายการ`,
+    value: `${receiverLine}${items.map((item, index) => `${index + 1}. ${item}`).join('\n')}`.slice(0, 1024),
+    inline: false
+  }];
 }
 
 function sendBossKillDiscordAlert(killLogEntry) {
@@ -2878,20 +2881,14 @@ function sendBossKillDiscordAlert(killLogEntry) {
     // จึงต้องเช็คว่าเป็น URL จริงก่อนถึงจะใส่ thumbnail ได้
     embed.description = `🗺️ **Map**: \`${map}\`\n💀 **Kill Time**: ${killTimeStr}\n⏳ **Next Spawn**: ${nextSpawnStr}\n👤 **Recorded By**: ${recordedBy}`;
     const dropFields = formatDiscordDropFields(dropItems);
-    embed.fields = [{ name: `🎁 DROP ITEMS • ${dropItems.length} รายการ`, value: 'แยกตามระดับสีในรายการถัดไป', inline: false }];
+    embed.fields = dropItems.length > 0 ? dropFields : [{ name: '🎁 DROP ITEMS', value: 'ไม่มีข้อมูลไอเทมดรอป', inline: false }];
 
     const boss = bossList.find(b => b.id === killLogEntry.bossId);
     if (boss && boss.avatar && /^https?:\/\//i.test(boss.avatar)) {
       embed.thumbnail = { url: boss.avatar };
     }
 
-    const rarityEmbeds = dropFields.map(field => ({
-      color: field.rarityColor,
-      title: field.name,
-      description: field.value,
-      footer: { text: 'LORD NINE SYSTEM • Drop Rarity' }
-    }));
-    sendDiscordWebhookPayload({ embeds: [embed, ...rarityEmbeds] });
+    sendDiscordWebhookPayload({ embeds: [embed] });
   } catch (e) {
     console.warn('Boss Kill Discord Alert error:', e);
   }
