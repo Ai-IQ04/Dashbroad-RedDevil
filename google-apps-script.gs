@@ -561,3 +561,168 @@ function jsonOutput_(data) {
   return ContentService.createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+// -----------------------------------------------------------------------------
+// Server-side boss alerts (Thailand time / Asia-Bangkok)
+// -----------------------------------------------------------------------------
+// Run setupBossAlertTrigger() once from Apps Script. The trigger runs every
+// minute, so a browser does not need to remain open for Discord alerts.
+// The Discord webhook is read from Firebase at guild_app/boss_discord_webhook.
+// If Firebase read rules are private, store these optional Script Properties:
+//   BOSS_ALERT_WEBHOOK_URL
+//   BOSS_ALERT_FIREBASE_AUTH_TOKEN
+const BOSS_ALERT_TIMEZONE = 'Asia/Bangkok';
+const BOSS_ALERT_LOG_SHEET_NAME = 'Boss Alert Log';
+const BOSS_ALERT_FIREBASE_URL = 'https://reddevil-f229e-default-rtdb.asia-southeast1.firebasedatabase.app';
+const BOSS_ALERT_WARNING_MS = 5 * 60 * 1000;
+const BOSS_ALERT_SPAWN_GRACE_MS = 15 * 60 * 1000;
+
+const BOSS_ALERT_FIXED_SCHEDULES = [
+  { id: 'world_boss', name: 'World Boss', map: 'World Boss', times: [{ days: [0,1,2,3,4,5,6], time: '10:00' }, { days: [0,1,2,3,4,5,6], time: '19:00' }] },
+  { id: 'clemantis', name: 'Clemantis', map: 'แอ่งน้ำปนเปื้อน', times: [{ days: [1], time: '10:30' }, { days: [4], time: '18:00' }] },
+  { id: 'saphirus', name: 'Saphirus', map: 'ทะเลสาบจันทร์เสี้ยว', times: [{ days: [0], time: '16:00' }, { days: [2], time: '10:30' }] },
+  { id: 'neutro', name: 'Neutro', map: 'ทะเลทรายกรีดร้อง', times: [{ days: [2], time: '18:00' }, { days: [4], time: '10:30' }] },
+  { id: 'thymele', name: 'Thymele', map: 'เนินเขาอัสดง', times: [{ days: [1], time: '18:00' }, { days: [3], time: '10:30' }] },
+  { id: 'roderick', name: 'Roderick', map: 'ทางระบายน้ำ ชั้น 1', times: [{ days: [5], time: '18:00' }] },
+  { id: 'auraq', name: 'Auraq', map: 'ทางระบายน้ำ ชั้น 2', times: [{ days: [5], time: '21:00' }, { days: [3], time: '20:00' }] },
+  { id: 'milavy', name: 'Milavy', map: 'สุสานใต้ดิน ชั้น 3', times: [{ days: [6], time: '14:00' }] },
+  { id: 'ringor', name: 'Ringor', map: 'สมรภูมิศักดิ์สิทธิ์', times: [{ days: [6], time: '16:00' }] },
+  { id: 'chaiflock', name: 'Chaiflock', map: 'ทุ่งหญ้าแดง', times: [{ days: [0], time: '14:00' }] },
+  { id: 'benji', name: 'Benji', map: 'ทุ่งหญ้าแดง', times: [{ days: [0], time: '20:00' }] },
+  { id: 'tumier', name: 'Tumier', map: 'ทางระบายน้ำ ชั้น 3', times: [{ days: [2], time: '20:55' }] },
+  { id: 'nevaeh', name: 'Nevaeh', map: 'KRANSIA', times: [{ days: [0], time: '21:00' }] },
+  { id: 'icaruthia', name: 'Icaruthia', map: 'KRANSIA', times: [{ days: [2], time: '20:00' }, { days: [5], time: '20:00' }] },
+  { id: 'motti', name: 'Motti', map: 'KRANSIA', times: [{ days: [3], time: '18:00' }, { days: [6], time: '18:00' }] },
+  { id: 'libitina', name: 'Libitina', map: 'โบสถ์แห่งบ่วงบัญชาชั่วนิรันดร์', times: [{ days: [2], time: '20:50' }, { days: [6], time: '20:30' }] },
+  { id: 'rakajeth', name: 'Rakajeth', map: 'อาญาแห่งเซเครต้า', times: [{ days: [2], time: '21:00' }, { days: [0], time: '20:05' }] },
+  { id: 'bahel', name: 'Bahel', map: 'รอยแยกแห่งการกัดกร่อน', times: [{ days: [5], time: '02:00' }] },
+  { id: 'lucus', name: 'Lucus', map: 'เตาหลอมแห่งความเงียบงัน', times: [{ days: [6], time: '21:00' }] },
+  { id: 'camalia', name: 'Camalia', map: 'ห้องทดลอง', times: [{ days: [5], time: '19:05' }] },
+  { id: 'guild_arena', name: 'Guild Arena', map: 'Guild Base', times: [{ days: [5,6,0], time: '19:25' }] },
+  { id: 'reddevil_guild_boss', name: 'RedDevil Guild Boss', map: 'Guild Base', times: [{ days: [0], time: '19:05' }] }
+];
+
+function setupBossAlertTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function(trigger) {
+    if (trigger.getHandlerFunction() === 'checkBossAlerts') ScriptApp.deleteTrigger(trigger);
+  });
+  ScriptApp.newTrigger('checkBossAlerts').timeBased().everyMinutes(1).create();
+  try { SpreadsheetApp.openById(SPREADSHEET_ID).setSpreadsheetTimeZone(BOSS_ALERT_TIMEZONE); } catch (error) {
+    console.warn('Could not set spreadsheet timezone: ' + error);
+  }
+}
+
+function checkBossAlerts() {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) return;
+  try {
+    const now = new Date();
+    const props = PropertiesService.getScriptProperties();
+    const webhook = String(props.getProperty('BOSS_ALERT_WEBHOOK_URL') || fetchBossAlertFirebase_('guild_app/boss_discord_webhook') || '').trim();
+    if (!webhook) return;
+    const timers = fetchBossAlertFirebase_('guild_app/boss_timers') || {};
+    const custom = fetchBossAlertFirebase_('guild_app/boss_custom_configs') || {};
+    const roleId = String(props.getProperty('BOSS_ALERT_ROLE_ID') || fetchBossAlertFirebase_('guild_app/boss_discord_role_id') || '').trim();
+    const logSheet = getBossAlertLogSheet_();
+    const sent = readBossAlertKeys_(logSheet);
+    const candidates = [];
+
+    Object.keys(timers).forEach(function(id) {
+      const timer = timers[id] || {};
+      const next = timer.customNextSpawn || timer.nextSpawnTime;
+      const date = next ? new Date(next) : null;
+      if (date && !isNaN(date.getTime())) candidates.push({ id: id, spawn: date, timer: timer, custom: custom[id] || {} });
+    });
+
+    BOSS_ALERT_FIXED_SCHEDULES.forEach(function(item) {
+      const timer = timers[item.id] || {};
+      if (timer.customNextSpawn || timer.nextSpawnTime) return;
+      const spawn = nextFixedBossSpawn_(item.times, now, timer.defeatedTime);
+      if (spawn) candidates.push({ id: item.id, spawn: spawn, timer: timer, custom: custom[item.id] || {}, fallback: item });
+    });
+
+    candidates.forEach(function(item) {
+      const diff = item.spawn.getTime() - now.getTime();
+      const spawnUnix = Math.floor(item.spawn.getTime() / 1000);
+      const name = String(item.custom.name || (item.fallback && item.fallback.name) || item.id);
+      const map = String(item.custom.map || (item.fallback && item.fallback.map) || '-');
+      const common = { id: item.id, name: name, map: map, spawn: item.spawn, spawnUnix: spawnUnix, roleId: roleId };
+      if (diff > 0 && diff <= BOSS_ALERT_WARNING_MS) sendBossAlertOnce_(logSheet, sent, webhook, common, 'warning');
+      if (diff <= 0 && diff >= -BOSS_ALERT_SPAWN_GRACE_MS) sendBossAlertOnce_(logSheet, sent, webhook, common, 'spawned');
+    });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function fetchBossAlertFirebase_(path) {
+  const props = PropertiesService.getScriptProperties();
+  const auth = String(props.getProperty('BOSS_ALERT_FIREBASE_AUTH_TOKEN') || '').trim();
+  const url = BOSS_ALERT_FIREBASE_URL.replace(/\/$/, '') + '/' + path.split('/').map(encodeURIComponent).join('/') + '.json' + (auth ? '?auth=' + encodeURIComponent(auth) : '');
+  try {
+    const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+    if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) throw new Error('Firebase HTTP ' + response.getResponseCode());
+    return JSON.parse(response.getContentText() || 'null');
+  } catch (error) {
+    console.warn('Boss alert Firebase read failed: ' + error);
+    return null;
+  }
+}
+
+function nextFixedBossSpawn_(times, now, defeatedTime) {
+  const defeated = defeatedTime ? new Date(defeatedTime) : null;
+  const minimum = defeated && !isNaN(defeated.getTime()) && defeated > now ? defeated : now;
+  const base = getBangkokParts_(minimum);
+  for (let dayOffset = 0; dayOffset <= 8; dayOffset++) {
+    const dayDate = new Date(Date.UTC(base.year, base.month - 1, base.day + dayOffset));
+    const dayOfWeek = dayDate.getUTCDay();
+    for (let i = 0; i < times.length; i++) {
+      if (times[i].days.indexOf(dayOfWeek) < 0) continue;
+      const hm = times[i].time.split(':').map(Number);
+      const candidate = new Date(Date.UTC(base.year, base.month - 1, base.day + dayOffset, hm[0], hm[1], 0) - 7 * 60 * 60 * 1000);
+      if (candidate.getTime() > now.getTime() && (!defeated || candidate.getTime() > defeated.getTime())) return candidate;
+    }
+  }
+  return null;
+}
+
+function getBangkokParts_(date) {
+  const parts = Utilities.formatDate(date, BOSS_ALERT_TIMEZONE, 'yyyy,MM,dd,HH,mm,ss').split(',').map(Number);
+  return { year: parts[0], month: parts[1], day: parts[2], hour: parts[3], minute: parts[4], second: parts[5] };
+}
+
+function getBossAlertLogSheet_() {
+  const book = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = book.getSheetByName(BOSS_ALERT_LOG_SHEET_NAME) || book.insertSheet(BOSS_ALERT_LOG_SHEET_NAME);
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['Alert Key', 'Sent At (Thai)', 'Type', 'Boss ID', 'Boss Name', 'Spawn At (Thai)']);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function readBossAlertKeys_(sheet) {
+  const result = {};
+  if (sheet.getLastRow() < 2) return result;
+  sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues().forEach(function(row) { result[String(row[0])] = true; });
+  return result;
+}
+
+function sendBossAlertOnce_(sheet, sent, webhook, item, type) {
+  const key = item.id + '_' + type + '_' + item.spawnUnix;
+  if (sent[key]) return;
+  const title = type === 'warning' ? '⏳ บอสจะเกิดใน 5 นาที' : '🔴 บอสเกิดแล้ว';
+  const timeText = Utilities.formatDate(item.spawn, BOSS_ALERT_TIMEZONE, 'dd/MM HH:mm') + ' น.';
+  const payload = {
+    content: item.roleId ? '<@&' + item.roleId + '>' : '',
+    embeds: [{ color: type === 'warning' ? 0xFFD700 : 0xEF4444, title: title + ' • ' + item.name, description: '🕒 เวลาไทย: **' + timeText + '**\n🗺️ Map: `' + item.map + '`\n<t:' + item.spawnUnix + ':R>', footer: { text: 'LORD NINE SYSTEM • Dashboard RedDevil' }, timestamp: item.spawn.toISOString() }]
+  };
+  try {
+    const response = UrlFetchApp.fetch(webhook, { method: 'post', contentType: 'application/json', payload: JSON.stringify(payload), muteHttpExceptions: true });
+    if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) throw new Error('Discord HTTP ' + response.getResponseCode());
+    sheet.appendRow([key, new Date(), type, item.id, item.name, item.spawn]);
+    sent[key] = true;
+  } catch (error) {
+    console.warn('Boss alert send failed: ' + error);
+  }
+}
