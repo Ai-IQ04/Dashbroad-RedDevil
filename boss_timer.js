@@ -338,6 +338,65 @@ function getBossNextSpawn(boss) {
   return calculateNextSpawnDate(boss, timer.defeatedTime);
 }
 
+function validateBossTimerData(timerData = bossTimerData) {
+  const issues = [];
+  Object.keys(timerData || {}).forEach(id => {
+    const timer = timerData[id] || {};
+    ['defeatedTime', 'nextSpawnTime', 'customNextSpawn'].forEach(key => {
+      if (timer[key] && isNaN(new Date(timer[key]).getTime())) issues.push(`${id}: invalid ${key}`);
+    });
+    if (timer.defeatedTime && new Date(timer.defeatedTime).getTime() > Date.now() + 60 * 1000) {
+      issues.push(`${id}: defeatedTime is in the future`);
+    }
+  });
+  return { ok: issues.length === 0, issues, checkedAt: new Date().toISOString() };
+}
+
+function getBossDataHealth() {
+  const timerHealth = validateBossTimerData();
+  const fixedCount = bossList.filter(b => b.respawnType === 'fixed').length;
+  const intervalCount = bossList.filter(b => b.respawnType === 'interval').length;
+  return {
+    ok: timerHealth.ok && Boolean(bossList.length),
+    checkedAt: timerHealth.checkedAt,
+    serverTimeOffsetMs: bossServerTimeOffsetMs,
+    firebaseConnected: typeof fbDb !== 'undefined' && Boolean(fbDb),
+    discordConfigured: Boolean(bossDiscordWebhookUrl),
+    bossCount: bossList.length,
+    fixedCount,
+    intervalCount,
+    issues: timerHealth.issues
+  };
+}
+
+function getBossSchedulePreview(days = 7) {
+  const result = [];
+  const now = getBossNow();
+  bossList.forEach(boss => {
+    if (boss.respawnType !== 'fixed' || !Array.isArray(boss.fixedTimes)) return;
+    const slots = [];
+    for (let offset = 0; offset < Math.max(1, Number(days)); offset++) {
+      const day = new Date(now.getTime() + offset * 86400000);
+      const parts = getBangkokDateParts(day);
+      const weekday = new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay();
+      boss.fixedTimes.forEach(slot => {
+        if (!slot.days.includes(weekday)) return;
+        const [hour, minute] = String(slot.time).split(':').map(Number);
+        const spawn = createDateFromBangkokParts({ year: parts.year, month: parts.month, day: parts.day, hour, minute });
+        if (spawn >= now) slots.push(spawn.toISOString());
+      });
+    }
+    result.push({ id: boss.id, name: boss.name, schedule: slots.sort() });
+  });
+  return result;
+}
+
+async function testBossDiscordAlert() {
+  if (!bossDiscordWebhookUrl) throw new Error('ยังไม่ได้ตั้งค่า Discord Webhook');
+  await sendDiscordWebhookPayload({ embeds: [{ color: 0x22C55E, title: '✅ Boss Timer Test', description: `เวลาไทย: ${formatBangkokClock(getBossNow())}\nระบบแจ้งเตือนทำงานปกติ`, footer: { text: 'Dashboard RedDevil' } }] });
+  return true;
+}
+
 function getBossTimerSourceLabel(boss, timer, isEn) {
   if (timer && timer.customNextSpawn) return isEn ? 'Admin custom time' : 'เวลา Admin ตั้งเอง';
   if (boss.respawnType === 'interval') return isEn ? `Interval ${boss.intervalHours}h` : `นับจากเวลาตาย ${boss.intervalHours} ชม.`;
@@ -380,6 +439,8 @@ function initBossTimerModule() {
     fbDb.ref('guild_app/boss_timers').on('value', snap => {
       if (snap.exists()) {
         bossTimerData = snap.val() || {};
+        const health = validateBossTimerData(bossTimerData);
+        if (!health.ok) console.warn('[Boss Timer] Data issues:', health.issues);
         localStorage.setItem('guild_boss_timers', JSON.stringify(bossTimerData));
         renderBossTimerCards();
         updateUpcomingBossWidget();
@@ -3717,6 +3778,10 @@ window.setRaidFormatSeparator = setRaidFormatSeparator;
 window.updateRaidDiscordPreview = updateRaidDiscordPreview;
 window.copyDiscordRaidAnnouncement = copyDiscordRaidAnnouncement;
 window.sendRaidAnnouncementToDiscordWebhook = sendRaidAnnouncementToDiscordWebhook;
+window.validateBossTimerData = validateBossTimerData;
+window.getBossDataHealth = getBossDataHealth;
+window.getBossSchedulePreview = getBossSchedulePreview;
+window.testBossDiscordAlert = testBossDiscordAlert;
 
 
 

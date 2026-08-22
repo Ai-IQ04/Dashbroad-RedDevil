@@ -612,6 +612,35 @@ function setupBossAlertTrigger() {
   }
 }
 
+function cleanupBossAlertLog() {
+  const sheet = getBossAlertLogSheet_();
+  const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  if (sheet.getLastRow() < 2) return { ok: true, removed: 0 };
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 6).getValues();
+  let removed = 0;
+  for (let i = values.length - 1; i >= 0; i--) {
+    const sentAt = values[i][1] instanceof Date ? values[i][1].getTime() : new Date(values[i][1]).getTime();
+    if (!isNaN(sentAt) && sentAt < cutoff) {
+      sheet.deleteRow(i + 2);
+      removed++;
+    }
+  }
+  return { ok: true, removed: removed };
+}
+
+function getBossAlertHealth() {
+  const props = PropertiesService.getScriptProperties();
+  const sheet = getBossAlertLogSheet_();
+  return {
+    ok: true,
+    timezone: BOSS_ALERT_TIMEZONE,
+    webhookConfigured: Boolean(props.getProperty('BOSS_ALERT_WEBHOOK_URL') || fetchBossAlertFirebase_('guild_app/boss_discord_webhook')),
+    firebaseConfigured: Boolean(BOSS_ALERT_FIREBASE_URL),
+    logRows: Math.max(0, sheet.getLastRow() - 1),
+    checkedAt: new Date().toISOString()
+  };
+}
+
 function checkBossAlerts() {
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(5000)) return;
@@ -626,8 +655,11 @@ function checkBossAlerts() {
     const logSheet = getBossAlertLogSheet_();
     const sent = readBossAlertKeys_(logSheet);
     const candidates = [];
+    const fixedIds = {};
+    BOSS_ALERT_FIXED_SCHEDULES.forEach(function(item) { fixedIds[item.id] = true; });
 
     Object.keys(timers).forEach(function(id) {
+      if (fixedIds[id]) return;
       const timer = timers[id] || {};
       const next = timer.customNextSpawn || timer.nextSpawnTime;
       const date = next ? new Date(next) : null;
@@ -636,7 +668,6 @@ function checkBossAlerts() {
 
     BOSS_ALERT_FIXED_SCHEDULES.forEach(function(item) {
       const timer = timers[item.id] || {};
-      if (timer.customNextSpawn || timer.nextSpawnTime) return;
       const spawn = nextFixedBossSpawn_(item.times, now, timer.defeatedTime);
       if (spawn) candidates.push({ id: item.id, spawn: spawn, timer: timer, custom: custom[item.id] || {}, fallback: item });
     });
