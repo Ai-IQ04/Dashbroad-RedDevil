@@ -288,7 +288,6 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
     // Always search from the later of the last defeat and current Thai time.
     // Otherwise an old defeat record can make the 7-day search window expire.
     const nowBangkok = getBangkokDateParts(now);
-    const searchStart = now.getTime();
 
     let nearest = null;
     for (let offset = 0; offset <= 7; offset++) {
