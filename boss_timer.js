@@ -287,11 +287,12 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
   if (boss.respawnType === 'fixed' && Array.isArray(boss.fixedTimes)) {
     // Always search from the later of the last defeat and current Thai time.
     // Otherwise an old defeat record can make the 7-day search window expire.
-    const searchStart = Math.max(defTimestamp, now.getTime());
+    const nowBangkok = getBangkokDateParts(now);
+    const searchStart = now.getTime();
 
     let nearest = null;
     for (let offset = 0; offset <= 7; offset++) {
-      const checkDate = new Date(searchStart + offset * 24 * 3600 * 1000);
+      const checkDate = new Date(Date.UTC(nowBangkok.year, nowBangkok.month - 1, nowBangkok.day + offset));
       const checkBangkok = getBangkokDateParts(checkDate);
       const dayOfWeek = new Date(Date.UTC(checkBangkok.year, checkBangkok.month - 1, checkBangkok.day)).getUTCDay();
 
