@@ -285,7 +285,9 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
 
   // 2. Fixed schedule bosses: คำนวณเวลารอบถัดไปตามตารางเวลาในโซนเวลาไทย (+7)
   if (boss.respawnType === 'fixed' && Array.isArray(boss.fixedTimes)) {
-    const searchStart = (defTimestamp > 0) ? defTimestamp : now.getTime();
+    // Always search from the later of the last defeat and current Thai time.
+    // Otherwise an old defeat record can make the 7-day search window expire.
+    const searchStart = Math.max(defTimestamp, now.getTime());
 
     let nearest = null;
     for (let offset = 0; offset <= 7; offset++) {
@@ -1642,9 +1644,10 @@ function openEditBossModal(bossId) {
 
   if (timer.defeatedTime) {
     const d = new Date(timer.defeatedTime);
-    if (editDefDateInput) editDefDateInput.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-    if (editDefHourSelect) editDefHourSelect.value = pad(d.getHours());
-    if (editDefMinSelect) editDefMinSelect.value = pad(d.getMinutes());
+    const bangkok = getBangkokDateParts(d);
+    if (editDefDateInput) editDefDateInput.value = `${bangkok.year}-${pad(bangkok.month)}-${pad(bangkok.day)}`;
+    if (editDefHourSelect) editDefHourSelect.value = pad(bangkok.hour);
+    if (editDefMinSelect) editDefMinSelect.value = pad(bangkok.minute);
   } else {
     if (editDefDateInput) editDefDateInput.value = '';
     if (editDefHourSelect) editDefHourSelect.value = '12';
@@ -1790,7 +1793,15 @@ function handleSaveEditBoss(e) {
   const editDefMinVal = document.getElementById('edit-boss-def-min').value;
 
   if (editDefDateVal && editDefHourVal !== '' && editDefMinVal !== '') {
-    const dt = new Date(`${editDefDateVal}T${editDefHourVal}:${editDefMinVal}:00`);
+    const [editYear, editMonth, editDay] = editDefDateVal.split('-').map(Number);
+    const dt = createDateFromBangkokParts({
+      year: editYear,
+      month: editMonth,
+      day: editDay,
+      hour: Number(editDefHourVal),
+      minute: Number(editDefMinVal),
+      second: 0
+    });
     if (!isNaN(dt.getTime())) {
       saveBossKillTime(currentEditBossId, dt.toISOString(), (typeof currentAdminEmail !== 'undefined' ? currentAdminEmail : 'Admin'));
     }
