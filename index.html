@@ -11514,7 +11514,17 @@ User Query: "${userText || 'วิเคราะห์รูปภาพนี�
   "cp": 182000
 }
 
-7. If user asks about Drop Logs / Member Search / Dividend Summary / AFK Diagnostics / Daily Boss Hunting Route / Guild Questions / General Chat -> output JSON:
+7. If the image is a CP ranking / leaderboard table with multiple players -> output JSON:
+{
+  "actionType": "cp_ranking_update",
+  "reply": "friendly explanation of the detected ranking",
+  "rows": [
+    {"rank": 1, "characterName": "Player Name", "guild": "RedDevil", "cp": 193529, "confidence": 98}
+  ]
+}
+Read every visible row. Keep numeric CP as an integer without commas. Use confidence 0-100. Do not invent rows or values that are not visible.
+
+8. If user asks about Drop Logs / Member Search / Dividend Summary / AFK Diagnostics / Daily Boss Hunting Route / Guild Questions / General Chat -> output JSON:
 {
   "actionType": "general_chat",
   "reply": "helpful, polite, and well-formatted Thai answer with clear markdown formatting, bullet points or tables where appropriate"
@@ -11753,7 +11763,64 @@ Output strictly valid JSON with no markdown formatting.`;
         `;
       }
 
-      // 4. Feature Request Proposal Card
+      // 4. CP Ranking Batch Update Action Card
+      else if (data.actionType === 'cp_ranking_update' && Array.isArray(data.rows) && data.rows.length > 0) {
+        const rows = data.rows.map((row, index) => {
+          const rawName = String(row.characterName || row.name || '').trim();
+          const rawGuild = String(row.guild || '').trim();
+          const cp = Number(row.cp) || 0;
+          const rank = Number(row.rank) || index + 1;
+          const confidence = Math.max(0, Math.min(100, Number(row.confidence) || 0));
+          const normalizedName = rawName.toLowerCase().replace(/\s+/g, '');
+          const matched = members.find(member => {
+            const memberName = String(member.characterName || member.name || '').trim();
+            const memberGuild = String(member.guild || '').trim();
+            const nameMatch = memberName.toLowerCase().replace(/\s+/g, '') === normalizedName;
+            const guildMatch = !rawGuild || !memberGuild || memberGuild.toLowerCase() === rawGuild.toLowerCase();
+            return nameMatch && guildMatch;
+          }) || members.find(member => String(member.characterName || member.name || '').trim().toLowerCase().replace(/\s+/g, '') === normalizedName);
+          const oldCp = matched ? Number(matched.cp) || 0 : 0;
+          const delta = cp - oldCp;
+          return { rank, characterName: rawName, guild: rawGuild, cp, confidence, matchedId: matched ? String(matched.id) : '', oldCp, delta };
+        });
+        const payloadStr = encodeURIComponent(JSON.stringify({ ...data, rows }));
+        const matchedCount = rows.filter(row => row.matchedId && row.cp > 0 && row.confidence >= 70).length;
+        actionCardHtml = `
+          <div class="mt-3 p-3.5 rounded-2xl bg-cyan-950/80 border border-cyan-500/60 space-y-2.5 text-left shadow-md">
+            <div class="flex items-center justify-between border-b border-cyan-500/30 pb-2">
+              <div class="font-bold text-cyan-300 flex items-center gap-1.5 text-sm">
+                <i class="fa-solid fa-ranking-star text-amber-300"></i>
+                <span>ตรวจพบ CP Ranking ${rows.length} รายการ</span>
+              </div>
+              <span class="text-[10px] text-slate-300">จับคู่ได้ ${matchedCount}/${rows.length}</span>
+            </div>
+            <div class="max-h-64 overflow-y-auto rounded-xl border border-slate-700/80 bg-slate-950/70">
+              <table class="w-full text-[11px]">
+                <thead class="sticky top-0 bg-slate-900 text-slate-400">
+                  <tr><th class="px-2 py-1.5 text-left">#</th><th class="px-2 py-1.5 text-left">สมาชิก</th><th class="px-2 py-1.5 text-right">CP ใหม่</th><th class="px-2 py-1.5 text-right">เปลี่ยน</th><th class="px-2 py-1.5 text-right">มั่นใจ</th></tr>
+                </thead>
+                <tbody>
+                  ${rows.map(row => `
+                    <tr class="border-t border-slate-800 ${row.matchedId ? '' : 'bg-rose-950/30'}">
+                      <td class="px-2 py-1.5 font-mono text-amber-300">${row.rank}</td>
+                      <td class="px-2 py-1.5 text-slate-200">${escapeHtml(row.characterName || '-')}<span class="block text-[9px] text-slate-500">${escapeHtml(row.guild || '')}${row.matchedId ? '' : ' • ไม่พบสมาชิก'}</span></td>
+                      <td class="px-2 py-1.5 text-right font-mono text-cyan-300">${row.cp.toLocaleString()}</td>
+                      <td class="px-2 py-1.5 text-right font-mono ${row.delta >= 0 ? 'text-emerald-300' : 'text-rose-300'}">${row.matchedId ? (row.delta >= 0 ? '+' : '') + row.delta.toLocaleString() : '-'}</td>
+                      <td class="px-2 py-1.5 text-right font-mono ${row.confidence >= 85 ? 'text-emerald-300' : row.confidence >= 70 ? 'text-amber-300' : 'text-rose-300'}">${row.confidence}%</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
+            <p class="text-[10px] text-amber-200/90">ระบบจะอัปเดตเฉพาะแถวที่จับคู่สมาชิกได้และความมั่นใจตั้งแต่ 70% ขึ้นไป</p>
+            <button type="button" onclick="executeNongDevilCpRankingUpdate(this, '${payloadStr}')"
+              class="w-full py-2.5 px-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs rounded-xl shadow-md shadow-cyan-600/30 transition flex items-center justify-center gap-1.5 active:scale-95">
+              <i class="fa-solid fa-shield-check"></i> <span>ยืนยันและอัปเดต CP ${matchedCount} คน</span>
+            </button>
+          </div>
+        `;
+      }
+
+      // 5. Feature Request Proposal Card
       else if (data.actionType === 'feature_request') {
         const payloadStr = encodeURIComponent(JSON.stringify(data));
         const readyPromptEsc = encodeURIComponent(data.readyPrompt || '');
@@ -12348,6 +12415,72 @@ Output strictly valid JSON with no markdown formatting.`;
     }
 
     // ================= ระบบประวัติและบันทึกการแก้ไข (Audit Logs System) =================
+    function executeNongDevilCpRankingUpdate(btn, payloadStr) {
+      if (!isAdmin) {
+        showToast('เฉพาะ Admin เท่านั้นที่สามารถอนุมัติและอัปเดต CP ได้ค่ะ', 'warning');
+        if (typeof openAdminEmailModal === 'function') openAdminEmailModal();
+        return;
+      }
+
+      try {
+        const data = JSON.parse(decodeURIComponent(payloadStr));
+        const rows = Array.isArray(data.rows) ? data.rows : [];
+        const eligible = rows.filter(row => row.matchedId && Number(row.cp) > 0 && Number(row.confidence) >= 70);
+        if (!eligible.length) {
+          showToast('ไม่พบข้อมูลที่จับคู่สมาชิกได้และมีความมั่นใจเพียงพอ', 'warning');
+          return;
+        }
+
+        const preview = eligible.slice(0, 20).map(row => {
+          const member = members.find(item => String(item.id) === String(row.matchedId));
+          const oldCp = member ? Number(member.cp) || 0 : Number(row.oldCp) || 0;
+          return `${row.characterName}: ${oldCp.toLocaleString()} → ${Number(row.cp).toLocaleString()}`;
+        }).join('\n');
+        const extra = eligible.length > 20 ? `\nและอีก ${eligible.length - 20} รายการ` : '';
+        if (!confirm(`ยืนยันอัปเดต CP จากภาพ Ranking จำนวน ${eligible.length} คน?\n\n${preview}${extra}`)) return;
+
+        const now = new Date().toISOString();
+        let updatedCount = 0;
+        let skippedCount = 0;
+        eligible.forEach(row => {
+          const member = members.find(item => String(item.id) === String(row.matchedId));
+          if (!member) { skippedCount++; return; }
+          const oldCp = Number(member.cp) || 0;
+          const newCp = Number(row.cp) || 0;
+          if (newCp <= 0) { skippedCount++; return; }
+          if (!Array.isArray(member.cpHistory)) member.cpHistory = [];
+          member.cpHistory.unshift({
+            at: now,
+            source: 'ai_cp_ranking',
+            rank: Number(row.rank) || null,
+            oldCp,
+            newCp,
+            confidence: Number(row.confidence) || 0,
+            actor: currentAdminEmail || 'Admin'
+          });
+          member.cpHistory = member.cpHistory.slice(0, 50);
+          member.cp = newCp;
+          updatedCount++;
+        });
+
+        saveData();
+        renderTable();
+        updateKPIs();
+        addAuditLog('cp', `AI อัปเดต CP จากภาพ Ranking ${updatedCount} คน`, `อนุมัติโดย ${currentAdminEmail || 'Admin'} | ข้าม ${skippedCount} รายการ | ${now}`, 'AI CP Ranking');
+
+        if (btn) {
+          btn.disabled = true;
+          btn.classList.remove('from-cyan-600', 'to-blue-600');
+          btn.classList.add('bg-emerald-700', 'opacity-90');
+          btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-300"></i> <span>อัปเดต CP สำเร็จ ${updatedCount} คน</span>`;
+        }
+        showToast(`อัปเดต CP จากภาพ Ranking สำเร็จ ${updatedCount} คน${skippedCount ? ` และข้าม ${skippedCount} รายการ` : ''}`, 'success');
+      } catch (err) {
+        console.error('Nong Devil CP Ranking Action Failed:', err);
+        showToast('อัปเดต CP จาก Ranking ไม่สำเร็จ: ' + (err.message || 'เกิดข้อผิดพลาด'), 'warning');
+      }
+    }
+
     let auditLogs = parseLocalStorageJson('guild_audit_logs', []);
 
     function saveAuditLogs() {
