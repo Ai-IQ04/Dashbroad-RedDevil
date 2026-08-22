@@ -25,6 +25,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
   <!-- 1.5 html2canvas for Export to Image -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Optional local deployment settings; keep google-sheets-config.js untracked. -->
+  <script src="google-sheets-config.js"></script>
   <!-- 2. Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- 3. Google Fonts: Modern Tech Stack (Sarabun for Character Names, Prompt for Thai UI, Inter for Latin/Numbers, JetBrains Mono for Timers) -->
@@ -89,6 +91,13 @@
       padding-bottom: env(safe-area-inset-bottom);
       padding-left: env(safe-area-inset-left);
       padding-right: env(safe-area-inset-right);
+    }
+
+    /* CSV import is intentionally disabled; use the Members roster instead. */
+    #btn-import-csv-top,
+    #import-csv-input,
+    #btn-clear-checks {
+      display: none !important;
     }
 
     @media (max-width: 640px) {
@@ -2548,7 +2557,9 @@
       #admin-toggle-btn,
       #btn-lang-toggle,
       #btn-add-member-top,
-      #btn-export-csv-top,
+    #btn-export-csv-top,
+    #btn-import-csv-top,
+    #import-csv-input,
       #btn-reset-top {
         min-height: 2rem !important;
         padding: 0.35rem 0.5rem !important;
@@ -2780,6 +2791,14 @@
           <i class="fa-solid fa-file-excel text-emerald-400 text-xs"></i>
           <span class="hidden lg:inline font-mono">CSV</span>
         </button>
+        <input id="import-csv-input" type="file" accept=".csv,text/csv" class="hidden"
+          onchange="handleImportCSV(event)">
+        <button id="btn-import-csv-top" onclick="triggerCSVImport()"
+          class="apple-btn bg-slate-900 hover:bg-slate-800 border border-sky-500/40 text-sky-300 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
+          title="นำเข้าข้อมูลสมาชิกจาก CSV">
+          <i class="fa-solid fa-file-arrow-up text-sky-400 text-xs"></i>
+          <span class="hidden lg:inline font-mono">นำเข้า CSV</span>
+        </button>
 
         <!-- ปุ่มรีเซ็ตข้อมูล -->
         <button id="btn-reset-top" onclick="resetAllData()"
@@ -2827,12 +2846,10 @@
             <span data-i18n="btn_weekly_summary">สรุปคะแนน</span>
           </button>
 
-          <!-- ปุ่มสรุป Top 10 เป็นรูปภาพ (LINE/Discord) -->
-          <button onclick="openTop10SummaryModal()"
-            class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
-            title="เซฟภาพสรุปคะแนน 10 อันดับแรกเพื่อแชร์ลง LINE / Discord">
-            <i class="fa-solid fa-camera text-xs"></i>
-            <span data-i18n="btn_top10_summary">สรุป Top 10</span>
+          <button onclick="openMemberDashboard()"
+            class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+            <i class="fa-solid fa-user-check text-xs"></i>
+            <span data-i18n="btn_member_dashboard">ข้อมูลของฉัน</span>
           </button>
 
           <!-- ปุ่มขออัพเดท CP (ทุกคนเห็น) -->
@@ -2930,7 +2947,7 @@
             <button id="btn-batch-guild-check" onclick="openBatchGuildCheckModal()"
               class="hidden apple-btn apple-btn-ocean inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
               <i class="fa-solid fa-list-check text-xs"></i>
-              <span data-i18n="btn_batch_guild_check">ติ๊ก All</span>
+              <span data-i18n="btn_batch_guild_check">จัดการติ๊ก</span>
             </button>
 
             <button id="btn-clear-checks" onclick="openClearChecksModal()"
@@ -2951,6 +2968,12 @@
               class="hidden apple-btn apple-btn-steel inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
               <i class="fa-solid fa-clock-rotate-left text-xs"></i>
               <span data-i18n="btn_audit_logs">ประวัติ</span>
+            </button>
+
+            <button id="btn-system-health" onclick="openSystemHealthModal()"
+              class="hidden apple-btn apple-btn-sapphire inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+              <i class="fa-solid fa-heart-pulse text-xs"></i>
+              <span>สุขภาพระบบ</span>
             </button>
 
             <button onclick="openBackupRestoreModal()"
@@ -3171,6 +3194,12 @@
           <i id="btn-archive-week-icon" class="fa-solid fa-lock-open text-[10px]"></i>
           <span id="btn-archive-week-text" data-i18n="btn_archive_week">ปิดรอบสัปดาห์</span>
         </button>
+        <button id="btn-close-cycle" onclick="closeFourWeekCycle()"
+          class="apple-btn apple-btn-amber hidden items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm"
+          title="ปิดรอบครบ 4 สัปดาห์และเริ่มรอบใหม่">
+          <i class="fa-solid fa-flag-checkered text-[10px]"></i>
+          <span>ปิดรอบครบ 4 สัปดาห์</span>
+        </button>
       </div>
     </div>
 
@@ -3194,6 +3223,11 @@
           class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl shadow-md border border-amber-400/50 hover:brightness-110 active:scale-95 transition shrink-0">
           <i class="fa-solid fa-lock text-[11px]"></i>
           <span>ปลดล็อกสัปดาห์</span>
+        </button>
+        <button id="btn-banner-reset-week" onclick="openResetWeekModal()"
+          class="apple-btn apple-btn-ruby inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl shadow-md border border-rose-400/50 hover:brightness-110 active:scale-95 transition shrink-0">
+          <i class="fa-solid fa-arrow-rotate-left text-[11px]"></i>
+          <span>รีเซ็ตสัปดาห์</span>
         </button>
       </div>
 
@@ -3709,13 +3743,12 @@
           </select>
         </div>
 
-        <!-- เลือกกิจกรรมบอส -->
+        <!-- เลือกกิจกรรมบอส (หลายตัวเลือกได้) -->
         <div>
-          <label class="block font-semibold text-slate-200 mb-1">2. เลือกกิจกรรมบอส *</label>
-          <select id="batch-activity-select"
-            class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500">
+          <label class="block font-semibold text-slate-200 mb-1">2. เลือกกิจกรรม/บอสที่ต้องการดำเนินการ *</label>
+          <div id="batch-activity-options" class="max-h-44 overflow-y-auto space-y-2 pr-1">
             <!-- Render via JS -->
-          </select>
+          </div>
         </div>
 
         <!-- เลือกรูปแบบการทำ -->
@@ -4172,6 +4205,14 @@
             </select>
           </div>
 
+          <div class="flex items-center gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
+            <label for="history-member-select" class="text-xs font-semibold text-slate-300 whitespace-nowrap">ดูสรุปสมาชิก:</label>
+            <select id="history-member-select" onchange="renderMemberWeeklySummary()"
+              class="min-w-0 flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-sky-300 font-semibold focus:outline-none focus:border-sky-500 cursor-pointer">
+              <!-- Render via JS -->
+            </select>
+          </div>
+
           <div id="history-week-actions" class="flex items-center gap-2">
             <!-- ปุ่มจัดการประวัติสัปดาห์ -->
           </div>
@@ -4180,6 +4221,10 @@
         <!-- รายละเอียดสรุปสถิติประจำสัปดาห์ที่เลือก -->
         <div id="history-content-container">
           <!-- Dynamic Content -->
+        </div>
+
+        <div id="member-weekly-summary-container">
+          <!-- Personal weekly summary -->
         </div>
       </div>
 
@@ -4413,6 +4458,8 @@
       <div class="p-3 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between">
         <button onclick="clearCpHistory()" data-i18n="btn_clear_history"
           class="apple-btn apple-btn-slate px-3 py-1.5 rounded-xl text-slate-400 text-[10px]">ล้างประวัติ</button>
+        <button onclick="configureCpRequestWindow()"
+          class="apple-btn apple-btn-amber px-3 py-1.5 rounded-xl text-[10px]">ตั้งเวลารับคำขอ</button>
         <button onclick="closeCpApprovalModal()"
           class="apple-btn apple-btn-slate px-4 py-1.5 rounded-xl text-slate-300 text-xs"
           data-i18n="btn_close">ปิดหน้าต่าง</button>
@@ -4550,6 +4597,46 @@
           <textarea id="appeal-reason-input" rows="2" maxlength="200" placeholder="เช่น ลงรอบ 19:30 น. อยู่ตี้ 3 ครับ"
             data-i18n-placeholder="appeal_step4_placeholder"
             class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-pink-500"></textarea>
+        </div>
+
+        <!-- แนบรูปภาพสกรีนช็อตหลักฐาน (ไม่บังคับ) -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
+            <span data-i18n="appeal_step5_label">📸 แนบรูปภาพสกรีนช็อตหลักฐาน (ถ้ามี)</span>
+            <span class="text-[10px] text-pink-400 font-normal" data-i18n="hint_appeal_screenshot">ลากวาง / Ctrl+V
+              ได้</span>
+          </label>
+
+          <div id="appeal-screenshot-dropzone" onclick="document.getElementById('appeal-screenshot-file-input').click()"
+            class="group relative border-2 border-dashed border-slate-700 hover:border-pink-500/80 bg-slate-950/70 hover:bg-pink-500/5 rounded-2xl p-3 sm:p-4 text-center cursor-pointer transition-all duration-200">
+            <input type="file" id="appeal-screenshot-file-input" accept="image/*" class="hidden"
+              onchange="handleAppealFileSelect(event)">
+
+            <div id="appeal-dropzone-placeholder" class="py-2 flex flex-col items-center justify-center">
+              <div
+                class="w-10 h-10 rounded-xl bg-pink-500/10 text-pink-400 border border-pink-500/20 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+              </div>
+              <p class="text-xs font-semibold text-slate-200" data-i18n="dropzone_title">ลากรูปภาพมาวางที่นี่
+                หรือคลิกเพื่อเลือกไฟล์</p>
+              <p class="text-[10.5px] text-slate-500 mt-0.5" data-i18n="dropzone_sub">รองรับไฟล์ PNG, JPG หรือกดวางภาพ
+                (Ctrl+V)</p>
+            </div>
+
+            <div id="appeal-dropzone-preview" class="hidden relative">
+              <img id="appeal-preview-img" src="" alt="Screenshot Preview"
+                class="max-h-36 mx-auto rounded-lg border border-slate-700 shadow-md object-contain">
+              <div class="mt-2 flex items-center justify-center gap-2">
+                <span class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                  <i class="fa-solid fa-circle-check"></i> <span data-i18n="screenshot_ready">แนบรูปภาพเรียบร้อย</span>
+                </span>
+                <button type="button" onclick="event.stopPropagation(); removeAppealScreenshot();"
+                  class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] hover:bg-rose-500/30 transition">
+                  <i class="fa-solid fa-trash-can mr-1"></i><span data-i18n="btn_remove_img">ลบรูป</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div
@@ -4789,7 +4876,17 @@
       }
     }
 
-    let rawActivities = JSON.parse(localStorage.getItem('guild_activities_data')) || INITIAL_ACTIVITIES;
+    function parseLocalStorageJson(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw === null ? fallback : JSON.parse(raw);
+      } catch (error) {
+        console.warn(`[Storage] Invalid JSON for ${key}; using default value.`, error);
+        return fallback;
+      }
+    }
+
+    let rawActivities = parseLocalStorageJson('guild_activities_data', INITIAL_ACTIVITIES);
     let ACTIVITIES = rawActivities.map(act => ({
       ...act,
       day: normalizeDay(act.day)
@@ -6630,7 +6727,34 @@
         "header_subtitle": "BlueDevil & RedDevil • ระบบเช็คชื่อ & จัดอันดับตาม CP",
         "current_week": "สัปดาห์ที่ {week}",
         "btn_boss_viewer": "Boss Viewer",
-        "btn_weekly_summary": "สรุปคะแนนรายสัปดาห์",
+         "btn_weekly_summary": "สรุปคะแนนรายสัปดาห์",
+         "btn_member_dashboard": "ข้อมูลของฉัน",
+         "member_dashboard_title": "ข้อมูลของฉัน",
+         "member_dashboard_desc": "สรุปคะแนน กิจกรรม คำขอ และประวัติของตัวละครที่เลือก",
+         "member_dashboard_select": "ตัวละครของฉัน",
+         "member_dashboard_no_data": "ยังไม่มีข้อมูลสมาชิก",
+         "member_dashboard_cp": "ขออัปเดต CP",
+         "member_dashboard_appeal": "ยื่นอุทธรณ์",
+         "member_dashboard_edit": "แก้ไขข้อมูล",
+         "member_dashboard_discord_linked": "เชื่อมแล้ว",
+         "member_dashboard_discord_missing": "ยังไม่พบ",
+         "member_dashboard_notice_cp_rejected": "CP ถูกปฏิเสธ: {reason}",
+         "member_dashboard_notice_appeal_rejected": "อุทธรณ์ถูกปฏิเสธ: {reason}",
+         "member_dashboard_notice_cp_pending": "มีคำขออัปเดต CP รอแอดมินตรวจสอบ",
+         "member_dashboard_notice_appeal_pending": "มีคำขออุทธรณ์เช็กชื่อรอแอดมินตรวจสอบ",
+         "member_dashboard_notice_edit_pending": "มีคำขอแก้ไขข้อมูลตัวละครรออนุมัติ",
+         "member_dashboard_weekly": "สรุปคะแนนรายสัปดาห์",
+         "member_dashboard_no_rank": "ไม่มีการจัดอันดับ",
+         "member_dashboard_locked": "ปิดรอบแล้ว",
+         "member_dashboard_active": "กำลังดำเนินการ",
+         "member_dashboard_score": "คะแนน",
+         "member_dashboard_attendance": "เข้าร่วม {checked}/{total} กิจกรรม",
+         "member_dashboard_requests": "สถานะคำขอและประวัติล่าสุด",
+         "member_dashboard_no_requests": "ยังไม่มีประวัติคำขอ",
+         "member_dashboard_status_pending": "รอตรวจสอบ",
+         "member_dashboard_status_approved": "อนุมัติแล้ว",
+         "member_dashboard_status_rejected": "ไม่อนุมัติ",
+         "member_dashboard_status_unknown": "ไม่ทราบสถานะ",
         "btn_request_cp": "ขออัพเดท CP",
         "btn_approve_cp": "อนุมัติ CP",
         "btn_manage_admins": "จัดการ Admin",
@@ -6868,7 +6992,7 @@
         "btn_appeal_request": "ยื่นอุทธรณ์",
         "btn_appeal_approval": "อุทธรณ์เช็คชื่อ",
         "btn_manage_guilds": "จัดการกิลด์",
-        "btn_batch_guild_check": "ติ๊ก All ตามกิลด์",
+        "btn_batch_guild_check": "จัดการติ๊ก",
         "btn_clear_checks": "ล้างการติ๊กถูก",
         "btn_audit_logs": "ประวัติแก้ไข",
         "modal_appeal_title": "ยื่นอุทธรณ์การเช็คชื่อบอส",
@@ -6957,7 +7081,7 @@
         "btn_approve_rewards": "อนุมัติรางวัล",
         "btn_manage_rewards": "คลังรางวัล",
         "btn_manage_guilds": "จัดการกิลด์",
-        "btn_batch_guild_check": "ติ๊ก All",
+        "btn_batch_guild_check": "จัดการติ๊ก",
         "btn_clear_checks": "ล้างติ๊ก",
         "btn_audit_logs": "ประวัติ",
         "boss_stat_alive": "บอสเกิดแล้ว (ALIVE!)",
@@ -7051,7 +7175,34 @@
         "header_subtitle": "BlueDevil & RedDevil • Attendance Check & CP-based Ranking",
         "current_week": "Week {week}",
         "btn_boss_viewer": "Boss Viewer",
-        "btn_weekly_summary": "Weekly Summary",
+         "btn_weekly_summary": "Weekly Summary",
+         "btn_member_dashboard": "My Dashboard",
+         "member_dashboard_title": "My Dashboard",
+         "member_dashboard_desc": "Summary of score, activities, requests, and history for the selected character",
+         "member_dashboard_select": "My character",
+         "member_dashboard_no_data": "No member data available",
+         "member_dashboard_cp": "Request CP Update",
+         "member_dashboard_appeal": "Submit Appeal",
+         "member_dashboard_edit": "Edit Information",
+         "member_dashboard_discord_linked": "Linked",
+         "member_dashboard_discord_missing": "Not found",
+         "member_dashboard_notice_cp_rejected": "CP rejected: {reason}",
+         "member_dashboard_notice_appeal_rejected": "Appeal rejected: {reason}",
+         "member_dashboard_notice_cp_pending": "A CP update request is waiting for admin review",
+         "member_dashboard_notice_appeal_pending": "An attendance appeal is waiting for admin review",
+         "member_dashboard_notice_edit_pending": "A character edit request is waiting for approval",
+         "member_dashboard_weekly": "Weekly Score Summary",
+         "member_dashboard_no_rank": "No ranking",
+         "member_dashboard_locked": "Cycle closed",
+         "member_dashboard_active": "In progress",
+         "member_dashboard_score": "Score",
+         "member_dashboard_attendance": "{checked}/{total} activities",
+         "member_dashboard_requests": "Recent Requests & History",
+         "member_dashboard_no_requests": "No request history yet",
+         "member_dashboard_status_pending": "Pending",
+         "member_dashboard_status_approved": "Approved",
+         "member_dashboard_status_rejected": "Rejected",
+         "member_dashboard_status_unknown": "Unknown status",
         "btn_request_cp": "Request CP Update",
         "btn_approve_cp": "Approve CP",
         "btn_manage_admins": "Manage Admins",
@@ -7289,7 +7440,7 @@
         "btn_appeal_request": "Appeal",
         "btn_appeal_approval": "Appeals",
         "btn_manage_guilds": "Manage Guilds",
-        "btn_batch_guild_check": "Batch Guild Check",
+        "btn_batch_guild_check": "Manage Checks",
         "btn_clear_checks": "Clear Checks",
         "btn_audit_logs": "Audit Logs",
         "modal_appeal_title": "Submit Attendance Appeal",
@@ -7378,7 +7529,7 @@
         "btn_approve_rewards": "Approve Rewards",
         "btn_manage_rewards": "Reward Vault",
         "btn_manage_guilds": "Manage Guilds",
-        "btn_batch_guild_check": "Check All",
+        "btn_batch_guild_check": "Manage Checks",
         "btn_clear_checks": "Clear Checks",
         "btn_audit_logs": "Audit Logs",
         "boss_stat_alive": "Spawned (ALIVE!)",
@@ -7518,6 +7669,9 @@
       updateKPIs();
       renderTableHeader();
       renderTable();
+      if (typeof renderMemberDashboard === 'function' && !document.getElementById('member-dashboard-modal')?.classList.contains('hidden')) {
+        renderMemberDashboard();
+      }
       if (typeof renderBossTimerCards === 'function') renderBossTimerCards();
       if (typeof updateUpcomingBossWidget === 'function') updateUpcomingBossWidget();
       if (!document.getElementById('weekly-history-modal').classList.contains('hidden')) {
@@ -7556,6 +7710,20 @@
     let fbDb = null;
     let isFirebaseReady = false;
     let isRemoteSyncing = false;
+
+    // ================= Google Sheets two-way attendance sync =================
+    // Deploy google-apps-script.gs as a Web app, then paste its /exec URL here.
+    // The spreadsheet ID is intentionally kept here so the Apps Script endpoint
+    // can be reused without exposing a Google service-account credential.
+    const GOOGLE_SHEET_ID = '1q-pBcNrc7gNpOg28Zq5D8yYOuMqCk8WD8nWP-SyToqA';
+    const GOOGLE_SHEETS_SYNC_URL = window.GOOGLE_SHEETS_SYNC_URL || '';
+    const GOOGLE_SHEETS_SYNC_TOKEN = window.GOOGLE_SHEETS_SYNC_TOKEN || '';
+    const GOOGLE_SHEETS_POLL_MS = 3000;
+    let googleSheetsSyncTimer = null;
+    let googleSheetsPollTimer = null;
+    let googleSheetsLastRemoteSignature = '';
+    let googleSheetsRequestInFlight = false;
+    let pendingWeekReset = false;
 
     try {
       if (typeof firebase !== 'undefined') {
@@ -7668,8 +7836,8 @@
       return accounts;
     }
 
-    let adminAccounts = normalizeAdminAccounts(JSON.parse(localStorage.getItem('guild_admin_accounts')));
-    let pendingAdminRequests = JSON.parse(localStorage.getItem('guild_pending_admins')) || [];
+    let adminAccounts = normalizeAdminAccounts(parseLocalStorageJson('guild_admin_accounts', []));
+    let pendingAdminRequests = parseLocalStorageJson('guild_pending_admins', []);
     let currentAdminEmail = localStorage.getItem('guild_current_admin_email') || '';
 
     localStorage.setItem('guild_admin_accounts', JSON.stringify(adminAccounts));
@@ -7721,12 +7889,12 @@
     let currentWeekNumber = parseInt(localStorage.getItem('guild_current_week')) || 1;
 
     // ชื่อของแต่ละสัปดาห์ (1-4)
-    let weekNames = JSON.parse(localStorage.getItem('guild_week_names')) || {
+    let weekNames = parseLocalStorageJson('guild_week_names', {
       1: "สัปดาห์ที่ 1",
       2: "สัปดาห์ที่ 2",
       3: "สัปดาห์ที่ 3",
       4: "สัปดาห์ที่ 4"
-    };
+    });
 
     function getWeekName(w) {
       if (weekNames && weekNames[w]) return weekNames[w];
@@ -7746,7 +7914,7 @@
       { id: 'BlueDevil', name: 'BlueDevil', color: 'cyan', icon: '🔵' }
     ];
 
-    let guildsList = JSON.parse(localStorage.getItem('guild_list_data')) || DEFAULT_GUILDS;
+    let guildsList = parseLocalStorageJson('guild_list_data', DEFAULT_GUILDS);
 
     const GUILD_COLOR_SCHEMES = {
       rose: {
@@ -7868,12 +8036,223 @@
       localStorage.setItem('guild_data_version', DATA_VERSION);
       localStorage.setItem('guild_members_data', JSON.stringify(members));
     } else {
-      members = JSON.parse(localStorage.getItem('guild_members_data')) || INITIAL_MEMBERS;
+      members = parseLocalStorageJson('guild_members_data', INITIAL_MEMBERS);
     }
     members.forEach(ensureMemberWeeklyData);
 
-    let weeklyArchives = JSON.parse(localStorage.getItem('guild_weekly_history')) || [];
-    let pendingCpRequests = JSON.parse(localStorage.getItem('guild_pending_cp')) || [];
+    let weeklyArchives = parseLocalStorageJson('guild_weekly_history', []);
+    let cycleArchives = parseLocalStorageJson('guild_cycle_history', []);
+    let aiScanArchives = parseLocalStorageJson('guild_ai_scan_history', []);
+    let currentCycleNumber = parseInt(localStorage.getItem('guild_current_cycle')) || 1;
+    let pendingCpRequests = parseLocalStorageJson('guild_pending_cp', []);
+    let cpRequestWindow = parseLocalStorageJson('guild_cp_request_window', {
+      enabled: false,
+      startAt: '',
+      endAt: ''
+    });
+
+    function getGoogleSheetsPayload() {
+      return {
+        spreadsheetId: GOOGLE_SHEET_ID,
+        activities: ACTIVITIES.map((activity, index) => ({
+          index,
+          key: activity.key || `activity_${index + 1}`,
+          name: activity.name || `Activity ${index + 1}`
+        })),
+        members: members.map(member => {
+          ensureMemberWeeklyData(member);
+          return {
+            id: member.id,
+            num: member.num,
+            characterName: member.characterName || member.name || '',
+            guild: member.guild || '',
+            cp: Number(member.cp) || 0,
+            weeklyChecks: {
+              1: [...(member.weeklyChecks[1] || [])],
+              2: [...(member.weeklyChecks[2] || [])],
+              3: [...(member.weeklyChecks[3] || [])],
+              4: [...(member.weeklyChecks[4] || [])]
+            }
+          };
+        })
+      };
+    }
+
+    function googleSheetsIsConfigured() {
+      return Boolean(GOOGLE_SHEETS_SYNC_URL && /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/.test(GOOGLE_SHEETS_SYNC_URL));
+    }
+
+    function googleSheetsSignature(data) {
+      try { return JSON.stringify(data); } catch (_) { return ''; }
+    }
+
+    function googleSheetsRequestId(action) {
+      return `${action}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+
+    function scheduleGoogleSheetsPush() {
+      if (!googleSheetsIsConfigured()) return;
+      clearTimeout(googleSheetsSyncTimer);
+      googleSheetsSyncTimer = setTimeout(pushToGoogleSheets, 500);
+    }
+
+    async function pushToGoogleSheets() {
+      if (!googleSheetsIsConfigured() || googleSheetsRequestInFlight) return;
+      const payload = getGoogleSheetsPayload();
+      if (!payload.members.length || !payload.activities.length) {
+        console.warn('[Google Sheets] Refusing to send an empty attendance payload.');
+        return;
+      }
+      googleSheetsRequestInFlight = true;
+      try {
+        await fetch(GOOGLE_SHEETS_SYNC_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'write', requestId: googleSheetsRequestId('write'), token: GOOGLE_SHEETS_SYNC_TOKEN, ...payload })
+        });
+      } catch (error) {
+        console.warn('[Google Sheets] write failed:', error);
+      } finally {
+        googleSheetsRequestInFlight = false;
+      }
+    }
+
+    async function syncGoogleSheetsLocks() {
+      if (!googleSheetsIsConfigured()) return;
+      try {
+        await fetch(GOOGLE_SHEETS_SYNC_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'setLocks',
+            requestId: googleSheetsRequestId('setLocks'),
+            token: GOOGLE_SHEETS_SYNC_TOKEN,
+            spreadsheetId: GOOGLE_SHEET_ID,
+            adminEmail: currentAdminEmail || 'Admin',
+            lockedWeeks
+          })
+        });
+      } catch (error) {
+        console.warn('[Google Sheets] lock sync failed:', error);
+      }
+    }
+
+    async function resetGoogleSheetsWeek(week, adminEmail) {
+      if (!googleSheetsIsConfigured()) return true;
+      const response = await fetch(GOOGLE_SHEETS_SYNC_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'resetWeek', requestId: googleSheetsRequestId('resetWeek'), token: GOOGLE_SHEETS_SYNC_TOKEN, spreadsheetId: GOOGLE_SHEET_ID, week, adminEmail })
+      });
+      return response.ok || response.type === 'opaque';
+    }
+
+    async function closeGoogleSheetsCycle(cycleNumber, adminEmail) {
+      if (!googleSheetsIsConfigured()) return true;
+      const response = await fetch(GOOGLE_SHEETS_SYNC_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'closeCycle', requestId: googleSheetsRequestId('closeCycle'), token: GOOGLE_SHEETS_SYNC_TOKEN, spreadsheetId: GOOGLE_SHEET_ID, cycleNumber, adminEmail })
+      });
+      return response.ok || response.type === 'opaque';
+    }
+
+    async function pullFromGoogleSheets() {
+      if (!googleSheetsIsConfigured() || googleSheetsRequestInFlight) return;
+      try {
+        const response = await fetch(`${GOOGLE_SHEETS_SYNC_URL}?action=read&spreadsheetId=${encodeURIComponent(GOOGLE_SHEET_ID)}&token=${encodeURIComponent(GOOGLE_SHEETS_SYNC_TOKEN)}&ts=${Date.now()}`, { cache: 'no-store' });
+        const result = await response.json();
+        if (!result || !result.ok || !Array.isArray(result.members)) return;
+        if (result.lockedWeeks && typeof result.lockedWeeks === 'object') {
+          const remoteLocks = { 1: false, 2: false, 3: false, 4: false, ...result.lockedWeeks };
+          if (JSON.stringify(remoteLocks) !== JSON.stringify(lockedWeeks)) {
+            lockedWeeks = remoteLocks;
+            localStorage.setItem('guild_locked_weeks', JSON.stringify(lockedWeeks));
+            if (typeof renderWeekTabs === 'function') renderWeekTabs();
+            if (typeof renderLockBanner === 'function') renderLockBanner();
+            if (typeof updateAdminUI === 'function') updateAdminUI();
+          }
+        }
+        if (result.members.length === 0) {
+          // First run: create the four sheet tabs from the existing app data.
+          scheduleGoogleSheetsPush();
+          return;
+        }
+        const signature = googleSheetsSignature(result.members);
+        if (!signature || signature === googleSheetsLastRemoteSignature) return;
+        googleSheetsLastRemoteSignature = signature;
+
+        const localById = new Map(members.map(member => [String(member.id), member]));
+        const remoteIds = new Set(result.members.map(remote => String(remote.id)));
+        let changed = false;
+        result.members.forEach(remote => {
+          let local = localById.get(String(remote.id)) || members.find(member =>
+            String(member.characterName || member.name || '').trim().toLowerCase() === String(remote.characterName || '').trim().toLowerCase());
+          if (!local) {
+            local = {
+              id: remote.id,
+              characterName: remote.characterName || remote.name || '',
+              name: remote.characterName || remote.name || '',
+              guild: remote.guild || '',
+              cp: Number(remote.cp) || 0,
+              checks: new Array(ACTIVITIES.length).fill(false),
+              weeklyChecks: {},
+              weeklyCp: {}
+            };
+            members.push(local);
+            localById.set(String(local.id), local);
+            changed = true;
+          }
+          if (remote.num !== undefined && local.num !== remote.num) { local.num = remote.num; changed = true; }
+          if (remote.characterName && local.characterName !== remote.characterName) { local.characterName = remote.characterName; local.name = remote.characterName; changed = true; }
+          if (remote.guild !== undefined && local.guild !== remote.guild) { local.guild = remote.guild; changed = true; }
+          if (remote.cp !== undefined && Number(local.cp) !== Number(remote.cp)) { local.cp = Number(remote.cp) || 0; changed = true; }
+          ensureMemberWeeklyData(local);
+          for (let week = 1; week <= 4; week++) {
+            const checks = Array.isArray(remote.weeklyChecks?.[week]) ? remote.weeklyChecks[week].map(Boolean) : null;
+            if (!checks) continue;
+            const next = new Array(ACTIVITIES.length).fill(false);
+            checks.slice(0, ACTIVITIES.length).forEach((value, index) => { next[index] = value; });
+            if (JSON.stringify(local.weeklyChecks[week]) !== JSON.stringify(next)) {
+              local.weeklyChecks[week] = next;
+              changed = true;
+            }
+          }
+        });
+        if (result.rosterComplete) {
+          const kept = members.filter(member => remoteIds.has(String(member.id)));
+          if (kept.length !== members.length) {
+            members.splice(0, members.length, ...kept);
+            changed = true;
+          }
+        }
+        if (changed) {
+          isRemoteSyncing = true;
+          members.forEach(ensureMemberWeeklyData);
+          localStorage.setItem('guild_members_data', JSON.stringify(members));
+          if (fbDb) {
+            await fbDb.ref('guild_app/members_data').set(members);
+          }
+          updateKPIs();
+          renderTable();
+          isRemoteSyncing = false;
+        }
+      } catch (error) {
+        console.warn('[Google Sheets] read failed:', error);
+      }
+    }
+
+    function initGoogleSheetsSync() {
+      if (!googleSheetsIsConfigured()) {
+        console.info('[Google Sheets] Sync is not configured. Set GOOGLE_SHEETS_SYNC_URL to the Apps Script /exec URL.');
+        return;
+      }
+      pullFromGoogleSheets();
+      clearInterval(googleSheetsPollTimer);
+      googleSheetsPollTimer = setInterval(pullFromGoogleSheets, GOOGLE_SHEETS_POLL_MS);
+    }
 
     // ฟังก์ชันบันทึกข้อมูล (บันทึกลง LocalStorage + ซิงค์ขึ้น Firebase Realtime)
     function saveData() {
@@ -7886,11 +8265,20 @@
       localStorage.setItem('guild_members_data', JSON.stringify(members));
       localStorage.setItem('guild_current_week', currentWeekNumber);
       localStorage.setItem('guild_weekly_history', JSON.stringify(weeklyArchives));
+      localStorage.setItem('guild_cycle_history', JSON.stringify(cycleArchives));
+      localStorage.setItem('guild_ai_scan_history', JSON.stringify(aiScanArchives));
+      localStorage.setItem('guild_current_cycle', currentCycleNumber);
       updateKPIs();
       if (fbDb && !isRemoteSyncing) {
-        fbDb.ref('guild_app/members_data').set(members);
+        const memberUpdates = {};
+        members.forEach((member, index) => {
+          memberUpdates[index] = member;
+        });
+        fbDb.ref('guild_app/members_data').update(memberUpdates);
         fbDb.ref('guild_app/weekly_history').set(weeklyArchives);
+        fbDb.ref('guild_app/cycle_history').set(cycleArchives);
       }
+      if (!isRemoteSyncing) scheduleGoogleSheetsPush();
     }
 
 
@@ -7909,6 +8297,44 @@
       if (fbDb) {
         fbDb.ref('guild_app/pending_cp').set(pendingCpRequests);
       }
+    }
+
+    function isCpRequestWindowOpen() {
+      if (!cpRequestWindow || !cpRequestWindow.enabled) return true;
+      const now = Date.now();
+      const start = cpRequestWindow.startAt ? new Date(cpRequestWindow.startAt).getTime() : -Infinity;
+      const end = cpRequestWindow.endAt ? new Date(cpRequestWindow.endAt).getTime() : Infinity;
+      return Number.isFinite(start) && Number.isFinite(end) && now >= start && now <= end;
+    }
+
+    function formatCpWindowDate(value) {
+      if (!value) return '-';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString(currentLang === 'th' ? 'th-TH' : 'en-US');
+    }
+
+    function configureCpRequestWindow() {
+      if (!isSuperAdmin && !isGuildScoringAdmin()) {
+        showToast('เฉพาะ Admin เท่านั้นที่ตั้งเวลารับคำขอ CP ได้', 'warning');
+        return;
+      }
+      const enabled = confirm('ต้องการเปิดใช้ช่วงเวลารับคำขอ CP หรือไม่?\nกดยกเลิกเพื่อเปิดรับคำขอตลอดเวลา');
+      if (!enabled) {
+        cpRequestWindow = { enabled: false, startAt: '', endAt: '' };
+      } else {
+        const startText = (prompt('เวลาเริ่มรับคำขอ (YYYY-MM-DD HH:mm):', cpRequestWindow.startAt ? cpRequestWindow.startAt.slice(0, 16).replace('T', ' ') : '') || '').trim();
+        const endText = (prompt('เวลาปิดรับคำขอ (YYYY-MM-DD HH:mm):', cpRequestWindow.endAt ? cpRequestWindow.endAt.slice(0, 16).replace('T', ' ') : '') || '').trim();
+        const startAt = new Date(startText.replace(' ', 'T'));
+        const endAt = new Date(endText.replace(' ', 'T'));
+        if (!startText || !endText || Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime()) || endAt <= startAt) {
+          showToast('รูปแบบเวลาผิด หรือเวลาปิดต้องอยู่หลังเวลาเปิด', 'warning');
+          return;
+        }
+        cpRequestWindow = { enabled: true, startAt: startAt.toISOString(), endAt: endAt.toISOString() };
+      }
+      localStorage.setItem('guild_cp_request_window', JSON.stringify(cpRequestWindow));
+      if (fbDb) fbDb.ref('guild_app/cp_request_window').set(cpRequestWindow);
+      showToast(cpRequestWindow.enabled ? `เปิดรับคำขอ CP ${formatCpWindowDate(cpRequestWindow.startAt)} - ${formatCpWindowDate(cpRequestWindow.endAt)}` : 'เปิดรับคำขอ CP ตลอดเวลา', 'success');
     }
 
     // ================= ฟังก์ชันเชื่อมต่อ Realtime Firebase Sync =================
@@ -7970,6 +8396,14 @@
         }
       });
 
+      fbDb.ref('guild_app/cp_request_window').on('value', snapshot => {
+        const val = snapshot.val();
+        if (val && typeof val === 'object') {
+          cpRequestWindow = { enabled: false, startAt: '', endAt: '', ...val };
+          localStorage.setItem('guild_cp_request_window', JSON.stringify(cpRequestWindow));
+        }
+      });
+
       // 4. ดักฟังข้อมูลสมาชิกและการเช็คชื่อ (ซิงค์คะแนน/CP ทั่วทั้งกิลด์แบบ Real-time โดยไม่รบกวนหน้าจอของคนอื่น)
       fbDb.ref('guild_app/members_data').on('value', snapshot => {
         const val = snapshot.val();
@@ -7982,7 +8416,11 @@
           renderTable();
           isRemoteSyncing = false;
         } else if (members && members.length > 0) {
-          fbDb.ref('guild_app/members_data').set(members);
+          const memberUpdates = {};
+          members.forEach((member, index) => {
+            memberUpdates[index] = member;
+          });
+          fbDb.ref('guild_app/members_data').update(memberUpdates);
         }
       });
 
@@ -7992,6 +8430,14 @@
         if (Array.isArray(val)) {
           weeklyArchives = val;
           localStorage.setItem('guild_weekly_history', JSON.stringify(weeklyArchives));
+        }
+      });
+
+      fbDb.ref('guild_app/cycle_history').on('value', snapshot => {
+        const val = snapshot.val();
+        if (Array.isArray(val)) {
+          cycleArchives = val;
+          localStorage.setItem('guild_cycle_history', JSON.stringify(cycleArchives));
         }
       });
 
@@ -8212,10 +8658,10 @@
       });
     }
 
-    let discordVerifiedMembers = JSON.parse(localStorage.getItem('guild_registered_members')) || {};
-    let discordServerMembers = JSON.parse(localStorage.getItem('guild_discord_server_members')) || {};
+    let discordVerifiedMembers = parseLocalStorageJson('guild_registered_members', {});
+    let discordServerMembers = parseLocalStorageJson('guild_discord_server_members', {});
     let lastKnownBotStatus = null;
-    let lockedWeeks = JSON.parse(localStorage.getItem('guild_locked_weeks')) || { 1: false, 2: false, 3: false, 4: false };
+    let lockedWeeks = parseLocalStorageJson('guild_locked_weeks', { 1: false, 2: false, 3: false, 4: false });
 
     function updateDiscordBotStatusUI(statusData) {
       const dot = document.getElementById('discord-bot-status-dot');
@@ -8241,21 +8687,48 @@
       text.className = 'hidden md:inline font-semibold text-slate-300';
     }
 
-    function triggerDiscordBotSync() {
+    async function triggerDiscordBotSync() {
       const icon = document.getElementById('discord-sync-icon');
+      const button = document.getElementById('discord-manual-sync-button');
       if (icon) icon.className = 'fa-solid fa-rotate fa-spin text-indigo-300 text-xs';
+      if (button) {
+        button.disabled = true;
+        button.classList.add('opacity-60', 'cursor-wait');
+      }
 
-      if (typeof fbDb !== 'undefined' && fbDb) {
-        fbDb.ref('guild_app/bot_commands/sync_trigger').set(Date.now());
+      try {
+        if (typeof fbDb === 'undefined' || !fbDb) {
+          throw new Error('ยังไม่เชื่อมต่อ Firebase');
+        }
+        const requestedAt = Date.now();
+        const requestId = `discord-sync-${requestedAt}-${Math.random().toString(36).slice(2, 8)}`;
+        await fbDb.ref('guild_app/bot_commands/sync_trigger').set({
+          requestedAt,
+          requestId,
+          requestedBy: (typeof currentAdminEmail !== 'undefined' && currentAdminEmail) || 'Admin'
+        });
+        showToast('🔄 ส่งคำสั่งแล้ว กำลังรอบอทซิงค์รายชื่อ Discord...', 'info');
+      } catch (error) {
+        if (icon) icon.className = 'fa-brands fa-discord text-rose-400 text-xs';
+        showToast(`ส่งคำสั่งซิงค์ไม่สำเร็จ: ${error.message || error}`, 'error');
+        if (button) {
+          button.disabled = false;
+          button.classList.remove('opacity-60', 'cursor-wait');
+        }
+        return;
       }
 
       showToast('🔄 ส่งคำสั่งให้บอทซิงค์รายชื่อ Discord เรียบร้อยแล้ว!', 'info');
 
       setTimeout(() => {
         if (icon) icon.className = 'fa-brands fa-discord text-indigo-400 text-xs';
+        if (button) {
+          button.disabled = false;
+          button.classList.remove('opacity-60', 'cursor-wait');
+        }
         if (typeof renderTable === 'function') renderTable();
         if (typeof renderDiscordRegistrationsList === 'function') renderDiscordRegistrationsList();
-      }, 2500);
+      }, 8000);
     }
 
     // ================= ระบบตรวจสอบการลงทะเบียนจาก Discord (Discord Registrations Queue) =================
@@ -8491,6 +8964,7 @@
       if (fbDb) {
         fbDb.ref('guild_app/locked_weeks').set(lockedWeeks);
       }
+      syncGoogleSheetsLocks();
 
       addAuditLog(
         'week_locked',
@@ -8507,6 +8981,12 @@
     }
 
     function openUnlockWeekModal() {
+      const titleEl = document.getElementById('unlock-week-modal-title');
+      const descEl = document.getElementById('unlock-week-modal-desc');
+      const submitTextEl = document.getElementById('unlock-week-submit-text');
+      if (titleEl) titleEl.textContent = '🔓 ยืนยันสิทธิ์เพื่อปลดล็อกสัปดาห์';
+      if (descEl) descEl.textContent = 'กรุณากรอก Email และ Password ของแอดมิน เพื่อยืนยันการปลดล็อกรอบสัปดาห์นี้';
+      if (submitTextEl) submitTextEl.textContent = 'ยืนยันปลดล็อก';
       const modal = document.getElementById('unlock-week-modal');
       const nameEl = document.getElementById('unlock-week-modal-name');
       const emailInput = document.getElementById('unlock-week-email-input');
@@ -8520,6 +9000,22 @@
 
       if (modal) modal.classList.remove('hidden');
       if (passInput) passInput.focus();
+    }
+
+    function openResetWeekModal() {
+      if (!isGuildScoringAdmin()) {
+        showToast('เฉพาะ Admin กิลด์เท่านั้นที่สามารถรีเซ็ตสัปดาห์ได้', 'warning');
+        if (!isAdmin) openAdminEmailModal();
+        return;
+      }
+
+      openUnlockWeekModal();
+      const titleEl = document.getElementById('unlock-week-modal-title');
+      const descEl = document.getElementById('unlock-week-modal-desc');
+      const submitTextEl = document.getElementById('unlock-week-submit-text');
+      if (titleEl) titleEl.textContent = '🔄 ยืนยันสิทธิ์เพื่อรีเซ็ตสัปดาห์';
+      if (descEl) descEl.textContent = 'การรีเซ็ตจะปลดล็อกสัปดาห์นี้และคงข้อมูลสมาชิก CP และการติ๊กไว้ กรุณายืนยันด้วย Email และ Password ของแอดมิน';
+      if (submitTextEl) submitTextEl.textContent = 'ยืนยันรีเซ็ตสัปดาห์';
     }
 
     function closeUnlockWeekModal() {
@@ -8583,11 +9079,28 @@
       if (fbDb) {
         fbDb.ref('guild_app/locked_weeks').set(lockedWeeks);
       }
+      syncGoogleSheetsLocks();
 
       currentAdminEmail = email;
       localStorage.setItem('guild_current_admin_email', currentAdminEmail);
       isAdmin = true;
       localStorage.setItem('guild_is_admin', 'true');
+
+      if (pendingWeekReset) {
+        try {
+          await resetGoogleSheetsWeek(w, email);
+          members.forEach(member => {
+            ensureMemberWeeklyData(member);
+            member.weeklyChecks[w] = new Array(ACTIVITIES.length).fill(false);
+            member.weeklyCheckTimestamps[w] = {};
+            if (w === currentWeekNumber) member.checks = [...member.weeklyChecks[w]];
+          });
+          saveData();
+        } catch (error) {
+          console.warn('[Google Sheets] week reset failed:', error);
+        }
+        pendingWeekReset = false;
+      }
 
       addAuditLog(
         'week_unlocked',
@@ -8601,7 +9114,7 @@
       renderLockBanner();
       renderTable();
       updateAdminUI();
-      showToast(`🔓 ปลดล็อก ${wName} เรียบร้อยแล้ว (สามารถแก้ไขข้อมูลได้ตามปกติ)`, 'success');
+      showToast(`🔄 รีเซ็ต ${wName} เรียบร้อยแล้ว (ข้อมูลเดิมยังคงอยู่ครบ)`, 'success');
     }
 
     function renderLockBanner() {
@@ -8646,6 +9159,16 @@
           archiveBtn.classList.remove('inline-flex');
         }
       }
+      updateCycleCloseButton();
+    }
+
+    function updateCycleCloseButton() {
+      const button = document.getElementById('btn-close-cycle');
+      if (!button) return;
+      const allWeeksLocked = [1, 2, 3, 4].every(week => Boolean(lockedWeeks[week]));
+      const canClose = isGuildScoringAdmin() && currentWeekNumber === 4 && allWeeksLocked;
+      button.classList.toggle('hidden', !canClose);
+      button.classList.toggle('inline-flex', canClose);
     }
 
     // ================= ระบบยืนยัน Email Admin เพื่อแก้ไขย้อนหลังในสัปดาห์ที่ปิดรอบ =================
@@ -8665,12 +9188,14 @@
       const descEl = document.getElementById('retroactive-edit-desc');
       const weekNameEl = document.getElementById('retroactive-edit-week-name');
       const emailInput = document.getElementById('retroactive-edit-email-input');
+      const passwordInput = document.getElementById('retroactive-edit-password-input');
 
       if (weekNameEl) weekNameEl.textContent = getWeekName(currentWeekNumber);
       if (descEl) descEl.textContent = actionDescription || 'แก้ไขข้อมูลในสัปดาห์ที่ปิดรอบแล้ว';
       if (emailInput) {
         emailInput.value = currentAdminEmail || '';
       }
+      if (passwordInput) passwordInput.value = '';
 
       if (modal) modal.classList.remove('hidden');
       if (emailInput) {
@@ -8686,21 +9211,30 @@
       pendingRetroactiveDescription = '';
     }
 
-    function handleConfirmRetroactiveEdit(e) {
+    async function handleConfirmRetroactiveEdit(e) {
       if (e) e.preventDefault();
       const emailInput = document.getElementById('retroactive-edit-email-input');
+      const passwordInput = document.getElementById('retroactive-edit-password-input');
       const email = (emailInput ? emailInput.value : '').trim().toLowerCase();
+      const password = passwordInput ? passwordInput.value : '';
 
-      if (!email) {
-        showToast('กรุณากรอก Email Admin เพื่อยืนยันสิทธิ์', 'warning');
+      if (!email || !password) {
+        showToast('กรุณากรอก Email และ Password ของ Admin เพื่อยืนยันสิทธิ์', 'warning');
         return;
       }
+      pendingWeekReset = true;
 
-      const isSuper = (typeof SUPER_ADMIN_EMAIL !== 'undefined' && email === SUPER_ADMIN_EMAIL.toLowerCase());
-      const isAdminUser = isSuper || (adminUsers && adminUsers[email] && adminUsers[email].status === 'approved') || (Array.isArray(adminEmails) && adminEmails.map(x => x.toLowerCase()).includes(email)) || (Array.isArray(adminAccounts) && adminAccounts.some(a => a.email && a.email.toLowerCase() === email));
+      const account = Array.isArray(adminAccounts)
+        ? adminAccounts.find(a => a.email && a.email.toLowerCase() === email)
+        : null;
+      const isSuper = email === SUPER_ADMIN_EMAIL.toLowerCase();
+      const storedPassword = isSuper
+        ? ((account && account.password) || DEFAULT_SUPER_ADMIN.password)
+        : (account && account.password);
+      const isAdminUser = Boolean(storedPassword && await verifyPassword(password, storedPassword));
 
       if (!isAdminUser) {
-        showToast('❌ อีเมลนี้ไม่มีสิทธิ์ Admin ในระบบ ไม่สามารถแก้ไขข้อมูลย้อนหลังได้', 'error');
+        showToast('❌ Email หรือ Password ไม่ถูกต้อง ไม่สามารถแก้ไขข้อมูลย้อนหลังได้', 'error');
         return;
       }
 
@@ -8940,6 +9474,7 @@
       const clearChecksBtn = document.getElementById('btn-clear-checks');
       const batchCheckBtn = document.getElementById('btn-batch-guild-check');
       const auditLogsBtn = document.getElementById('btn-audit-logs');
+      const systemHealthBtn = document.getElementById('btn-system-health');
       const clearAuditLogsBtn = document.getElementById('btn-clear-audit-logs');
       const approveRewardsBtn = document.getElementById('btn-approve-rewards');
 
@@ -9041,6 +9576,15 @@
             auditLogsBtn.classList.remove('inline-flex');
           }
         }
+        if (systemHealthBtn) {
+          if (isAdmin) {
+            systemHealthBtn.classList.remove('hidden');
+            systemHealthBtn.classList.add('inline-flex');
+          } else {
+            systemHealthBtn.classList.add('hidden');
+            systemHealthBtn.classList.remove('inline-flex');
+          }
+        }
         if (clearAuditLogsBtn) {
           if (isSuperAdmin) {
             clearAuditLogsBtn.classList.remove('hidden');
@@ -9140,9 +9684,14 @@
 
       // ปุ่มส่งออก CSV แสดงเฉพาะ Full Admin ในหน้าคะแนน
       const exportCsvBtnTop = document.getElementById('btn-export-csv-top');
+      const importCsvBtnTop = document.getElementById('btn-import-csv-top');
       if (exportCsvBtnTop) {
         if (isFullAdmin && !isViewingBossTimer) exportCsvBtnTop.classList.remove('hidden');
         else exportCsvBtnTop.classList.add('hidden');
+      }
+      if (importCsvBtnTop) {
+        if (isFullAdmin && !isViewingBossTimer) importCsvBtnTop.classList.remove('hidden');
+        else importCsvBtnTop.classList.add('hidden');
       }
 
       renderLockBanner();
@@ -9717,6 +10266,32 @@
     }
 
     // ================= ระบบติ๊กถูก All ตามกิลด์ (Batch Guild Check-in) =================
+    function closeBatchGuildCheckModal() {
+      const modal = document.getElementById('batch-guild-check-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    let pendingPreSaveCheck = null;
+
+    function populateBatchActivityOptions() {
+      const container = document.getElementById('batch-activity-options');
+      if (!container || !Array.isArray(ACTIVITIES)) return;
+
+      const selectedValues = Array.from(container.querySelectorAll('input[type="checkbox"][name="batch-activity-checkbox"]:checked')).map(el => Number(el.value));
+      const currentSelected = new Set(selectedValues);
+
+      container.innerHTML = ACTIVITIES.map((act, idx) => {
+        const checked = currentSelected.has(idx) ? 'checked' : '';
+        const label = `${act.shortName || act.name || 'Boss'} • ${act.day || '-'} • ${act.weight || 0}%`;
+        return `
+          <label class="flex items-center gap-2 p-2.5 bg-slate-900/80 border border-slate-700 rounded-xl cursor-pointer hover:border-indigo-500/60 transition">
+            <input type="checkbox" name="batch-activity-checkbox" value="${idx}" class="accent-indigo-500" ${checked}>
+            <span class="font-bold text-slate-200 text-[11px]">${escapeHtml(label)}</span>
+          </label>
+        `;
+      }).join('');
+    }
+
     function openBatchGuildCheckModal(bypassLock = false) {
       if (!isGuildScoringAdmin()) {
         showToast('เฉพาะ Admin กิลด์เท่านั้นที่สามารถติ๊กถูก All ตามกิลด์ได้', 'warning');
@@ -9732,12 +10307,10 @@
 
       const modal = document.getElementById('batch-guild-check-modal');
       const guildSelect = document.getElementById('batch-guild-select');
-      const actSelect = document.getElementById('batch-activity-select');
       const weekLabel = document.getElementById('batch-modal-week-label');
 
       if (weekLabel) weekLabel.textContent = getWeekName(currentWeekNumber);
 
-      // Populate Guilds
       if (guildSelect) {
         let gHtml = '';
         guildsList.forEach(g => {
@@ -9748,70 +10321,112 @@
         guildSelect.innerHTML = gHtml;
       }
 
-      // Populate Activities
-      if (actSelect) {
-        let aHtml = `<option value="all">✨ ทุกกิจกรรมบอสทั้งหมด (${ACTIVITIES.length} บอส)</option>`;
-        ACTIVITIES.forEach((act, idx) => {
-          aHtml += `<option value="${idx}">⚔️ [${escapeHtml(act.day || '-')}] ${escapeHtml(act.name || act.shortName)} (${act.weight || 0} คะแนน)</option>`;
-        });
-        actSelect.innerHTML = aHtml;
-      }
-
+      populateBatchActivityOptions();
       if (modal) modal.classList.remove('hidden');
     }
 
-    function closeBatchGuildCheckModal() {
-      const modal = document.getElementById('batch-guild-check-modal');
+    function getSelectedBatchActivities() {
+      const checked = Array.from(document.querySelectorAll('input[name="batch-activity-checkbox"]:checked')).map(el => Number(el.value));
+      return checked.filter(v => !Number.isNaN(v) && v >= 0 && v < ACTIVITIES.length);
+    }
+
+    function openPreSaveCheckConfirmModal(summaryText, onConfirm) {
+      const modal = document.getElementById('pre-save-check-confirm-modal');
+      const summaryEl = document.getElementById('pre-save-summary-text');
+      if (summaryEl) summaryEl.innerHTML = summaryText;
+      pendingPreSaveCheck = { onConfirm };
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closePreSaveCheckConfirmModal() {
+      const modal = document.getElementById('pre-save-check-confirm-modal');
       if (modal) modal.classList.add('hidden');
+      pendingPreSaveCheck = null;
+    }
+
+    function confirmPreSaveCheckApproval() {
+      const dateAnswer = document.querySelector('input[name="pre-save-date-check"]:checked')?.value || 'yes';
+      const countAnswer = document.querySelector('input[name="pre-save-count-check"]:checked')?.value || 'yes';
+      const activityAnswer = document.querySelector('input[name="pre-save-activity-check"]:checked')?.value || 'yes';
+
+      if (dateAnswer !== 'yes' || countAnswer !== 'yes' || activityAnswer !== 'yes') {
+        showToast('กรุณาตรวจสอบและยืนยันให้ครบทุกข้อก่อนบันทึกข้อมูล', 'warning');
+        return;
+      }
+
+      closePreSaveCheckConfirmModal();
+      if (pendingPreSaveCheck && typeof pendingPreSaveCheck.onConfirm === 'function') {
+        pendingPreSaveCheck.onConfirm();
+      }
     }
 
     function handleConfirmBatchGuildCheck() {
-      if (!isAdmin) return;
+      if (!isGuildScoringAdmin()) {
+        showToast('เฉพาะ Admin กิลด์เท่านั้นที่สามารถติ๊กถูก All ตามกิลด์ได้', 'warning');
+        if (!isAdmin) openAdminEmailModal();
+        return;
+      }
 
       const selectedGuild = document.getElementById('batch-guild-select')?.value || 'all';
-      const selectedActivity = document.getElementById('batch-activity-select')?.value || 'all';
+      const selectedActivities = getSelectedBatchActivities();
       const actionType = document.querySelector('input[name="batch-action"]:checked')?.value || 'check';
       const isChecked = actionType === 'check';
 
-      let affectedCount = 0;
-
-      members.forEach(m => {
-        if (selectedGuild === 'all' || m.guild === selectedGuild) {
-          ensureMemberWeeklyData(m);
-          affectedCount++;
-
-          if (selectedActivity === 'all') {
-            m.checks = new Array(ACTIVITIES.length).fill(isChecked);
-            m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(isChecked);
-          } else {
-            const actIdx = parseInt(selectedActivity);
-            if (!isNaN(actIdx) && actIdx >= 0 && actIdx < ACTIVITIES.length) {
-              m.checks[actIdx] = isChecked;
-              if (!Array.isArray(m.weeklyChecks[currentWeekNumber])) {
-                m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
-              }
-              m.weeklyChecks[currentWeekNumber][actIdx] = isChecked;
-            }
-          }
-        }
-      });
-
-      saveData();
-      renderTable();
-      updateKPIs();
-      closeBatchGuildCheckModal();
+      if (!selectedActivities.length) {
+        showToast('กรุณาเลือกกิจกรรม/บอสอย่างน้อย 1 ตัวก่อนบันทึก', 'warning');
+        return;
+      }
 
       const guildLabel = selectedGuild === 'all' ? 'ทุกกิลด์' : `กิลด์ ${selectedGuild}`;
-      const actLabel = selectedActivity === 'all' ? 'ทุกบอส' : (ACTIVITIES[parseInt(selectedActivity)]?.shortName || 'บอสที่เลือก');
-      const actionLabel = isChecked ? 'ติ๊กถูกทั้งหมด' : 'ยกเลิกติ๊กถูก';
+      const actLabel = selectedActivities.length === 1 ? ACTIVITIES[selectedActivities[0]]?.shortName || 'บอสที่เลือก' : `${selectedActivities.length} บอสที่เลือก`;
+      const summaryText = `
+        <div class="space-y-1">
+          <div>• สัปดาห์: <span class="font-bold text-white">${escapeHtml(getWeekName(currentWeekNumber))}</span></div>
+          <div>• กิลด์: <span class="font-bold text-white">${escapeHtml(guildLabel)}</span></div>
+          <div>• จำนวนที่เลือก: <span class="font-bold text-white">${selectedActivities.length} บอส</span></div>
+          <div>• การกระทำ: <span class="font-bold text-white">${isChecked ? 'ติ๊กถูก' : 'ยกเลิกติ๊กถูก'}</span></div>
+          <div>• ชื่อกิจกรรม: <span class="font-bold text-white">${escapeHtml(actLabel)}</span></div>
+        </div>
+      `;
 
-      addAuditLog(
-        'batch',
-        `${actionLabel} ให้ ${guildLabel}`,
-        `กิจกรรม: ${actLabel} | สมาชิกที่ได้รับผลกระทบ: ${affectedCount} คน | ${getWeekName(currentWeekNumber)}`
-      );
+      openPreSaveCheckConfirmModal(summaryText, () => {
+        let affectedCount = 0;
 
-      showToast(`${actionLabel} ให้ ${guildLabel} (${actLabel}) จำนวน ${affectedCount} คน เรียบร้อยแล้ว!`, 'success');
+        members.forEach(m => {
+          if (selectedGuild === 'all' || m.guild === selectedGuild) {
+            ensureMemberWeeklyData(m);
+            affectedCount++;
+
+            if (selectedActivities.length === ACTIVITIES.length) {
+              m.checks = new Array(ACTIVITIES.length).fill(isChecked);
+              m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(isChecked);
+            } else {
+              selectedActivities.forEach(actIdx => {
+                if (!Array.isArray(m.checks)) m.checks = [];
+                m.checks[actIdx] = isChecked;
+                if (!Array.isArray(m.weeklyChecks[currentWeekNumber])) {
+                  m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
+                }
+                m.weeklyChecks[currentWeekNumber][actIdx] = isChecked;
+              });
+            }
+          }
+        });
+
+        saveData();
+        renderTable();
+        updateKPIs();
+        closeBatchGuildCheckModal();
+
+        const actionLabel = isChecked ? 'ติ๊กถูกทั้งหมด' : 'ยกเลิกติ๊กถูก';
+        addAuditLog(
+          'batch',
+          `${actionLabel} ให้ ${guildLabel}`,
+          `กิจกรรม: ${actLabel} | สมาชิกที่ได้รับผลกระทบ: ${affectedCount} คน | ${getWeekName(currentWeekNumber)}`
+        );
+
+        showToast(`${actionLabel} ให้ ${guildLabel} (${actLabel}) จำนวน ${affectedCount} คน เรียบร้อยแล้ว!`, 'success');
+      });
     }
 
     // ================= 📸 ระบบ AI สแกนรูปจัดการชุมนุมเพื่อติ๊กคะแนนบอส (AI Squad Attendance Scanner) =================
@@ -9980,25 +10595,43 @@
     }
 
     // ================= 📸 ระบบ AI สแกนรูปจัดการชุมนุมเพื่อติ๊กคะแนนบอส (AI Squad Attendance Scanner) =================
-    let detectedSquadItems = []; // Array of { id, squadNum, rawName, member, selected }
+    let detectedSquadItems = []; // Array of { id, squadNum, rawName, member, confidence, selected }
+    let detectedConfidenceByName = {};
+
+    function getSelectedSquadActivities() {
+      const checked = Array.from(document.querySelectorAll('input[name="squad-activity-checkbox"]:checked')).map(el => Number(el.value));
+      return checked.filter(v => !Number.isNaN(v) && v >= 0 && v < ACTIVITIES.length);
+    }
+
+    function populateSquadActivityOptions() {
+      const container = document.getElementById('squad-activity-options');
+      if (!container || !Array.isArray(ACTIVITIES)) return;
+      const selected = new Set(getSelectedSquadActivities());
+      container.innerHTML = ACTIVITIES.map((act, idx) => {
+        const checked = selected.has(idx) ? 'checked' : '';
+        const label = `${act.shortName || act.name || 'Boss'} • ${act.day || '-'} • ${act.weight || 0}%`;
+        return `
+          <label class="flex items-center gap-2 p-2.5 bg-slate-900/80 border border-slate-700 rounded-xl cursor-pointer hover:border-indigo-500/60 transition">
+            <input type="checkbox" name="squad-activity-checkbox" value="${idx}" class="accent-indigo-500" ${checked}>
+            <span class="font-bold text-slate-200 text-[11px]">${escapeHtml(label)}</span>
+          </label>
+        `;
+      }).join('');
+    }
 
     function openAiSquadCheckModal() {
-      if (!isAdmin) {
-        showToast(t('toast_need_admin_edit'), 'warning');
-        openAdminEmailModal();
+      if (!isGuildScoringAdmin()) {
+        showToast('เฉพาะ Admin กิลด์เท่านั้นที่สามารถสแกนภาพและติ๊กข้อมูลได้', 'warning');
+        if (!isAdmin) openAdminEmailModal();
         return;
       }
 
-      // Populate activities dropdown
-      const actSelect = document.getElementById('squad-check-activity-select');
-      if (actSelect && Array.isArray(ACTIVITIES)) {
-        let html = '';
-        ACTIVITIES.forEach((act, idx) => {
-          html += `<option value="${idx}">⚔️ ${escapeHtml(act.name)} (${escapeHtml(act.shortName || '')})</option>`;
-        });
-        actSelect.innerHTML = html;
+      if (isWeekLocked(currentWeekNumber)) {
+        showToast('สัปดาห์นี้ถูกล็อก กรุณาปลดล็อกก่อนใช้ AI สแกนบันทึกข้อมูล', 'warning');
+        return;
       }
 
+      populateSquadActivityOptions();
       populateSquadManualAddDropdown();
       resetSquadImageScan();
       const modal = document.getElementById('ai-squad-check-modal');
@@ -10132,6 +10765,8 @@ Tasks:
 2. Extract all character names placed in each squad slot (including Chinese, Japanese, and special characters like yn官, Hanchirisu改善, Birkenstockツ, Starix死, etc.).
 3. Match each detected character name against the guild roster if a matching member exists.
 
+Also provide confidenceByName with a numeric confidence from 0 to 100 for every detected name. Use lower confidence when the screenshot is blurry or the roster match is uncertain.
+
 Output strictly valid JSON with no markdown wrapping:
 {
   "squads": [
@@ -10144,7 +10779,8 @@ Output strictly valid JSON with no markdown wrapping:
       "members": ["SenjuNo2", "ไข่ล่อ", "Mindgame", "Heuristics", "ไข่มอส"]
     }
   ],
-  "allMembers": ["name1", "name2"]
+  "allMembers": ["name1", "name2"],
+  "confidenceByName": {"name1": 98, "name2": 72}
 }`;
 
         const parsedData = await callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey);
@@ -10166,6 +10802,8 @@ Output strictly valid JSON with no markdown wrapping:
       if (resultsContainer) resultsContainer.classList.remove('hidden');
 
       const squads = Array.isArray(data.squads) ? data.squads : [];
+      detectedConfidenceByName = data && data.confidenceByName && typeof data.confidenceByName === 'object'
+        ? data.confidenceByName : {};
       detectedSquadItems = [];
 
       let itemCounter = 0;
@@ -10185,12 +10823,14 @@ Output strictly valid JSON with no markdown wrapping:
           });
 
           const itemId = `squad_item_${itemCounter++}`;
+          const confidence = Math.max(0, Math.min(100, Number(detectedConfidenceByName[cleanName]) || 0));
           detectedSquadItems.push({
             id: itemId,
             squadNum: sqNum,
             rawName: cleanName,
             member: guildMember || null,
-            selected: !!guildMember // Pre-select if matched in guild
+            confidence,
+            selected: !!guildMember && confidence >= 85 // Low-confidence matches require manual review.
           });
         });
       });
@@ -10231,6 +10871,8 @@ Output strictly valid JSON with no markdown wrapping:
           const memberName = item.member ? (item.member.characterName || item.member.name) : item.rawName;
           const guildName = item.member ? (item.member.guild || '-') : 'ไม่พบในกิลด์';
 
+          const confidenceLabel = item.confidence > 0 ? `${item.confidence}%` : 'ตรวจสอบเอง';
+          const confidenceClass = item.confidence >= 85 ? 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10' : 'text-amber-300 border-amber-500/30 bg-amber-500/10';
           const cardClass = item.selected
             ? 'bg-indigo-950/40 border-indigo-500/50 shadow-sm'
             : 'bg-slate-950/60 border-slate-800 opacity-60';
@@ -10251,6 +10893,7 @@ Output strictly valid JSON with no markdown wrapping:
                     <i class="fa-solid fa-shield text-[9px] text-slate-500"></i>
                     <span>${escapeHtml(guildName)}</span>
                   </div>
+                  <div class="text-[9px] mt-1"><span class="px-1.5 py-0.5 rounded-full border ${confidenceClass}">ความมั่นใจ ${confidenceLabel}</span></div>
                 </div>
               </div>
 
@@ -10344,12 +10987,15 @@ Output strictly valid JSON with no markdown wrapping:
     }
 
     function confirmAiSquadAttendanceCheck() {
-      if (!isAdmin) return;
+      if (!isGuildScoringAdmin()) {
+        showToast('เฉพาะ Admin กิลด์เท่านั้นที่สามารถยืนยันการติ๊กจากภาพได้', 'warning');
+        if (!isAdmin) openAdminEmailModal();
+        return;
+      }
 
-      const actSelect = document.getElementById('squad-check-activity-select');
-      const actIdx = actSelect ? parseInt(actSelect.value) : 0;
-      if (isNaN(actIdx) || actIdx < 0 || actIdx >= ACTIVITIES.length) {
-        showToast('กรุณาเลือกกิจกรรม/บอสที่ถูกต้อง', 'warning');
+      const selectedActivities = getSelectedSquadActivities();
+      if (!selectedActivities.length) {
+        showToast('กรุณาเลือกกิจกรรม/บอสอย่างน้อย 1 ตัวก่อนบันทึก', 'warning');
         return;
       }
 
@@ -10359,35 +11005,61 @@ Output strictly valid JSON with no markdown wrapping:
         return;
       }
 
-      let affectedCount = 0;
-      selectedItems.forEach(item => {
-        const targetName = item.member.characterName || item.member.name;
-        const m = members.find(mem => (mem.characterName || mem.name) === targetName);
-        if (m) {
-          ensureMemberWeeklyData(m);
-          m.checks[actIdx] = true;
-          if (!Array.isArray(m.weeklyChecks[currentWeekNumber])) {
-            m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
+      const actNames = selectedActivities.map(idx => ACTIVITIES[idx]?.shortName || ACTIVITIES[idx]?.name || `บอส ${idx + 1}`);
+      const summaryText = `
+        <div class="space-y-1">
+          <div>• สัปดาห์: <span class="font-bold text-white">${escapeHtml(getWeekName(currentWeekNumber))}</span></div>
+          <div>• จำนวนที่เลือก: <span class="font-bold text-white">${selectedItems.length} คน</span></div>
+          <div>• จำนวนบอสที่เลือก: <span class="font-bold text-white">${selectedActivities.length} ตัว</span></div>
+          <div>• ชื่อกิจกรรม/บอส: <span class="font-bold text-white">${escapeHtml(actNames.join(', '))}</span></div>
+          <div>• รายชื่อที่จะบันทึก: <span class="font-bold text-white">${selectedItems.map(item => escapeHtml(item.member.characterName || item.member.name)).slice(0, 5).join(', ')}${selectedItems.length > 5 ? ' ...' : ''}</span></div>
+        </div>
+      `;
+
+      openPreSaveCheckConfirmModal(summaryText, () => {
+        let affectedCount = 0;
+        selectedItems.forEach(item => {
+          const targetName = item.member.characterName || item.member.name;
+          const m = members.find(mem => (mem.characterName || mem.name) === targetName);
+          if (m) {
+            ensureMemberWeeklyData(m);
+            selectedActivities.forEach(actIdx => {
+              m.checks[actIdx] = true;
+              if (!Array.isArray(m.weeklyChecks[currentWeekNumber])) {
+                m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
+              }
+              m.weeklyChecks[currentWeekNumber][actIdx] = true;
+            });
+            affectedCount++;
           }
-          m.weeklyChecks[currentWeekNumber][actIdx] = true;
-          affectedCount++;
-        }
+        });
+
+        aiScanArchives.push({
+          scannedAt: new Date().toISOString(),
+          admin: currentAdminEmail || 'Admin',
+          week: currentWeekNumber,
+          activities: selectedActivities.map(index => ACTIVITIES[index]?.key || index),
+          detected: detectedSquadItems.map(item => ({
+            name: item.rawName,
+            memberId: item.member ? item.member.id : null,
+            confidence: item.confidence || 0,
+            selected: Boolean(item.selected)
+          })),
+          affectedCount
+        });
+        saveData();
+        renderTable();
+        updateKPIs();
+        closeAiSquadCheckModal();
+
+        addAuditLog(
+          'batch',
+          `AI สแกนรูปชุมนุมติ๊กบอส (${selectedActivities.length} ตัว)`,
+          `สแกนจากรูปภาพจัดการชุมนุม | ติ๊กถูกสำเร็จ: ${affectedCount} คน | ${getWeekName(currentWeekNumber)} | บอส: ${actNames.join(', ')}`
+        );
+
+        showToast(`📸 ติ๊กถูกบอส ${actNames.join(', ')} ให้สมาชิก ${affectedCount} คน เรียบร้อยแล้ว! 🎉`, 'success');
       });
-
-      saveData();
-      renderTable();
-      updateKPIs();
-      closeAiSquadCheckModal();
-
-      const actName = ACTIVITIES[actIdx]?.name || ACTIVITIES[actIdx]?.shortName || 'กิจกรรม';
-
-      addAuditLog(
-        'batch',
-        `AI สแกนรูปชุมนุมติ๊กบอส: ${actName}`,
-        `สแกนจากรูปภาพจัดการชุมนุม | ติ๊กถูกสำเร็จ: ${affectedCount} คน | ${getWeekName(currentWeekNumber)}`
-      );
-
-      showToast(`📸 ติ๊กถูกบอส "${actName}" ให้สมาชิก ${affectedCount} คน เรียบร้อยแล้ว! 🎉`, 'success');
     }
 
     // Global Paste Listener for AI Squad Attendance Check (when in Scoring Module)
@@ -10417,7 +11089,8 @@ Output strictly valid JSON with no markdown wrapping:
         const isSquadModalOpen = squadModal && !squadModal.classList.contains('hidden');
         const isViewingScoring = typeof activeAppModule === 'undefined' || activeAppModule === 'scoring';
 
-        if (isAdmin && (isSquadModalOpen || isViewingScoring)) {
+        const canUseScoringCheck = isGuildScoringAdmin();
+        if (canUseScoringCheck && (isSquadModalOpen || isViewingScoring)) {
           e.preventDefault();
           if (!isSquadModalOpen) openAiSquadCheckModal();
           processSquadImageWithGemini(imageFile);
@@ -10428,7 +11101,7 @@ Output strictly valid JSON with no markdown wrapping:
     // ================= 😈 น้องเดวิล: เลขา AI ประจำกิลด์ RedDevil (AI Assistant & Diagnostics Engine) =================
     let nongDevilAttachedImage = null;
     let nongDevilMessagesHistory = [];
-    let nongDevilFeedbackLogs = JSON.parse(localStorage.getItem('guild_nong_devil_feedback_logs')) || [];
+    let nongDevilFeedbackLogs = parseLocalStorageJson('guild_nong_devil_feedback_logs', []);
 
     function saveNongDevilFeedbackLogs() {
       if (nongDevilFeedbackLogs.length > 200) nongDevilFeedbackLogs = nongDevilFeedbackLogs.slice(0, 200);
@@ -10648,14 +11321,14 @@ Output strictly valid JSON with no markdown wrapping:
         : '';
 
       // 3. Drop Logs & Kill Logs (Real-time Drop History)
-      const rawDropLogs = (typeof bossDropLogs !== 'undefined' && Array.isArray(bossDropLogs)) ? bossDropLogs : (JSON.parse(localStorage.getItem('guild_boss_drop_logs')) || []);
+      const rawDropLogs = (typeof bossDropLogs !== 'undefined' && Array.isArray(bossDropLogs)) ? bossDropLogs : parseLocalStorageJson('guild_boss_drop_logs', []);
       const recentDrops = rawDropLogs.slice(0, 30).map(d => {
         const timeStr = d.killTime ? new Date(d.killTime).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-';
         const items = Array.isArray(d.items) ? d.items.join(', ') : (d.item || '-');
         return `• [${timeStr}] บอส: ${d.bossName || '-'} ➔ ไอเทม: ${items} (บันทึกโดย: ${d.recordedBy || 'Admin'})`;
       }).join('\n');
 
-      const rawKillLogs = (typeof bossKillLogs !== 'undefined' && Array.isArray(bossKillLogs)) ? bossKillLogs : (JSON.parse(localStorage.getItem('guild_boss_kill_logs')) || []);
+      const rawKillLogs = (typeof bossKillLogs !== 'undefined' && Array.isArray(bossKillLogs)) ? bossKillLogs : parseLocalStorageJson('guild_boss_kill_logs', []);
       const recentKills = rawKillLogs.slice(0, 15).map(k => {
         return `• บอส: ${k.bossName || '-'} (Lv.${k.level || '?'}) ตายเวลา ${k.killTimeFormatted || '-'} | เกิดรอบถัดไป: ${k.nextSpawnFormatted || '-'}${k.dropItemsText && k.dropItemsText !== '-' ? ' | ดรอป: ' + k.dropItemsText : ''}`;
       }).join('\n');
@@ -11675,7 +12348,7 @@ Output strictly valid JSON with no markdown formatting.`;
     }
 
     // ================= ระบบประวัติและบันทึกการแก้ไข (Audit Logs System) =================
-    let auditLogs = JSON.parse(localStorage.getItem('guild_audit_logs')) || [];
+    let auditLogs = parseLocalStorageJson('guild_audit_logs', []);
 
     function saveAuditLogs() {
       if (auditLogs.length > 250) {
@@ -12068,9 +12741,9 @@ Output strictly valid JSON with no markdown formatting.`;
     }
 
     function toggleAllChecks(memberId, bypassLock = false) {
-      if (!isAdmin) {
-        showToast(t('toast_need_admin_check'), "warning");
-        openAdminEmailModal();
+      if (!isGuildScoringAdmin()) {
+        showToast('เฉพาะ Admin กิลด์เท่านั้นที่สามารถติ๊กถูกแบบรวมได้', "warning");
+        if (!isAdmin) openAdminEmailModal();
         return;
       }
       const member = members.find(m => m.id === memberId);
@@ -13188,6 +13861,82 @@ Output strictly valid JSON with no markdown formatting.`;
       }
     }
 
+    async function closeFourWeekCycle() {
+      if (!isGuildScoringAdmin()) {
+        showToast('เฉพาะ Super Admin หรือ Admin ปกติเท่านั้นที่ปิดรอบได้', 'warning');
+        return;
+      }
+
+      if (isWeekLocked(currentWeekNumber)) {
+        showToast('สัปดาห์นี้ถูกล็อก กรุณาปลดล็อกก่อนบันทึกผล AI', 'warning');
+        return;
+      }
+
+      const allWeeksLocked = [1, 2, 3, 4].every(week => Boolean(lockedWeeks[week]));
+      if (currentWeekNumber !== 4 || !allWeeksLocked) {
+        showToast('กรุณาล็อกให้ครบทั้ง 4 สัปดาห์ก่อนปิดรอบ', 'warning');
+        return;
+      }
+
+      const email = (prompt('กรอก Email Admin เพื่อปิดรอบครบ 4 สัปดาห์:') || '').trim().toLowerCase();
+      const password = prompt('กรอก Password Admin:') || '';
+      const account = Array.isArray(adminAccounts)
+        ? adminAccounts.find(item => item.email && item.email.toLowerCase() === email)
+        : null;
+      const isSuper = email === SUPER_ADMIN_EMAIL.toLowerCase();
+      const storedPassword = isSuper
+        ? ((account && account.password) || DEFAULT_SUPER_ADMIN.password)
+        : (account && account.password);
+      if (!storedPassword || !(await verifyPassword(password, storedPassword))) {
+        showToast('Email หรือ Password ไม่ถูกต้อง', 'error');
+        return;
+      }
+      if (account && account.role === 'boss_admin') {
+        showToast('Boss Admin ไม่มีสิทธิ์ปิดรอบครบ 4 สัปดาห์', 'warning');
+        return;
+      }
+
+      if (!confirm(`ยืนยันปิดรอบที่ ${currentCycleNumber} และเริ่มรอบที่ ${currentCycleNumber + 1} ใช่หรือไม่?\n\nข้อมูลสมาชิกและประวัติรอบเดิมจะถูกเก็บไว้`)) return;
+
+      try {
+        await closeGoogleSheetsCycle(currentCycleNumber, email);
+      } catch (error) {
+        showToast('ไม่สามารถบันทึกรอบใน Google Sheets ได้ จึงยกเลิกการปิดรอบ', 'error');
+        console.warn('[Google Sheets] cycle close failed:', error);
+        return;
+      }
+
+      cycleArchives.push({
+        cycleNumber: currentCycleNumber,
+        archivedAt: new Date().toISOString(),
+        archivedBy: email,
+        membersSnapshot: JSON.parse(JSON.stringify(members)),
+        weeklyArchives: JSON.parse(JSON.stringify(weeklyArchives))
+      });
+
+      currentCycleNumber += 1;
+      currentWeekNumber = 1;
+      lockedWeeks = { 1: false, 2: false, 3: false, 4: false };
+      members.forEach(member => {
+        ensureMemberWeeklyData(member);
+        for (let week = 1; week <= 4; week++) {
+          member.weeklyChecks[week] = new Array(ACTIVITIES.length).fill(false);
+          member.weeklyCheckTimestamps[week] = {};
+        }
+        member.checks = [...member.weeklyChecks[1]];
+      });
+      weeklyArchives = [];
+      localStorage.setItem('guild_locked_weeks', JSON.stringify(lockedWeeks));
+      if (fbDb) fbDb.ref('guild_app/locked_weeks').set(lockedWeeks);
+      syncGoogleSheetsLocks();
+      saveData();
+      renderWeekTabs();
+      renderLockBanner();
+      renderTable();
+      updateKPIs();
+      showToast(`ปิดรอบที่ ${currentCycleNumber - 1} และเริ่มรอบที่ ${currentCycleNumber} เรียบร้อยแล้ว`, 'success');
+    }
+
     // ================= ระบบสรุปคะแนนทุกอาทิตย์ (Weekly Archives) =================
     function openArchiveWeekModal() {
       if (!isGuildScoringAdmin()) {
@@ -13243,6 +13992,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
     function openWeeklyHistoryModal() {
       const select = document.getElementById('history-week-select');
+      const memberSelect = document.getElementById('history-member-select');
       const allWeeks = [];
       for (let w = 1; w <= currentWeekNumber; w++) {
         allWeeks.push(w);
@@ -13253,12 +14003,108 @@ Output strictly valid JSON with no markdown formatting.`;
         return `<option value="${w}">${t('current_week', { week: w })} ${isCurrent ? t('week_current_badge') : ''}</option>`;
       }).reverse().join('');
 
+      const previousMemberId = memberSelect.value;
+      memberSelect.innerHTML = members
+        .slice()
+        .sort((a, b) => String(a.characterName || a.name).localeCompare(String(b.characterName || b.name), 'th'))
+        .map(m => `<option value="${escapeHtml(String(m.id))}">${escapeHtml(m.characterName || m.name || m.id)}${m.guild ? ` · ${escapeHtml(m.guild)}` : ''}</option>`)
+        .join('');
+      if (previousMemberId && members.some(m => String(m.id) === previousMemberId)) {
+        memberSelect.value = previousMemberId;
+      }
+
       renderWeeklyHistoryDetails();
+      renderMemberWeeklySummary();
       document.getElementById('weekly-history-modal').classList.remove('hidden');
     }
 
     function closeWeeklyHistoryModal() {
       document.getElementById('weekly-history-modal').classList.add('hidden');
+    }
+
+    function getHistoryMembersForWeek(weekNumber) {
+      if (weekNumber === currentWeekNumber) return members;
+      const archive = weeklyArchives.find(w => w.weekNumber === weekNumber);
+      return archive ? (archive.membersSnapshot || []) : [];
+    }
+
+    function getMemberChecksForWeek(member, weekNumber) {
+      if (!member) return [];
+      if (member.weeklyChecks && Array.isArray(member.weeklyChecks[weekNumber])) {
+        return member.weeklyChecks[weekNumber];
+      }
+      return Array.isArray(member.checks) ? member.checks : [];
+    }
+
+    function renderMemberWeeklySummary() {
+      const container = document.getElementById('member-weekly-summary-container');
+      const memberSelect = document.getElementById('history-member-select');
+      const weekSelect = document.getElementById('history-week-select');
+      if (!container || !memberSelect || !weekSelect || !members.length) return;
+
+      const weekNumber = parseInt(weekSelect.value) || currentWeekNumber;
+      const selectedId = memberSelect.value || String(members[0].id);
+      const sourceMembers = getHistoryMembersForWeek(weekNumber);
+      const member = sourceMembers.find(m => String(m.id) === selectedId) ||
+        members.find(m => String(m.id) === selectedId);
+      if (!member) {
+        container.innerHTML = '';
+        return;
+      }
+
+      const checks = getMemberChecksForWeek(member, weekNumber);
+      const score = calculateTotalScore(checks);
+      const maxScore = ACTIVITIES.reduce((sum, activity) => sum + (Number(activity.weight) || 0), 0);
+      const percent = maxScore > 0 ? Math.min(100, (score / maxScore) * 100) : 0;
+      const activeCount = calculateActiveCount(checks);
+      const eligible = isEligible(checks);
+      const ranked = sourceMembers.slice().sort((a, b) =>
+        calculateTotalScore(getMemberChecksForWeek(b, weekNumber)) - calculateTotalScore(getMemberChecksForWeek(a, weekNumber))
+      );
+      const overallRank = ranked.findIndex(m => String(m.id) === String(member.id)) + 1;
+      const guildMembers = sourceMembers.filter(m => (m.guild || '') === (member.guild || ''));
+      const guildRanked = guildMembers.slice().sort((a, b) =>
+        calculateTotalScore(getMemberChecksForWeek(b, weekNumber)) - calculateTotalScore(getMemberChecksForWeek(a, weekNumber))
+      );
+      const guildRank = guildRanked.findIndex(m => String(m.id) === String(member.id)) + 1;
+
+      const previousMembers = getHistoryMembersForWeek(weekNumber - 1);
+      const previousMember = previousMembers.find(m => String(m.id) === String(member.id));
+      const previousScore = previousMember ? calculateTotalScore(getMemberChecksForWeek(previousMember, weekNumber - 1)) : null;
+      const scoreDelta = previousScore === null ? null : score - previousScore;
+      const deltaHtml = scoreDelta === null ? '<span class="text-slate-500">ไม่มีข้อมูลสัปดาห์ก่อน</span>' :
+        `<span class="${scoreDelta >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${scoreDelta >= 0 ? '▲' : '▼'} ${Math.abs(scoreDelta)} คะแนนจากสัปดาห์ก่อน</span>`;
+
+      const activityRows = ACTIVITIES.map((activity, index) => {
+        const checked = Boolean(checks[index]);
+        return `<div class="flex items-center gap-2 text-[11px]">
+          <i class="fa-solid ${checked ? 'fa-circle-check text-emerald-400' : 'fa-circle-xmark text-slate-600'}"></i>
+          <span class="flex-1 truncate ${checked ? 'text-slate-200' : 'text-slate-500'}">${escapeHtml(activity.name || activity.shortName || `Activity ${index + 1}`)}</span>
+          <span class="font-mono ${checked ? 'text-emerald-300' : 'text-slate-600'}">${checked ? `+${activity.weight || 0}` : 'ยังไม่เข้า'}</span>
+        </div>`;
+      }).join('');
+
+      container.innerHTML = `<div class="bg-gradient-to-br from-sky-950/70 via-slate-950 to-indigo-950/60 rounded-2xl border border-sky-500/30 p-4 space-y-3">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div class="text-[10px] uppercase tracking-wider text-sky-300 font-bold">สรุปส่วนตัว · สัปดาห์ ${weekNumber}</div>
+            <h4 class="text-base font-bold text-white mt-1">${escapeHtml(member.characterName || member.name || member.id)}</h4>
+            <p class="text-[11px] text-slate-400 mt-0.5">${escapeHtml(member.guild || '-')} · CP ${Number(member.cp || 0).toLocaleString()}</p>
+          </div>
+          <div class="text-right">
+            <div class="text-2xl font-black text-white font-mono">${score}<span class="text-xs text-slate-400">/${maxScore}</span></div>
+            <div class="text-[11px] ${eligible ? 'text-emerald-400' : 'text-amber-300'} font-semibold">${eligible ? 'ผ่านเกณฑ์' : 'ยังไม่ผ่านเกณฑ์'}</div>
+          </div>
+        </div>
+        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-sky-400 to-indigo-400" style="width:${percent.toFixed(1)}%"></div></div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+          <div class="bg-slate-900/70 rounded-xl p-2"><div class="text-[10px] text-slate-500">เข้าร่วม</div><div class="text-sm font-bold text-white">${activeCount}/${ACTIVITIES.length}</div></div>
+          <div class="bg-slate-900/70 rounded-xl p-2"><div class="text-[10px] text-slate-500">อันดับรวม</div><div class="text-sm font-bold text-amber-300">#${overallRank || '-'}</div></div>
+          <div class="bg-slate-900/70 rounded-xl p-2"><div class="text-[10px] text-slate-500">อันดับกิลด์</div><div class="text-sm font-bold text-sky-300">#${guildRank || '-'}</div></div>
+          <div class="bg-slate-900/70 rounded-xl p-2"><div class="text-[10px] text-slate-500">เทียบสัปดาห์ก่อน</div><div class="text-[11px] font-semibold mt-1">${deltaHtml}</div></div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-1.5 border-t border-slate-800/80 pt-3">${activityRows || '<span class="text-xs text-slate-500">ยังไม่มีกิจกรรม</span>'}</div>
+      </div>`;
     }
 
     function renderWeeklyHistoryDetails() {
@@ -13267,6 +14113,8 @@ Output strictly valid JSON with no markdown formatting.`;
       const container = document.getElementById('history-content-container');
       const actionsContainer = document.getElementById('history-week-actions');
       const isCurrent = selectedWeek === currentWeekNumber;
+
+      renderMemberWeeklySummary();
 
       let weekData;
       let snapMembers = [];
@@ -13372,6 +14220,10 @@ Output strictly valid JSON with no markdown formatting.`;
         openAdminEmailModal();
         return;
       }
+      if (isWeekLocked(weekNumber)) {
+        showToast(`สัปดาห์ที่ ${weekNumber} ยังล็อกอยู่ กรุณากด "รีเซ็ตสัปดาห์" และยืนยันด้วย Email กับ Password ก่อนลบ`, 'warning');
+        return;
+      }
       if (!confirm(`คุณต้องการลบประวัติย้อนหลังสัปดาห์ที่ ${weekNumber} ใช่หรือไม่?`)) return;
       weeklyArchives = weeklyArchives.filter(w => w.weekNumber !== weekNumber);
       localStorage.setItem('guild_weekly_archives', JSON.stringify(weeklyArchives));
@@ -13380,6 +14232,141 @@ Output strictly valid JSON with no markdown formatting.`;
     }
 
     // ================= ส่งออก CSV & รีเซ็ต =================
+    function triggerCSVImport() {
+      const input = document.getElementById('import-csv-input');
+      if (!input) return;
+      input.value = '';
+      input.click();
+    }
+
+    function parseCSVRows(csvText) {
+      const rows = [];
+      let row = [];
+      let value = '';
+      let quoted = false;
+
+      for (let index = 0; index < csvText.length; index++) {
+        const char = csvText[index];
+        const nextChar = csvText[index + 1];
+
+        if (char === '"' && quoted && nextChar === '"') {
+          value += '"';
+          index++;
+        } else if (char === '"') {
+          quoted = !quoted;
+        } else if (char === ',' && !quoted) {
+          row.push(value);
+          value = '';
+        } else if ((char === '\n' || char === '\r') && !quoted) {
+          if (char === '\r' && nextChar === '\n') index++;
+          row.push(value);
+          if (row.some(cell => cell.trim() !== '')) rows.push(row);
+          row = [];
+          value = '';
+        } else {
+          value += char;
+        }
+      }
+
+      row.push(value);
+      if (row.some(cell => cell.trim() !== '')) rows.push(row);
+      return rows;
+    }
+
+    function handleImportCSV(event) {
+      if (!isGuildScoringAdmin()) {
+        showToast('เฉพาะ Admin กิลด์เท่านั้นที่สามารถนำเข้า CSV ได้', 'warning');
+        if (!isAdmin) openAdminEmailModal();
+        if (event.target) event.target.value = '';
+        return;
+      }
+
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      showToast(`กำลังอ่านไฟล์ CSV: ${file.name}`, 'info');
+
+      const reader = new FileReader();
+      reader.onload = function (loadEvent) {
+        try {
+          const rows = parseCSVRows(String(loadEvent.target.result || '').replace(/^\uFEFF/, ''));
+          if (rows.length < 2) throw new Error('ไม่พบข้อมูลสมาชิกในไฟล์ CSV');
+
+          const header = rows[0].map(cell => cell.trim().toLowerCase());
+          const nameIndex = header.indexOf('charactername');
+          const guildIndex = header.indexOf('guild');
+          const emailIndex = header.indexOf('email');
+          const cpIndex = header.indexOf('cp');
+          if (nameIndex < 0 || guildIndex < 0 || emailIndex < 0 || cpIndex < 0) {
+            throw new Error('หัวตารางต้องมี CharacterName, Guild, Email และ CP');
+          }
+
+          const importedMembers = rows.slice(1).map(row => ({
+            characterName: (row[nameIndex] || '').trim(),
+            guild: (row[guildIndex] || '').trim(),
+            email: (row[emailIndex] || '').trim(),
+            cp: Number(String(row[cpIndex] || '0').replace(/,/g, '')) || 0
+          })).filter(member => member.characterName || member.email);
+
+          if (importedMembers.length === 0) throw new Error('ไม่พบสมาชิกที่มีข้อมูลเพียงพอ');
+          if (!confirm(`พบข้อมูลสมาชิก ${importedMembers.length} คน\n\nระบบจะอัปเดตเฉพาะข้อมูลพื้นฐานและคงข้อมูลการติ๊กเดิมไว้ทั้งหมด ต้องการดำเนินการต่อหรือไม่?`)) return;
+
+          let updatedCount = 0;
+          let addedCount = 0;
+          const nextId = () => members.reduce((max, member) => Math.max(max, Number(member.id) || 0), 0) + 1;
+
+          importedMembers.forEach(imported => {
+            const importedEmail = imported.email.toLowerCase();
+            const importedName = imported.characterName.toLowerCase();
+            const existing = members.find(member => {
+              const memberEmail = (member.email || '').trim().toLowerCase();
+              const memberName = (member.characterName || member.name || '').trim().toLowerCase();
+              return (importedEmail && memberEmail === importedEmail) || memberName === importedName;
+            });
+
+            if (existing) {
+              existing.characterName = imported.characterName || existing.characterName;
+              existing.guild = imported.guild || existing.guild;
+              existing.email = imported.email || existing.email;
+              existing.cp = imported.cp;
+              ensureMemberWeeklyData(existing);
+              updatedCount++;
+              return;
+            }
+
+            const newMember = {
+              id: nextId(),
+              num: members.length + 1,
+              characterName: imported.characterName,
+              guild: imported.guild,
+              email: imported.email,
+              cp: imported.cp,
+              checks: new Array(ACTIVITIES.length).fill(false),
+              weeklyChecks: {},
+              weeklyCp: {}
+            };
+            ensureMemberWeeklyData(newMember);
+            members.push(newMember);
+            addedCount++;
+          });
+
+          saveData();
+          renderTable();
+          updateKPIs();
+          showToast(`นำเข้า CSV สำเร็จ อัปเดต ${updatedCount} คน เพิ่มใหม่ ${addedCount} คน โดยข้อมูลการติ๊กเดิมยังอยู่ครบ`, 'success');
+        } catch (error) {
+          console.error('Import CSV Error:', error);
+          showToast(`นำเข้า CSV ไม่สำเร็จ: ${error.message}`, 'error');
+        } finally {
+          event.target.value = '';
+        }
+      };
+      reader.onerror = () => {
+        showToast('ไม่สามารถอ่านไฟล์ CSV ได้', 'error');
+        event.target.value = '';
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+
     function exportToCSV() {
       let csvContent = "\uFEFF";
       csvContent += "No.,CharacterName,Guild,Email,CP,ActiveCount,TotalScore,PenaltyPercent,EligibleStatus," + ACTIVITIES.map(a => a.name).join(",") + "\n";
@@ -13536,6 +14523,119 @@ Output strictly valid JSON with no markdown formatting.`;
       });
     }
 
+    // ================= ระบบแนบรูปภาพหลักฐานในคำขออุทธรณ์ (Appeal Screenshot Attachment) =================
+    let currentAppealScreenshotBase64 = null;
+
+    function handleAppealFileSelect(event) {
+      const file = event.target.files && event.target.files[0];
+      if (file) {
+        handleAppealImageFile(file);
+      }
+    }
+
+    function handleAppealImageFile(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        showToast('กรุณาเลือกไฟล์รูปภาพที่ถูกต้อง (PNG, JPG, WebP)', 'warning');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+          const maxDim = 1280;
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          currentAppealScreenshotBase64 = canvas.toDataURL('image/jpeg', 0.82);
+
+          const previewImg = document.getElementById('appeal-preview-img');
+          const placeholder = document.getElementById('appeal-dropzone-placeholder');
+          const previewBox = document.getElementById('appeal-dropzone-preview');
+
+          if (previewImg) previewImg.src = currentAppealScreenshotBase64;
+          if (placeholder) placeholder.classList.add('hidden');
+          if (previewBox) previewBox.classList.remove('hidden');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeAppealScreenshot() {
+      currentAppealScreenshotBase64 = null;
+      const fileInput = document.getElementById('appeal-screenshot-file-input');
+      const placeholder = document.getElementById('appeal-dropzone-placeholder');
+      const previewBox = document.getElementById('appeal-dropzone-preview');
+      const previewImg = document.getElementById('appeal-preview-img');
+
+      if (fileInput) fileInput.value = '';
+      if (previewImg) previewImg.src = '';
+      if (placeholder) placeholder.classList.remove('hidden');
+      if (previewBox) previewBox.classList.add('hidden');
+    }
+
+    function initAppealDropzone() {
+      const dropzone = document.getElementById('appeal-screenshot-dropzone');
+      if (!dropzone) return;
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add('border-pink-400', 'bg-pink-500/10');
+        }, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove('border-pink-400', 'bg-pink-500/10');
+        }, false);
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files.length > 0) {
+          handleAppealImageFile(files[0]);
+        }
+      }, false);
+
+      // รองรับการกดวางภาพ (Ctrl+V) ทันทีที่เปิดหน้าต่างยื่นอุทธรณ์
+      window.addEventListener('paste', (e) => {
+        const appealModal = document.getElementById('appeal-request-modal');
+        if (appealModal && !appealModal.classList.contains('hidden')) {
+          const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+          for (let index in items) {
+            const item = items[index];
+            if (item.kind === 'file' && item.type.startsWith('image/')) {
+              const blob = item.getAsFile();
+              handleAppealImageFile(blob);
+              showToast(t('toast_screenshot_pasted', 'วางภาพสกรีนช็อตเรียบร้อย!'), 'info');
+              break;
+            }
+          }
+        }
+      });
+    }
+
     function openImageLightbox(imgSrc, title) {
       const modal = document.getElementById('image-lightbox-modal');
       const img = document.getElementById('lightbox-img');
@@ -13613,6 +14713,10 @@ Output strictly valid JSON with no markdown formatting.`;
     }
 
     function openCpUpdateRequestModal() {
+      if (!isCpRequestWindowOpen()) {
+        showToast(`ปิดรับคำขอ CP แล้ว เปิดรับอีกครั้ง: ${formatCpWindowDate(cpRequestWindow.startAt)} - ${formatCpWindowDate(cpRequestWindow.endAt)}`, 'warning');
+        return;
+      }
       const select = document.getElementById('cp-update-member-select');
       const sortedMembers = [...members].sort((a, b) => (a.characterName || '').localeCompare(b.characterName || '', currentLang === 'th' ? 'th' : 'en'));
 
@@ -13643,6 +14747,10 @@ Output strictly valid JSON with no markdown formatting.`;
 
     function handleCpUpdateRequest(e) {
       e.preventDefault();
+      if (!isCpRequestWindowOpen()) {
+        showToast('หมดเวลารับคำขอ CP แล้ว กรุณารอรอบถัดไป', 'warning');
+        return;
+      }
       const memberId = parseInt(document.getElementById('cp-update-member-select').value);
       const newCp = parseInt(document.getElementById('cp-update-new-value').value);
 
@@ -13667,6 +14775,8 @@ Output strictly valid JSON with no markdown formatting.`;
         existing.newCp = newCp;
         existing.oldCp = member.cp || 0;
         existing.screenshot = currentCpScreenshotBase64;
+        existing.evidenceProvided = true;
+        existing.reviewNote = '';
         existing.weekNumber = currentWeekNumber;
         existing.requestedAt = new Date().toISOString();
         savePendingCpRequests();
@@ -13684,7 +14794,9 @@ Output strictly valid JSON with no markdown formatting.`;
         oldCp: member.cp || 0,
         newCp: newCp,
         screenshot: currentCpScreenshotBase64,
+        evidenceProvided: true,
         requestedAt: new Date().toISOString(),
+        reviewNote: '',
         status: 'pending'
       });
 
@@ -13903,6 +15015,12 @@ Output strictly valid JSON with no markdown formatting.`;
       const req = pendingCpRequests.find(r => r.id === requestId);
       if (!req) return;
 
+      if (!req.screenshot) {
+        showToast('คำขอนี้ไม่มีรูปหลักฐาน จึงยังอนุมัติไม่ได้', 'warning');
+        return;
+      }
+      if (!confirm(`ยืนยันอนุมัติ CP ของ ${req.characterName} เป็น ${Number(req.newCp).toLocaleString()} ใช่หรือไม่?`)) return;
+
       const member = members.find(m => m.id === req.memberId);
       if (member) {
         ensureMemberWeeklyData(member);
@@ -13918,6 +15036,7 @@ Output strictly valid JSON with no markdown formatting.`;
       req.status = 'approved';
       req.processedAt = new Date().toISOString();
       req.processedBy = currentAdminEmail || 'Admin';
+      req.reviewNote = 'อนุมัติและเพิ่มเช็คชื่อแล้ว';
       savePendingCpRequests();
       renderCpApprovalList();
 
@@ -13944,7 +15063,7 @@ Output strictly valid JSON with no markdown formatting.`;
     }
 
     // ================= ระบบอุทธรณ์การเช็คชื่อ (Attendance Appeal System) =================
-    let attendanceAppeals = JSON.parse(localStorage.getItem('guild_attendance_appeals')) || [];
+    let attendanceAppeals = parseLocalStorageJson('guild_attendance_appeals', []);
 
     function saveAttendanceAppeals() {
       localStorage.setItem('guild_attendance_appeals', JSON.stringify(attendanceAppeals));
@@ -14068,6 +15187,16 @@ Output strictly valid JSON with no markdown formatting.`;
       }
 
       const bossIndices = checkedBoxes.map(cb => parseInt(cb.value)).filter(n => !isNaN(n));
+      const duplicate = attendanceAppeals.find(existing =>
+        existing.status === 'pending' &&
+        Number(existing.memberId) === Number(member.id) &&
+        Number(existing.weekNumber) === Number(weekNumber) &&
+        (existing.bossIndices || []).some(index => bossIndices.includes(index))
+      );
+      if (duplicate) {
+        showToast('มีคำขออุทธรณ์ของสมาชิกและกิจกรรมนี้อยู่ระหว่างตรวจสอบแล้ว', 'warning');
+        return;
+      }
       const bossNames = bossIndices.map(idx => {
         const act = ACTIVITIES[idx];
         if (!act) return `บอส #${idx + 1}`;
@@ -14085,13 +15214,17 @@ Output strictly valid JSON with no markdown formatting.`;
         bossIndices: bossIndices,
         bossNames: bossNames,
         reason: reason,
+        screenshot: currentAppealScreenshotBase64,
         requestedAt: new Date().toISOString(),
+        evidenceProvided: Boolean(currentAppealScreenshotBase64),
+        reviewNote: '',
         status: 'pending'
       };
 
       attendanceAppeals.unshift(appealItem);
       saveAttendanceAppeals();
       closeAppealRequestModal();
+      removeAppealScreenshot();
 
       if (typeof addAuditLog === 'function') {
         addAuditLog(
@@ -14233,10 +15366,20 @@ Output strictly valid JSON with no markdown formatting.`;
       const req = attendanceAppeals.find(r => r.id === appealId);
       if (!req) return;
 
+      const targetWeek = req.weekNumber || currentWeekNumber;
+      if (isWeekLocked(targetWeek)) {
+        showToast(`สัปดาห์ที่ ${targetWeek} ถูกล็อก กรุณาปลดล็อกก่อนอนุมัติคำอุทธรณ์`, 'warning');
+        return;
+      }
+      if (!confirm(`ยืนยันอนุมัติคำอุทธรณ์ของ ${req.characterName} จำนวน ${(req.bossIndices || []).length} กิจกรรมใช่หรือไม่?`)) return;
+
       const member = members.find(m => m.id === req.memberId);
+      if (!member) {
+        showToast('ไม่พบสมาชิกในรายชื่อปัจจุบัน จึงยังอนุมัติไม่ได้', 'error');
+        return;
+      }
       if (member) {
         ensureMemberWeeklyData(member);
-        const targetWeek = req.weekNumber || currentWeekNumber;
 
         if (!Array.isArray(member.weeklyChecks[targetWeek])) {
           member.weeklyChecks[targetWeek] = new Array(ACTIVITIES.length).fill(false);
@@ -14280,7 +15423,14 @@ Output strictly valid JSON with no markdown formatting.`;
       const req = attendanceAppeals.find(r => r.id === appealId);
       if (!req) return;
 
+      const reviewNote = (prompt('ระบุเหตุผลที่ปฏิเสธคำอุทธรณ์ (จำเป็น):') || '').trim();
+      if (!reviewNote) {
+        showToast('กรุณาระบุเหตุผลก่อนปฏิเสธคำอุทธรณ์', 'warning');
+        return;
+      }
+
       req.status = 'rejected';
+      req.reviewNote = reviewNote;
       req.processedAt = new Date().toISOString();
       req.processedBy = currentAdminEmail || 'Admin';
       saveAttendanceAppeals();
@@ -14370,6 +15520,7 @@ Output strictly valid JSON with no markdown formatting.`;
       updateCpPendingBadge();
       initCpDropzone();
       initFirebaseSync();
+      initGoogleSheetsSync();
       // อัพเดท Widget บอสที่กำลังจะเกิดนับถอยหลังทุก 1 วินาที
       updateUpcomingBossWidget();
       setInterval(updateUpcomingBossWidget, 1000);
@@ -14592,6 +15743,41 @@ Output strictly valid JSON with no markdown formatting.`;
     }
 
     // ================= ฟีเจอร์: สำรองและกู้คืนข้อมูล (Backup & Restore JSON) =================
+    async function openSystemHealthModal() {
+      if (!isAdmin) {
+        showToast('เฉพาะ Admin เท่านั้น', 'warning');
+        return;
+      }
+      const modal = document.getElementById('system-health-modal');
+      const content = document.getElementById('system-health-content');
+      if (!modal || !content) return;
+      modal.classList.remove('hidden');
+      content.innerHTML = '<div class="py-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังตรวจสอบระบบ...</div>';
+      try {
+        const url = `${GOOGLE_SHEETS_SYNC_URL}?token=${encodeURIComponent(GOOGLE_SHEETS_SYNC_TOKEN)}&ts=${Date.now()}`;
+        const response = await fetch(url, { cache: 'no-store' });
+        const result = await response.json();
+        if (!result.ok || !result.health) throw new Error('ไม่พบข้อมูลสุขภาพระบบ');
+        const health = result.health;
+        const rows = Object.entries(health.sheets || {}).map(([name, count]) =>
+          `<div class="flex justify-between border-b border-slate-800 py-2"><span class="text-slate-300">${escapeHtml(name)}</span><span class="font-mono text-sky-300">${Number(count || 0).toLocaleString()} แถว</span></div>`
+        ).join('');
+        content.innerHTML = `<div class="grid grid-cols-2 gap-3 mb-4">
+          <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3"><div class="text-[10px] text-emerald-300">สถานะซิงค์</div><div class="text-lg font-bold text-emerald-400 mt-1">ปกติ</div></div>
+          <div class="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-3"><div class="text-[10px] text-indigo-300">ตรวจสอบล่าสุด</div><div class="text-xs font-mono text-white mt-2">${new Date(health.checkedAt).toLocaleString('th-TH')}</div></div>
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3"><div class="text-[10px] text-slate-500">Audit Log</div><div class="text-lg font-bold text-white mt-1">${Number(health.auditRows || 0).toLocaleString()} รายการ</div></div>
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3"><div class="text-[10px] text-slate-500">Backup</div><div class="text-lg font-bold text-white mt-1">${Number(health.backupRows || 0).toLocaleString()} รายการ</div></div>
+        </div><div class="bg-slate-950 rounded-xl border border-slate-800 px-3">${rows}</div>`;
+      } catch (error) {
+        content.innerHTML = `<div class="py-8 text-center text-rose-300"><i class="fa-solid fa-triangle-exclamation mr-2"></i>${escapeHtml(error.message || 'ตรวจสอบระบบไม่สำเร็จ')}</div>`;
+      }
+    }
+
+    function closeSystemHealthModal() {
+      const modal = document.getElementById('system-health-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
     function openBackupRestoreModal() {
       const modal = document.getElementById('backup-restore-modal');
       if (modal) modal.classList.remove('hidden');
@@ -14822,7 +16008,7 @@ Output strictly valid JSON with no markdown formatting.`;
     }
 
     // ================= ระบบปักหมุดบอสโปรด (Pin / Favorite Bosses) =================
-    let pinnedBossNames = JSON.parse(localStorage.getItem('guild_pinned_bosses') || '[]');
+    let pinnedBossNames = parseLocalStorageJson('guild_pinned_bosses', []);
 
     function togglePinBoss(bossName, event) {
       if (event) event.stopPropagation();
@@ -14864,9 +16050,9 @@ Output strictly valid JSON with no markdown formatting.`;
       }
     ];
 
-    let storeRewards = JSON.parse(localStorage.getItem('guild_reward_store_items')) || DEFAULT_STORE_REWARDS;
-    let storeRewardLogs = JSON.parse(localStorage.getItem('guild_reward_store_logs')) || [];
-    let memberPins = JSON.parse(localStorage.getItem('guild_member_pins')) || {};
+    let storeRewards = parseLocalStorageJson('guild_reward_store_items', DEFAULT_STORE_REWARDS);
+    let storeRewardLogs = parseLocalStorageJson('guild_reward_store_logs', []);
+    let memberPins = parseLocalStorageJson('guild_member_pins', {});
     let uploadedStoreImageBase64 = null;
     let activePinContext = null;
 
@@ -16394,7 +17580,7 @@ Output strictly valid JSON with no markdown formatting.`;
     }
 
     // ================= ✏️ ระบบขอแก้ไขข้อมูลตัวละคร & Admin Approval =================
-    let charEditRequests = JSON.parse(localStorage.getItem('guild_char_edit_requests')) || [];
+    let charEditRequests = parseLocalStorageJson('guild_char_edit_requests', []);
 
     function saveCharEditRequests() {
       localStorage.setItem('guild_char_edit_requests', JSON.stringify(charEditRequests));
@@ -16752,7 +17938,160 @@ Output strictly valid JSON with no markdown formatting.`;
       showToast(t('toast_char_edit_history_cleared'), 'success');
     }
 
+    let selectedMemberDashboardId = localStorage.getItem('guild_selected_member_id') || '';
+
+    function getDashboardMember() {
+      const select = document.getElementById('member-dashboard-select');
+      const selectedId = (select && select.value) || selectedMemberDashboardId;
+      return members.find(member => String(member.id) === String(selectedId)) || null;
+    }
+
+    function openMemberDashboard() {
+      const modal = document.getElementById('member-dashboard-modal');
+      const select = document.getElementById('member-dashboard-select');
+      if (!modal || !select) return;
+      const sorted = [...members].sort((a, b) =>
+        String(a.characterName || a.name || '').localeCompare(String(b.characterName || b.name || ''), currentLang === 'th' ? 'th' : 'en')
+      );
+      select.innerHTML = sorted.map(member =>
+        `<option value="${escapeHtml(String(member.id))}">${escapeHtml(member.characterName || member.name || member.id)} (${escapeHtml(member.guild || '-')})</option>`
+      ).join('');
+      if (sorted.length) {
+        const preferred = sorted.some(member => String(member.id) === String(selectedMemberDashboardId))
+          ? selectedMemberDashboardId : String(sorted[0].id);
+        select.value = preferred;
+        selectedMemberDashboardId = preferred;
+        localStorage.setItem('guild_selected_member_id', preferred);
+      }
+      modal.classList.remove('hidden');
+      renderMemberDashboard();
+    }
+
+    function closeMemberDashboard() {
+      const modal = document.getElementById('member-dashboard-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function getDashboardRequests(member) {
+      const memberId = String(member.id);
+      const charName = String(member.characterName || member.name || '').toLowerCase();
+      const cp = (pendingCpRequests || []).filter(request => String(request.memberId) === memberId);
+      const appeals = (attendanceAppeals || []).filter(request => String(request.memberId) === memberId);
+      const edits = (charEditRequests || []).filter(request =>
+        String(request.originalCharName || '').toLowerCase() === charName
+      );
+      return { cp, appeals, edits };
+    }
+
+    function dashboardStatusLabel(status) {
+      const labels = {
+        pending: [t('member_dashboard_status_pending'), 'text-amber-300 bg-amber-500/10 border-amber-500/30'],
+        approved: [t('member_dashboard_status_approved'), 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30'],
+        rejected: [t('member_dashboard_status_rejected'), 'text-rose-300 bg-rose-500/10 border-rose-500/30']
+      };
+      const item = labels[status] || [t('member_dashboard_status_unknown'), 'text-slate-300 bg-slate-800 border-slate-700'];
+      return `<span class="px-2 py-0.5 rounded-full border text-[10px] font-bold ${item[1]}">${item[0]}</span>`;
+    }
+
+    function openMemberCpRequest() {
+      const member = getDashboardMember();
+      if (!member) return;
+      openCpUpdateRequestModal();
+      const select = document.getElementById('cp-update-member-select');
+      if (select) {
+        select.value = String(member.id);
+        select.dispatchEvent(new Event('change'));
+      }
+    }
+
+    function openMemberAppealRequest() {
+      const member = getDashboardMember();
+      if (!member) return;
+      openAppealRequestModal();
+      const select = document.getElementById('appeal-member-select');
+      if (select) {
+        select.value = String(member.id);
+        populateAppealBossCheckboxes();
+      }
+    }
+
+    function openMemberEditRequest() {
+      const member = getDashboardMember();
+      if (member) openCharEditRequestModal(member.characterName || member.name || '');
+    }
+
+    function renderMemberDashboard() {
+      const container = document.getElementById('member-dashboard-content');
+      const select = document.getElementById('member-dashboard-select');
+      const member = getDashboardMember();
+      if (!container || !member) {
+        if (container) container.innerHTML = `<div class="text-center text-slate-500 py-10">${t('member_dashboard_no_data')}</div>`;
+        return;
+      }
+      selectedMemberDashboardId = String(member.id);
+      localStorage.setItem('guild_selected_member_id', selectedMemberDashboardId);
+      const requests = getDashboardRequests(member);
+      const discord = getDiscordVerifiedData(member);
+      const latestCp = requests.cp.slice().sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt))[0];
+      const latestAppeal = requests.appeals.slice().sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt))[0];
+      const latestEdit = requests.edits.slice().sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0))[0];
+      const notices = [];
+      if (latestCp && latestCp.status === 'rejected') notices.push(t('member_dashboard_notice_cp_rejected', { reason: latestCp.rejectedReason || latestCp.rejectReason || (currentLang === 'th' ? 'กรุณาตรวจสอบหลักฐานอีกครั้ง' : 'Please check the evidence again') }));
+      if (latestAppeal && latestAppeal.status === 'rejected') notices.push(t('member_dashboard_notice_appeal_rejected', { reason: latestAppeal.reviewNote || (currentLang === 'th' ? 'กรุณาตรวจสอบรายละเอียดคำขอ' : 'Please review the request details') }));
+      if (latestCp && latestCp.status === 'pending') notices.push(t('member_dashboard_notice_cp_pending'));
+      if (latestAppeal && latestAppeal.status === 'pending') notices.push(t('member_dashboard_notice_appeal_pending'));
+      if (latestEdit && latestEdit.status === 'pending') notices.push(t('member_dashboard_notice_edit_pending'));
+
+      const weekCards = [1, 2, 3, 4].map(week => {
+        const checks = getMemberChecksForWeek(member, week);
+        const score = calculateTotalScore(checks);
+        const max = ACTIVITIES.reduce((sum, activity) => sum + (Number(activity.weight) || 0), 0);
+        const percent = max ? Math.min(100, score / max * 100) : 0;
+        const checked = calculateActiveCount(checks);
+        const locked = Boolean(lockedWeeks && lockedWeeks[week]);
+        return `<div class="bg-slate-900/80 border ${locked ? 'border-amber-500/30' : 'border-slate-800'} rounded-2xl p-3">
+          <div class="flex justify-between items-center text-xs"><span class="font-bold text-white">${escapeHtml(getWeekName(week))}</span><span class="text-slate-400">${locked ? t('member_dashboard_locked') : t('member_dashboard_active')}</span></div>
+          <div class="text-lg font-black text-emerald-300 mt-2">${score}<span class="text-[10px] text-slate-500">/${max}</span></div>
+          <div class="h-1.5 bg-slate-800 rounded-full mt-2 overflow-hidden"><div class="h-full bg-emerald-400 rounded-full" style="width:${percent.toFixed(1)}%"></div></div>
+          <div class="text-[10px] text-slate-400 mt-2">${t('member_dashboard_attendance', { checked, total: ACTIVITIES.length })}</div>
+        </div>`;
+      }).join('');
+
+      const requestRows = [...requests.cp.map(r => ({ type: 'CP', ...r })), ...requests.appeals.map(r => ({ type: 'อุทธรณ์', ...r })), ...requests.edits.map(r => ({ type: 'แก้ไขข้อมูล', ...r }))]
+        .sort((a, b) => new Date(b.requestedAt || b.timestamp || 0) - new Date(a.requestedAt || a.timestamp || 0)).slice(0, 8)
+        .map(request => `<div class="flex items-center justify-between gap-2 py-2 border-b border-slate-800/70 text-[11px]"><span class="text-slate-300">${request.type}</span>${dashboardStatusLabel(request.status)}</div>`).join('');
+
+      container.innerHTML = `<div class="bg-gradient-to-br from-emerald-950/70 via-slate-950 to-sky-950/60 border border-emerald-500/30 rounded-2xl p-4">
+        <div class="flex flex-wrap items-start justify-between gap-3"><div><div class="text-xl font-black text-white">${escapeHtml(member.characterName || member.name || '-')}</div><div class="text-xs text-slate-400 mt-1">${escapeHtml(member.guild || '-')} · CP ${Number(member.cp || 0).toLocaleString()} · Discord ${discord ? t('member_dashboard_discord_linked') : t('member_dashboard_discord_missing')}</div></div><div class="flex gap-2"><button onclick="openMemberCpRequest()" class="px-2.5 py-1.5 rounded-lg bg-sky-600 text-white text-[10px] font-bold">${t('member_dashboard_cp')}</button><button onclick="openMemberAppealRequest()" class="px-2.5 py-1.5 rounded-lg bg-pink-600 text-white text-[10px] font-bold">${t('member_dashboard_appeal')}</button><button onclick="openMemberEditRequest()" class="px-2.5 py-1.5 rounded-lg bg-amber-600 text-white text-[10px] font-bold">${t('member_dashboard_edit')}</button></div></div>
+      </div>
+      ${notices.length ? `<div class="bg-amber-950/40 border border-amber-500/30 rounded-2xl p-3 text-xs text-amber-200 space-y-1">${notices.map(notice => `<div><i class="fa-solid fa-bell mr-1 text-amber-400"></i>${escapeHtml(notice)}</div>`).join('')}</div>` : ''}
+      <div><div class="flex items-center justify-between mb-2"><h4 class="text-sm font-bold text-white">${t('member_dashboard_weekly')}</h4><span class="text-[10px] text-slate-500">${t('member_dashboard_no_rank')}</span></div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">${weekCards}</div></div>
+      <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-3"><h4 class="text-sm font-bold text-white mb-1">${t('member_dashboard_requests')}</h4>${requestRows || `<div class="text-xs text-slate-500 py-4 text-center">${t('member_dashboard_no_requests')}</div>`}</div>`;
+    }
+
   </script>
+
+  <!-- ================= Modal: แดชบอร์ดข้อมูลส่วนตัวสมาชิก ================= -->
+  <div id="member-dashboard-modal"
+    class="hidden fixed inset-0 z-[65] bg-black/85 flex items-center justify-center p-3 sm:p-5 backdrop-blur-md overflow-y-auto">
+    <div class="apple-modal-box relative w-full max-w-4xl bg-slate-950 border border-emerald-500/30 rounded-3xl shadow-2xl p-4 sm:p-6 my-auto max-h-[92vh] overflow-y-auto">
+      <div class="flex items-start justify-between gap-3 border-b border-slate-800 pb-3 mb-4">
+        <div>
+          <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-user-check text-emerald-400"></i><span data-i18n="member_dashboard_title">ข้อมูลของฉัน</span></h3>
+          <p class="text-[11px] text-slate-400 mt-1" data-i18n="member_dashboard_desc">สรุปคะแนน กิจกรรม คำขอ และประวัติของตัวละครที่เลือก</p>
+        </div>
+        <button onclick="closeMemberDashboard()" class="text-slate-400 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 mb-4">
+        <label for="member-dashboard-select" class="text-xs font-semibold text-slate-300" data-i18n="member_dashboard_select">ตัวละครของฉัน</label>
+        <select id="member-dashboard-select" onchange="renderMemberDashboard()"
+          class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-400"></select>
+      </div>
+
+      <div id="member-dashboard-content" class="space-y-4"></div>
+    </div>
+  </div>
 
   <!-- ================= Modal: สรุปคะแนน Top 10 (Export to Image) ================= -->
   <div id="top10-summary-modal"
@@ -16842,6 +18181,17 @@ Output strictly valid JSON with no markdown formatting.`;
         </button>
       </div>
 
+    </div>
+  </div>
+
+  <div id="system-health-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div><h3 class="text-base font-bold text-white"><i class="fa-solid fa-heart-pulse text-sky-400 mr-2"></i>สุขภาพระบบ</h3><p class="text-[11px] text-slate-400 mt-1">ตรวจสอบ Google Sheets, Audit Log และ Backup</p></div>
+        <button onclick="closeSystemHealthModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div id="system-health-content" class="pt-4"></div>
+      <div class="flex justify-end pt-4"><button onclick="closeSystemHealthModal()" class="apple-btn apple-btn-slate px-4 py-1.5 rounded-xl text-xs">ปิด</button></div>
     </div>
   </div>
 
@@ -17410,6 +18760,16 @@ Output strictly valid JSON with no markdown formatting.`;
           </div>
         </div>
 
+        <div>
+          <label class="block text-xs font-bold text-slate-300 text-left mb-1.5">Password Admin:</label>
+          <div class="relative">
+            <i class="fa-solid fa-key absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input type="password" id="retroactive-edit-password-input" required autocomplete="current-password"
+              placeholder="กรอกรหัสผ่าน Admin"
+              class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 text-white text-xs rounded-xl py-2.5 pl-9 pr-3 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition shadow-inner font-mono" />
+          </div>
+        </div>
+
         <div class="flex items-center gap-2 pt-1">
           <button type="button" onclick="closeRetroactiveEditModal()"
             class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">
@@ -17440,7 +18800,7 @@ Output strictly valid JSON with no markdown formatting.`;
         <i class="fa-solid fa-lock-open text-xl animate-bounce"></i>
       </div>
 
-      <h3 class="text-base font-extrabold text-white">
+      <h3 id="unlock-week-modal-title" class="text-base font-extrabold text-white">
         🔓 ยืนยันสิทธิ์เพื่อปลดล็อกสัปดาห์
       </h3>
 
@@ -17450,7 +18810,7 @@ Output strictly valid JSON with no markdown formatting.`;
           <i class="fa-solid fa-calendar-check text-[11px]"></i>
           <span id="unlock-week-modal-name">สัปดาห์ที่ 1</span>
         </div>
-        <p class="text-slate-300 text-[11.5px]">
+        <p id="unlock-week-modal-desc" class="text-slate-300 text-[11.5px]">
           กรุณากรอก Email และ Password ของแอดมิน เพื่อยืนยันการปลดล็อกรอบสัปดาห์นี้
         </p>
       </div>
@@ -17491,7 +18851,7 @@ Output strictly valid JSON with no markdown formatting.`;
           </button>
           <button type="submit"
             class="flex-1 py-2.5 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-lock-open"></i> <span>ยืนยันปลดล็อก</span>
+            <i class="fa-solid fa-lock-open"></i> <span id="unlock-week-submit-text">ยืนยันปลดล็อก</span>
           </button>
         </div>
       </form>
@@ -18230,12 +19590,11 @@ Output strictly valid JSON with no markdown formatting.`;
         <!-- Step 1: Select Boss / Activity -->
         <div class="p-3.5 bg-slate-950/80 border border-slate-800 rounded-2xl space-y-2">
           <label class="block text-xs font-bold text-indigo-300">
-            <i class="fa-solid fa-dragon mr-1"></i> 1. เลือกกิจกรรม / บอสที่ต้องการติ๊กคะแนน:
+            <i class="fa-solid fa-dragon mr-1"></i> 1. เลือกกิจกรรม / บอสที่ต้องการติ๊กคะแนน (เลือกได้หลายตัว):
           </label>
-          <select id="squad-check-activity-select"
-            class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-indigo-400 focus:outline-none">
+          <div id="squad-activity-options" class="max-h-52 overflow-y-auto space-y-2 pr-1">
             <!-- Populated via JS -->
-          </select>
+          </div>
         </div>
 
         <!-- Step 2: Image Dropzone & Paste Area -->
@@ -18335,6 +19694,69 @@ Output strictly valid JSON with no markdown formatting.`;
         </button>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ================= หน้าต่างยืนยันก่อนบันทึก (AI / Batch Reviews) ================= -->
+  <div id="pre-save-check-confirm-modal"
+    class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-lg p-5 shadow-2xl space-y-4 apple-modal-box">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <div class="flex items-center gap-2.5">
+          <div class="h-10 w-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-circle-question"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">ยืนยันก่อนบันทึก</h3>
+            <p class="text-[11px] text-slate-400">กรุณาตรวจสอบข้อมูลก่อนบันทึกลงระบบ</p>
+          </div>
+        </div>
+        <button type="button" onclick="closePreSaveCheckConfirmModal()" class="text-slate-400 hover:text-white p-1 rounded-lg transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3.5 text-xs text-slate-300">
+        <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-3">
+          <div class="font-bold text-amber-300 text-[11px] mb-1">สรุป</div>
+          <div id="pre-save-summary-text" class="text-slate-200 leading-relaxed"></div>
+        </div>
+
+        <div class="space-y-2.5">
+          <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-3">
+            <div class="font-bold text-slate-200 mb-1.5">1. วันที่ / สัปดาห์ ถูกต้องไหม?</div>
+            <div class="flex items-center gap-3">
+              <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="pre-save-date-check" value="yes" checked class="accent-emerald-500"> <span class="text-emerald-300">ถูกต้อง</span></label>
+              <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="pre-save-date-check" value="no" class="accent-rose-500"> <span class="text-rose-300">ไม่ถูกต้อง</span></label>
+            </div>
+          </div>
+
+          <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-3">
+            <div class="font-bold text-slate-200 mb-1.5">2. จำนวนคนที่เลือก ถูกต้องไหม?</div>
+            <div class="flex items-center gap-3">
+              <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="pre-save-count-check" value="yes" checked class="accent-emerald-500"> <span class="text-emerald-300">ถูกต้อง</span></label>
+              <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="pre-save-count-check" value="no" class="accent-rose-500"> <span class="text-rose-300">ไม่ถูกต้อง</span></label>
+            </div>
+          </div>
+
+          <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-3">
+            <div class="font-bold text-slate-200 mb-1.5">3. ชื่อกิจกรรม / บอส ถูกต้องไหม?</div>
+            <div class="flex items-center gap-3">
+              <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="pre-save-activity-check" value="yes" checked class="accent-emerald-500"> <span class="text-emerald-300">ถูกต้อง</span></label>
+              <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="pre-save-activity-check" value="no" class="accent-rose-500"> <span class="text-rose-300">ไม่ถูกต้อง</span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800/80">
+        <button type="button" onclick="closePreSaveCheckConfirmModal()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition">
+          แก้ไขใหม่
+        </button>
+        <button type="button" id="btn-confirm-pre-save-check" onclick="confirmPreSaveCheckApproval()" class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-bold shadow-lg shadow-emerald-500/20 transition">
+          <i class="fa-solid fa-check mr-1"></i>ยืนยันบันทึก
+        </button>
+      </div>
     </div>
   </div>
 
@@ -18662,7 +20084,7 @@ Output strictly valid JSON with no markdown formatting.`;
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="triggerDiscordBotSync()"
+          <button id="discord-manual-sync-button" onclick="triggerDiscordBotSync()"
             class="apple-btn bg-indigo-900/80 hover:bg-indigo-800 text-indigo-200 border border-indigo-500/50 px-2.5 py-1.5 text-xs rounded-xl flex items-center gap-1.5 shadow-sm font-semibold">
             <i class="fa-solid fa-rotate text-xs"></i>
             <span>รีเฟรชดิส</span>

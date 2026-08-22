@@ -16,6 +16,10 @@ const { Client, GatewayIntentBits, Partials, EmbedBuilder, AttachmentBuilder } =
 const fs = require('fs');
 const path = require('path');
 
+const SYNC_POLL_INTERVAL_MS = 5000;
+let lastProcessedSyncTrigger = 0;
+let syncCommandInProgress = false;
+
 function loadDotEnvFile() {
   const envPath = path.join(__dirname, '.env');
   if (!fs.existsSync(envPath)) return;
@@ -67,6 +71,11 @@ CONFIG = {
   MENTION_TAG: process.env.MENTION_TAG || CONFIG.MENTION_TAG,
   FIREBASE_DB_URL: process.env.FIREBASE_DB_URL || CONFIG.FIREBASE_DB_URL
 };
+
+const ADMIN_EMAILS = String(process.env.DISCORD_SYNC_ADMIN_EMAILS || CONFIG.DISCORD_SYNC_ADMIN_EMAILS || '')
+  .split(',')
+  .map(value => value.trim().toLowerCase())
+  .filter(Boolean);
 
 // 🤖 สร้าง Client บอท
 const client = new Client({
@@ -230,7 +239,7 @@ async function scanRegistrationHistory() {
 async function syncDiscordServerMembers() {
   try {
     const guild = client.guilds.cache.first();
-    if (!guild) return;
+    if (!guild) throw new Error('ไม่พบบอทอยู่ใน Discord server');
 
     const members = await guild.members.fetch();
     const serverMembersData = {};
@@ -251,17 +260,20 @@ async function syncDiscordServerMembers() {
     });
 
     const endpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/discord_server_members.json`;
-    await fetch(endpoint, {
+    const response = await fetch(endpoint, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(serverMembersData)
     });
+    if (!response.ok) throw new Error(`Firebase HTTP ${response.status}`);
 
     const count = Object.keys(serverMembersData).length;
     console.log(`👥 [Discord Sync] ซิงค์รายชื่อสมาชิกในเซิร์ฟเวอร์ Discord สำเร็จ: ${count} คน`);
     await sendHeartbeat(count);
+    return count;
   } catch (err) {
     console.error('❌ Error syncing Discord server members:', err.message);
+    throw err;
   }
 }
 
@@ -284,66 +296,63 @@ async function sendHeartbeat(memberCount = 0) {
   }
 }
 
-// ⚡ ดักฟังคำสั่งจากหน้าเว็บ Dashboard (ซิงค์ด่วน & ส่งประกาศจากน้องเดวิล)
-function listenForDashboardCommands() {
-  let lastSeenSyncTrigger = Date.now();
-  let lastSeenAnnouncementId = '';
+async function writeBotStatus(fields) {
+  const endpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/bot_status.json`;
+  const response = await fetch(endpoint, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(fields)
+  });
+  if (!response.ok) throw new Error(`Firebase status HTTP ${response.status}`);
+}
 
-  setInterval(async () => {
-    try {
-      // 1. ซิงค์ด่วน
-      const syncEndpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/sync_trigger.json`;
-      const syncRes = await fetch(syncEndpoint);
-      if (syncRes.ok) {
-        const trigger = await syncRes.json();
-        if (trigger && Number(trigger) > lastSeenSyncTrigger) {
-          lastSeenSyncTrigger = Number(trigger);
-          console.log('⚡ [Dashboard Trigger] ได้รับคำสั่งกดซิงค์ข้อมูลจากหน้าเว็บ...');
-          await syncDiscordServerMembers();
-          await scanRegistrationHistory();
-        }
-      }
+async function checkFirebaseSyncCommand() {
+  if (syncCommandInProgress) return;
 
-      // 2. ส่งประกาศจากน้องเดวิล (Nong Devil Announcement)
-      const announceEndpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/send_announcement.json`;
-      const announceRes = await fetch(announceEndpoint);
-      if (announceRes.ok) {
-        const item = await announceRes.json();
-        if (item && item.id && item.id !== lastSeenAnnouncementId && (Date.now() - (item.timestamp || 0) < 60000)) {
-          lastSeenAnnouncementId = item.id;
-          const channelId = item.channelId || CONFIG.ANNOUNCEMENT_CHANNEL_ID || '1539252263132860516';
-          const mentionTag = item.mentionTag || CONFIG.MENTION_TAG || '<@&1508495658162851970>';
+  try {
+    const endpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/sync_trigger.json`;
+    const response = await fetch(endpoint);
+    if (!response.ok) throw new Error(`Firebase command HTTP ${response.status}`);
 
-          const channel = client.channels.cache.get(channelId) || await client.channels.fetch(channelId).catch(err => {
-            console.warn(`⚠️ [Announcement Error] ดึงห้อง Discord ID ${channelId} ไม่สำเร็จ:`, err.message);
-            return null;
-          });
-          if (channel) {
-            const embed = {
-              title: item.title || '📢 [RedDevil] ประกาศจากกิลด์',
-              description: item.content || '',
-              color: 0xDC2626,
-              footer: { text: '🛡️ RedDevil Guild Announcement System • น้องเดวิล AI' },
-              timestamp: new Date().toISOString()
-            };
-            if (item.author) {
-              embed.author = { name: `ประกาศโดย Admin: ${item.author}` };
-            }
-
-            await channel.send({
-              content: mentionTag,
-              embeds: [embed]
-            });
-            console.log(`📢 [Announcement Sent] ส่งประกาศเข้าห้อง ${channel.name || channelId} สำเร็จ (Mention: ${mentionTag})`);
-          } else {
-            console.warn(`⚠️ [Announcement Error] ไม่พบห้อง Discord ID: ${channelId}`);
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('⚠️ [Dashboard Commands] อ่านหรือประมวลผลคำสั่งจาก Firebase ไม่สำเร็จ:', e.message);
+    const triggerValue = await response.json();
+    const command = triggerValue && typeof triggerValue === 'object'
+      ? triggerValue
+      : { requestedAt: triggerValue };
+    const triggerAt = Number(command.requestedAt);
+    if (!Number.isFinite(triggerAt) || triggerAt <= lastProcessedSyncTrigger) return;
+    // Mark every new trigger as seen, including rejected commands, so a bad
+    // request cannot make the bot retry the same error forever.
+    lastProcessedSyncTrigger = triggerAt;
+    const requestedBy = String(command.requestedBy || '').trim().toLowerCase();
+    if (!requestedBy) throw new Error('คำสั่งซิงค์ไม่มีผู้สั่ง');
+    if (ADMIN_EMAILS.length > 0 && !ADMIN_EMAILS.includes(requestedBy)) {
+      throw new Error('ผู้สั่งไม่มีสิทธิ์ซิงค์ Discord');
     }
-  }, 3000);
+
+    syncCommandInProgress = true;
+    const count = await syncDiscordServerMembers();
+    await writeBotStatus({
+      lastSyncAt: new Date().toISOString(),
+      lastSyncCount: count,
+      lastSyncTrigger: triggerAt,
+      lastSyncRequestId: String(command.requestId || ''),
+      lastSyncRequestedBy: requestedBy,
+      lastSyncError: null
+    });
+    console.log(`✅ [Manual Sync] ซิงค์ตามคำสั่งหน้าเว็บสำเร็จ ${count} คน`);
+  } catch (err) {
+    console.error('❌ [Manual Sync] ทำตามคำสั่งซิงค์ไม่สำเร็จ:', err.message);
+    try {
+      await writeBotStatus({
+        lastSyncAt: new Date().toISOString(),
+        lastSyncError: String(err.message || err).slice(0, 500)
+      });
+    } catch (statusError) {
+      console.warn('⚠️ ไม่สามารถบันทึกสถานะ Manual Sync:', statusError.message);
+    }
+  } finally {
+    syncCommandInProgress = false;
+  }
 }
 
 // 🟢 เมื่อบอทออนไลน์สำเร็จ
@@ -356,7 +365,10 @@ client.once('ready', async () => {
 
   await scanRegistrationHistory();
   await syncDiscordServerMembers();
-  listenForDashboardCommands();
+
+  // หน้าเว็บส่งคำสั่งผ่าน guild_app/bot_commands/sync_trigger
+  setInterval(checkFirebaseSyncCommand, SYNC_POLL_INTERVAL_MS);
+  await checkFirebaseSyncCommand();
 
   // ซิงค์รายชื่อสมาชิก Discord และส่ง Heartbeat ทุกๆ 30 วินาที
   setInterval(async () => {
@@ -379,6 +391,7 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
 
 // 📩 ดักฟังข้อความใหม่แบบ Real-Time
 client.on('messageCreate', async (message) => {
+  if (message.author?.bot || message.webhookId) return;
   if (CONFIG.REGISTRATION_CHANNEL_ID && message.channelId !== CONFIG.REGISTRATION_CHANNEL_ID) return;
 
   const parsed = parseRegistrationMessage(message);

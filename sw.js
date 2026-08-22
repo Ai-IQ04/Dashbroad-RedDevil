@@ -1,4 +1,4 @@
-const CACHE_NAME = 'reddevil-app-v2';
+const CACHE_NAME = 'reddevil-app-v3';
 const APP_SHELL = [
   './',
   './index.html',
@@ -28,6 +28,17 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+
+  const requestUrl = new URL(event.request.url);
+  const isSameOrigin = requestUrl.origin === self.location.origin;
+  const isAppAsset = requestUrl.pathname === '/' ||
+    requestUrl.pathname.endsWith('/index.html') ||
+    requestUrl.pathname.endsWith('/boss_timer.js') ||
+    requestUrl.pathname.startsWith('/assets/') ||
+    requestUrl.pathname.endsWith('/version.json');
+
+  // Never cache Firebase, Gemini, CDN, webhook, or other third-party responses.
+  if (!isSameOrigin || !isAppAsset) return;
 
   event.respondWith(
     fetch(event.request)

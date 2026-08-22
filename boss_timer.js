@@ -33,6 +33,16 @@ let isBossSoundEnabled = localStorage.getItem('guild_boss_sound_enabled') !== 'f
 let activeAppModule = 'scoring'; // 'scoring' | 'boss_timer'
 let currentEditBossId = null;
 
+function parseStoredJson(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw === null ? fallback : JSON.parse(raw);
+  } catch (error) {
+    console.warn(`[Storage] Invalid JSON for ${key}; using default value.`, error);
+    return fallback;
+  }
+}
+
 // 45+ Boss definitions from Google Sheet
 const DEFAULT_BOSS_DATABASE = [
   { id: 'world_boss', name: 'World Boss', level: '60-105', map: 'World Boss', respawnType: 'fixed', scheduleText: 'Daily 10:00/19:00', fixedTimes: [{ days: [0, 1, 2, 3, 4, 5, 6], time: '10:00' }, { days: [0, 1, 2, 3, 4, 5, 6], time: '19:00' }], note: 'World Boss' },
@@ -215,6 +225,44 @@ function switchAppModule(moduleName) {
   }
 }
 
+function getBangkokDateParts(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Bangkok',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false
+  }).formatToParts(date);
+
+  const values = {};
+  for (const part of parts) {
+    if (part.type !== 'literal') values[part.type] = part.value;
+  }
+
+  return {
+    year: Number(values.year),
+    month: Number(values.month),
+    day: Number(values.day),
+    hour: Number(values.hour),
+    minute: Number(values.minute),
+    second: Number(values.second)
+  };
+}
+
+function createDateFromBangkokParts({ year, month, day, hour, minute, second = 0 }) {
+  const utcMs = Date.UTC(year, month - 1, day, hour, minute, second) - (7 * 60 * 60 * 1000);
+  return new Date(utcMs);
+}
+
+function formatBangkokClock(date) {
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Bangkok',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+  return formatter.format(date);
+}
+
 // Calculate Next Spawn Date
 function calculateNextSpawnDate(boss, defeatedDateStr) {
   const now = new Date();
@@ -223,28 +271,33 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
 
   // 1. Interval bosses: คงสถานะ 'เกิดแล้ว' ค้างไว้จนกว่า Admin จะมากดลงเวลาตายจริง
   if (boss.respawnType === 'interval') {
-    if (!defeatedDateStr || isNaN(defTimestamp) || defTimestamp === 0) return null; // Unrecorded -> Do NOT show countdown
+    if (!defeatedDateStr || isNaN(defTimestamp) || defTimestamp === 0) return null;
     const nextSpawn = new Date(defTimestamp + (boss.intervalHours * 3600 * 1000));
     return nextSpawn;
   }
 
-  // 2. Fixed schedule bosses: คำนวณเวลารอบถัดไปตามตารางเวลา
-  //    - ใช้ defeatedTime เป็นจุดเริ่มต้นค้นหารอบถัดไป (ถ้ามี) เพื่อให้รอบถัดไปถูกต้องตามเวลาตายจริง
-  //    - ถ้าไม่มี defeatedTime ให้ค้นหาจากเวลาปัจจุบัน
+  // 2. Fixed schedule bosses: คำนวณเวลารอบถัดไปตามตารางเวลาในโซนเวลาไทย (+7)
   if (boss.respawnType === 'fixed' && Array.isArray(boss.fixedTimes)) {
-    // จุดเริ่มต้นค้นหา: ใช้เวลาตาย (ถ้ามี) หรือเวลาปัจจุบัน
     const searchStart = (defTimestamp > 0) ? defTimestamp : now.getTime();
 
     let nearest = null;
     for (let offset = 0; offset <= 7; offset++) {
       const checkDate = new Date(searchStart + offset * 24 * 3600 * 1000);
-      const dayOfWeek = checkDate.getDay(); // 0 = Sun, 1 = Mon ...
+      const checkBangkok = getBangkokDateParts(checkDate);
+      const dayOfWeek = new Date(Date.UTC(checkBangkok.year, checkBangkok.month - 1, checkBangkok.day)).getUTCDay();
 
       for (const ft of boss.fixedTimes) {
         if (ft.days.includes(dayOfWeek)) {
           const [h, m] = ft.time.split(':').map(Number);
-          const candidate = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate(), h, m, 0, 0);
-          // ต้องเป็นเวลาที่มากกว่าเวลาตาย (ข้ามรอบที่ผ่านไปแล้ว) และมากกว่าเวลาปัจจุบัน
+          const candidate = createDateFromBangkokParts({
+            year: checkBangkok.year,
+            month: checkBangkok.month,
+            day: checkBangkok.day,
+            hour: h,
+            minute: m,
+            second: 0
+          });
+
           if (candidate.getTime() > defTimestamp && candidate > now) {
             if (!nearest || candidate < nearest) {
               nearest = candidate;
@@ -273,19 +326,15 @@ function getBossNextSpawn(boss) {
 
 // Initialize Boss Data
 function initBossTimerModule() {
-  const savedConfigs = localStorage.getItem('guild_boss_custom_configs');
-  bossCustomConfigs = savedConfigs ? JSON.parse(savedConfigs) : {};
+  bossCustomConfigs = parseStoredJson('guild_boss_custom_configs', {});
 
   rebuildBossList();
 
-  const savedTimers = localStorage.getItem('guild_boss_timers');
-  bossTimerData = savedTimers ? JSON.parse(savedTimers) : {};
+  bossTimerData = parseStoredJson('guild_boss_timers', {});
 
-  const savedLogs = localStorage.getItem('guild_boss_drop_logs');
-  bossDropLogs = savedLogs ? JSON.parse(savedLogs) : [];
+  bossDropLogs = parseStoredJson('guild_boss_drop_logs', []);
 
-  const savedKillLogs = localStorage.getItem('guild_boss_kill_logs');
-  bossKillLogs = savedKillLogs ? JSON.parse(savedKillLogs) : [];
+  bossKillLogs = parseStoredJson('guild_boss_kill_logs', []);
 
   bossSheetWebhookUrl = localStorage.getItem('guild_boss_sheet_webhook') || '';
 
@@ -2829,7 +2878,7 @@ async function checkAndSendDiscordSpawnAlerts() {
     const diffMs = nextSpawn.getTime() - nowMs;
     const spawnUnix = Math.floor(nextSpawn.getTime() / 1000);
     const pad = n => String(n).padStart(2, '0');
-    const timeHHmm = `${pad(nextSpawn.getHours())}:${pad(nextSpawn.getMinutes())}`;
+    const timeHHmm = formatBangkokClock(nextSpawn);
     const bossDisplayName = `Lv.${boss.level || '??'}, ${boss.name}`;
 
     // 🟡 1. แจ้งเตือนก่อนเกิด 5 นาที (เหลือ 0 ถึง 5 นาที)
@@ -3109,11 +3158,11 @@ function getIntervalFieldBosses() {
     .sort((a, b) => (parseInt(b.level) || 0) - (parseInt(a.level) || 0));
 }
 
-let raidPlannerSets = JSON.parse(localStorage.getItem('guild_boss_raid_sets')) || [
+let raidPlannerSets = parseStoredJson('guild_boss_raid_sets', [
   { id: 1, name: '🔥 ชุดที่ 1 : บอสระดับสูง (Lv.95 - 100)', bossIds: ['asta', 'ordo', 'secreta', 'supore', 'catena', 'gareth', 'larba', 'titore', 'shuliar'] },
   { id: 2, name: '⚡ ชุดที่ 2 : บอสระดับกลาง (Lv.85 - 93)', bossIds: ['wannitas', 'metus', 'duplican', 'baron_braudmore', 'amentis', 'general_aquleus', 'lady_dalia'] },
   { id: 3, name: '🎯 ชุดที่ 3 : บอสทั่วไป (Lv.60 - 80)', bossIds: ['undomiel', 'livera', 'araneo', 'ego', 'vioren', 'venatus'] }
-];
+]);
 
 function saveRaidPlannerSets() {
   localStorage.setItem('guild_boss_raid_sets', JSON.stringify(raidPlannerSets));
