@@ -645,7 +645,10 @@ function checkBossAlerts() {
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(5000)) return;
   try {
-    const now = new Date();
+    // Keep Apps Script on exactly the same clock as the web page. The page
+    // uses Firebase .info/serverTimeOffset, so do the same here instead of
+    // relying on the Apps Script machine clock.
+    const now = getBossAlertWebNow_();
     const props = PropertiesService.getScriptProperties();
     const webhook = String(props.getProperty('BOSS_ALERT_WEBHOOK_URL') || fetchBossAlertFirebase_('guild_app/boss_discord_webhook') || '').trim();
     if (!webhook) return;
@@ -684,6 +687,12 @@ function checkBossAlerts() {
   } finally {
     lock.releaseLock();
   }
+}
+
+function getBossAlertWebNow_() {
+  const offsetValue = fetchBossAlertFirebase_('.info/serverTimeOffset');
+  const offsetMs = Number(offsetValue);
+  return new Date(Date.now() + (isFinite(offsetMs) ? offsetMs : 0));
 }
 
 function fetchBossAlertFirebase_(path) {
