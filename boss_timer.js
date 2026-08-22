@@ -2819,6 +2819,28 @@ async function sendDiscordWebhookPayload(payload) {
 // ส่งการ์ดแจ้งเตือน Discord เมื่อลงเวลาบอสตาย (เรียกจาก saveBossKillTime)
 // - เช็คสถานะเปิด/ปิด (bossKillDiscordEnabled) และ Webhook URL ก่อนส่ง
 // - แสดงชื่อบอส, เวลาตาย, เวลากำเนิดรอบถัดไป, ผู้บันทึก และไอเทมดรอป (ถ้ามี)
+function getDiscordDropStyle(item) {
+  const text = String(item || '').toLowerCase();
+  if (/legendary|ตำนาน|สีส้ม|ทอง|orange|gold/.test(text)) return { icon: '🟧', label: 'Legendary' };
+  if (/epic|มหากาพย์|สีม่วง|ม่วง|purple|violet/.test(text)) return { icon: '🟪', label: 'Epic' };
+  if (/rare|หายาก|สีน้ำเงิน|ฟ้า|blue/.test(text)) return { icon: '🟦', label: 'Rare' };
+  if (/uncommon|เขียว|สีเขียว|green/.test(text)) return { icon: '🟩', label: 'Uncommon' };
+  return { icon: '⬜', label: 'Item' };
+}
+
+function formatDiscordDropFields(dropItems) {
+  const grouped = {};
+  dropItems.forEach(item => {
+    const style = getDiscordDropStyle(item);
+    if (!grouped[style.label]) grouped[style.label] = { style, items: [] };
+    grouped[style.label].items.push(String(item).replace(/\s+/g, ' ').trim());
+  });
+  return ['Legendary', 'Epic', 'Rare', 'Uncommon', 'Item'].filter(label => grouped[label]).map(label => {
+    const group = grouped[label];
+    return { name: `${group.style.icon} ${label} × ${group.items.length}`, value: group.items.map(item => `• ${item}`).join('\n').slice(0, 1024), inline: false };
+  });
+}
+
 function sendBossKillDiscordAlert(killLogEntry) {
   // ถ้าปิดการแจ้งเตือน หรือยังไม่ได้ตั้งค่า Webhook URL ให้ข้ามไปเงียบๆ
   if (!bossKillDiscordEnabled) return;
@@ -2854,6 +2876,12 @@ function sendBossKillDiscordAlert(killLogEntry) {
     // หมายเหตุ: Discord รับเฉพาะ URL ที่เป็น http/https เท่านั้น
     // ถ้า avatar เป็น base64 data URI (data:image/...) จะทำให้ Discord ตอบ 400
     // จึงต้องเช็คว่าเป็น URL จริงก่อนถึงจะใส่ thumbnail ได้
+    embed.description = `🗺️ **Map**: \`${map}\`\n💀 **Kill Time**: ${killTimeStr}\n⏳ **Next Spawn**: ${nextSpawnStr}\n👤 **Recorded By**: ${recordedBy}`;
+    embed.fields = dropItems.length > 0 ? [
+      { name: `🎁 DROP ITEMS • ${dropItems.length} รายการ`, value: '🟧 Legendary  🟪 Epic  🟦 Rare  🟩 Uncommon  ⬜ Item', inline: false },
+      ...formatDiscordDropFields(dropItems)
+    ] : [{ name: '🎁 DROP ITEMS', value: 'ไม่มีข้อมูลไอเทมดรอป', inline: false }];
+
     const boss = bossList.find(b => b.id === killLogEntry.bossId);
     if (boss && boss.avatar && /^https?:\/\//i.test(boss.avatar)) {
       embed.thumbnail = { url: boss.avatar };
