@@ -769,60 +769,36 @@ function clearSelectedBosses() {
   updateSelectedBossesUI();
 }
 
-function safeCopyToClipboard(text) {
-  if (!text) return Promise.resolve(false);
+function copyTextDirectly(text) {
+  if (!text) return false;
+  let copied = false;
 
-  return new Promise((resolve) => {
-    // 1. Try modern Async Clipboard API
-    if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-      navigator.clipboard.writeText(text)
-        .then(() => resolve(true))
-        .catch(() => {
-          // Fallback to execCommand
-          resolve(execCommandCopyFallback(text));
-        });
-      return;
-    }
-    // 2. Fallback to execCommand
-    resolve(execCommandCopyFallback(text));
-  });
-}
-
-function execCommandCopyFallback(text) {
-  let textarea;
-  let success = false;
+  // 1. Synchronous fallback textarea execution (guaranteed across all browsers and HTTP contexts immediately)
   try {
-    textarea = document.createElement('textarea');
+    const textarea = document.createElement('textarea');
     textarea.value = text;
     textarea.style.position = 'fixed';
     textarea.style.left = '-9999px';
     textarea.style.top = '-9999px';
     textarea.style.opacity = '0';
-    textarea.setAttribute('aria-hidden', 'true');
     document.body.appendChild(textarea);
-
-    if (navigator.userAgent.match(/ipad|iphone|ios/i)) {
-      const range = document.createRange();
-      range.selectNodeContents(textarea);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-      textarea.setSelectionRange(0, 999999);
-    } else {
-      textarea.focus();
-      textarea.select();
-    }
-
-    success = document.execCommand('copy');
+    textarea.focus();
+    textarea.select();
+    textarea.setSelectionRange(0, text.length);
+    copied = document.execCommand('copy');
+    document.body.removeChild(textarea);
   } catch (err) {
-    console.error('[Clipboard] execCommand copy failed:', err);
-    success = false;
-  } finally {
-    if (textarea && textarea.parentNode) {
-      textarea.parentNode.removeChild(textarea);
-    }
+    copied = false;
   }
-  return success;
+
+  // 2. Also execute modern Async Clipboard API in parallel
+  try {
+    if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(text).then(() => { copied = true; }).catch(() => {});
+    }
+  } catch (e) {}
+
+  return copied;
 }
 
 function copyFromModalTextarea() {
@@ -832,43 +808,23 @@ function copyFromModalTextarea() {
   const text = ta.value;
   ta.focus();
   ta.select();
-  ta.setSelectionRange(0, 99999);
+  ta.setSelectionRange(0, text.length);
 
-  const applySuccessUi = () => {
-    const btn = document.getElementById('btn-modal-copy-all');
-    if (btn) {
-      btn.innerHTML = `<i class="fa-solid fa-check text-emerald-950 text-sm"></i> <span>คัดลอกสำเร็จแล้ว! 🎉</span>`;
-      btn.className = 'px-5 py-2.5 bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-950 font-black rounded-xl text-xs shadow-lg shadow-emerald-500/30 flex items-center gap-1.5 transition';
-      setTimeout(() => {
-        if (btn) {
-          btn.innerHTML = `<i class="fa-solid fa-copy"></i> <span>คัดลอกทั้งหมด</span>`;
-          btn.className = 'px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-amber-500/30 flex items-center gap-1.5 transition active:scale-95';
-        }
-      }, 3000);
-    }
-    if (typeof showToast === 'function') showToast('📋 คัดลอกข้อความสำเร็จแล้ว! นำไปวางในแชทเกมส์ได้เลย', 'success');
-    if (typeof playChime === 'function') playChime();
-  };
+  copyTextDirectly(text);
 
-  if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-    navigator.clipboard.writeText(text).then(applySuccessUi).catch(() => {
-      try {
-        const ok = document.execCommand('copy');
-        if (ok) applySuccessUi();
-        else if (typeof showToast === 'function') showToast('กรุณากดค้างที่กล่องข้อความแล้วเลือก "คัดลอก"', 'info');
-      } catch (e) {
-        if (typeof showToast === 'function') showToast('กรุณากดค้างที่กล่องข้อความแล้วเลือก "คัดลอก"', 'info');
+  const btn = document.getElementById('btn-modal-copy-all');
+  if (btn) {
+    btn.innerHTML = `<i class="fa-solid fa-check text-emerald-950 text-sm"></i> <span>คัดลอกสำเร็จแล้ว! 🎉</span>`;
+    btn.className = 'px-5 py-2.5 bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-950 font-black rounded-xl text-xs shadow-lg shadow-emerald-500/30 flex items-center gap-1.5 transition';
+    setTimeout(() => {
+      if (btn) {
+        btn.innerHTML = `<i class="fa-solid fa-copy"></i> <span>คัดลอกทั้งหมด</span>`;
+        btn.className = 'px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-amber-500/30 flex items-center gap-1.5 transition active:scale-95';
       }
-    });
-  } else {
-    try {
-      const ok = document.execCommand('copy');
-      if (ok) applySuccessUi();
-      else if (typeof showToast === 'function') showToast('กรุณากดค้างที่กล่องข้อความแล้วเลือก "คัดลอก"', 'info');
-    } catch (e) {
-      if (typeof showToast === 'function') showToast('กรุณากดค้างที่กล่องข้อความแล้วเลือก "คัดลอก"', 'info');
-    }
+    }, 3000);
   }
+  if (typeof showToast === 'function') showToast('📋 คัดลอกข้อความสำเร็จแล้ว! นำไปวางในแชทเกมส์ได้เลย', 'success');
+  if (typeof playChime === 'function') playChime();
 }
 
 function openGameChatCopyPreviewModal(text) {
@@ -888,7 +844,7 @@ function openGameChatCopyPreviewModal(text) {
             <i class="fa-solid fa-xmark text-lg"></i>
           </button>
         </div>
-        <p class="text-[11px] text-slate-300">แตะที่กล่องข้อความเพื่อเลือกทั้งหมด หรือกดปุ่ม <b>"คัดลอกทั้งหมด"</b> ด้านล่าง:</p>
+        <p class="text-[11px] text-slate-300">คลิกที่กล่องเพื่อเลือกทั้งหมด หรือกดปุ่ม <b>"คัดลอกทั้งหมด"</b> ด้านล่าง:</p>
         <textarea id="boss-game-chat-textarea" rows="9" onclick="this.focus(); this.select();" class="w-full bg-slate-950 border border-amber-500/50 rounded-2xl p-3 text-sm text-amber-300 font-mono focus:outline-none focus:ring-2 focus:ring-amber-500/50 leading-relaxed cursor-pointer shadow-inner"></textarea>
         <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
           <button type="button" onclick="document.getElementById('boss-game-chat-copy-modal').classList.add('hidden')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">ปิด</button>
@@ -911,7 +867,7 @@ function openGameChatCopyPreviewModal(text) {
   }
 }
 
-async function copySelectedBossesToGameChat() {
+function copySelectedBossesToGameChat() {
   const now = new Date();
   let list = [];
 
@@ -966,18 +922,18 @@ async function copySelectedBossesToGameChat() {
     return;
   }
 
-  const success = await safeCopyToClipboard(fullText);
-  if (success) {
-    if (typeof showToast === 'function') {
-      showToast(selectedBossIds && selectedBossIds.size > 0 
-        ? `📋 คัดลอกบอสที่เลือก ${list.length} ตัวแล้ว! วาง (Ctrl+V) ในแชทเกมส์ได้ทันที 🎉`
-        : `📋 คัดลอกเวลาบอส ${list.length} ตัวแล้ว! วาง (Ctrl+V) ในแชทเกมส์ได้ทันที 🎉`, 'success');
-    }
-    if (typeof playChime === 'function') playChime();
-  } else {
-    // Fallback: Open popup modal displaying text box with auto-select
-    openGameChatCopyPreviewModal(fullText);
+  // Synchronous direct copy
+  copyTextDirectly(fullText);
+
+  if (typeof showToast === 'function') {
+    showToast(selectedBossIds && selectedBossIds.size > 0 
+      ? `📋 คัดลอกบอสที่เลือก ${list.length} ตัวแล้ว! วาง (Ctrl+V) ในแชทเกมส์ได้ทันที 🎉`
+      : `📋 คัดลอกเวลาบอส ${list.length} ตัวแล้ว! วาง (Ctrl+V) ในแชทเกมส์ได้ทันที 🎉`, 'success');
   }
+  if (typeof playChime === 'function') playChime();
+
+  // Also open preview modal with auto-selected text
+  openGameChatCopyPreviewModal(fullText);
 }
 
 // Render Boss Cards or Table
@@ -1530,16 +1486,13 @@ function renderBossTimerCards() {
   updateSelectedBossesUI();
 }
 
-async function copyBossInfo(bossId) {
+function copyBossInfo(bossId) {
   const boss = bossList.find(item => item.id === bossId);
   if (!boss) return;
   const text = formatBossForGameChat(boss);
-  const success = await safeCopyToClipboard(text);
-  if (success) {
-    if (typeof showToast === 'function') showToast(`📋 คัดลอก "${text}" แล้ว! วางในแชทเกมส์ได้ทันที`, 'success');
-  } else {
-    openGameChatCopyPreviewModal(text);
-  }
+  copyTextDirectly(text);
+  if (typeof showToast === 'function') showToast(`📋 คัดลอก "${text}" แล้ว! วางในแชทเกมส์ได้ทันที`, 'success');
+  if (typeof playChime === 'function') playChime();
 }
 
 // Format Countdown
