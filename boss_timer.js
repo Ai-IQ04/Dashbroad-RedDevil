@@ -665,6 +665,166 @@ function switchBossViewMode(mode) {
   renderBossTimerCards();
 }
 
+// Table Multi-Select State (Table View Only)
+let selectedTableBossIds = new Set();
+
+function formatBossForGameChat(boss) {
+  if (!boss) return '';
+  const nextSpawn = getBossNextSpawn(boss);
+  const now = new Date();
+  let timeStr = '-';
+  if (nextSpawn && !isNaN(nextSpawn.getTime())) {
+    const diffMs = nextSpawn.getTime() - now.getTime();
+    if (diffMs <= 0) {
+      timeStr = 'เกิดแล้ว';
+    } else {
+      const parts = getBangkokDateParts(nextSpawn);
+      const pad = n => String(n).padStart(2, '0');
+      timeStr = `${pad(parts.hour)}:${pad(parts.minute)}`;
+    }
+  }
+  return `${boss.name} ${timeStr}`;
+}
+
+function copyTextDirectly(text) {
+  if (!text) return false;
+  let copied = false;
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    textarea.style.top = '-9999px';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    textarea.setSelectionRange(0, text.length);
+    copied = document.execCommand('copy');
+    document.body.removeChild(textarea);
+  } catch (err) {
+    copied = false;
+  }
+  try {
+    if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(text).then(() => { copied = true; }).catch(() => {});
+    }
+  } catch (e) {}
+  return copied;
+}
+
+function updateTableSelectionUI() {
+  const count = selectedTableBossIds.size;
+  const btn = document.getElementById('btn-table-copy-selected');
+  const btnText = document.getElementById('btn-table-copy-selected-text');
+  const clearBtn = document.getElementById('btn-table-clear-selected');
+  const selectAllChk = document.getElementById('boss-table-select-all');
+
+  if (btnText) btnText.textContent = `คัดลอกที่เลือก (${count} ตัว)`;
+  if (btn) {
+    if (count > 0) {
+      btn.disabled = false;
+      btn.classList.remove('opacity-40', 'cursor-not-allowed');
+    } else {
+      btn.disabled = true;
+      btn.classList.add('opacity-40', 'cursor-not-allowed');
+    }
+  }
+  if (clearBtn) {
+    if (count > 0) clearBtn.classList.remove('hidden');
+    else clearBtn.classList.add('hidden');
+  }
+  if (selectAllChk) {
+    const visible = bossList.filter(b => {
+      if (currentBossFilter === 'alive' && b.status !== 'alive') return false;
+      if (currentBossFilter === 'soon' && b.status !== 'soon') return false;
+      if (currentBossFilter === 'cooldown' && b.status !== 'cooldown') return false;
+      return true;
+    });
+    selectAllChk.checked = visible.length > 0 && visible.every(b => selectedTableBossIds.has(b.id));
+  }
+}
+
+function toggleTableBossSelect(bossId, isChecked) {
+  if (isChecked === undefined) {
+    if (selectedTableBossIds.has(bossId)) selectedTableBossIds.delete(bossId);
+    else selectedTableBossIds.add(bossId);
+  } else if (isChecked) {
+    selectedTableBossIds.add(bossId);
+  } else {
+    selectedTableBossIds.delete(bossId);
+  }
+  updateTableSelectionUI();
+}
+
+function toggleTableBossSelectAll(forceChecked) {
+  const visible = bossList.filter(b => {
+    if (currentBossFilter === 'alive' && b.status !== 'alive') return false;
+    if (currentBossFilter === 'soon' && b.status !== 'soon') return false;
+    if (currentBossFilter === 'cooldown' && b.status !== 'cooldown') return false;
+    return true;
+  });
+
+  const shouldSelect = forceChecked !== undefined ? forceChecked : !visible.every(b => selectedTableBossIds.has(b.id));
+  visible.forEach(b => {
+    if (shouldSelect) selectedTableBossIds.add(b.id);
+    else selectedTableBossIds.delete(b.id);
+  });
+
+  document.querySelectorAll('.boss-table-chk').forEach(chk => {
+    const bid = chk.getAttribute('data-boss-id');
+    if (bid) chk.checked = selectedTableBossIds.has(bid);
+  });
+  updateTableSelectionUI();
+}
+
+function clearTableBossSelection() {
+  selectedTableBossIds.clear();
+  document.querySelectorAll('.boss-table-chk').forEach(chk => { chk.checked = false; });
+  const selectAllChk = document.getElementById('boss-table-select-all');
+  if (selectAllChk) selectAllChk.checked = false;
+  updateTableSelectionUI();
+}
+
+function copySelectedTableBosses() {
+  if (selectedTableBossIds.size === 0) {
+    if (typeof showToast === 'function') showToast('กรุณาติ๊กเลือกบอสในตารางก่อนคัดลอก', 'warning');
+    return;
+  }
+
+  const now = new Date();
+  const list = bossList
+    .filter(b => selectedTableBossIds.has(b.id))
+    .map(b => {
+      const nextSpawn = getBossNextSpawn(b);
+      const diffMs = nextSpawn ? nextSpawn.getTime() - now.getTime() : null;
+      const status = getBossStatus(b, nextSpawn, now);
+      return { ...b, nextSpawn, diffMs, status };
+    });
+
+  // Sort by spawn urgency
+  list.sort((a, b) => {
+    const order = { alive: 1, soon: 2, cooldown: 3, unrecorded: 4 };
+    if (order[a.status] !== order[b.status]) {
+      return (order[a.status] || 99) - (order[b.status] || 99);
+    }
+    if (a.diffMs !== null && b.diffMs !== null) {
+      return a.diffMs - b.diffMs;
+    }
+    return 0;
+  });
+
+  const lines = list.map(b => formatBossForGameChat(b));
+  const fullText = lines.join('\n');
+
+  copyTextDirectly(fullText);
+
+  if (typeof showToast === 'function') {
+    showToast(`📋 คัดลอกบอสที่เลือก ${list.length} ตัวสำหรับแชทเกมส์แล้ว! วาง (Ctrl+V) ได้ทันที 🎉`, 'success');
+  }
+  if (typeof playChime === 'function') playChime();
+}
+
 // Render Boss Cards or Table
 function renderBossTimerCards() {
   const container = document.getElementById('boss-cards-grid');
@@ -901,7 +1061,13 @@ function renderBossTimerCards() {
           : `<div class="w-11 h-11 rounded-2xl bg-slate-800 border ${avatarRing} flex items-center justify-center text-amber-400/90 text-sm shrink-0 shadow-inner"><i class="fa-solid fa-dragon"></i></div>`;
 
         rowsHtml += `
-          <tr id="boss-card-${b.id}" oncontextmenu="event.preventDefault(); copyBossForGameChat('${b.id}'); return false;" title="${escapeHtml(b.name)} (คลิกขวาเพื่อคัดลอกลงแชทเกมส์)" class="${rowBg} border-b border-slate-800/60 group hover:bg-slate-900/40 transition cursor-pointer">
+          <tr id="boss-card-${b.id}" class="${rowBg} border-b border-slate-800/60 group hover:bg-slate-900/40 transition">
+            <!-- 0. ติ๊กเลือกบอสเพื่อคัดลอก -->
+            <td class="py-3 px-3 text-center align-middle w-12" onclick="event.stopPropagation();">
+              <input type="checkbox" data-boss-id="${b.id}" class="boss-table-chk w-4 h-4 rounded border-slate-700 bg-slate-900 text-amber-500 focus:ring-amber-500/50 cursor-pointer"
+                ${selectedTableBossIds.has(b.id) ? 'checked' : ''} onchange="toggleTableBossSelect('${b.id}', this.checked)" title="ติ๊กเลือกบอสตัวนี้" />
+            </td>
+
             <!-- 1. สถานะ -->
             <td class="py-3 px-3 text-center align-middle w-24">
               <div id="boss-status-badge-${b.id}">${statusBadge}</div>
@@ -971,10 +1137,10 @@ function renderBossTimerCards() {
                   title="ดูประวัติไอเทมดรอป">
                   <i class="fa-solid fa-gift text-[11px]"></i>
                 </button>
-                <button onclick="copyBossInfo('${b.id}')"
-                  class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 flex items-center justify-center transition shadow-sm"
-                  title="คัดลอกชื่อและเวลาเกิด">
-                  <i class="fa-regular fa-copy text-[11px]"></i>
+                <button onclick="copyBossForGameChat('${b.id}')"
+                  class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-slate-700 flex items-center justify-center transition shadow-sm"
+                  title="คลิกซ้ายเพื่อคัดลอกเฉพาะบอสตัวนี้ลงแชทเกมส์">
+                  <i class="fa-solid fa-copy text-[11px]"></i>
                 </button>
               </div>
             </td>
@@ -987,9 +1153,31 @@ function renderBossTimerCards() {
 
     container.innerHTML = `
       <div class="rounded-2xl border border-slate-800 bg-slate-950/70 shadow-2xl backdrop-blur-md overflow-hidden">
-        <table class="w-full text-left border-collapse min-w-[800px]">
+        <!-- Table Action Header Bar -->
+        <div class="flex items-center justify-between px-4 py-2.5 bg-slate-900/90 border-b border-slate-800 flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-white flex items-center gap-1.5"><i class="fa-solid fa-table-list text-amber-400"></i> ตารางเวลาบอส</span>
+            <span class="text-[11px] text-slate-400 hidden sm:inline">(ติ๊กเลือกบอสเพื่อคัดลอกหลายตัว หรือกดปุ่ม 📋 ท้ายแถวเพื่อคัดลอกตัวเดียว)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btn-table-clear-selected" type="button" onclick="clearTableBossSelection()" class="px-2.5 py-1 text-[11px] font-semibold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition ${selectedTableBossIds.size > 0 ? '' : 'hidden'}">
+              ✕ ล้างการเลือก
+            </button>
+            <button id="btn-table-copy-selected" type="button" onclick="copySelectedTableBosses()" class="apple-btn apple-btn-gold px-3.5 py-1 text-xs font-black flex items-center gap-1.5 shadow-md shadow-amber-500/20 ${selectedTableBossIds.size > 0 ? '' : 'opacity-40 cursor-not-allowed'}" ${selectedTableBossIds.size > 0 ? '' : 'disabled'}>
+              <i class="fa-solid fa-copy text-[11px]"></i>
+              <span id="btn-table-copy-selected-text">คัดลอกที่เลือก (${selectedTableBossIds.size} ตัว)</span>
+            </button>
+          </div>
+        </div>
+
+        <table class="w-full text-left border-collapse min-w-[850px]">
           <thead>
             <tr class="border-b border-slate-800 bg-slate-900/90 text-slate-400 font-bold uppercase tracking-wider text-[11px]">
+              <th class="py-3 px-3 text-center w-12">
+                <input type="checkbox" id="boss-table-select-all" onchange="toggleTableBossSelectAll(this.checked)"
+                  class="w-4 h-4 rounded border-slate-700 bg-slate-900 text-amber-500 focus:ring-amber-500/50 cursor-pointer"
+                  title="เลือกทั้งหมด" ${filtered.length > 0 && filtered.every(b => selectedTableBossIds.has(b.id)) ? 'checked' : ''} />
+              </th>
               <th class="py-3 px-3 text-center w-24">สถานะ</th>
               <th class="py-3 px-3">ข้อมูลบอส</th>
               <th class="py-3 px-3 text-center w-32">เวลานับถอยหลัง</th>
@@ -1242,43 +1430,8 @@ function copyBossForGameChat(bossId) {
   if (typeof playChime === 'function') playChime();
 }
 
-async function copyBossInfo(bossId) {
-  const boss = bossList.find(item => item.id === bossId);
-  if (!boss) return;
-  const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
-  const nextSpawn = getBossNextSpawn(boss);
-  const now = new Date();
-  let timeStr = '-';
-  if (nextSpawn && !isNaN(nextSpawn.getTime())) {
-    const diffMs = nextSpawn.getTime() - now.getTime();
-    if (diffMs <= 0) {
-      timeStr = isEn ? 'ALIVE' : 'เกิดแล้ว';
-    } else {
-      const parts = getBangkokDateParts(nextSpawn);
-      const pad = n => String(n).padStart(2, '0');
-      timeStr = `${pad(parts.hour)}:${pad(parts.minute)}`;
-    }
-  }
-  const text = `${boss.name} (${boss.map || '-'}) : ${timeStr}`;
-  try {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text);
-    } else {
-      const area = document.createElement('textarea');
-      area.value = text;
-      area.style.position = 'fixed';
-      area.style.opacity = '0';
-      document.body.appendChild(area);
-      area.focus();
-      area.select();
-      document.execCommand('copy');
-      area.remove();
-    }
-    if (typeof showToast === 'function') showToast(`📋 คัดลอก "${text}" แล้ว`, 'success');
-    if (typeof playChime === 'function') playChime();
-  } catch (e) {
-    if (typeof showToast === 'function') showToast('คัดลอกข้อมูลไม่สำเร็จ', 'warning');
-  }
+function copyBossInfo(bossId) {
+  return copyBossForGameChat(bossId);
 }
 
 // Format Countdown
@@ -4338,6 +4491,10 @@ window.getBossDataHealth = getBossDataHealth;
 window.getBossSchedulePreview = getBossSchedulePreview;
 window.testBossDiscordAlert = testBossDiscordAlert;
 window.copyBossForGameChat = copyBossForGameChat;
+window.toggleTableBossSelect = toggleTableBossSelect;
+window.toggleTableBossSelectAll = toggleTableBossSelectAll;
+window.clearTableBossSelection = clearTableBossSelection;
+window.copySelectedTableBosses = copySelectedTableBosses;
 
 
 
