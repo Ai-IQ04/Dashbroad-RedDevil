@@ -1,5 +1,5 @@
 {
-  "version": "1.4.6",
-  "buildTime": 1787106000000,
-  "releaseNotes": "Fix canvas context scoping and add robust sequential multi-image OCR processing"
+  "version": "1.4.7",
+  "buildTime": 1787107000000,
+  "releaseNotes": "Revert AI squad attendance scanner to stable single-image mode with duplicate check prevention"
 }
