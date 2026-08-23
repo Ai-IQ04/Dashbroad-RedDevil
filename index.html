@@ -2944,6 +2944,13 @@
               <span>สแกนชุมนุม (AI)</span>
             </button>
 
+            <button id="btn-ai-cp-update" onclick="openAdminAiCpUpdate()"
+              class="apple-btn apple-btn-cyan inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
+              title="AI CP Update - Admin only">
+              <i class="fa-solid fa-wand-magic-sparkles text-xs text-cyan-200"></i>
+              <span>อัปเดต CP ด้วย AI</span>
+            </button>
+
             <button id="btn-batch-guild-check" onclick="openBatchGuildCheckModal()"
               class="hidden apple-btn apple-btn-ocean inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
               <i class="fa-solid fa-list-check text-xs"></i>
@@ -11138,6 +11145,21 @@ Output strictly valid JSON with no markdown wrapping:
         modal.classList.add('hidden');
         modal.classList.remove('flex');
       }
+    }
+
+    function openAdminAiCpUpdate() {
+      if (!isAdmin) {
+        showToast('ฟังก์ชันนี้ใช้ได้เฉพาะ Admin เท่านั้น', 'warning');
+        return;
+      }
+      toggleNongDevilChat(true);
+      const input = document.getElementById('nong-devil-input');
+      if (input) {
+        input.value = 'อัปเดต CP จากภาพ Ranking นี้ และแสดงรายการที่จับคู่ได้ให้ตรวจสอบ';
+        input.focus();
+      }
+      const fileInput = document.getElementById('nong-devil-file-input');
+      if (fileInput) fileInput.click();
     }
 
     function initNongDevilGreeting() {
