@@ -1,5 +1,5 @@
 {
-  "version": "1.3.7",
-  "buildTime": 1787096000000,
-  "releaseNotes": "Robust right-click copy delegation across table and cards"
+  "version": "1.3.8",
+  "buildTime": 1787097000000,
+  "releaseNotes": "Add Simple / Compact view mode for boss timer"
 }

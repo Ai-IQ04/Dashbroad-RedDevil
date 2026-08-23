@@ -853,16 +853,14 @@ function renderBossTimerCards() {
 
   // Update View Mode Toggle Buttons UI
   const btnGrid = document.getElementById('btn-view-grid');
+  const btnSimple = document.getElementById('btn-view-simple');
   const btnTable = document.getElementById('btn-view-table');
-  if (btnGrid && btnTable) {
-    if (currentBossViewMode === 'table') {
-      btnTable.className = "boss-view-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition flex items-center gap-1.5 shadow-sm";
-      btnGrid.className = "boss-view-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5";
-    } else {
-      btnGrid.className = "boss-view-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition flex items-center gap-1.5 shadow-sm";
-      btnTable.className = "boss-view-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5";
-    }
-  }
+  const activeBtnClass = "boss-view-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition flex items-center gap-1.5 shadow-sm";
+  const inactiveBtnClass = "boss-view-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5";
+
+  if (btnGrid) btnGrid.className = currentBossViewMode === 'grid' ? activeBtnClass : inactiveBtnClass;
+  if (btnSimple) btnSimple.className = currentBossViewMode === 'simple' ? activeBtnClass : inactiveBtnClass;
+  if (btnTable) btnTable.className = currentBossViewMode === 'table' ? activeBtnClass : inactiveBtnClass;
 
   const now = getBossNow();
   const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
@@ -1211,6 +1209,101 @@ function renderBossTimerCards() {
         </table>
       </div>
     `;
+    return;
+  }
+
+  // ================= RENDER MODE: SIMPLE / COMPACT VIEW =================
+  if (currentBossViewMode === 'simple') {
+    container.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-2.5";
+    let simpleHtml = '';
+
+    filtered.forEach(b => {
+      try {
+        const isGuildActivity = GUILD_SCORING_BOSS_IDS.has(b.id) || (b.name && /lucus|bahel|libitina|rakajeth|tumier|neva|icarut|morti|motti|arena|camalia|world/i.test(b.name));
+        const isHighTier = isHighLevelBoss(b.level, b.id, b.name);
+
+        let nameColorClass = 'text-emerald-300';
+        let cardBorder = 'border-slate-800/90 hover:border-slate-700 bg-slate-950/80';
+        let avatarBorder = 'border-slate-700';
+
+        if (isGuildActivity) {
+          nameColorClass = 'text-amber-400 font-black';
+          avatarBorder = 'border-amber-500/60';
+        } else if (isHighTier) {
+          nameColorClass = 'text-rose-300 font-black';
+          avatarBorder = 'border-rose-500/60';
+        }
+
+        let statusPill = '';
+        let cdColor = 'text-slate-400';
+        if (b.status === 'alive') {
+          cardBorder = 'border-rose-500/80 bg-rose-950/20 ring-1 ring-rose-500/40 shadow-lg shadow-rose-950/40';
+          statusPill = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-600 text-white animate-pulse">เกิดแล้ว</span>`;
+          cdColor = 'text-rose-300 animate-pulse font-black';
+        } else if (b.status === 'soon') {
+          cardBorder = 'border-amber-500/80 bg-amber-950/20 ring-1 ring-amber-500/40 shadow-md shadow-amber-950/30';
+          statusPill = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500 text-slate-950 animate-pulse">ใกล้เกิด</span>`;
+          cdColor = 'text-amber-300 animate-pulse font-black';
+        } else if (b.status === 'cooldown') {
+          statusPill = `<span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-sky-950 text-sky-300 border border-sky-800">รอเกิด</span>`;
+          cdColor = 'text-sky-300 font-bold';
+        } else {
+          statusPill = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-900 text-slate-400 border border-slate-800">-</span>`;
+          cdColor = 'text-slate-500';
+        }
+
+        const countdownText = formatCountdown(b.diffMs, b.status);
+        const nextSpawnText = b.nextSpawn ? formatBossNextSpawnDisplay(b.nextSpawn) : (b.respawnType === 'interval' ? 'รอลงเวลา' : '-');
+
+        const avatarThumb = b.avatar
+          ? `<img src="${escapeHtml(b.avatar)}" alt="${escapeHtml(b.name)}" class="w-10 h-10 rounded-xl object-cover border ${avatarBorder} shrink-0 bg-slate-900 shadow-sm" onerror="this.onerror=null; this.src=''; this.parentElement.innerHTML='<div class=\\'w-10 h-10 rounded-xl bg-slate-800 border ${avatarBorder} flex items-center justify-center text-amber-400 text-xs\\'><i class=\\'fa-solid fa-dragon\\'></i></div>';" />`
+          : `<div class="w-10 h-10 rounded-xl bg-slate-800 border ${avatarBorder} flex items-center justify-center text-amber-400/90 text-xs shrink-0 shadow-inner"><i class="fa-solid fa-dragon"></i></div>`;
+
+        simpleHtml += `
+          <div id="boss-card-${b.id}" oncontextmenu="event.preventDefault(); copyBossForGameChat('${b.id}'); return false;"
+            title="${escapeHtml(b.name)} (คลิกขวาเพื่อคัดลอก)"
+            class="boss-card relative flex items-center justify-between gap-2.5 p-2.5 rounded-2xl border ${cardBorder} backdrop-blur-md transition hover:scale-[1.015] duration-150 cursor-pointer shadow-md">
+            
+            <div class="flex items-center gap-2.5 min-w-0 flex-1">
+              <div class="relative shrink-0" onclick="${isAdminActive ? `openEditBossModal('${b.id}')` : `openBossDropLogModal('${b.id}')`}" title="${isAdminActive ? 'แก้ไขข้อมูลบอส' : escapeHtml(b.name)}">
+                ${avatarThumb}
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5 leading-tight">
+                  <span class="text-xs sm:text-[13px] font-bold ${nameColorClass} truncate" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>
+                  <span class="text-[9px] font-mono text-slate-400">Lv.${escapeHtml(b.level || '??')}</span>
+                </div>
+                <div class="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                  <span class="truncate max-w-[90px]"><i class="fa-solid fa-location-dot text-slate-500 text-[9px] mr-0.5"></i>${escapeHtml(b.map || 'ไม่ระบุ')}</span>
+                  <span class="font-mono text-amber-300/90 truncate">${nextSpawnText}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex flex-col items-end shrink-0 gap-1">
+              <div class="flex items-center gap-1">
+                ${statusPill}
+                <button onclick="copyBossForGameChat('${b.id}')" class="w-6 h-6 rounded-lg bg-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-slate-700 flex items-center justify-center transition" title="คัดลอกลงแชทเกมส์">
+                  <i class="fa-solid fa-copy text-[10px]"></i>
+                </button>
+                ${isAdminActive ? `
+                <button onclick="openBossKillConfirmModal('${b.id}')" class="w-6 h-6 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 flex items-center justify-center transition" title="บันทึกบอสตาย">
+                  <i class="fa-solid fa-skull text-[10px]"></i>
+                </button>` : ''}
+              </div>
+              <div id="boss-cd-${b.id}" class="text-[12px] font-mono font-black ${cdColor} tracking-tight">
+                ${countdownText}
+              </div>
+            </div>
+
+          </div>
+        `;
+      } catch (err) {
+        console.error('[Simple View] Render item error:', b && b.id, err);
+      }
+    });
+
+    container.innerHTML = simpleHtml;
     return;
   }
 

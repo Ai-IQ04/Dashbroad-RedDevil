@@ -4503,6 +4503,11 @@
             <i class="fa-solid fa-table-cells-large text-xs"></i>
             <span class="hidden sm:inline">การ์ด</span>
           </button>
+          <button id="btn-view-simple" onclick="switchBossViewMode('simple')"
+            class="boss-view-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5" title="มุมมองแบบง่าย (Simple / Compact)">
+            <i class="fa-solid fa-list-ul text-xs"></i>
+            <span class="hidden sm:inline">แบบง่าย</span>
+          </button>
           <button id="btn-view-table" onclick="switchBossViewMode('table')"
             class="boss-view-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5" title="มุมมองตาราง (Table)">
             <i class="fa-solid fa-table-list text-xs"></i>
@@ -22156,7 +22161,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=9.6"></script>
+  <script src="boss_timer.js?v=9.7"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
