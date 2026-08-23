@@ -1562,7 +1562,7 @@
       background: transparent !important;
     }
 
-    body.neo-dark .boss-card {
+    body.neo-dark .boss-card:not(.boss-card-alive-alert):not(.boss-card-soon-alert) {
       background: linear-gradient(145deg, #303c49, #242e39) !important;
       border-color: rgba(255, 255, 255, 0.08) !important;
       box-shadow: var(--neo-shadow-raised) !important;
@@ -2064,7 +2064,7 @@
     body:not(.neo-dark) #admin-hub-container,
     body:not(.neo-dark) #upcoming-boss-toolbar-widget,
     body:not(.neo-dark) #scoring-module-container>main>div,
-    body:not(.neo-dark) .boss-card,
+    body:not(.neo-dark) .boss-card:not(.boss-card-alive-alert):not(.boss-card-soon-alert),
     body:not(.neo-dark) [id$="-modal"]>div {
       box-shadow: 10px 10px 20px rgba(163, 174, 190, 0.45), -8px -8px 18px rgba(255, 255, 255, 0.82) !important;
     }
@@ -2166,6 +2166,69 @@
       color: #ea580c !important;
     }
 
+    /* ===== Boss Card & Text Alert Animations (Dark & Light Mode) ===== */
+    @keyframes borderFlashRed {
+      0%, 100% {
+        border-color: rgba(239, 68, 68, 0.45);
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
+      }
+      50% {
+        border-color: rgba(255, 34, 71, 1);
+        box-shadow: 0 0 28px rgba(255, 34, 71, 0.85), inset 0 0 14px rgba(255, 34, 71, 0.3);
+      }
+    }
+
+    @keyframes borderFlashYellow {
+      0%, 100% {
+        border-color: rgba(234, 179, 8, 0.45);
+        box-shadow: 0 0 10px rgba(234, 179, 8, 0.2);
+      }
+      50% {
+        border-color: rgba(250, 204, 21, 1);
+        box-shadow: 0 0 28px rgba(250, 204, 21, 0.85), inset 0 0 14px rgba(250, 204, 21, 0.25);
+      }
+    }
+
+    /* ขอบการ์ดกระพริบตามสถานะ (ทั้งโหมดมืดและโหมดสว่าง) */
+    .boss-card.boss-card-alive-alert,
+    body.neo-dark .boss-card.boss-card-alive-alert,
+    body:not(.neo-dark) .boss-card.boss-card-alive-alert,
+    body:not(.neo-dark) .boss-card.boss-card-guild.boss-card-alive-alert {
+      animation: borderFlashRed 1.8s infinite ease-in-out !important;
+      border-width: 2px !important;
+    }
+
+    .boss-card.boss-card-soon-alert,
+    body.neo-dark .boss-card.boss-card-soon-alert,
+    body:not(.neo-dark) .boss-card.boss-card-soon-alert,
+    body:not(.neo-dark) .boss-card.boss-card-guild.boss-card-soon-alert {
+      animation: borderFlashYellow 1.8s infinite ease-in-out !important;
+      border-width: 2px !important;
+    }
+
+    /* สีตัวหนังสือนับถอยหลัง: สีแดงสด (#FF2247) / สีเหลืองสด (#FACC15) ทั้ง Dark & Light Mode */
+    .boss-countdown-alive,
+    body.neo-dark .boss-countdown-alive,
+    body:not(.neo-dark) .boss-countdown-alive,
+    body:not(.neo-dark) .boss-card div[class*="shadow-inner"] .boss-countdown-alive,
+    body:not(.neo-dark) .boss-card.boss-card-guild div[class*="shadow-inner"] .boss-countdown-alive {
+      color: #ff2247 !important;
+      -webkit-text-fill-color: #ff2247 !important;
+      text-shadow: 0 0 14px rgba(255, 34, 71, 0.95) !important;
+      font-weight: 900 !important;
+    }
+
+    .boss-countdown-soon,
+    body.neo-dark .boss-countdown-soon,
+    body:not(.neo-dark) .boss-countdown-soon,
+    body:not(.neo-dark) .boss-card div[class*="shadow-inner"] .boss-countdown-soon,
+    body:not(.neo-dark) .boss-card.boss-card-guild div[class*="shadow-inner"] .boss-countdown-soon {
+      color: #facc15 !important;
+      -webkit-text-fill-color: #facc15 !important;
+      text-shadow: 0 0 14px rgba(250, 204, 21, 0.95) !important;
+      font-weight: 900 !important;
+    }
+
     body:not(.neo-dark) input,
     body:not(.neo-dark) select,
     body:not(.neo-dark) textarea,
@@ -2180,7 +2243,7 @@
     body.neo-dark #admin-hub-container,
     body.neo-dark #upcoming-boss-toolbar-widget,
     body.neo-dark #scoring-module-container>main>div,
-    body.neo-dark .boss-card,
+    body.neo-dark .boss-card:not(.boss-card-alive-alert):not(.boss-card-soon-alert),
     body.neo-dark [id$="-modal"]>div {
       box-shadow: 10px 10px 20px rgba(15, 20, 27, 0.62), -8px -8px 18px rgba(255, 255, 255, 0.045) !important;
     }
@@ -21199,7 +21262,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=7.2"></script>
+  <script src="boss_timer.js?v=7.3"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
@@ -21274,5 +21337,6 @@ Output strictly valid JSON with no markdown formatting.`;
 </body>
 
 </html>
+
 
 

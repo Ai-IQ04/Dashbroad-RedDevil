@@ -758,13 +758,16 @@ function renderBossTimerCards() {
     let statusBadge = '';
     let cardBorder = cardBaseBorder;
     let cardBg = cardBaseBg;
+    let alertCardClass = '';
 
     if (b.status === 'alive') {
+      alertCardClass = ' boss-card-alive-alert';
       statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white border border-rose-300 flex items-center gap-1.5 shadow-lg shadow-rose-600/50"><i class="fa-solid fa-circle text-[7px] text-rose-200 animate-ping"></i><span class="animate-pulse">${tBoss('boss_status_spawned', 'เกิดแล้ว (ALIVE!)')}</span></span>`;
       cardBorder = 'border-rose-500 ring-2 ring-rose-500/50 shadow-2xl shadow-rose-950/80';
       cardBg = 'from-rose-950/60 via-slate-900 to-slate-950';
     } else if (b.status === 'soon') {
-      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/30 text-amber-300 border border-amber-400 flex items-center gap-1.5 shadow-md shadow-amber-950/60"><i class="fa-solid fa-clock text-[9px] text-amber-400 animate-spin" style="animation-duration: 4s;"></i><span class="animate-pulse">${tBoss('boss_status_soon', 'ใกล้เกิด (<30m)')}</span></span>`;
+      alertCardClass = ' boss-card-soon-alert';
+      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-yellow-500/25 text-yellow-300 border border-yellow-400 flex items-center gap-1.5 shadow-md shadow-yellow-950/60"><i class="fa-solid fa-clock text-[9px] text-yellow-400 animate-spin" style="animation-duration: 4s;"></i><span class="animate-pulse">${tBoss('boss_status_soon', 'ใกล้เกิด (<30m)')}</span></span>`;
       cardBorder = 'border-amber-400/80 ring-2 ring-amber-400/40 shadow-xl shadow-amber-950/60';
       cardBg = 'from-amber-950/40 via-slate-900 to-slate-950';
     } else if (b.status === 'cooldown') {
@@ -838,7 +841,7 @@ function renderBossTimerCards() {
     const guildCardClass = isGuildActivity ? ' boss-card-guild' : '';
 
     html += `
-      <div class="boss-card${guildCardClass} relative flex flex-col justify-between bg-gradient-to-b ${cardBg} border ${cardBorder} rounded-3xl p-4 shadow-xl backdrop-blur-md transition hover:scale-[1.015] duration-200">
+      <div id="boss-card-${b.id}" class="boss-card${guildCardClass}${alertCardClass} relative flex flex-col justify-between bg-gradient-to-b ${cardBg} border ${cardBorder} rounded-3xl p-4 shadow-xl backdrop-blur-md transition hover:scale-[1.015] duration-200">
         <div>
           <!-- Top Row: Type & Status Badges -->
           <div class="flex items-center justify-between gap-1.5 mb-2.5">
@@ -870,7 +873,7 @@ function renderBossTimerCards() {
           <!-- Countdown Big Box (High Contrast & Clear Typography) -->
           <div class="my-3 p-3 rounded-2xl bg-slate-950/90 border border-slate-800 shadow-inner text-center">
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">${tBoss('boss_countdown_label', 'นับถอยหลัง')}</span>
-            <div id="boss-cd-${b.id}" class="text-lg sm:text-xl font-black font-mono tracking-wider ${b.status === 'alive' ? 'text-rose-400 animate-pulse drop-shadow-[0_0_12px_rgba(244,63,94,0.9)]' : b.status === 'soon' ? 'text-amber-300 animate-pulse drop-shadow-[0_0_10px_rgba(252,211,77,0.85)]' : b.status === 'cooldown' ? 'text-sky-300' : 'text-slate-500'}">
+            <div id="boss-cd-${b.id}" class="text-lg sm:text-xl font-black font-mono tracking-wider ${b.status === 'alive' ? 'boss-countdown-alive animate-pulse' : b.status === 'soon' ? 'boss-countdown-soon animate-pulse' : b.status === 'cooldown' ? 'text-sky-300' : 'text-slate-500'}">
               ${countdownText}
             </div>
           </div>
@@ -1066,12 +1069,29 @@ function updateCountdowns() {
 
     cdEl.textContent = formatCountdown(diffMs, status);
 
+    const cardEl = document.getElementById(`boss-card-${boss.id}`);
+    if (cardEl) {
+      if (status === 'alive') {
+        if (!cardEl.classList.contains('boss-card-alive-alert')) {
+          cardEl.classList.add('boss-card-alive-alert');
+          cardEl.classList.remove('boss-card-soon-alert');
+        }
+      } else if (status === 'soon') {
+        if (!cardEl.classList.contains('boss-card-soon-alert')) {
+          cardEl.classList.add('boss-card-soon-alert');
+          cardEl.classList.remove('boss-card-alive-alert');
+        }
+      } else {
+        cardEl.classList.remove('boss-card-alive-alert', 'boss-card-soon-alert');
+      }
+    }
+
     if (status === 'alive') {
-      cdEl.className = "text-base sm:text-lg font-black font-mono tracking-wider text-rose-400 animate-pulse drop-shadow-[0_0_12px_rgba(244,63,94,0.9)]";
+      cdEl.className = "text-lg sm:text-xl font-black font-mono tracking-wider boss-countdown-alive animate-pulse";
     } else if (status === 'soon') {
-      cdEl.className = "text-base sm:text-lg font-black font-mono tracking-wider text-amber-300 animate-pulse drop-shadow-[0_0_10px_rgba(252,211,77,0.85)]";
+      cdEl.className = "text-lg sm:text-xl font-black font-mono tracking-wider boss-countdown-soon animate-pulse";
     } else {
-      cdEl.className = "text-base sm:text-lg font-black font-mono tracking-wider text-sky-300";
+      cdEl.className = "text-lg sm:text-xl font-black font-mono tracking-wider text-sky-300";
     }
   });
 }
