@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th" class="h-full notranslate" translate="no" id="html-root">
 
 <head>
@@ -1033,12 +1033,12 @@
       min-height: 2.35rem;
     }
 
-    #nav-tab-scoring.bg-gradient-to-r,
-    #nav-tab-boss-timer.bg-gradient-to-r,
-    .from-amber-500.to-orange-500,
-    .from-amber-600.to-orange-500,
-    .from-orange-500.to-rose-600,
-    .from-amber-500.via-orange-600.to-rose-600 {
+    body:not(.neo-dark) #nav-tab-scoring.bg-gradient-to-r,
+    body:not(.neo-dark) #nav-tab-boss-timer.bg-gradient-to-r,
+    body:not(.neo-dark) .from-amber-500.to-orange-500,
+    body:not(.neo-dark) .from-amber-600.to-orange-500,
+    body:not(.neo-dark) .from-orange-500.to-rose-600,
+    body:not(.neo-dark) .from-amber-500.via-orange-600.to-rose-600 {
       background-image: linear-gradient(145deg, #ffab67, #f97316) !important;
       color: #ffffff !important;
       box-shadow: 8px 8px 18px rgba(249, 115, 22, 0.18), -8px -8px 18px rgba(255, 255, 255, 0.8) !important;
@@ -1058,17 +1058,17 @@
       color: #8a97aa !important;
     }
 
-    table,
-    thead,
-    tbody,
-    tr,
-    .apple-modal-box,
-    [id$="-modal"]>div,
-    #week-tabs-bar,
-    #online-presence-badge,
-    #upcoming-boss-toolbar-widget,
-    #scoring-module-container>div,
-    #boss-timer-module-container>div {
+    body:not(.neo-dark) table,
+    body:not(.neo-dark) thead,
+    body:not(.neo-dark) tbody,
+    body:not(.neo-dark) tr,
+    body:not(.neo-dark) .apple-modal-box,
+    body:not(.neo-dark) [id$="-modal"]>div,
+    body:not(.neo-dark) #week-tabs-bar,
+    body:not(.neo-dark) #online-presence-badge,
+    body:not(.neo-dark) #upcoming-boss-toolbar-widget,
+    body:not(.neo-dark) #scoring-module-container>div,
+    body:not(.neo-dark) #boss-timer-module-container>div {
       background: linear-gradient(145deg, rgba(255, 255, 255, 0.86), rgba(233, 238, 245, 0.96)) !important;
       color: var(--neo-text) !important;
       border-color: var(--neo-border) !important;
@@ -1316,7 +1316,7 @@
     [class*="from-orange-"],
     [class*="via-orange-"],
     [class*="to-orange-"],
-    #nav-tab-scoring.bg-gradient-to-r,
+    body:not(.neo-dark) #nav-tab-scoring.bg-gradient-to-r,
     .boss-filter-btn.bg-amber-500 {
       background: linear-gradient(145deg, #e9a466, #d9854a) !important;
       color: #ffffff !important;
@@ -1532,8 +1532,8 @@
     body.neo-dark input:focus,
     body.neo-dark select:focus,
     body.neo-dark textarea:focus {
-      border-color: rgba(251, 191, 36, 0.4) !important;
-      box-shadow: inset 5px 5px 10px rgba(10, 15, 20, 0.65), inset -5px -5px 10px rgba(255, 255, 255, 0.025), 0 0 0 3px rgba(251, 191, 36, 0.12) !important;
+      border-color: rgba(249, 115, 22, 0.5) !important;
+      box-shadow: inset 5px 5px 10px rgba(10, 15, 20, 0.65), inset -5px -5px 10px rgba(255, 255, 255, 0.025), 0 0 0 3px rgba(249, 115, 22, 0.18) !important;
       outline: none !important;
     }
 
@@ -1812,11 +1812,15 @@
     }
 
     body.neo-dark .boss-filter-btn.bg-amber-500,
+    body.neo-dark .boss-filter-btn.bg-orange-500,
     body.neo-dark .boss-filter-btn.bg-rose-500,
     body.neo-dark .boss-filter-btn.bg-sky-500 {
-      background: linear-gradient(145deg, #f59a55, #d96522) !important;
-      color: #fff8f1 !important;
-      box-shadow: 4px 4px 10px rgba(15, 20, 27, 0.55), -4px -4px 10px rgba(255, 255, 255, 0.04) !important;
+      background: linear-gradient(145deg, #f97316, #c2410c) !important;
+      background-image: linear-gradient(145deg, #f97316, #c2410c) !important;
+      border: 1px solid rgba(253, 186, 116, 0.5) !important;
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+      box-shadow: 4px 4px 10px rgba(10, 14, 20, 0.5), -2px -2px 6px rgba(255, 255, 255, 0.04), 0 0 12px rgba(249, 115, 22, 0.4) !important;
     }
 
     body.neo-dark ::-webkit-scrollbar-track {
@@ -3112,10 +3116,11 @@
       border-color: rgba(110, 231, 183, 0.35) !important;
     }
 
-    body.neo-dark #member-table-body span[class*="bg-amber-"] {
-      background: rgba(164, 113, 32, 0.2) !important;
-      color: #fde68a !important;
-      border-color: rgba(251, 191, 36, 0.35) !important;
+    body.neo-dark #member-table-body span[class*="bg-amber-"],
+    body.neo-dark #member-table-body span[class*="bg-orange-"] {
+      background: rgba(249, 115, 22, 0.18) !important;
+      color: #fb923c !important;
+      border-color: rgba(249, 115, 22, 0.35) !important;
     }
 
     body.neo-dark #member-table-body span[class*="bg-sky-"],
@@ -3157,7 +3162,7 @@
 
     body.neo-dark #member-hub-container>button:nth-of-type(1) i,
     body.neo-dark #member-hub-container>button:nth-of-type(1) span {
-      color: #f4c978 !important;
+      color: #fb923c !important;
     }
 
     body.neo-dark #member-hub-container>button:nth-of-type(2) i,
@@ -3176,6 +3181,109 @@
       background: #2b3948 !important;
       border-color: rgba(203, 213, 225, 0.32) !important;
       transform: translateY(-1px);
+    }
+
+    /* ===== Dark Mode Segmented Nav Switcher (เช็คชื่อ & บอสไทม์เมอร์) ===== */
+    /* แคปซูลด้านนอก (Outer Well) */
+    body.neo-dark header div[class*="bg-slate-900/95"],
+    body.neo-dark header div[class*="bg-slate-900"] {
+      background: #172028 !important;
+      background-image: none !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      box-shadow: inset 4px 4px 8px rgba(10, 15, 20, 0.65), inset -4px -4px 8px rgba(255, 255, 255, 0.025) !important;
+      border-radius: 16px !important;
+    }
+
+    /* ปุ่มที่กำลังเลือกใช้งาน (Active Tab) - Orange Neumorphic */
+    body.neo-dark #nav-tab-scoring.bg-gradient-to-r,
+    body.neo-dark #nav-tab-boss-timer.bg-gradient-to-r {
+      background: linear-gradient(145deg, #f97316, #c2410c) !important;
+      background-image: linear-gradient(145deg, #f97316, #c2410c) !important;
+      border: 1px solid rgba(253, 186, 116, 0.5) !important;
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+      box-shadow: 5px 5px 14px rgba(10, 14, 20, 0.55), -3px -3px 8px rgba(255, 255, 255, 0.04), 0 0 16px rgba(249, 115, 22, 0.45) !important;
+      border-radius: 13px !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    body.neo-dark #nav-tab-scoring.bg-gradient-to-r i,
+    body.neo-dark #nav-tab-boss-timer.bg-gradient-to-r i {
+      color: #ffffff !important;
+    }
+
+    /* ปุ่มที่ไม่ได้เลือก (Inactive Tab) */
+    body.neo-dark #nav-tab-scoring:not(.bg-gradient-to-r),
+    body.neo-dark #nav-tab-boss-timer:not(.bg-gradient-to-r) {
+      background: transparent !important;
+      background-image: none !important;
+      border: 1px solid transparent !important;
+      box-shadow: none !important;
+      color: #94a3b8 !important;
+      -webkit-text-fill-color: #94a3b8 !important;
+      border-radius: 13px !important;
+    }
+
+    body.neo-dark #nav-tab-scoring:not(.bg-gradient-to-r):hover,
+    body.neo-dark #nav-tab-boss-timer:not(.bg-gradient-to-r):hover {
+      background: rgba(255, 255, 255, 0.04) !important;
+      color: #f1f5f9 !important;
+      -webkit-text-fill-color: #f1f5f9 !important;
+    }
+
+    /* ตัวเลขนับบอสที่เกิดบนปุ่ม (Boss Alive Badge) */
+    body.neo-dark #badge-boss-alive-count {
+      background: #ef4444 !important;
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.65) !important;
+    }
+
+    /* ===== Dark Mode Week Tabs Bar (แถบสลับรอบสัปดาห์) ===== */
+    /* แคปซูลด้านนอก (Outer Well) */
+    body.neo-dark #week-tabs-bar {
+      background: #172028 !important;
+      background-image: none !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      box-shadow: inset 4px 4px 8px rgba(10, 15, 20, 0.65), inset -4px -4px 8px rgba(255, 255, 255, 0.025) !important;
+      border-radius: 9999px !important;
+      padding: 3px !important;
+    }
+
+    /* ปุ่มสัปดาห์ที่เลือกอยู่ (Active Week Tab) - Orange Neumorphic */
+    body.neo-dark #week-tabs-bar div[class*="from-amber-"] {
+      background: linear-gradient(145deg, #f97316, #c2410c) !important;
+      background-image: linear-gradient(145deg, #f97316, #c2410c) !important;
+      border: 1px solid rgba(253, 186, 116, 0.5) !important;
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+      box-shadow: 4px 4px 10px rgba(10, 14, 20, 0.5), -2px -2px 6px rgba(255, 255, 255, 0.04), 0 0 12px rgba(249, 115, 22, 0.4) !important;
+      border-radius: 9999px !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    body.neo-dark #week-tabs-bar div[class*="from-amber-"] i,
+    body.neo-dark #week-tabs-bar div[class*="from-amber-"] span {
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+    }
+
+    /* ปุ่มสัปดาห์ที่ไม่ได้เลือก (Inactive Week Tab) */
+    body.neo-dark #week-tabs-bar div:not([class*="from-amber-"]) {
+      background: transparent !important;
+      background-image: none !important;
+      border: 1px solid transparent !important;
+      box-shadow: none !important;
+      color: #94a3b8 !important;
+      -webkit-text-fill-color: #94a3b8 !important;
+      border-radius: 9999px !important;
+      transition: background-color 0.2s ease, color 0.2s ease !important;
+    }
+
+    body.neo-dark #week-tabs-bar div:not([class*="from-amber-"]):hover {
+      background: rgba(255, 255, 255, 0.05) !important;
+      color: #f1f5f9 !important;
+      -webkit-text-fill-color: #f1f5f9 !important;
     }
 
     /* ===== Universal Dark Neumorphic Modal Interiors (ทุก Modal ทุกฟังก์ชัน) ===== */
@@ -3266,10 +3374,10 @@
     body.neo-dark [id$="-modal"] span[class*="bg-amber-"],
     body.neo-dark [id$="-modal"] span[class*="bg-orange-"],
     body.neo-dark [id$="-modal"] span[class*="bg-yellow-"] {
-      background: rgba(251, 191, 36, 0.18) !important;
+      background: rgba(249, 115, 22, 0.18) !important;
       background-image: none !important;
-      color: #fde68a !important;
-      border-color: rgba(251, 191, 36, 0.35) !important;
+      color: #fb923c !important;
+      border-color: rgba(249, 115, 22, 0.35) !important;
     }
 
     body.neo-dark [id$="-modal"] span[class*="bg-purple-"],
@@ -21688,7 +21796,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=7.6"></script>
+  <script src="boss_timer.js?v=7.7"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
@@ -21763,6 +21871,7 @@ Output strictly valid JSON with no markdown formatting.`;
 </body>
 
 </html>
+
 
 
 
