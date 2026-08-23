@@ -1,5 +1,5 @@
 {
-  "version": "1.4.3",
-  "buildTime": 1787103000000,
-  "releaseNotes": "One-way Google Sheets 1-minute auto backup"
+  "version": "1.4.4",
+  "buildTime": 1787104000000,
+  "releaseNotes": "Add duplicate check prevention and fuzzy matching to AI squad attendance scanner"
 }

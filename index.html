@@ -11574,14 +11574,12 @@
               .map(m => m.name.replace(/^models\//, ''));
 
             if (available.length > 0) {
-              // Priority: 3.5-flash > 3.6-flash > 3.7-flash > 3-flash > 3.1-flash > flash-latest > any flash > first available
+              // Priority: 2.5-flash > 2.0-flash > 1.5-flash-latest > 1.5-flash > flash > first available
               const preferred =
-                available.find(m => /gemini-3\.5-flash/i.test(m)) ||
-                available.find(m => /gemini-3\.6-flash/i.test(m)) ||
-                available.find(m => /gemini-3\.7-flash/i.test(m)) ||
-                available.find(m => /gemini-3-flash/i.test(m)) ||
-                available.find(m => /gemini-3\.1-flash/i.test(m)) ||
-                available.find(m => /gemini-flash-latest/i.test(m)) ||
+                available.find(m => /gemini-2\.5-flash/i.test(m)) ||
+                available.find(m => /gemini-2\.0-flash/i.test(m)) ||
+                available.find(m => /gemini-1\.5-flash-latest/i.test(m)) ||
+                available.find(m => /gemini-1\.5-flash/i.test(m)) ||
                 available.find(m => /flash/i.test(m)) ||
                 available[0];
 
@@ -11598,7 +11596,7 @@
       }
 
       // Fallback defaults
-      return { apiVer: 'v1beta', model: 'gemini-3.5-flash' };
+      return { apiVer: 'v1beta', model: 'gemini-1.5-flash' };
     }
 
     // Universal Gemini Vision Caller with Model Discovery & Auto-Fallback
@@ -11608,15 +11606,12 @@
 
       const candidateList = [
         { apiVer: discovered.apiVer, model: discovered.model },
-        { apiVer: 'v1beta', model: 'gemini-3.5-flash' },
-        { apiVer: 'v1beta', model: 'gemini-3.6-flash' },
-        { apiVer: 'v1beta', model: 'gemini-3.7-flash' },
-        { apiVer: 'v1beta', model: 'gemini-3-flash-preview' },
-        { apiVer: 'v1beta', model: 'gemini-3.1-flash-lite' },
-        { apiVer: 'v1', model: 'gemini-3.5-flash' },
-        { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' },
+        { apiVer: 'v1beta', model: 'gemini-2.0-flash' },
         { apiVer: 'v1beta', model: 'gemini-1.5-flash' },
-        { apiVer: 'v1', model: 'gemini-1.5-flash' }
+        { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' },
+        { apiVer: 'v1', model: 'gemini-1.5-flash' },
+        { apiVer: 'v1beta', model: 'gemini-2.5-flash' },
+        { apiVer: 'v1beta', model: 'gemini-1.5-pro' }
       ];
 
       let lastError = null;
@@ -11729,6 +11724,37 @@
       return checked.filter(v => !Number.isNaN(v) && v >= 0 && v < ACTIVITIES.length);
     }
 
+    function normalizeMemberNameForMatch(name) {
+      return String(name || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[\s\-_丶、,.:;'"~`!@#$%^&*()[\]{}|\\/+=]+/g, '');
+    }
+
+    function checkMemberAlreadyCheckedForActivities(guildMember, selectedActivities) {
+      if (!guildMember || !Array.isArray(selectedActivities) || selectedActivities.length === 0) return false;
+      ensureMemberWeeklyData(guildMember);
+      const wChecks = guildMember.weeklyChecks && guildMember.weeklyChecks[currentWeekNumber]
+        ? guildMember.weeklyChecks[currentWeekNumber] : [];
+      return selectedActivities.every(actIdx => Boolean(wChecks[actIdx]));
+    }
+
+    function handleSquadActivityChange() {
+      const selectedActivities = getSelectedSquadActivities();
+      detectedSquadItems.forEach(item => {
+        if (item.member) {
+          const wasAlreadyChecked = item.alreadyChecked;
+          item.alreadyChecked = checkMemberAlreadyCheckedForActivities(item.member, selectedActivities);
+          if (item.alreadyChecked) {
+            item.selected = false; // Do not select if already checked
+          } else if (wasAlreadyChecked && !item.alreadyChecked) {
+            item.selected = true;
+          }
+        }
+      });
+      renderSquadItemsListUI();
+    }
+
     function populateSquadActivityOptions() {
       const container = document.getElementById('squad-activity-options');
       if (!container || !Array.isArray(ACTIVITIES)) return;
@@ -11742,7 +11768,7 @@
         const label = `${act.shortName || act.name || 'Boss'} • ${act.day || '-'} • ${act.weight || 0}%`;
         return `
           <label class="flex items-center gap-2 p-2.5 bg-slate-900/80 border border-slate-700 rounded-xl cursor-pointer hover:border-indigo-500/60 transition">
-            <input type="checkbox" name="squad-activity-checkbox" value="${idx}" class="accent-indigo-500" ${checked} onchange="updateSquadSelectionSummary()">
+            <input type="checkbox" name="squad-activity-checkbox" value="${idx}" class="accent-indigo-500" ${checked} onchange="handleSquadActivityChange()">
             <span class="font-bold text-slate-200 text-[11px]">${escapeHtml(label)}</span>
           </label>
         `;
@@ -11828,7 +11854,7 @@
             const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
-            const ctx = canvas.getContext('2d');
+            ctx = canvas.getContext('2d');
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, width, height);
             ctx.drawImage(img, 0, 0, width, height);
@@ -11936,6 +11962,7 @@ Output strictly valid JSON with no markdown wrapping:
         ? data.confidenceByName : {};
       detectedSquadItems = [];
 
+      const selectedActivities = getSelectedSquadActivities();
       let itemCounter = 0;
 
       squads.forEach((sq, sqIdx) => {
@@ -11946,11 +11973,16 @@ Output strictly valid JSON with no markdown wrapping:
           const cleanName = String(rawName).trim();
           if (!cleanName) return;
 
+          const cleanNorm = normalizeMemberNameForMatch(cleanName);
           const guildMember = members.find(m => {
             const cName = (m.characterName || m.name || '').trim();
+            const cNorm = normalizeMemberNameForMatch(cName);
             return cName.toLowerCase() === cleanName.toLowerCase() ||
-              cName.replace(/\s+/g, '').toLowerCase() === cleanName.replace(/\s+/g, '').toLowerCase();
+              cName.replace(/\s+/g, '').toLowerCase() === cleanName.replace(/\s+/g, '').toLowerCase() ||
+              (cNorm && cleanNorm && cNorm === cleanNorm);
           });
+
+          const alreadyChecked = guildMember ? checkMemberAlreadyCheckedForActivities(guildMember, selectedActivities) : false;
 
           const itemId = `squad_item_${itemCounter++}`;
           const confidence = Math.max(0, Math.min(100, Number(detectedConfidenceByName[cleanName]) || 0));
@@ -11960,7 +11992,8 @@ Output strictly valid JSON with no markdown wrapping:
             rawName: cleanName,
             member: guildMember || null,
             confidence,
-            selected: Boolean(guildMember) // Automatically select all recognized guild members!
+            alreadyChecked,
+            selected: Boolean(guildMember && !alreadyChecked) // If already checked, do not duplicate check!
           });
         });
       });
@@ -12003,9 +12036,20 @@ Output strictly valid JSON with no markdown wrapping:
 
           const confidenceLabel = item.confidence > 0 ? `${item.confidence}%` : 'ตรวจสอบเอง';
           const confidenceClass = item.confidence >= 80 ? 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10' : 'text-amber-300 border-amber-500/30 bg-amber-500/10';
-          const cardClass = item.selected
-            ? 'bg-indigo-950/40 border-indigo-500/50 shadow-sm'
-            : 'bg-slate-950/60 border-slate-800 opacity-60';
+          
+          let cardClass = '';
+          let statusBadgeHtml = '';
+
+          if (item.alreadyChecked) {
+            cardClass = 'bg-slate-900/50 border-emerald-500/40';
+            statusBadgeHtml = '<span class="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shrink-0"><i class="fa-solid fa-circle-check mr-1"></i>ติ๊กแล้ว 🟢 (ข้าม)</span>';
+          } else if (item.selected) {
+            cardClass = 'bg-indigo-950/40 border-indigo-500/50 shadow-sm';
+            statusBadgeHtml = '<span class="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shrink-0">รอติ๊กเพิ่ม ➕</span>';
+          } else {
+            cardClass = 'bg-slate-950/60 border-slate-800 opacity-60';
+            statusBadgeHtml = '<span class="px-2 py-0.5 rounded-full text-[9.5px] font-medium bg-slate-800 text-slate-400 border border-slate-700 shrink-0">ไม่ติ๊ก</span>';
+          }
 
           html += `
             <div class="p-2.5 rounded-xl border ${cardClass} flex items-center justify-between gap-2 transition cursor-pointer hover:border-indigo-400"
@@ -12022,15 +12066,14 @@ Output strictly valid JSON with no markdown wrapping:
                   <div class="text-[10px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
                     <i class="fa-solid fa-shield text-[9px] text-slate-500"></i>
                     <span>${escapeHtml(guildName)}</span>
+                    ${item.alreadyChecked ? '<span class="text-emerald-400 font-bold ml-1">• มีคะแนนบอสนี้แล้ว</span>' : ''}
                   </div>
                   <div class="text-[9px] mt-1"><span class="px-1.5 py-0.5 rounded-full border ${confidenceClass}">ความมั่นใจ ${confidenceLabel}</span></div>
                 </div>
               </div>
 
               <div>
-                ${item.selected
-              ? '<span class="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shrink-0">เลือกแล้ว ✅</span>'
-              : '<span class="px-2 py-0.5 rounded-full text-[9.5px] font-medium bg-slate-800 text-slate-400 border border-slate-700 shrink-0">ไม่ติ๊ก</span>'}
+                ${statusBadgeHtml}
               </div>
             </div>
           `;
@@ -12082,12 +12125,16 @@ Output strictly valid JSON with no markdown wrapping:
         return;
       }
 
+      const selectedActivities = getSelectedSquadActivities();
+      const alreadyChecked = checkMemberAlreadyCheckedForActivities(guildMember, selectedActivities);
+
       detectedSquadItems.push({
         id: `squad_item_${Date.now()}`,
         squadNum: 1,
         rawName: chosenName,
         member: guildMember,
-        selected: true
+        alreadyChecked,
+        selected: !alreadyChecked
       });
 
       select.value = '';
@@ -12101,18 +12148,24 @@ Output strictly valid JSON with no markdown wrapping:
       const confirmBtnText = document.getElementById('btn-confirm-squad-check-text');
 
       const selectedItems = detectedSquadItems.filter(it => it.selected);
+      const alreadyCheckedItems = detectedSquadItems.filter(it => it.alreadyChecked);
       const totalCount = detectedSquadItems.length;
       const selectedCount = selectedItems.length;
+      const alreadyCheckedCount = alreadyCheckedItems.length;
 
       if (summaryBadge) {
-        summaryBadge.textContent = `เลือกแล้ว ${selectedCount} / ${totalCount} คน`;
+        if (alreadyCheckedCount > 0) {
+          summaryBadge.textContent = `รอติ๊กเพิ่ม ${selectedCount} คน (ข้ามคนที่ติ๊กแล้ว ${alreadyCheckedCount} คน) / ทั้งหมด ${totalCount} คน`;
+        } else {
+          summaryBadge.textContent = `เลือกแล้ว ${selectedCount} / ${totalCount} คน`;
+        }
       }
 
       if (confirmBtn) {
         confirmBtn.disabled = selectedCount === 0;
       }
       if (confirmBtnText) {
-        confirmBtnText.textContent = `ยืนยันติ๊กถูกให้สมาชิกที่เลือก (${selectedCount} คน)`;
+        confirmBtnText.textContent = `ยืนยันติ๊กถูกให้สมาชิก (${selectedCount} คน)`;
       }
     }
 
@@ -12144,19 +12197,26 @@ Output strictly valid JSON with no markdown wrapping:
       const actNames = selectedActivities.map(idx => ACTIVITIES[idx]?.shortName || ACTIVITIES[idx]?.name || `บอส ${idx + 1}`);
 
       let affectedCount = 0;
+      let alreadyCheckedCount = 0;
+
       selectedItems.forEach(item => {
         const targetName = item.member.characterName || item.member.name;
         const m = members.find(mem => (mem.characterName || mem.name) === targetName);
         if (m) {
           ensureMemberWeeklyData(m);
+          let wasModified = false;
           selectedActivities.forEach(actIdx => {
-            m.checks[actIdx] = true;
-            if (!Array.isArray(m.weeklyChecks[currentWeekNumber])) {
-              m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
+            if (!m.weeklyChecks[currentWeekNumber][actIdx]) {
+              m.weeklyChecks[currentWeekNumber][actIdx] = true;
+              m.checks[actIdx] = true;
+              wasModified = true;
             }
-            m.weeklyChecks[currentWeekNumber][actIdx] = true;
           });
-          affectedCount++;
+          if (wasModified) {
+            affectedCount++;
+          } else {
+            alreadyCheckedCount++;
+          }
         }
       });
 
@@ -12169,6 +12229,7 @@ Output strictly valid JSON with no markdown wrapping:
           name: item.rawName,
           memberId: item.member ? item.member.id : null,
           confidence: item.confidence || 0,
+          alreadyChecked: Boolean(item.alreadyChecked),
           selected: Boolean(item.selected)
         })),
         affectedCount
@@ -12183,11 +12244,15 @@ Output strictly valid JSON with no markdown wrapping:
         addAuditLog(
           'batch',
           `AI สแกนรูปชุมนุมติ๊กบอส (${selectedActivities.length} ตัว)`,
-          `สแกนจากรูปภาพจัดการชุมนุม | ติ๊กถูกสำเร็จ: ${affectedCount} คน | ${getWeekName(currentWeekNumber)} | บอส: ${actNames.join(', ')}`
+          `สแกนจากรูปภาพจัดการชุมนุม | ติ๊กถูกสำเร็จ: ${affectedCount} คน | ข้ามคนที่ติ๊กแล้ว: ${alreadyCheckedCount} คน | ${getWeekName(currentWeekNumber)} | บอส: ${actNames.join(', ')}`
         );
       }
 
-      showToast(`📸 ติ๊กถูกบอส ${actNames.join(', ')} ให้สมาชิก ${affectedCount} คน เรียบร้อยแล้ว! 🎉`, 'success');
+      if (affectedCount > 0) {
+        showToast(`📸 ติ๊กถูกบอส ${actNames.join(', ')} ให้สมาชิกใหม่ ${affectedCount} คน เรียบร้อยแล้ว! 🎉`, 'success');
+      } else {
+        showToast(`ℹ️ สมาชิกที่เลือกมีคะแนนบอส ${actNames.join(', ')} ครบอยู่แล้ว (ไม่มีการติ๊กซ้ำ)`, 'info');
+      }
       if (typeof playChime === 'function') playChime();
     }
 

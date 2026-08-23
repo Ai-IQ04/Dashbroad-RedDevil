@@ -3148,12 +3148,10 @@ async function discoverActiveGeminiModel(apiKey) {
         if (available.length > 0) {
           // Priority: 3.5-flash > 3.6-flash > 3.7-flash > 3-flash > 3.1-flash > flash-latest > any flash > first available
           const preferred =
-            available.find(m => /gemini-3\.5-flash/i.test(m)) ||
-            available.find(m => /gemini-3\.6-flash/i.test(m)) ||
-            available.find(m => /gemini-3\.7-flash/i.test(m)) ||
-            available.find(m => /gemini-3-flash/i.test(m)) ||
-            available.find(m => /gemini-3\.1-flash/i.test(m)) ||
-            available.find(m => /gemini-flash-latest/i.test(m)) ||
+            available.find(m => /gemini-2\.5-flash/i.test(m)) ||
+            available.find(m => /gemini-2\.0-flash/i.test(m)) ||
+            available.find(m => /gemini-1\.5-flash-latest/i.test(m)) ||
+            available.find(m => /gemini-1\.5-flash/i.test(m)) ||
             available.find(m => /flash/i.test(m)) ||
             available[0];
 
@@ -3170,7 +3168,7 @@ async function discoverActiveGeminiModel(apiKey) {
   }
 
   // Fallback defaults
-  return { apiVer: 'v1beta', model: 'gemini-3.5-flash' };
+  return { apiVer: 'v1beta', model: 'gemini-1.5-flash' };
 }
 
 // Universal Gemini Vision Caller with Model Discovery & Auto-Fallback
@@ -3180,15 +3178,12 @@ async function callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiK
 
   const candidateList = [
     { apiVer: discovered.apiVer, model: discovered.model },
-    { apiVer: 'v1beta', model: 'gemini-3.5-flash' },
-    { apiVer: 'v1beta', model: 'gemini-3.6-flash' },
-    { apiVer: 'v1beta', model: 'gemini-3.7-flash' },
-    { apiVer: 'v1beta', model: 'gemini-3-flash-preview' },
-    { apiVer: 'v1beta', model: 'gemini-3.1-flash-lite' },
-    { apiVer: 'v1', model: 'gemini-3.5-flash' },
-    { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' },
+    { apiVer: 'v1beta', model: 'gemini-2.0-flash' },
     { apiVer: 'v1beta', model: 'gemini-1.5-flash' },
-    { apiVer: 'v1', model: 'gemini-1.5-flash' }
+    { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' },
+    { apiVer: 'v1', model: 'gemini-1.5-flash' },
+    { apiVer: 'v1beta', model: 'gemini-2.5-flash' },
+    { apiVer: 'v1beta', model: 'gemini-1.5-pro' }
   ];
 
   let lastError = null;
