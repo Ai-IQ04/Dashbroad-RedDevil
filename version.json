@@ -1,5 +1,5 @@
 {
-  "version": "1.2.1",
-  "buildTime": 1787080000000,
-  "releaseNotes": "Add boss table view mode and enhance status badges"
+  "version": "1.2.2",
+  "buildTime": 1787081000000,
+  "releaseNotes": "Clean dark table view without row glow animations"
 }
