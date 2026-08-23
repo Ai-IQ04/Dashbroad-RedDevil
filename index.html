@@ -4010,6 +4010,13 @@
               <span data-i18n="btn_batch_guild_check">จัดการติ๊ก</span>
             </button>
 
+            <button id="btn-reorder-activities" onclick="openReorderActivitiesModal()"
+              class="apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
+              title="จัดเรียงลำดับคอลัมน์บอส / สลับตำแหน่งบอส">
+              <i class="fa-solid fa-arrows-up-down text-xs"></i>
+              <span>ลำดับคอลัมน์</span>
+            </button>
+
             <button id="btn-clear-checks" onclick="openClearChecksModal()"
               class="hidden apple-btn apple-btn-burgundy inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
               <i class="fa-solid fa-broom text-xs"></i>
@@ -5909,8 +5916,8 @@
       { key: 'arena_sun', name: 'Arena #Sun', day: 'Sun', shortName: 'Arena', weight: 8 },
       { key: 'rakajeth_sun', name: 'Rakajeth #Sun', day: 'Sun', shortName: 'Raka', weight: 8 },
       { key: 'neva_sun', name: 'Neva #Sun', day: 'Sun', shortName: 'Neva', weight: 4 },
+      { key: 'tumier_sun', name: 'Tumier #Sun', day: 'Sun', shortName: 'Tumi', weight: 8 },
       { key: 'icarutia_tue', name: 'Icarutia #Tue', day: 'Tue', shortName: 'Icar', weight: 4 },
-      { key: 'tumier_tue', name: 'Tumier #Tue', day: 'Tue', shortName: 'Tumi', weight: 8 },
       { key: 'libitina_tue', name: 'Libitina #Tue', day: 'Tue', shortName: 'Libi', weight: 8 },
       { key: 'rakajeth_tue', name: 'Rakajeth #Tue', day: 'Tue', shortName: 'Raka', weight: 8 },
       { key: 'morti_wed', name: 'Morti #Wed', day: 'Wed', shortName: 'Morti', weight: 4 },
@@ -5965,6 +5972,20 @@
     }
 
     let rawActivities = parseLocalStorageJson('guild_activities_data', INITIAL_ACTIVITIES);
+    // Auto-migrate if old activities had tumier as index 4 instead of index 3
+    if (Array.isArray(rawActivities) && rawActivities.length >= 5) {
+      const idxTumi = rawActivities.findIndex(a => (a.shortName || '').toLowerCase() === 'tumi' || (a.key || '').includes('tumi'));
+      const idxIcarTue = rawActivities.findIndex(a => (a.shortName || '').toLowerCase() === 'icar' && ((a.day || '').toLowerCase().includes('tue') || (a.key || '').includes('tue')));
+      if (idxTumi > idxIcarTue && idxIcarTue >= 0) {
+        const [tumiItem] = rawActivities.splice(idxTumi, 1);
+        tumiItem.day = 'Sun';
+        tumiItem.key = 'tumier_sun';
+        tumiItem.name = 'Tumier #Sun';
+        rawActivities.splice(idxIcarTue, 0, tumiItem);
+        localStorage.setItem('guild_activities_data', JSON.stringify(rawActivities));
+      }
+    }
+
     let ACTIVITIES = rawActivities.map(act => ({
       ...act,
       day: normalizeDay(act.day)
@@ -14397,6 +14418,146 @@ Output strictly valid JSON with no markdown formatting.`;
       showToast(t('toast_activity_deleted', { name: act.shortName }), "info");
     }
 
+    // ================= ⚙️ ระบบจัดการและจัดเรียงลำดับคอลัมน์บอส (Activity Column Manager) =================
+    let tempReorderActivities = [];
+
+    function openReorderActivitiesModal() {
+      if (!isGuildScoringAdmin()) {
+        showToast('เฉพาะ Admin กิลด์เท่านั้นที่สามารถจัดเรียงลำดับคอลัมน์ได้', 'warning');
+        if (!isAdmin) openAdminEmailModal();
+        return;
+      }
+      tempReorderActivities = JSON.parse(JSON.stringify(ACTIVITIES));
+      renderReorderActivitiesListUI();
+      const modal = document.getElementById('reorder-activities-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeReorderActivitiesModal() {
+      const modal = document.getElementById('reorder-activities-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function renderReorderActivitiesListUI() {
+      const container = document.getElementById('reorder-activities-list');
+      if (!container) return;
+
+      container.innerHTML = tempReorderActivities.map((act, idx) => {
+        const normDay = normalizeDay(act.day);
+        const dayLabel = getDayDisplayName(normDay, currentLang);
+        const colorInfo = getDayColorInfo(normDay);
+
+        const isFirst = idx === 0;
+        const isLast = idx === tempReorderActivities.length - 1;
+
+        return `
+          <div class="flex items-center justify-between p-2.5 bg-slate-950/80 border border-slate-800 hover:border-slate-700 rounded-2xl gap-2 transition">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-6 h-6 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center font-mono font-bold text-[11px] shrink-0 border border-slate-700">
+                ${idx + 1}
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-black ${colorInfo.badgeBg} shrink-0">
+                ${dayLabel}
+              </span>
+              <div class="min-w-0">
+                <span class="font-black text-slate-100 text-xs truncate block">${escapeHtml(act.name || act.shortName)}</span>
+                <span class="text-[10px] text-slate-400 font-mono">ชื่อย่อ: ${escapeHtml(act.shortName)} • คะแนน: ${act.weight || 0}%</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" onclick="moveActivityStep(${idx}, -1)" ${isFirst ? 'disabled' : ''}
+                class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-amber-500 disabled:opacity-25 disabled:cursor-not-allowed text-slate-300 hover:text-slate-950 border border-slate-700 flex items-center justify-center transition active:scale-95"
+                title="เลื่อนขึ้น">
+                <i class="fa-solid fa-arrow-up text-xs"></i>
+              </button>
+              <button type="button" onclick="moveActivityStep(${idx}, 1)" ${isLast ? 'disabled' : ''}
+                class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-amber-500 disabled:opacity-25 disabled:cursor-not-allowed text-slate-300 hover:text-slate-950 border border-slate-700 flex items-center justify-center transition active:scale-95"
+                title="เลื่อนลง">
+                <i class="fa-solid fa-arrow-down text-xs"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function moveActivityStep(index, direction) {
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= tempReorderActivities.length) return;
+      const item = tempReorderActivities.splice(index, 1)[0];
+      tempReorderActivities.splice(targetIndex, 0, item);
+      renderReorderActivitiesListUI();
+    }
+
+    function resetDefaultActivitiesOrder() {
+      if (!confirm('ต้องการคืนค่าลำดับคอลัมน์กลับเป็นค่าเริ่มต้นดั้งเดิมของระบบหรือไม่?')) return;
+      tempReorderActivities = JSON.parse(JSON.stringify(INITIAL_ACTIVITIES));
+      renderReorderActivitiesListUI();
+    }
+
+    function saveReorderedActivities() {
+      if (!Array.isArray(tempReorderActivities) || tempReorderActivities.length === 0) return;
+
+      const oldActivities = [...ACTIVITIES];
+      const newActivities = [...tempReorderActivities];
+
+      // Build mapping from old activity key to old index
+      const oldKeyToOldIdx = {};
+      oldActivities.forEach((act, idx) => {
+        const key = act.key || act.name;
+        oldKeyToOldIdx[key] = idx;
+      });
+
+      // Migrate every member's attendance checks safely
+      members.forEach(member => {
+        ensureMemberWeeklyData(member);
+        const oldChecks = Array.isArray(member.checks) ? [...member.checks] : [];
+        const newChecks = new Array(newActivities.length).fill(false);
+        newActivities.forEach((newAct, newIdx) => {
+          const key = newAct.key || newAct.name;
+          const oldIdx = oldKeyToOldIdx[key];
+          if (oldIdx !== undefined && oldChecks[oldIdx] !== undefined) {
+            newChecks[newIdx] = Boolean(oldChecks[oldIdx]);
+          }
+        });
+        member.checks = newChecks;
+
+        if (member.weeklyChecks) {
+          for (let w = 1; w <= 4; w++) {
+            const oldW = Array.isArray(member.weeklyChecks[w]) ? [...member.weeklyChecks[w]] : [];
+            const newW = new Array(newActivities.length).fill(false);
+            newActivities.forEach((newAct, newIdx) => {
+              const key = newAct.key || newAct.name;
+              const oldIdx = oldKeyToOldIdx[key];
+              if (oldIdx !== undefined && oldW[oldIdx] !== undefined) {
+                newW[newIdx] = Boolean(oldW[oldIdx]);
+              }
+            });
+            member.weeklyChecks[w] = newW;
+          }
+        }
+      });
+
+      ACTIVITIES = newActivities;
+      localStorage.setItem('guild_activities_data', JSON.stringify(ACTIVITIES));
+      if (fbDb) {
+        fbDb.ref('guild_app/activities_data').set(ACTIVITIES);
+      }
+      saveData();
+      renderTable();
+      updateKPIs();
+      closeReorderActivitiesModal();
+      showToast('จัดเรียงลำดับคอลัมน์บอสเรียบร้อยแล้ว! 🎉', 'success');
+      if (typeof playChime === 'function') playChime();
+    }
+
     // ================= วาดตารางแสดงผล (Render UI) =================
     function renderTable() {
       renderTableHeader();
@@ -20170,6 +20331,59 @@ Output strictly valid JSON with no markdown formatting.`;
     </div>
   </div>
 
+  <!-- ================= ⚙️ Modal: จัดการและเรียงลำดับคอลัมน์บอส (Reorder Activities Modal) ================= -->
+  <div id="reorder-activities-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-4 animate-fade-in"
+    onclick="closeReorderActivitiesModal()">
+    <div
+      class="apple-modal-box relative w-full max-w-xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-amber-500/50 rounded-3xl p-5 sm:p-6 shadow-2xl relative animate-scale-up max-h-[92vh] flex flex-col my-auto"
+      onclick="event.stopPropagation()">
+      <button type="button" onclick="closeReorderActivitiesModal()"
+        class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <!-- Header -->
+      <div class="flex items-center gap-3 pb-3 border-b border-slate-800 shrink-0">
+        <div
+          class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-500 text-slate-950 flex items-center justify-center text-xl border border-amber-400/40 shadow-md">
+          <i class="fa-solid fa-arrows-up-down"></i>
+        </div>
+        <div>
+          <h3 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
+            <span>จัดการเรียงลำดับคอลัมน์บอส / กิจกรรม</span>
+          </h3>
+          <p class="text-[11px] text-slate-400 mt-0.5">กดปุ่ม ⬆️ / ⬇️ เพื่อสลับตำแหน่งคอลัมน์บอสในตารางได้ตามต้องการ</p>
+        </div>
+      </div>
+
+      <!-- Body Scrollable List -->
+      <div class="flex-1 overflow-y-auto py-3 space-y-2 pr-1 text-xs" id="reorder-activities-list">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="flex items-center justify-between gap-2 pt-3 border-t border-slate-800 shrink-0">
+        <button type="button" onclick="resetDefaultActivitiesOrder()"
+          class="py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"
+          title="คืนค่าเป็นลำดับตั้งต้นดั้งเดิมของระบบ">
+          <i class="fa-solid fa-rotate-left"></i> <span>คืนค่าเริ่มต้น</span>
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeReorderActivitiesModal()"
+            class="py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">
+            ยกเลิก
+          </button>
+          <button type="button" onclick="saveReorderedActivities()"
+            class="py-2.5 px-5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/25 active:scale-95 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-floppy-disk"></i> <span>บันทึกลำดับคอลัมน์</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ================= 🔒 Modal: ยืนยัน / ตั้งรหัส PIN 4 หลักประจำตัวละคร ================= -->
   <div id="member-pin-modal"
     class="hidden fixed inset-0 z-[70] bg-black/85 flex items-center justify-center p-3 sm:p-4 backdrop-blur-md overflow-y-auto"
@@ -21942,7 +22156,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=8.4"></script>
+  <script src="boss_timer.js?v=8.5"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {

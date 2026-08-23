@@ -1,5 +1,5 @@
 {
-  "version": "1.2.5",
-  "buildTime": 1787084000000,
-  "releaseNotes": "Match boss name colors and drop shadows with tier tags in table view"
+  "version": "1.2.6",
+  "buildTime": 1787085000000,
+  "releaseNotes": "Add Activity Column Manager tool and reorder Sunday Tumi before Tuesday Icar"
 }
