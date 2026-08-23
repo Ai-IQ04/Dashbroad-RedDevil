@@ -11802,7 +11802,7 @@
     function resetSquadImageScan() {
       const dropzonePrompt = document.getElementById('squad-dropzone-prompt');
       const previewBox = document.getElementById('squad-image-preview-box');
-      const previewImg = document.getElementById('squad-image-preview');
+      const thumbnailsContainer = document.getElementById('squad-thumbnails-container');
       const statusEl = document.getElementById('squad-ai-status');
       const resultsContainer = document.getElementById('squad-results-container');
       const fileInput = document.getElementById('squad-image-file-input');
@@ -11810,7 +11810,7 @@
 
       if (dropzonePrompt) dropzonePrompt.classList.remove('hidden');
       if (previewBox) previewBox.classList.add('hidden');
-      if (previewImg) previewImg.src = '';
+      if (thumbnailsContainer) thumbnailsContainer.innerHTML = '';
       if (statusEl) statusEl.classList.add('hidden');
       if (resultsContainer) resultsContainer.classList.add('hidden');
       if (fileInput) fileInput.value = '';
@@ -11871,20 +11871,35 @@
       });
     }
 
-    function handleSquadFileSelect(file) {
-      if (!file) return;
-      processSquadImageWithGemini(file);
+    function handleSquadFileSelect(files) {
+      if (!files) return;
+      const fileList = (files instanceof FileList || Array.isArray(files))
+        ? Array.from(files)
+        : [files];
+      const validImages = fileList.filter(f => f && f.type && f.type.startsWith('image/'));
+      if (!validImages.length) return;
+      processSquadImagesWithGemini(validImages);
     }
 
-    async function processSquadImageWithGemini(file) {
+    async function processSquadImagesWithGemini(fileList) {
       const dropzonePrompt = document.getElementById('squad-dropzone-prompt');
       const previewBox = document.getElementById('squad-image-preview-box');
-      const previewImg = document.getElementById('squad-image-preview');
+      const thumbnailsContainer = document.getElementById('squad-thumbnails-container');
+      const countBadge = document.getElementById('squad-images-count-badge');
       const statusEl = document.getElementById('squad-ai-status');
       const resultsContainer = document.getElementById('squad-results-container');
 
-      if (previewImg) {
-        previewImg.src = URL.createObjectURL(file);
+      if (thumbnailsContainer) {
+        thumbnailsContainer.innerHTML = fileList.map((f, idx) => {
+          const url = URL.createObjectURL(f);
+          return `
+            <div class="relative group rounded-xl overflow-hidden border border-slate-700 w-24 h-24 sm:w-28 sm:h-28 bg-slate-950 shrink-0 shadow-sm">
+              <img src="${url}" class="w-full h-full object-cover" />
+              <span class="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/80 rounded-md text-[9px] font-mono text-indigo-300 border border-slate-700/60">ภาพ #${idx + 1}</span>
+            </div>
+          `;
+        }).join('');
+        if (countBadge) countBadge.innerHTML = `<i class="fa-solid fa-images mr-1"></i>แนบ ${fileList.length} รูปภาพ`;
         if (previewBox) previewBox.classList.remove('hidden');
         if (dropzonePrompt) dropzonePrompt.classList.add('hidden');
       }
@@ -11899,18 +11914,14 @@
       }
 
       if (statusEl) {
-        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400 mr-1.5"></i> กำลังส่งภาพให้ Google Gemini AI สแกนถอดรายชื่อสมาชิกในหน่วยชุมนุม 1-4...`;
+        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400 mr-1.5"></i> กำลังส่งภาพ (0/${fileList.length}) ให้ Google Gemini AI สแกนถอดรายชื่อสมาชิก...`;
         statusEl.classList.remove('hidden');
       }
       if (resultsContainer) resultsContainer.classList.add('hidden');
 
-      try {
-        // Optimize & compress image through Canvas for optimal Gemini processing (< 500KB)
-        const { base64Str, mimeType } = await compressImageForGemini(file, 1600, 0.88);
+      const memberRoster = members.map(m => (m.characterName || m.name || '').trim()).filter(Boolean).join(', ');
 
-        const memberRoster = members.map(m => (m.characterName || m.name || '').trim()).filter(Boolean).join(', ');
-
-        const prompt = `You are a high-precision OCR and character name extractor for the MMORPG 'LORD NINE' (LORDNINE / ลอร์ดไนน์).
+      const prompt = `You are a high-precision OCR and character name extractor for the MMORPG 'LORD NINE' (LORDNINE / ลอร์ดไนน์).
 Examine this screenshot of the in-game squad / assembly management window titled 'จัดการชุมนุม' (Squad Management).
 
 Guild member roster for reference and fuzzy spelling matching:
@@ -11939,10 +11950,66 @@ Output strictly valid JSON with no markdown wrapping:
   "confidenceByName": {"name1": 98, "name2": 72}
 }`;
 
-        const parsedData = await callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey);
-        renderSquadScanResults(parsedData);
+      const combinedSquads = [];
+      const combinedConfidence = {};
+      const seenMembers = new Set();
+      let completedCount = 0;
+
+      try {
+        const scanPromises = fileList.map(async (file, fileIdx) => {
+          try {
+            const { base64Str, mimeType } = await compressImageForGemini(file, 1600, 0.88);
+            const res = await callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey);
+            completedCount++;
+            if (statusEl) {
+              statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400 mr-1.5"></i> สแกนภาพเสร็จแล้ว (${completedCount}/${fileList.length}) กำลังประมวลผล...`;
+            }
+            return { res, fileIdx };
+          } catch (e) {
+            console.warn(`Failed scanning squad image #${fileIdx + 1}:`, e);
+            completedCount++;
+            return null;
+          }
+        });
+
+        const scanResults = await Promise.all(scanPromises);
+
+        scanResults.forEach(item => {
+          if (!item || !item.res) return;
+          const data = item.res;
+          const squads = Array.isArray(data.squads) ? data.squads : [];
+          if (data.confidenceByName && typeof data.confidenceByName === 'object') {
+            Object.assign(combinedConfidence, data.confidenceByName);
+          }
+
+          squads.forEach(sq => {
+            const sqNum = sq.squadNumber || 1;
+            let existingSq = combinedSquads.find(s => s.squadNumber === sqNum);
+            if (!existingSq) {
+              existingSq = { squadNumber: sqNum, members: [] };
+              combinedSquads.push(existingSq);
+            }
+            const mList = Array.isArray(sq.members) ? sq.members : [];
+            mList.forEach(rawName => {
+              const clean = String(rawName).trim();
+              const cleanNorm = normalizeMemberNameForMatch(clean);
+              if (clean && !seenMembers.has(cleanNorm || clean.toLowerCase())) {
+                seenMembers.add(cleanNorm || clean.toLowerCase());
+                existingSq.members.push(clean);
+              }
+            });
+          });
+        });
+
+        // Sort squads by squadNumber
+        combinedSquads.sort((a, b) => a.squadNumber - b.squadNumber);
+
+        renderSquadScanResults({
+          squads: combinedSquads,
+          confidenceByName: combinedConfidence
+        });
       } catch (err) {
-        console.error('Google Gemini Squad Scan Error:', err);
+        console.error('Google Gemini Squad Multi-Scan Error:', err);
         if (statusEl) {
           statusEl.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Google Gemini สแกนไม่สำเร็จ: ${escapeHtml(err.message || 'โปรดตรวจสอบ API Key')}</span>`;
         }
@@ -12256,26 +12323,26 @@ Output strictly valid JSON with no markdown wrapping:
       if (typeof playChime === 'function') playChime();
     }
 
-    // Global Paste Listener for AI Squad Attendance Check (when in Scoring Module)
+    // Global Paste Listener for AI Squad Attendance Check (Supports Multi-Images Paste)
     window.addEventListener('paste', e => {
       const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
       if (!items) return;
 
-      let imageFile = null;
+      const imageFiles = [];
       for (const item of items) {
         if (item.type && item.type.startsWith('image/')) {
-          imageFile = item.getAsFile();
-          break;
+          const file = item.getAsFile();
+          if (file) imageFiles.push(file);
         }
       }
 
-      if (imageFile) {
+      if (imageFiles.length > 0) {
         const nongDevilModal = document.getElementById('nong-devil-chat-modal');
         const isNongDevilOpen = nongDevilModal && !nongDevilModal.classList.contains('hidden');
 
         if (isNongDevilOpen) {
           e.preventDefault();
-          handleNongDevilFileSelect(imageFile);
+          handleNongDevilFileSelect(imageFiles[0]);
           return;
         }
 
@@ -12287,7 +12354,7 @@ Output strictly valid JSON with no markdown wrapping:
         if (canUseScoringCheck && (isSquadModalOpen || isViewingScoring)) {
           e.preventDefault();
           if (!isSquadModalOpen) openAiSquadCheckModal();
-          processSquadImageWithGemini(imageFile);
+          handleSquadFileSelect(imageFiles);
         }
       }
     });
@@ -21379,31 +21446,39 @@ Output strictly valid JSON with no markdown formatting.`;
           </div>
         </div>
 
-        <!-- Step 2: Image Dropzone & Paste Area -->
+        <!-- Step 2: Image Dropzone & Paste Area (Supports Multiple Images) -->
         <div
           class="p-3.5 bg-slate-950/80 border border-dashed border-indigo-500/40 hover:border-indigo-400 rounded-2xl text-center relative cursor-pointer group transition"
           id="squad-image-dropzone" onclick="document.getElementById('squad-image-file-input').click()">
-          <input type="file" id="squad-image-file-input" accept="image/*" class="hidden"
-            onchange="handleSquadFileSelect(this.files[0])" />
+          <input type="file" id="squad-image-file-input" accept="image/*" multiple class="hidden"
+            onchange="handleSquadFileSelect(this.files)" />
 
           <div id="squad-dropzone-prompt" class="py-4 space-y-2">
             <div
               class="w-12 h-12 mx-auto rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-2xl group-hover:scale-110 transition">
               <i class="fa-solid fa-cloud-arrow-up"></i>
             </div>
-            <div class="text-xs font-bold text-white">กดคลิกเพื่อเลือกรูปภาพ หรือกด <span
+            <div class="text-xs font-bold text-white">กดคลิกเพื่อเลือก <span class="text-indigo-300 underline underline-offset-2">รูปภาพ (เลือกพร้อมกันหลายรูปได้)</span> หรือกด <span
                 class="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 rounded-md font-mono">Ctrl
                 + V</span> เพื่อวางภาพ</div>
-            <div class="text-[11px] text-slate-400">รองรับรูปภาพหน้าจอ "จัดการชุมนุม" (หน่วย 1, 2, 3, 4)</div>
+            <div class="text-[11px] text-slate-400">รองรับรูปภาพหน้าจอ "จัดการชุมนุม" (หน่วย 1, 2, 3, 4) • แนบได้พร้อมกันหลายใบ</div>
           </div>
 
           <div id="squad-image-preview-box"
-            class="hidden relative max-h-48 rounded-xl overflow-hidden border border-slate-700 mx-auto">
-            <img id="squad-image-preview" class="max-h-48 w-full object-contain bg-slate-950" />
-            <button type="button" onclick="event.stopPropagation(); resetSquadImageScan();"
-              class="absolute top-2 right-2 px-2 py-1 bg-black/80 hover:bg-black text-rose-300 rounded-lg text-[10px] border border-rose-500/40">
-              <i class="fa-solid fa-rotate-left mr-1"></i>เปลี่ยนรูป
-            </button>
+            class="hidden relative rounded-xl overflow-hidden border border-slate-700 mx-auto p-2 bg-slate-950/90">
+            <div id="squad-thumbnails-container" class="flex flex-wrap gap-2 justify-center items-center max-h-44 overflow-y-auto p-1">
+              <!-- Multiple Image Thumbnails rendered here -->
+            </div>
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-800 text-[11px] px-1">
+              <span id="squad-images-count-badge" class="text-indigo-300 font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-images"></i>
+                <span>แนบ 1 รูปภาพ</span>
+              </span>
+              <button type="button" onclick="event.stopPropagation(); resetSquadImageScan();"
+                class="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-lg text-[10px] border border-rose-500/40 transition">
+                <i class="fa-solid fa-rotate-left mr-1"></i>เลือกรูปใหม่
+              </button>
+            </div>
           </div>
         </div>
 
