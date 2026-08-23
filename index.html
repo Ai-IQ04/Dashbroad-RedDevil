@@ -11854,7 +11854,7 @@
             const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
-            ctx = canvas.getContext('2d');
+            const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, width, height);
             ctx.drawImage(img, 0, 0, width, height);
@@ -11914,7 +11914,7 @@
       }
 
       if (statusEl) {
-        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400 mr-1.5"></i> กำลังส่งภาพ (0/${fileList.length}) ให้ Google Gemini AI สแกนถอดรายชื่อสมาชิก...`;
+        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400 mr-1.5"></i> กำลังเริ่มสแกนรูปภาพ (${fileList.length} รูป)...`;
         statusEl.classList.remove('hidden');
       }
       if (resultsContainer) resultsContainer.classList.add('hidden');
@@ -11928,8 +11928,8 @@ Guild member roster for reference and fuzzy spelling matching:
 ${memberRoster}
 
 Tasks:
-1. Identify each squad unit (หน่วย 1, หน่วย 2, หน่วย 3, หน่วย 4, etc. shown with blue/cyan numbers on the left).
-2. Extract all character names placed in each squad slot (including Chinese, Japanese, and special characters like yn官, Hanchirisu改善, Birkenstockツ, Starix死, etc.).
+1. Identify each squad unit (หน่วย 1, หน่วย 2, หน่วย 3, หน่วย 4, etc. shown with numbers/icons on the left).
+2. Extract all character names placed in each squad slot (including Chinese, Japanese, Thai, English, and special characters like yn官, Hanchirisu改善, Birkenstockツ, Starix死, etc.).
 3. Match each detected character name against the guild roster if a matching member exists.
 
 Also provide confidenceByName with a numeric confidence from 0 to 100 for every detected name.
@@ -11953,56 +11953,76 @@ Output strictly valid JSON with no markdown wrapping:
       const combinedSquads = [];
       const combinedConfidence = {};
       const seenMembers = new Set();
-      let completedCount = 0;
+      let lastError = null;
 
       try {
-        const scanPromises = fileList.map(async (file, fileIdx) => {
+        // Sequential scanning for maximum reliability and avoiding API rate limits
+        for (let i = 0; i < fileList.length; i++) {
+          const file = fileList[i];
+          if (statusEl) {
+            statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400 mr-1.5"></i> กำลังส่งภาพที่ ${i + 1}/${fileList.length} ให้ Google Gemini AI สแกน...`;
+          }
+
           try {
             const { base64Str, mimeType } = await compressImageForGemini(file, 1600, 0.88);
-            const res = await callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey);
-            completedCount++;
-            if (statusEl) {
-              statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-purple-400 mr-1.5"></i> สแกนภาพเสร็จแล้ว (${completedCount}/${fileList.length}) กำลังประมวลผล...`;
-            }
-            return { res, fileIdx };
-          } catch (e) {
-            console.warn(`Failed scanning squad image #${fileIdx + 1}:`, e);
-            completedCount++;
-            return null;
-          }
-        });
+            const data = await callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey);
 
-        const scanResults = await Promise.all(scanPromises);
-
-        scanResults.forEach(item => {
-          if (!item || !item.res) return;
-          const data = item.res;
-          const squads = Array.isArray(data.squads) ? data.squads : [];
-          if (data.confidenceByName && typeof data.confidenceByName === 'object') {
-            Object.assign(combinedConfidence, data.confidenceByName);
-          }
-
-          squads.forEach(sq => {
-            const sqNum = sq.squadNumber || 1;
-            let existingSq = combinedSquads.find(s => s.squadNumber === sqNum);
-            if (!existingSq) {
-              existingSq = { squadNumber: sqNum, members: [] };
-              combinedSquads.push(existingSq);
-            }
-            const mList = Array.isArray(sq.members) ? sq.members : [];
-            mList.forEach(rawName => {
-              const clean = String(rawName).trim();
-              const cleanNorm = normalizeMemberNameForMatch(clean);
-              if (clean && !seenMembers.has(cleanNorm || clean.toLowerCase())) {
-                seenMembers.add(cleanNorm || clean.toLowerCase());
-                existingSq.members.push(clean);
+            if (data && typeof data === 'object') {
+              if (data.confidenceByName && typeof data.confidenceByName === 'object') {
+                Object.assign(combinedConfidence, data.confidenceByName);
               }
-            });
-          });
-        });
+
+              // Robust squad list parsing
+              let parsedSquads = Array.isArray(data.squads) ? data.squads : [];
+              if (parsedSquads.length === 0) {
+                // Fallback to top-level arrays if squads array is missing
+                const fallbackList = Array.isArray(data.allMembers) ? data.allMembers :
+                  (Array.isArray(data.members) ? data.members :
+                    (Array.isArray(data.characters) ? data.characters :
+                      (Array.isArray(data.names) ? data.names : [])));
+                if (fallbackList.length > 0) {
+                  parsedSquads = [{ squadNumber: i + 1, members: fallbackList }];
+                }
+              }
+
+              parsedSquads.forEach(sq => {
+                let sqNum = parseInt(String(sq.squadNumber || sq.squad || sq.name || '').replace(/\D+/g, ''));
+                if (!sqNum || isNaN(sqNum)) sqNum = combinedSquads.length + 1;
+
+                let existingSq = combinedSquads.find(s => s.squadNumber === sqNum);
+                if (!existingSq) {
+                  existingSq = { squadNumber: sqNum, members: [] };
+                  combinedSquads.push(existingSq);
+                }
+                const mList = Array.isArray(sq.members) ? sq.members : [];
+                mList.forEach(rawName => {
+                  const clean = String(rawName).trim();
+                  const cleanNorm = normalizeMemberNameForMatch(clean);
+                  const key = cleanNorm || clean.toLowerCase();
+                  if (clean && !seenMembers.has(key)) {
+                    seenMembers.add(key);
+                    existingSq.members.push(clean);
+                  }
+                });
+              });
+            }
+          } catch (imgErr) {
+            console.warn(`Error scanning image #${i + 1}:`, imgErr);
+            lastError = imgErr;
+          }
+        }
 
         // Sort squads by squadNumber
         combinedSquads.sort((a, b) => a.squadNumber - b.squadNumber);
+
+        const totalExtracted = combinedSquads.reduce((sum, s) => sum + (s.members ? s.members.length : 0), 0);
+
+        if (totalExtracted === 0) {
+          if (statusEl) {
+            statusEl.innerHTML = `<span class="text-amber-300 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ${lastError ? escapeHtml(lastError.message) : 'AI สแกนภาพแล้วแต่ไม่พบรายชื่อตัวละคร กรุณาตรวจสอบว่าเป็นภาพหน้าต่าง "จัดการชุมนุม" หรือไม่'}</span>`;
+          }
+          return;
+        }
 
         renderSquadScanResults({
           squads: combinedSquads,

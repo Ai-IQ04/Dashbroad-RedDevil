@@ -1,5 +1,5 @@
 {
-  "version": "1.4.5",
-  "buildTime": 1787105000000,
-  "releaseNotes": "Add multi-image batch scan and smart deduplication to AI squad attendance scanner"
+  "version": "1.4.6",
+  "buildTime": 1787106000000,
+  "releaseNotes": "Fix canvas context scoping and add robust sequential multi-image OCR processing"
 }
