@@ -3035,6 +3035,46 @@
       border-color: rgba(96, 165, 250, 0.24) !important;
     }
 
+    /* Text hierarchy for personal/member summaries. */
+    body.neo-dark #member-dashboard-modal h3,
+    body.neo-dark #weekly-history-modal>div>div h3 {
+      color: #f4f7fb !important;
+    }
+
+    body.neo-dark #member-dashboard-content h4,
+    body.neo-dark #member-weekly-summary-container h4,
+    body.neo-dark #history-content-container h4 {
+      color: #8be9fd !important;
+      text-shadow: 0 0 8px rgba(139, 233, 253, 0.12);
+    }
+
+    body.neo-dark #member-dashboard-content .text-xl,
+    body.neo-dark #member-weekly-summary-container .text-base {
+      color: #f8fafc !important;
+    }
+
+    body.neo-dark #member-dashboard-content .text-emerald-300,
+    body.neo-dark #member-weekly-summary-container .text-emerald-300 {
+      color: #86efac !important;
+    }
+
+    body.neo-dark #member-dashboard-content .text-amber-300,
+    body.neo-dark #member-weekly-summary-container .text-amber-300 {
+      color: #fcd34d !important;
+    }
+
+    body.neo-dark #member-dashboard-content .text-rose-300,
+    body.neo-dark #member-weekly-summary-container .text-rose-300 {
+      color: #fda4af !important;
+    }
+
+    body.neo-dark #member-dashboard-content .text-slate-400,
+    body.neo-dark #member-dashboard-content .text-slate-500,
+    body.neo-dark #member-weekly-summary-container .text-slate-400,
+    body.neo-dark #member-weekly-summary-container .text-slate-500 {
+      color: #aebdcd !important;
+    }
+
     /* All member-menu pills use one consistent dark tone. */
     body.neo-dark #member-hub-container>button {
       background: #202a34 !important;
@@ -14662,6 +14702,7 @@ Output strictly valid JSON with no markdown formatting.`;
       const score = calculateTotalScore(checks);
       const maxScore = ACTIVITIES.reduce((sum, activity) => sum + (Number(activity.weight) || 0), 0);
       const percent = maxScore > 0 ? Math.min(100, (score / maxScore) * 100) : 0;
+      const scoreTone = percent >= 80 ? 'text-emerald-300' : percent >= 50 ? 'text-amber-300' : 'text-rose-300';
       const activeCount = calculateActiveCount(checks);
       const eligible = isEligible(checks);
       const ranked = sourceMembers.slice().sort((a, b) =>
@@ -14698,7 +14739,7 @@ Output strictly valid JSON with no markdown formatting.`;
             <p class="text-[11px] text-slate-400 mt-0.5">${escapeHtml(member.guild || '-')} · CP ${Number(member.cp || 0).toLocaleString()}</p>
           </div>
           <div class="text-right">
-            <div class="text-2xl font-black text-white font-mono">${score}<span class="text-xs text-slate-400">/${maxScore}</span></div>
+            <div class="text-2xl font-black ${scoreTone} font-mono">${score}<span class="text-xs text-slate-400">/${maxScore}</span></div>
             <div class="text-[11px] ${eligible ? 'text-emerald-400' : 'text-amber-300'} font-semibold">${eligible ? 'ผ่านเกณฑ์' : 'ยังไม่ผ่านเกณฑ์'}</div>
           </div>
         </div>
@@ -18653,11 +18694,12 @@ Output strictly valid JSON with no markdown formatting.`;
         const score = calculateTotalScore(checks);
         const max = ACTIVITIES.reduce((sum, activity) => sum + (Number(activity.weight) || 0), 0);
         const percent = max ? Math.min(100, score / max * 100) : 0;
+        const scoreTone = percent >= 80 ? 'text-emerald-300' : percent >= 50 ? 'text-amber-300' : 'text-rose-300';
         const checked = calculateActiveCount(checks);
         const locked = Boolean(lockedWeeks && lockedWeeks[week]);
         return `<div class="bg-slate-900/80 border ${locked ? 'border-amber-500/30' : 'border-slate-800'} rounded-2xl p-3">
           <div class="flex justify-between items-center text-xs"><span class="font-bold text-white">${escapeHtml(getWeekName(week))}</span><span class="text-slate-400">${locked ? t('member_dashboard_locked') : t('member_dashboard_active')}</span></div>
-          <div class="text-lg font-black text-emerald-300 mt-2">${score}<span class="text-[10px] text-slate-500">/${max}</span></div>
+          <div class="text-lg font-black ${scoreTone} mt-2">${score}<span class="text-[10px] text-slate-500">/${max}</span></div>
           <div class="h-1.5 bg-slate-800 rounded-full mt-2 overflow-hidden"><div class="h-full bg-emerald-400 rounded-full" style="width:${percent.toFixed(1)}%"></div></div>
           <div class="text-[10px] text-slate-400 mt-2">${t('member_dashboard_attendance', { checked, total: ACTIVITIES.length })}</div>
         </div>`;
