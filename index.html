@@ -2686,6 +2686,127 @@
         padding: 0.5rem !important;
       }
     }
+    /* ================= Dark theme consistency pass ================= */
+    body.neo-dark {
+      --neo-bg: #202832;
+      --neo-surface: #27313c;
+      --neo-surface-2: #303c49;
+      --neo-input: #1f2933;
+      --neo-text: #edf2f7;
+      --neo-muted: #a8b4c2;
+      --neo-line: rgba(203, 213, 225, 0.14);
+    }
+
+    /* Keep the main table readable instead of making every row identical. */
+    body.neo-dark #main-table-head th {
+      background: #303c49 !important;
+      background-image: none !important;
+      color: #f1f5f9 !important;
+      border-color: var(--neo-line) !important;
+      box-shadow: none !important;
+    }
+
+    body.neo-dark #member-table-body>tr:not(:last-child)>td {
+      background: #27313c !important;
+      background-image: none !important;
+      border-color: rgba(203, 213, 225, 0.09) !important;
+      box-shadow: none !important;
+    }
+
+    body.neo-dark #member-table-body>tr:nth-child(even):not(:last-child)>td {
+      background: #2b3642 !important;
+    }
+
+    body.neo-dark #member-table-body>tr:not(:last-child):hover>td {
+      background: #354454 !important;
+      transition: background-color 120ms ease;
+    }
+
+    /* Inputs use a quiet inset surface and stronger placeholder contrast. */
+    body.neo-dark input,
+    body.neo-dark select,
+    body.neo-dark textarea {
+      background: var(--neo-input) !important;
+      background-image: none !important;
+      color: var(--neo-text) !important;
+      border-color: var(--neo-line) !important;
+      box-shadow: inset 2px 2px 5px rgba(15, 20, 27, 0.38) !important;
+    }
+
+    body.neo-dark input::placeholder,
+    body.neo-dark textarea::placeholder {
+      color: #9aaabd !important;
+      opacity: 1;
+    }
+
+    /* Neutral buttons stay quiet; semantic buttons keep their status color. */
+    body.neo-dark button[class*="bg-slate-"],
+    body.neo-dark .apple-btn-slate {
+      background: #303c49 !important;
+      background-image: none !important;
+      color: #dbe7f3 !important;
+      border-color: var(--neo-line) !important;
+      box-shadow: 3px 3px 8px rgba(15, 20, 27, 0.42) !important;
+    }
+
+    body.neo-dark button[class*="bg-slate-"]:hover,
+    body.neo-dark .apple-btn-slate:hover {
+      background: #3a4a5b !important;
+      color: #ffffff !important;
+    }
+
+    body.neo-dark button[class*="bg-rose-"],
+    body.neo-dark button[class*="bg-red-"] {
+      color: #fecdd3 !important;
+    }
+
+    body.neo-dark button[class*="bg-emerald-"],
+    body.neo-dark button[class*="bg-green-"] {
+      color: #bbf7d0 !important;
+    }
+
+    body.neo-dark button[class*="bg-amber-"],
+    body.neo-dark button[class*="bg-yellow-"] {
+      color: #fde68a !important;
+    }
+
+    /* Preserve meaning of status badges after the global dark-mode rules. */
+    body.neo-dark #member-table-body span[class*="bg-rose-"] {
+      background: rgba(190, 52, 74, 0.2) !important;
+      color: #fda4af !important;
+      border-color: rgba(251, 113, 133, 0.35) !important;
+    }
+
+    body.neo-dark #member-table-body span[class*="bg-emerald-"] {
+      background: rgba(46, 125, 90, 0.2) !important;
+      color: #a7f3d0 !important;
+      border-color: rgba(110, 231, 183, 0.35) !important;
+    }
+
+    body.neo-dark #member-table-body span[class*="bg-amber-"] {
+      background: rgba(164, 113, 32, 0.2) !important;
+      color: #fde68a !important;
+      border-color: rgba(251, 191, 36, 0.35) !important;
+    }
+
+    body.neo-dark #member-table-body span[class*="bg-sky-"],
+    body.neo-dark #member-table-body span[class*="bg-cyan-"] {
+      background: rgba(38, 120, 153, 0.2) !important;
+      color: #bae6fd !important;
+      border-color: rgba(125, 211, 252, 0.35) !important;
+    }
+
+    /* Reserve the strongest neumorphic shadow for cards and dialogs. */
+    body.neo-dark #member-table-body button,
+    body.neo-dark .filter-control,
+    body.neo-dark .tab-button {
+      box-shadow: none !important;
+    }
+
+    body.neo-dark .apple-kpi-card,
+    body.neo-dark [id$="-modal"]>div {
+      box-shadow: 8px 8px 16px rgba(15, 20, 27, 0.52), -5px -5px 12px rgba(255, 255, 255, 0.035) !important;
+    }
   </style>
 </head>
 
