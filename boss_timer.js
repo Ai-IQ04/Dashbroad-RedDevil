@@ -847,9 +847,27 @@ function renderBossTimerCards() {
         const isGuildActivity = GUILD_SCORING_BOSS_IDS.has(b.id) || (b.name && /lucus|bahel|libitina|rakajeth|tumier|neva|icarut|morti|motti|arena|camalia|world/i.test(b.name));
         const isHighTier = isHighLevelBoss(b.level, b.id, b.name);
 
-        let nameColorClass = isGuildActivity ? 'text-amber-400 font-bold' : (isHighTier ? 'text-rose-300 font-bold' : 'text-emerald-300 font-bold');
-        let levelBadgeClass = isGuildActivity ? 'bg-amber-950 text-amber-300 border-amber-500/40' : (isHighTier ? 'bg-rose-950 text-rose-300 border-rose-500/40' : 'bg-emerald-950 text-emerald-300 border-emerald-500/40');
-        let avatarRing = isGuildActivity ? 'border-amber-500/50' : (isHighTier ? 'border-rose-500/50' : 'border-emerald-500/40');
+        let nameColorClass = '';
+        let levelBadgeClass = '';
+        let avatarRing = '';
+        let typeIcon = '';
+
+        if (isGuildActivity) {
+          nameColorClass = 'text-amber-400 font-black drop-shadow-[0_2px_8px_rgba(251,191,36,0.45)]';
+          levelBadgeClass = 'bg-amber-950/90 text-amber-300 border-amber-500/60 shadow-amber-950/60';
+          avatarRing = 'border-amber-500/60 ring-1 ring-amber-500/30';
+          typeIcon = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-sm flex items-center gap-1"><i class="fa-solid fa-star text-[8px] text-amber-400"></i>กิลด์</span>`;
+        } else if (isHighTier) {
+          nameColorClass = 'text-rose-400 font-black drop-shadow-[0_2px_10px_rgba(244,63,94,0.6)]';
+          levelBadgeClass = 'bg-rose-950/90 text-rose-300 border-rose-500/60 shadow-rose-950/60';
+          avatarRing = 'border-rose-500/60 ring-1 ring-rose-500/30';
+          typeIcon = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/50 shadow-sm flex items-center gap-1"><i class="fa-solid fa-skull-crossbones text-[8px] text-rose-400"></i>บอสสูง</span>`;
+        } else {
+          nameColorClass = 'text-emerald-300 font-black drop-shadow-[0_2px_10px_rgba(52,211,153,0.5)]';
+          levelBadgeClass = 'bg-emerald-950/90 text-emerald-300 border-emerald-500/60 shadow-emerald-950/60';
+          avatarRing = 'border-emerald-500/60 ring-1 ring-emerald-500/30';
+          typeIcon = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm flex items-center gap-1"><i class="fa-solid fa-shield-halved text-[8px] text-emerald-400"></i>ทั่วไป</span>`;
+        }
 
         let statusBadge = '';
         let rowBg = '';
@@ -881,10 +899,6 @@ function renderBossTimerCards() {
         const avatarThumb = b.avatar
           ? `<img src="${escapeHtml(b.avatar)}" alt="${escapeHtml(b.name)}" class="w-11 h-11 rounded-2xl object-cover border ${avatarRing} shrink-0 bg-slate-900 shadow-md" onerror="this.onerror=null; this.src=''; this.parentElement.innerHTML='<div class=\\'w-11 h-11 rounded-2xl bg-slate-800 border ${avatarRing} flex items-center justify-center text-amber-400 text-sm\\'><i class=\\'fa-solid fa-dragon\\'></i></div>';" />`
           : `<div class="w-11 h-11 rounded-2xl bg-slate-800 border ${avatarRing} flex items-center justify-center text-amber-400/90 text-sm shrink-0 shadow-inner"><i class="fa-solid fa-dragon"></i></div>`;
-
-        let typeIcon = isGuildActivity
-          ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">กิลด์</span>`
-          : (isHighTier ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">บอสสูง</span>` : '');
 
         rowsHtml += `
           <tr id="boss-card-${b.id}" class="${rowBg} border-b border-slate-800/60 group">
