@@ -2895,6 +2895,49 @@
     body.neo-dark #member-dashboard-modal label {
       color: #aebdcd !important;
     }
+
+    /* Weekly Summary: force the personal summary card and its inner blocks
+       to stay dark. These blocks are generated dynamically by JavaScript. */
+    body.neo-dark #weekly-history-modal #member-weekly-summary-container,
+    body.neo-dark #weekly-history-modal #history-content-container {
+      color: #dbe5ef !important;
+    }
+
+    body.neo-dark #weekly-history-modal #member-weekly-summary-container>div,
+    body.neo-dark #weekly-history-modal #member-weekly-summary-container .bg-gradient-to-br {
+      background: #17222d !important;
+      background-image: none !important;
+      border-color: rgba(96, 165, 250, 0.28) !important;
+      color: #dbe5ef !important;
+      box-shadow: 5px 5px 12px rgba(8, 12, 17, 0.38) !important;
+    }
+
+    body.neo-dark #weekly-history-modal #member-weekly-summary-container [class*="bg-slate-"] {
+      background: #202c38 !important;
+      background-image: none !important;
+      border-color: rgba(148, 163, 184, 0.16) !important;
+    }
+
+    body.neo-dark #weekly-history-modal #member-weekly-summary-container [class*="text-white"] {
+      color: #f1f5f9 !important;
+    }
+
+    body.neo-dark #weekly-history-modal #member-weekly-summary-container [class*="text-slate-400"],
+    body.neo-dark #weekly-history-modal #member-weekly-summary-container [class*="text-slate-500"],
+    body.neo-dark #weekly-history-modal #member-weekly-summary-container [class*="text-slate-600"] {
+      color: #9eacbb !important;
+    }
+
+    body.neo-dark #weekly-history-modal #member-weekly-summary-container [class*="border-t"] {
+      border-color: rgba(148, 163, 184, 0.16) !important;
+    }
+
+    body.neo-dark #weekly-history-modal #history-content-container>div>div,
+    body.neo-dark #weekly-history-modal #history-content-container [class*="bg-slate-"] {
+      background: #202c38 !important;
+      background-image: none !important;
+      border-color: rgba(148, 163, 184, 0.14) !important;
+    }
   </style>
 </head>
 
