@@ -3281,6 +3281,12 @@
             <i class="fa-solid fa-user-pen text-xs"></i>
             <span data-i18n="btn_edit_character">แก้ไขข้อมูลตัวละคร</span>
           </button>
+
+          <button onclick="openGuildJoinRequestModal()"
+            class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+            <i class="fa-solid fa-user-plus text-xs"></i>
+            <span data-i18n="btn_guild_join_request">ลงทะเบียนเข้ากิลด์</span>
+          </button>
         </div>
 
         <!-- 👑 Admin Hub (แทนที่ฝั่งขวาในแถวเดียวกันทันทีเมื่อล็อกอิน Admin) -->
@@ -3356,6 +3362,14 @@
               title="AI CP Update - Admin only">
               <i class="fa-solid fa-wand-magic-sparkles text-xs text-cyan-200"></i>
               <span>อัปเดต CP ด้วย AI</span>
+            </button>
+
+            <button id="btn-approve-guild-join" onclick="openGuildJoinApprovalModal()"
+              class="hidden apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+              <i class="fa-solid fa-user-plus text-xs"></i>
+              <span data-i18n="btn_guild_join_approval">คำขอเข้ากิลด์</span>
+              <span id="guild-join-pending-badge"
+                class="hidden px-1.5 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full shadow leading-none animate-pulse">0</span>
             </button>
 
             <button id="btn-batch-guild-check" onclick="openBatchGuildCheckModal()"
@@ -7534,6 +7548,30 @@
         "btn_custom_time": "ปรับเวลา",
         "btn_drop_logs": "ดูประวัติไอเทมดรอป",
         "btn_edit_character": "แก้ไขข้อมูลตัวละคร",
+        "btn_guild_join_request": "ลงทะเบียนเข้ากิลด์",
+        "btn_guild_join_approval": "คำขอเข้ากิลด์",
+        "guild_join_modal_title": "ลงทะเบียนขอเข้ากิลด์",
+        "guild_join_modal_desc": "กรอกข้อมูลเพื่อให้ Admin ตรวจสอบก่อนเข้าร่วมกิลด์",
+        "guild_join_name": "ชื่อตัวละคร *",
+        "guild_join_cp": "CP *",
+        "guild_join_guild": "กิลด์ที่ต้องการเข้า *",
+        "guild_join_contact": "Email หรือ Discord *",
+        "guild_join_class": "อาชีพ *",
+        "guild_join_reason": "เหตุผล / ข้อมูลเพิ่มเติม",
+        "guild_join_class_placeholder": "เช่น Warrior, Mage",
+        "guild_join_submit": "ส่งคำขอ",
+        "guild_join_approval_title": "อนุมัติคำขอเข้ากิลด์",
+        "guild_join_pending": "คำขอรอตรวจสอบ ({count})",
+        "guild_join_processed": "ประวัติคำขอล่าสุด ({count})",
+        "guild_join_no_data": "ยังไม่มีคำขอเข้ากิลด์",
+        "guild_join_approve": "อนุมัติเข้ากิลด์",
+        "guild_join_reject": "ปฏิเสธ",
+        "guild_join_need_info": "ขอข้อมูลเพิ่ม",
+        "toast_guild_join_sent": "ส่งคำขอเข้ากิลด์แล้ว รอ Admin ตรวจสอบ",
+        "toast_guild_join_approved": "อนุมัติ {name} เข้ากิลด์แล้ว",
+        "toast_guild_join_rejected": "ปฏิเสธคำขอของ {name} แล้ว",
+        "guild_join_duplicate": "ชื่อตัวละครนี้มีอยู่แล้วหรือมีคำขอรอตรวจสอบอยู่",
+        "guild_join_info_requested": "ส่งคำขอข้อมูลเพิ่มเติมแล้ว",
         "btn_approve_char_edits": "อนุมัติข้อมูล",
         "modal_char_edit_title": "แก้ไขข้อมูลตัวละคร",
         "modal_char_edit_desc": "ยื่นคำขอแก้ไขชื่อตัวละคร, Email, และสังกัดกิลด์ (ต้องได้รับการอนุมัติจาก Admin)",
@@ -7982,6 +8020,30 @@
         "btn_custom_time": "Custom Time",
         "btn_drop_logs": "View Drop Logs",
         "btn_edit_character": "Edit Character",
+        "btn_guild_join_request": "Join Guild Request",
+        "btn_guild_join_approval": "Guild Requests",
+        "guild_join_modal_title": "Request to Join Guild",
+        "guild_join_modal_desc": "Submit your information for Admin review before joining",
+        "guild_join_name": "Character Name *",
+        "guild_join_cp": "CP *",
+        "guild_join_guild": "Guild to join *",
+        "guild_join_contact": "Email or Discord *",
+        "guild_join_class": "Class *",
+        "guild_join_reason": "Reason / Additional information",
+        "guild_join_class_placeholder": "e.g. Warrior, Mage",
+        "guild_join_submit": "Submit Request",
+        "guild_join_approval_title": "Guild Join Requests",
+        "guild_join_pending": "Pending requests ({count})",
+        "guild_join_processed": "Recent history ({count})",
+        "guild_join_no_data": "No guild join requests",
+        "guild_join_approve": "Approve",
+        "guild_join_reject": "Reject",
+        "guild_join_need_info": "Request more info",
+        "toast_guild_join_sent": "Guild join request submitted. Awaiting Admin review.",
+        "toast_guild_join_approved": "Approved {name} to join the guild.",
+        "toast_guild_join_rejected": "Rejected {name}'s request.",
+        "guild_join_duplicate": "This character already exists or has a pending request.",
+        "guild_join_info_requested": "A request for more information was sent.",
         "btn_approve_char_edits": "Char Approvals",
         "modal_char_edit_title": "Edit Character Profile",
         "modal_char_edit_desc": "Submit request to change character name, email, or guild (Requires Admin Approval)",
@@ -9125,6 +9187,15 @@
       });
 
       // 18. ดักฟังรายชื่อสมาชิกทั้งหมดใน Discord Server (Discord Server Members)
+      // ฟังคำขอลงทะเบียนสมาชิกใหม่แบบ Real-Time
+      fbDb.ref('guild_app/guild_join_requests').on('value', snapshot => {
+        const val = snapshot.val();
+        guildJoinRequests = Array.isArray(val) ? val : [];
+        localStorage.setItem('guild_join_requests', JSON.stringify(guildJoinRequests));
+        updateGuildJoinBadge();
+        if (typeof renderGuildJoinApprovalList === 'function') renderGuildJoinApprovalList();
+      });
+
       fbDb.ref('guild_app/discord_server_members').on('value', snapshot => {
         const val = snapshot.val();
         if (val && typeof val === 'object') {
@@ -10016,6 +10087,17 @@
           } else {
             approveCharEditsBtn.classList.add('hidden');
             approveCharEditsBtn.classList.remove('inline-flex');
+          }
+        }
+        const approveGuildJoinBtn = document.getElementById('btn-approve-guild-join');
+        if (approveGuildJoinBtn) {
+          if (isFullAdmin) {
+            approveGuildJoinBtn.classList.remove('hidden');
+            approveGuildJoinBtn.classList.add('inline-flex');
+            updateGuildJoinBadge();
+          } else {
+            approveGuildJoinBtn.classList.add('hidden');
+            approveGuildJoinBtn.classList.remove('inline-flex');
           }
         }
         if (manageGuildsBtn) {
@@ -18585,6 +18667,147 @@ Output strictly valid JSON with no markdown formatting.`;
       showToast(t('toast_char_edit_history_cleared'), 'success');
     }
 
+    // ================= 👥 ระบบลงทะเบียนขอเข้ากิลด์ =================
+    let guildJoinRequests = parseLocalStorageJson('guild_join_requests', []);
+
+    function saveGuildJoinRequests() {
+      localStorage.setItem('guild_join_requests', JSON.stringify(guildJoinRequests || []));
+      if (typeof fbDb !== 'undefined' && fbDb) {
+        fbDb.ref('guild_app/guild_join_requests').set(guildJoinRequests || []);
+      }
+      updateGuildJoinBadge();
+    }
+
+    function updateGuildJoinBadge() {
+      const badge = document.getElementById('guild-join-pending-badge');
+      if (!badge) return;
+      const count = (guildJoinRequests || []).filter(r => r.status === 'pending').length;
+      badge.textContent = count;
+      if (count > 0 && isAdmin && isGuildScoringAdmin()) badge.classList.remove('hidden');
+      else badge.classList.add('hidden');
+    }
+
+    function openGuildJoinRequestModal() {
+      const modal = document.getElementById('guild-join-request-modal');
+      if (!modal) return;
+      ['guild-join-name', 'guild-join-cp', 'guild-join-contact', 'guild-join-class', 'guild-join-reason'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      const guild = document.getElementById('guild-join-guild');
+      if (guild) guild.value = 'RedDevil';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeGuildJoinRequestModal() {
+      const modal = document.getElementById('guild-join-request-modal');
+      if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    }
+
+    function submitGuildJoinRequest(e) {
+      if (e) e.preventDefault();
+      const name = String(document.getElementById('guild-join-name')?.value || '').trim();
+      const cp = Number(document.getElementById('guild-join-cp')?.value || 0);
+      const guild = String(document.getElementById('guild-join-guild')?.value || '').trim();
+      const contact = String(document.getElementById('guild-join-contact')?.value || '').trim();
+      const className = String(document.getElementById('guild-join-class')?.value || '').trim();
+      const reason = String(document.getElementById('guild-join-reason')?.value || '').trim();
+      if (!name || !cp || !guild || !contact || !className) {
+        showToast(currentLang === 'th' ? 'กรุณากรอกข้อมูลที่มีเครื่องหมาย * ให้ครบ' : 'Please complete all required fields.', 'warning');
+        return;
+      }
+      const normalized = name.toLowerCase();
+      const exists = (members || []).some(m => String(m.characterName || m.name || '').trim().toLowerCase() === normalized);
+      const pending = (guildJoinRequests || []).some(r => r.status === 'pending' && String(r.characterName || '').trim().toLowerCase() === normalized);
+      if (exists || pending) {
+        showToast(t('guild_join_duplicate'), 'warning');
+        return;
+      }
+      guildJoinRequests.unshift({
+        id: 'JOIN-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+        characterName: name, cp, guild, contact, className, reason,
+        requestedAt: new Date().toISOString(), status: 'pending', processedBy: '', processedAt: '', reviewNote: ''
+      });
+      saveGuildJoinRequests();
+      closeGuildJoinRequestModal();
+      showToast(t('toast_guild_join_sent'), 'success');
+    }
+
+    function openGuildJoinApprovalModal() {
+      if (!isGuildScoringAdmin()) {
+        showToast(currentLang === 'th' ? 'เฉพาะ Admin ที่มีสิทธิ์จัดการสมาชิกเท่านั้น' : 'Only authorized Admins can manage members.', 'warning');
+        return;
+      }
+      const modal = document.getElementById('guild-join-approval-modal');
+      if (!modal) return;
+      modal.classList.remove('hidden'); modal.classList.add('flex');
+      renderGuildJoinApprovalList();
+    }
+
+    function closeGuildJoinApprovalModal() {
+      const modal = document.getElementById('guild-join-approval-modal');
+      if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    }
+
+    function renderGuildJoinApprovalList() {
+      const pendingEl = document.getElementById('guild-join-approval-pending-list');
+      const processedEl = document.getElementById('guild-join-approval-processed-list');
+      if (!pendingEl || !processedEl) return;
+      const pending = (guildJoinRequests || []).filter(r => r.status === 'pending');
+      const processed = (guildJoinRequests || []).filter(r => r.status !== 'pending').slice(0, 30);
+      updateGuildJoinBadge();
+      pendingEl.innerHTML = pending.length ? pending.map(req => `
+        <div class="bg-slate-900/90 border border-emerald-500/30 rounded-2xl p-3.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div class="min-w-0 flex-1 space-y-1">
+            <div class="flex items-center gap-2 flex-wrap"><b class="text-white">${escapeHtml(req.characterName)}</b><span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">${escapeHtml(req.guild)}</span><span class="text-slate-300 text-xs">CP ${Number(req.cp).toLocaleString()}</span></div>
+            <div class="text-[11px] text-slate-300">${escapeHtml(t('guild_join_class'))}: <b class="text-amber-200">${escapeHtml(req.className || '-')}</b> · ${escapeHtml(req.contact || '-')}</div>
+            <div class="text-[11px] text-slate-400">${escapeHtml(req.reason || '-')}</div>
+            <div class="text-[10px] text-slate-500 font-mono">${new Date(req.requestedAt || Date.now()).toLocaleString(currentLang === 'th' ? 'th-TH' : 'en-US')}</div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0 flex-wrap">
+            <button onclick="approveGuildJoinRequest('${req.id}')" class="apple-btn apple-btn-emerald px-3 py-1.5 rounded-xl text-xs font-bold"><i class="fa-solid fa-check"></i> ${escapeHtml(t('guild_join_approve'))}</button>
+            <button onclick="requestGuildJoinInfo('${req.id}')" class="apple-btn apple-btn-sapphire px-3 py-1.5 rounded-xl text-xs font-bold"><i class="fa-solid fa-circle-question"></i> ${escapeHtml(t('guild_join_need_info'))}</button>
+            <button onclick="rejectGuildJoinRequest('${req.id}')" class="apple-btn apple-btn-burgundy px-3 py-1.5 rounded-xl text-xs font-bold"><i class="fa-solid fa-xmark"></i> ${escapeHtml(t('guild_join_reject'))}</button>
+          </div>
+        </div>`).join('') : `<div class="p-6 text-center bg-slate-900/50 border border-slate-800/80 rounded-2xl text-slate-400">${escapeHtml(t('guild_join_no_data'))}</div>`;
+      processedEl.innerHTML = processed.length ? processed.map(req => `<div class="p-2 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-[11px] gap-2 opacity-80"><span class="text-white font-semibold">${escapeHtml(req.characterName)} <span class="text-slate-400">(${escapeHtml(req.guild || '-')})</span></span><span class="${req.status === 'approved' ? 'text-emerald-300' : 'text-rose-300'} font-bold">${escapeHtml(req.status === 'approved' ? t('approved_badge') : req.status === 'needs_info' ? t('guild_join_need_info') : t('rejected_badge'))}</span></div>`).join('') : `<p class="text-slate-500 text-center py-2 text-[11px]">${escapeHtml(t('guild_join_no_data'))}</p>`;
+    }
+
+    function approveGuildJoinRequest(requestId) {
+      if (!isGuildScoringAdmin()) return;
+      const req = (guildJoinRequests || []).find(r => r.id === requestId && r.status === 'pending');
+      if (!req) return;
+      if ((members || []).some(m => String(m.characterName || m.name || '').toLowerCase() === String(req.characterName).toLowerCase())) {
+        req.status = 'rejected'; req.reviewNote = 'Duplicate character';
+        saveGuildJoinRequests(); renderGuildJoinApprovalList(); return;
+      }
+      const checks = Array.isArray(ACTIVITIES) ? ACTIVITIES.map(() => false) : [];
+      const newMember = { id: Date.now(), characterName: req.characterName, name: req.characterName, guild: req.guild, cp: req.cp, email: req.contact, className: req.className, checks, history: [], weeklyCp: { 1: req.cp, 2: req.cp, 3: req.cp, 4: req.cp }, weeklyChecks: { 1: [...checks], 2: [...checks], 3: [...checks], 4: [...checks] } };
+      members.unshift(newMember);
+      req.status = 'approved'; req.processedBy = currentAdminEmail || 'Admin'; req.processedAt = new Date().toISOString();
+      saveData(); renderTable(); updateKPIs(); saveGuildJoinRequests(); renderGuildJoinApprovalList();
+      addAuditLog('guild_join_approved', `Approved guild join request: ${req.characterName}`, `Guild: ${req.guild} | Class: ${req.className}`, req.characterName);
+      showToast(t('toast_guild_join_approved', { name: req.characterName }), 'success');
+    }
+
+    function rejectGuildJoinRequest(requestId) {
+      if (!isGuildScoringAdmin()) return;
+      const req = (guildJoinRequests || []).find(r => r.id === requestId && r.status === 'pending');
+      if (!req) return;
+      req.status = 'rejected'; req.processedBy = currentAdminEmail || 'Admin'; req.processedAt = new Date().toISOString();
+      saveGuildJoinRequests(); renderGuildJoinApprovalList();
+      showToast(t('toast_guild_join_rejected', { name: req.characterName }), 'info');
+    }
+
+    function requestGuildJoinInfo(requestId) {
+      if (!isGuildScoringAdmin()) return;
+      const req = (guildJoinRequests || []).find(r => r.id === requestId && r.status === 'pending');
+      if (!req) return;
+      req.status = 'needs_info'; req.processedBy = currentAdminEmail || 'Admin'; req.processedAt = new Date().toISOString();
+      saveGuildJoinRequests(); renderGuildJoinApprovalList();
+      showToast(t('guild_join_info_requested'), 'info');
+    }
+
     let selectedMemberDashboardId = localStorage.getItem('guild_selected_member_id') || '';
 
     function getDashboardMember() {
@@ -20536,6 +20759,35 @@ Output strictly valid JSON with no markdown formatting.`;
   </div>
 
   <!-- ================= ✏️ Modal: ยื่นคำขอแก้ไขข้อมูลตัวละคร (Character Edit Request) ================= -->
+  <div id="guild-join-request-modal"
+    class="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="w-full max-w-lg bg-slate-900 border border-emerald-500/30 rounded-3xl p-5 shadow-2xl apple-modal-box">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-3"><div class="h-10 w-10 rounded-xl bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center justify-center"><i class="fa-solid fa-user-plus"></i></div><div><h3 class="text-base font-extrabold text-white" data-i18n="guild_join_modal_title">ลงทะเบียนขอเข้ากิลด์</h3><p class="text-[11px] text-slate-400" data-i18n="guild_join_modal_desc">กรอกข้อมูลเพื่อให้ Admin ตรวจสอบก่อนเข้าร่วมกิลด์</p></div></div>
+        <button type="button" onclick="closeGuildJoinRequestModal()" class="text-slate-400 hover:text-white p-2"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="submitGuildJoinRequest(event)" class="space-y-3.5 pt-4 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label class="space-y-1.5"><span class="text-slate-300 font-semibold" data-i18n="guild_join_name">ชื่อตัวละคร *</span><input id="guild-join-name" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-emerald-400"></label>
+          <label class="space-y-1.5"><span class="text-slate-300 font-semibold" data-i18n="guild_join_cp">CP *</span><input id="guild-join-cp" required type="number" min="1" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-emerald-400"></label>
+          <label class="space-y-1.5"><span class="text-slate-300 font-semibold" data-i18n="guild_join_guild">กิลด์ที่ต้องการเข้า *</span><select id="guild-join-guild" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-emerald-400"><option value="RedDevil">RedDevil</option><option value="BlueDevil">BlueDevil</option></select></label>
+          <label class="space-y-1.5"><span class="text-slate-300 font-semibold" data-i18n="guild_join_class">อาชีพ *</span><input id="guild-join-class" required data-i18n-placeholder="guild_join_class_placeholder" placeholder="เช่น Warrior, Mage" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-emerald-400"></label>
+        </div>
+        <label class="space-y-1.5 block"><span class="text-slate-300 font-semibold" data-i18n="guild_join_contact">Email หรือ Discord *</span><input id="guild-join-contact" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-emerald-400"></label>
+        <label class="space-y-1.5 block"><span class="text-slate-300 font-semibold" data-i18n="guild_join_reason">เหตุผล / ข้อมูลเพิ่มเติม</span><textarea id="guild-join-reason" rows="3" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-emerald-400 resize-none"></textarea></label>
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800"><button type="button" onclick="closeGuildJoinRequestModal()" class="apple-btn apple-btn-slate px-4 py-2 rounded-xl text-xs font-bold" data-i18n="btn_cancel">ยกเลิก</button><button type="submit" class="apple-btn apple-btn-emerald px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-paper-plane mr-1"></i><span data-i18n="guild_join_submit">ส่งคำขอ</span></button></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="guild-join-approval-modal"
+    class="fixed inset-0 z-[70] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-slate-900 border border-emerald-500/30 rounded-3xl p-5 shadow-2xl apple-modal-box">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800"><div><h3 class="text-base font-extrabold text-white" data-i18n="guild_join_approval_title">อนุมัติคำขอเข้ากิลด์</h3><p class="text-[11px] text-slate-400">ตรวจสอบข้อมูลก่อนเพิ่มสมาชิกเข้าสู่ Dashboard</p></div><button type="button" onclick="closeGuildJoinApprovalModal()" class="text-slate-400 hover:text-white p-2"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="pt-4 space-y-4"><div><h4 class="text-xs font-bold text-emerald-300 mb-2" data-i18n="guild_join_pending">คำขอรอตรวจสอบ</h4><div id="guild-join-approval-pending-list" class="space-y-2"></div></div><div><h4 class="text-xs font-bold text-slate-400 mb-2" data-i18n="guild_join_processed">ประวัติคำขอล่าสุด</h4><div id="guild-join-approval-processed-list" class="space-y-2"></div></div></div>
+    </div>
+  </div>
+
   <div id="char-edit-request-modal"
     class="hidden fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-3 sm:p-4 backdrop-blur-md overflow-y-auto">
     <div
