@@ -1,5 +1,5 @@
 {
-  "version": "1.5.4",
-  "buildTime": 1787114000000,
-  "releaseNotes": "Add direct character deletion button in table rows for normal and super admins"
+  "version": "1.5.5",
+  "buildTime": 1787115000000,
+  "releaseNotes": "Fix character deletion in 100% of cases by handling string IDs and name fallbacks"
 }

@@ -14996,8 +14996,8 @@ Output strictly valid JSON with no markdown formatting.`;
                 <td class="py-1 px-0 text-center w-7 sm:w-7.5 max-w-[30px] ${isDayEnd ? 'border-r-2 border-slate-700/80' : 'border-r border-slate-800/30'} ${isLucus ? 'bg-rose-950/10' : ''}">
                   <button 
                     type="button"
-                    onclick="handleCheckClick(${member.id}, ${actIndex}, event)"
-                    ondblclick="handleCheckClick(${member.id}, ${actIndex}, event)"
+                    onclick="handleCheckClick('${member.id}', ${actIndex}, event)"
+                    ondblclick="handleCheckClick('${member.id}', ${actIndex}, event)"
                     title="${escapeHtml(act.name)} (${act.weight}%) • แตะ 2 ครั้งติดเพื่อเช็คชื่อ ${!isScoringAdmin ? '🔒' : ''}"
                     class="w-4.5 h-4.5 sm:w-5 sm:h-5 mx-auto rounded-md flex items-center justify-center transition-all ${isChecked
                 ? 'bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 font-black shadow-[0_0_10px_rgba(16,185,129,0.5)] border border-emerald-300/50 apple-check-active scale-100 hover:brightness-110 active:scale-90'
@@ -15018,21 +15018,21 @@ Output strictly valid JSON with no markdown formatting.`;
               <div class="flex items-center justify-center gap-1">
                 ${isScoringAdmin ? `
                   <button 
-                    onclick="toggleAllChecks(${member.id})" 
+                    onclick="toggleAllChecks('${member.id}')" 
                     class="w-5.5 h-5.5 rounded flex items-center justify-center text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/20 transition text-[10px]"
                     title="${allChecked ? t('toast_checks_cleared') : t('toast_checks_all')}"
                   >
                     <i class="fa-solid ${allChecked ? 'fa-square-minus text-amber-400' : 'fa-square-check text-indigo-400'}"></i>
                   </button>
                   <button 
-                    onclick="openEditMemberModal(${member.id})" 
+                    onclick="openEditMemberModal('${member.id}')" 
                     class="w-5.5 h-5.5 rounded flex items-center justify-center text-slate-400 hover:text-amber-300 hover:bg-amber-500/20 transition text-[10px]"
                     title="${t('tooltip_edit_char')}"
                   >
                     <i class="fa-regular fa-pen-to-square"></i>
                   </button>
                   <button 
-                    onclick="deleteMember(${member.id})" 
+                    onclick="deleteMember('${member.id}')" 
                     class="w-5.5 h-5.5 rounded flex items-center justify-center text-slate-400 hover:text-rose-400 hover:bg-rose-500/20 transition text-[10px]"
                     title="ลบตัวละคร"
                   >
@@ -15582,10 +15582,8 @@ Output strictly valid JSON with no markdown formatting.`;
     function deleteMemberFromEditModal() {
       const editId = document.getElementById('edit-member-id')?.value;
       if (!editId) return;
-      const member = members.find(m => String(m.id) === String(editId));
-      if (!member) return;
       closeAddMemberModal();
-      deleteMember(member.id);
+      deleteMember(editId);
     }
 
     function handleSaveMember(e) {
@@ -15659,18 +15657,18 @@ Output strictly valid JSON with no markdown formatting.`;
         if (!isAdmin) openAdminEmailModal();
         return;
       }
-      const member = members.find(m => m.id === id);
-      if (!member) return;
-      const name = member.characterName || 'Member';
+      const strId = String(id).trim();
+      const member = members.find(m => String(m.id) === strId || String(m.characterName).trim().toLowerCase() === strId.toLowerCase());
+      const name = member ? (member.characterName || 'Member') : strId;
 
       if (confirm(`คุณต้องการลบตัวละคร "${name}" ออกจากระบบใช่หรือไม่?\n\n(ข้อมูลการเช็คชื่อของตัวละครนี้จะถูกลบออกด้วย)`)) {
-        rememberDeletedMember(id);
-        members = members.filter(m => String(m.id) !== String(id));
+        rememberDeletedMember(member ? member.id : strId);
+        members = members.filter(m => String(m.id) !== strId && String(m.characterName).trim().toLowerCase() !== strId.toLowerCase());
 
         addAuditLog(
           'member',
           `ลบสมาชิก "${name}"`,
-          `กิลด์เดิม: ${member.guild || '-'} | CP: ${member.cp ? Number(member.cp).toLocaleString() : 0}`,
+          `กิลด์เดิม: ${member ? (member.guild || '-') : '-'} | CP: ${member ? Number(member.cp || 0).toLocaleString() : 0}`,
           name
         );
 
