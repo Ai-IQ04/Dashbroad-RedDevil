@@ -760,11 +760,11 @@ function renderBossTimerCards() {
     let cardBg = cardBaseBg;
 
     if (b.status === 'alive') {
-      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white border border-rose-300 animate-pulse flex items-center gap-1 shadow-lg shadow-rose-600/50"><i class="fa-solid fa-circle text-[6px] text-rose-200"></i> ${tBoss('boss_status_spawned', 'เกิดแล้ว (ALIVE!)')}</span>`;
+      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white border border-rose-300 flex items-center gap-1.5 shadow-lg shadow-rose-600/50"><i class="fa-solid fa-circle text-[7px] text-rose-200 animate-ping"></i><span class="animate-pulse">${tBoss('boss_status_spawned', 'เกิดแล้ว (ALIVE!)')}</span></span>`;
       cardBorder = 'border-rose-500 ring-2 ring-rose-500/50 shadow-2xl shadow-rose-950/80';
       cardBg = 'from-rose-950/60 via-slate-900 to-slate-950';
     } else if (b.status === 'soon') {
-      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/30 text-amber-300 border border-amber-400 animate-pulse flex items-center gap-1 shadow-md shadow-amber-950/60"><i class="fa-solid fa-clock text-[8px] text-amber-400"></i> ${tBoss('boss_status_soon', 'ใกล้เกิด (<30m)')}</span>`;
+      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/30 text-amber-300 border border-amber-400 flex items-center gap-1.5 shadow-md shadow-amber-950/60"><i class="fa-solid fa-clock text-[9px] text-amber-400 animate-spin" style="animation-duration: 4s;"></i><span class="animate-pulse">${tBoss('boss_status_soon', 'ใกล้เกิด (<30m)')}</span></span>`;
       cardBorder = 'border-amber-400/80 ring-2 ring-amber-400/40 shadow-xl shadow-amber-950/60';
       cardBg = 'from-amber-950/40 via-slate-900 to-slate-950';
     } else if (b.status === 'cooldown') {
@@ -870,7 +870,7 @@ function renderBossTimerCards() {
           <!-- Countdown Big Box (High Contrast & Clear Typography) -->
           <div class="my-3 p-3 rounded-2xl bg-slate-950/90 border border-slate-800 shadow-inner text-center">
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">${tBoss('boss_countdown_label', 'นับถอยหลัง')}</span>
-            <div id="boss-cd-${b.id}" class="text-lg sm:text-xl font-black font-mono tracking-wider ${b.status === 'alive' ? 'text-rose-400 animate-pulse drop-shadow-[0_0_8px_rgba(244,63,94,0.6)]' : b.status === 'soon' ? 'text-amber-300 animate-pulse drop-shadow-[0_0_8px_rgba(252,211,77,0.6)]' : b.status === 'cooldown' ? 'text-sky-300' : 'text-slate-500'}">
+            <div id="boss-cd-${b.id}" class="text-lg sm:text-xl font-black font-mono tracking-wider ${b.status === 'alive' ? 'text-rose-400 animate-pulse drop-shadow-[0_0_12px_rgba(244,63,94,0.9)]' : b.status === 'soon' ? 'text-amber-300 animate-pulse drop-shadow-[0_0_10px_rgba(252,211,77,0.85)]' : b.status === 'cooldown' ? 'text-sky-300' : 'text-slate-500'}">
               ${countdownText}
             </div>
           </div>
@@ -1067,9 +1067,9 @@ function updateCountdowns() {
     cdEl.textContent = formatCountdown(diffMs, status);
 
     if (status === 'alive') {
-      cdEl.className = "text-base sm:text-lg font-black font-mono tracking-wider text-rose-400 animate-pulse";
+      cdEl.className = "text-base sm:text-lg font-black font-mono tracking-wider text-rose-400 animate-pulse drop-shadow-[0_0_12px_rgba(244,63,94,0.9)]";
     } else if (status === 'soon') {
-      cdEl.className = "text-base sm:text-lg font-black font-mono tracking-wider text-amber-300 animate-pulse";
+      cdEl.className = "text-base sm:text-lg font-black font-mono tracking-wider text-amber-300 animate-pulse drop-shadow-[0_0_10px_rgba(252,211,77,0.85)]";
     } else {
       cdEl.className = "text-base sm:text-lg font-black font-mono tracking-wider text-sky-300";
     }
