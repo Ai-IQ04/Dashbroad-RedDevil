@@ -2301,6 +2301,121 @@
       color: #a8e8f6 !important;
       border-color: rgba(109, 211, 235, 0.4) !important;
       box-shadow: 3px 3px 8px rgba(15, 20, 27, 0.48), -3px -3px 7px rgba(255, 255, 255, 0.04) !important;
+    /* ===== 🎁 Guild Reward Store (ร้านค้าของรางวัล) - Dark Mode Neumorphic Theme ===== */
+    body.neo-dark #guild-reward-store-modal .apple-modal-box,
+    body.neo-dark #reward-lightbox-modal>div,
+    body.neo-dark #reward-approval-modal>div,
+    body.neo-dark #reward-winner-modal>div {
+      background: linear-gradient(145deg, #2d3844, #222c36) !important;
+      border-color: rgba(251, 191, 36, 0.28) !important;
+      box-shadow: 14px 14px 28px rgba(15, 20, 27, 0.7), -14px -14px 28px rgba(255, 255, 255, 0.035) !important;
+      color: var(--neo-text) !important;
+    }
+
+    /* แถบแจ้งเตือนรอบเดือน (Monthly cycle notice) */
+    body.neo-dark #guild-reward-store-modal div[class*="from-amber-950"] {
+      background: linear-gradient(145deg, #25303c, #1f2731) !important;
+      border-color: rgba(251, 191, 36, 0.25) !important;
+      box-shadow: inset 3px 3px 6px rgba(15, 20, 27, 0.5), inset -3px -3px 6px rgba(255, 255, 255, 0.03) !important;
+      color: #fde68a !important;
+    }
+
+    /* แถบแท็บ & กล่องเลือกตัวละคร (Navigation Tabs & Points Selector Bar) */
+    body.neo-dark #guild-reward-store-modal div[class*="bg-slate-950/60"],
+    body.neo-dark #guild-reward-store-modal div[class*="bg-slate-900/90"] {
+      background: linear-gradient(145deg, #26313c, #202a33) !important;
+      border-color: var(--neo-border) !important;
+    }
+
+    /* การ์ดสินค้าในแค็ตตาล็อก (Reward Catalog Cards) */
+    body.neo-dark #reward-catalog-grid>div,
+    body.neo-dark .reward-store-card {
+      background: linear-gradient(145deg, #303c49, #242e39) !important;
+      border-color: rgba(255, 255, 255, 0.08) !important;
+      box-shadow: var(--neo-shadow-soft) !important;
+      color: var(--neo-text) !important;
+    }
+
+    body.neo-dark #reward-catalog-grid>div:hover,
+    body.neo-dark .reward-store-card:hover {
+      border-color: rgba(251, 191, 36, 0.45) !important;
+      box-shadow: 10px 10px 22px rgba(15, 20, 27, 0.65), 0 0 15px rgba(251, 191, 36, 0.15) !important;
+    }
+
+    /* กรอบรูปภาพสินค้าในการ์ด */
+    body.neo-dark #reward-catalog-grid div[class*="aspect-video"],
+    body.neo-dark .reward-store-card div[class*="aspect-video"] {
+      background: #1c242d !important;
+      border-color: rgba(255, 255, 255, 0.06) !important;
+      box-shadow: inset 3px 3px 7px rgba(15, 20, 27, 0.5), inset -3px -3px 7px rgba(255, 255, 255, 0.025) !important;
+    }
+
+    /* ข้อความชื่อสินค้าและรายละเอียด */
+    body.neo-dark #reward-catalog-grid h4,
+    body.neo-dark .reward-store-card h4 {
+      color: var(--neo-text) !important;
+      letter-spacing: 0 !important;
+    }
+
+    body.neo-dark #reward-catalog-grid p,
+    body.neo-dark .reward-store-card p {
+      color: var(--neo-muted) !important;
+    }
+
+    /* กล่องข้อความแจ้งสุ่มเมื่อแลกเกินสต็อก */
+    body.neo-dark #reward-catalog-grid div[class*="bg-amber-500/15"],
+    body.neo-dark .reward-store-card div[class*="bg-amber-500/15"] {
+      background: linear-gradient(145deg, #2a3440, #202933) !important;
+      border-color: rgba(251, 191, 36, 0.25) !important;
+      color: #fde68a !important;
+      box-shadow: inset 2px 2px 5px rgba(15, 20, 27, 0.4) !important;
+    }
+
+    /* กล่องราคาและป้ายสต็อก */
+    body.neo-dark #reward-catalog-grid div[class*="border-t"],
+    body.neo-dark .reward-store-card div[class*="border-t"] {
+      border-color: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    /* ตารางประวัติการแลก (History Table) */
+    body.neo-dark #store-tab-history table,
+    body.neo-dark #store-tab-history thead,
+    body.neo-dark #store-tab-history tr {
+      background: #27313c !important;
+      border-color: var(--neo-border) !important;
+      color: var(--neo-text) !important;
+    }
+
+    body.neo-dark #store-tab-history tbody tr:hover {
+      background: #2e3a47 !important;
+    }
+
+    /* แท็บแอดมิน: กล่องแต้มพิเศษและเพิ่มของรางวัล */
+    body.neo-dark #store-tab-admin>div {
+      background: linear-gradient(145deg, #2d3844, #222c36) !important;
+      border-color: var(--neo-border) !important;
+      box-shadow: var(--neo-shadow-soft) !important;
+      color: var(--neo-text) !important;
+    }
+
+    body.neo-dark #store-tab-admin input,
+    body.neo-dark #store-tab-admin select,
+    body.neo-dark #store-member-select {
+      background: #1c242d !important;
+      border-color: rgba(255, 255, 255, 0.08) !important;
+      color: var(--neo-text) !important;
+      box-shadow: inset 4px 4px 8px rgba(15, 20, 27, 0.5), inset -4px -4px 8px rgba(255, 255, 255, 0.03) !important;
+    }
+
+    body.neo-dark #store-img-dropzone {
+      background: #1f2731 !important;
+      border-color: rgba(255, 255, 255, 0.12) !important;
+    }
+
+    body.neo-dark #admin-store-items-list>div {
+      background: linear-gradient(145deg, #2a3541, #212b35) !important;
+      border-color: var(--neo-border) !important;
+      box-shadow: var(--neo-shadow-soft) !important;
     }
 
     /* ปรับหัวตารางและแถวข้อมูลให้เป็นสไตล์ Neumorphism (พื้นผิวนูน + เงา) ใน light mode */
@@ -17167,7 +17282,7 @@ Output strictly valid JSON with no markdown formatting.`;
         const alreadyRequested = m && itemRequests.some(l => l.memberName === charName);
 
         return `
-          <div class="bg-gradient-to-b from-slate-900/90 via-[#0b101e]/90 to-slate-950 border border-slate-800/90 hover:border-amber-500/50 rounded-3xl p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-amber-500/10 group shadow-lg">
+          <div class="reward-store-card bg-gradient-to-b from-slate-900/90 via-[#0b101e]/90 to-slate-950 border border-slate-800/90 hover:border-amber-500/50 rounded-3xl p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-amber-500/10 group shadow-lg">
             <div>
               <div class="relative w-full aspect-video rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden flex items-center justify-center cursor-pointer group/img"
                    onclick="openRewardLightbox('${escapeHtml(item.image || '')}', '${escapeHtml(item.name)}')">
@@ -21264,7 +21379,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=7.4"></script>
+  <script src="boss_timer.js?v=7.5"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
@@ -21339,6 +21454,7 @@ Output strictly valid JSON with no markdown formatting.`;
 </body>
 
 </html>
+
 
 
 
