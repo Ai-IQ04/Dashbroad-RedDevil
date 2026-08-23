@@ -1,5 +1,5 @@
 {
-  "version": "1.5.1",
-  "buildTime": 1787111000000,
-  "releaseNotes": "Add Dual OCR Engine (Google Gemini AI + Offline Local Tesseract OCR) with auto-fallback"
+  "version": "1.5.2",
+  "buildTime": 1787112000000,
+  "releaseNotes": "Add Levenshtein character similarity and subsegment fuzzy matching to attendance scanner"
 }

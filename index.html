@@ -11748,6 +11748,83 @@
         .replace(/[\s\-_丶、,.:;'"~`!@#$%^&*()[\]{}|\\/+=]+/g, '');
     }
 
+    function calculateLevenshteinSimilarity(s1, s2) {
+      if (!s1 || !s2) return 0;
+      if (s1 === s2) return 1.0;
+      const len1 = s1.length;
+      const len2 = s2.length;
+      const matrix = Array.from({ length: len1 + 1 }, () => new Array(len2 + 1).fill(0));
+
+      for (let i = 0; i <= len1; i++) matrix[i][0] = i;
+      for (let j = 0; j <= len2; j++) matrix[0][j] = j;
+
+      for (let i = 1; i <= len1; i++) {
+        for (let j = 1; j <= len2; j++) {
+          const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j - 1] + cost
+          );
+        }
+      }
+      const distance = matrix[len1][len2];
+      const maxLen = Math.max(len1, len2);
+      return Math.max(0, 1 - distance / maxLen);
+    }
+
+    function findBestGuildMemberMatch(rawName, minThreshold = 0.62) {
+      if (!rawName || !Array.isArray(members) || members.length === 0) return null;
+      const cleanRaw = String(rawName).trim();
+      const rawNorm = normalizeMemberNameForMatch(cleanRaw);
+      if (!rawNorm) return null;
+
+      // Tier 1: Exact / Normalized Match (100%)
+      for (const m of members) {
+        const cName = (m.characterName || m.name || '').trim();
+        const cNorm = normalizeMemberNameForMatch(cName);
+        if (cName.toLowerCase() === cleanRaw.toLowerCase() || cNorm === rawNorm) {
+          return { member: m, similarity: 1.0, matchType: 'exact' };
+        }
+      }
+
+      // Tier 2: Substring prefix/suffix Match (90-95%)
+      for (const m of members) {
+        const cName = (m.characterName || m.name || '').trim();
+        const cNorm = normalizeMemberNameForMatch(cName);
+        if (cNorm && rawNorm) {
+          if (cNorm.length >= 3 && rawNorm.includes(cNorm)) {
+            return { member: m, similarity: 0.95, matchType: 'contained' };
+          }
+          if (rawNorm.length >= 3 && cNorm.includes(rawNorm)) {
+            return { member: m, similarity: 0.90, matchType: 'partial' };
+          }
+        }
+      }
+
+      // Tier 3: Levenshtein Distance Similarity (62%+)
+      let bestMember = null;
+      let maxScore = 0;
+
+      for (const m of members) {
+        const cName = (m.characterName || m.name || '').trim();
+        const cNorm = normalizeMemberNameForMatch(cName);
+        if (!cNorm) continue;
+
+        const sim = calculateLevenshteinSimilarity(rawNorm, cNorm);
+        if (sim > maxScore && sim >= minThreshold) {
+          maxScore = sim;
+          bestMember = m;
+        }
+      }
+
+      if (bestMember) {
+        return { member: bestMember, similarity: maxScore, matchType: 'fuzzy' };
+      }
+
+      return null;
+    }
+
     function checkMemberAlreadyCheckedForActivities(guildMember, selectedActivities) {
       if (!guildMember || !Array.isArray(selectedActivities) || selectedActivities.length === 0) return false;
       ensureMemberWeeklyData(guildMember);
@@ -11956,49 +12033,26 @@
           }
         });
 
-        // Match detected text lines against guild members roster
+        // Match detected text lines against guild members roster using advanced similarity
         const lines = (text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
         const detectedMembers = [];
         const confidenceByName = {};
         const seenNames = new Set();
 
-        members.forEach(member => {
-          const mName = (member.characterName || member.name || '').trim();
-          if (!mName) return;
-          const normMName = normalizeMemberNameForMatch(mName);
-          if (!normMName) return;
+        lines.forEach(line => {
+          const words = line.split(/[\s,]+/);
+          const candidates = [line, ...words].filter(w => w && w.length >= 2);
 
-          let bestMatch = false;
-          let matchConfidence = 0;
-
-          for (const line of lines) {
-            const normLine = normalizeMemberNameForMatch(line);
-            if (normLine.includes(normMName)) {
-              bestMatch = true;
-              matchConfidence = 95;
-              break;
-            }
-            if (normMName.length >= 4 && normLine.includes(normMName.substring(0, normMName.length - 1))) {
-              bestMatch = true;
-              matchConfidence = 85;
-              break;
-            }
-            const words = line.split(/\s+/);
-            for (const w of words) {
-              const normW = normalizeMemberNameForMatch(w);
-              if (normW === normMName) {
-                bestMatch = true;
-                matchConfidence = 90;
-                break;
+          for (const cand of candidates) {
+            const match = findBestGuildMemberMatch(cand, 0.65);
+            if (match && match.member) {
+              const mName = match.member.characterName;
+              if (!seenNames.has(mName.toLowerCase())) {
+                seenNames.add(mName.toLowerCase());
+                detectedMembers.push(mName);
+                confidenceByName[mName] = Math.round(match.similarity * 100);
               }
             }
-            if (bestMatch) break;
-          }
-
-          if (bestMatch && !seenNames.has(mName.toLowerCase())) {
-            seenNames.add(mName.toLowerCase());
-            detectedMembers.push(mName);
-            confidenceByName[mName] = matchConfidence;
           }
         });
 
@@ -12122,19 +12176,17 @@ Output strictly valid JSON with no markdown wrapping:
           const cleanName = String(rawName).trim();
           if (!cleanName) return;
 
-          const cleanNorm = normalizeMemberNameForMatch(cleanName);
-          const guildMember = members.find(m => {
-            const cName = (m.characterName || m.name || '').trim();
-            const cNorm = normalizeMemberNameForMatch(cName);
-            return cName.toLowerCase() === cleanName.toLowerCase() ||
-              cName.replace(/\s+/g, '').toLowerCase() === cleanName.replace(/\s+/g, '').toLowerCase() ||
-              (cNorm && cleanNorm && cNorm === cleanNorm);
-          });
+          const matchResult = findBestGuildMemberMatch(cleanName, 0.62);
+          const guildMember = matchResult ? matchResult.member : null;
 
           const alreadyChecked = guildMember ? checkMemberAlreadyCheckedForActivities(guildMember, selectedActivities) : false;
 
           const itemId = `squad_item_${itemCounter++}`;
-          const confidence = Math.max(0, Math.min(100, Number(detectedConfidenceByName[cleanName]) || 0));
+          let confidence = Math.max(0, Math.min(100, Number(detectedConfidenceByName[cleanName]) || 0));
+          if (matchResult && matchResult.similarity) {
+            confidence = Math.max(confidence, Math.round(matchResult.similarity * 100));
+          }
+
           detectedSquadItems.push({
             id: itemId,
             squadNum: sqNum,
