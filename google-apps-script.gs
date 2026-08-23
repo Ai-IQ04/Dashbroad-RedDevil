@@ -21,7 +21,8 @@ const SYNC_TOKEN = 'GENERATE_AND_STORE_A_PRIVATE_SYNC_TOKEN';
 
 /**
  * ดึงข้อมูลจากหน้าเว็บ / Firebase Realtime Database มาบันทึกลง Google Sheet ทุกๆ 1 นาที (One-Way Ingest)
- * ระบบจะทำงานอัตโนมัติบน Google Cloud ตลอด 24 ชม. แม้ไม่มีใครเปิดหน้าเว็บ
+ * ระบบจะทำงานอัตโนมัติบน Google Cloud ตลอด 24 ชม.
+ * มีระบบ Smart Hash Check: ถ้าข้อมูลไม่มีการเปลี่ยนแปลง จะไม่แตะต้องตารางเลย 100% (หน้าชีตนิ่งสนิท ไม่กระพริบ)
  */
 function pullFromWebDatabase() {
   const lock = LockService.getScriptLock();
@@ -55,16 +56,31 @@ function pullFromWebDatabase() {
     }
 
     if (members.length > 0) {
+      // 1. ตรวจสอบ Signature: ถ้าข้อมูลไม่เปลี่ยน ให้ข้ามทันที 100% ป้องกันชีตกระพริบ
+      const currentSignature = Utilities.base64Encode(
+        Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, JSON.stringify({ m: members, a: activities }))
+      );
+      const props = PropertiesService.getScriptProperties();
+      const lastSignature = props.getProperty('last_synced_signature') || '';
+
+      if (currentSignature === lastSignature) {
+        Logger.log('ข้อมูลไม่มีการเปลี่ยนแปลง ข้ามการอัปเดตชีต (ชีตนิ่งสนิท)');
+        return;
+      }
+
+      // 2. เมื่อมีการเปลี่ยนแปลงจริงๆ จึงทำการเขียนทับแบบ Smooth
       writeAttendance_({
         members: members,
         activities: activities
       });
+      props.setProperty('last_synced_signature', currentSignature);
+
       appendAuditLog_({ adminEmail: 'cron-1min' }, 'cron_pull_1min', {
         membersCount: members.length,
         activitiesCount: activities.length,
         timestamp: new Date().toISOString()
       });
-      Logger.log('Successfully pulled and updated ' + members.length + ' members to Google Sheets.');
+      Logger.log('ตรวจพบการเปลี่ยนแปลง: อัปเดตตาราง ' + members.length + ' คน สำเร็จแล้ว');
     }
   } catch (err) {
     Logger.log('pullFromWebDatabase error: ' + err);
@@ -360,40 +376,57 @@ function writeAttendance_(payload) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-  const lockedWeeks = readLockedWeeks_();
-  const activities = Array.isArray(payload.activities) ? payload.activities : [];
-  const members = Array.isArray(payload.members) ? payload.members : [];
-  // Never destroy an existing sheet because a browser sent an incomplete
-  // payload while it was still loading or syncing from another source.
-  if (activities.length === 0 || members.length === 0) {
-    throw new Error('Refusing to overwrite attendance sheets with an empty payload.');
-  }
-
-  writeMembersRoster_(book, members);
-  writeActivitiesCatalog_(book, activities);
-  for (let week = 1; week <= WEEK_COUNT; week++) {
-    if (lockedWeeks[week]) continue;
-    const sheet = getOrCreateSheet_(book, 'Week ' + week);
-    const headers = ['Member ID', 'Number', 'Character Name', 'Guild', 'CP']
-      .concat(activities.map((activity, index) => activity.name || activity.key || ('Activity ' + (index + 1))));
-    const rows = [headers];
-    members.forEach(member => {
-      const checks = member.weeklyChecks && member.weeklyChecks[week] || [];
-      rows.push([
-        String(member.id || ''), member.num || '', String(member.characterName || ''),
-        String(member.guild || ''), Number(member.cp) || 0
-      ].concat(activities.map((_, index) => Boolean(checks[index]))));
-    });
-    sheet.clearContents();
-    if (rows.length && rows[0].length) {
-      if (activities.length && rows.length > 1) {
-        applyCheckboxesSafely_(sheet.getRange(2, 6, rows.length - 1, activities.length));
-      }
-      sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
-      sheet.setFrozenRows(1);
-      sheet.autoResizeColumns(1, rows[0].length);
+    const lockedWeeks = readLockedWeeks_();
+    const activities = Array.isArray(payload.activities) ? payload.activities : [];
+    const members = Array.isArray(payload.members) ? payload.members : [];
+    // Never destroy an existing sheet because a browser sent an incomplete payload
+    if (activities.length === 0 || members.length === 0) {
+      throw new Error('Refusing to overwrite attendance sheets with an empty payload.');
     }
-  }
+
+    writeMembersRoster_(book, members);
+    writeActivitiesCatalog_(book, activities);
+    for (let week = 1; week <= WEEK_COUNT; week++) {
+      if (lockedWeeks[week]) continue;
+      const sheet = getOrCreateSheet_(book, 'Week ' + week);
+      const headers = ['Member ID', 'Number', 'Character Name', 'Guild', 'CP']
+        .concat(activities.map((activity, index) => activity.name || activity.key || ('Activity ' + (index + 1))));
+      const rows = [headers];
+      members.forEach(member => {
+        const checks = member.weeklyChecks && member.weeklyChecks[week] || [];
+        rows.push([
+          String(member.id || ''), member.num || '', String(member.characterName || ''),
+          String(member.guild || ''), Number(member.cp) || 0
+        ].concat(activities.map((_, index) => Boolean(checks[index]))));
+      });
+
+      if (rows.length && rows[0].length) {
+        const rowCount = rows.length;
+        const colCount = rows[0].length;
+        const lastRow = sheet.getLastRow();
+        const lastCol = sheet.getLastColumn();
+
+        // 1. เขียนข้อมูลทับตรงๆ (Smooth Overwrite - ไม่ใช้ clearContents เพื่อไม่ให้จอกระพริบ)
+        sheet.getRange(1, 1, rowCount, colCount).setValues(rows);
+
+        // 2. ถ้ามีแถวส่วนเกินที่เคยมีอยู่เดิม ให้ลบเฉพาะแถวส่วนเกินด้านล่าง
+        if (lastRow > rowCount) {
+          sheet.getRange(rowCount + 1, 1, lastRow - rowCount, Math.max(lastCol, colCount)).clearContent();
+        }
+
+        // 3. ใส่ Checkbox Validation โดยไม่สั่งซ้ำถ้ามีอยู่แล้ว
+        if (activities.length && rowCount > 1) {
+          applyCheckboxesSafely_(sheet.getRange(2, 6, rowCount - 1, activities.length));
+        }
+
+        sheet.setFrozenRows(1);
+
+        // 4. จัดขนาดคอลัมน์เฉพาะตอนสร้างตารางครั้งแรกเท่านั้น (ป้องกันตารางเด้งยืดหด)
+        if (lastRow === 0) {
+          sheet.autoResizeColumns(1, colCount);
+        }
+      }
+    }
   } finally {
     lock.releaseLock();
   }
@@ -412,10 +445,15 @@ function writeActivitiesCatalog_(book, activities) {
       Number(activity.weight) || 0
     ]);
   });
-  sheet.clearContents();
-  sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
-  sheet.setFrozenRows(1);
-  sheet.autoResizeColumns(1, rows[0].length);
+  if (rows.length && rows[0].length) {
+    const lastRow = sheet.getLastRow();
+    sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+    if (lastRow > rows.length) {
+      sheet.getRange(rows.length + 1, 1, lastRow - rows.length, rows[0].length).clearContent();
+    }
+    sheet.setFrozenRows(1);
+    if (lastRow === 0) sheet.autoResizeColumns(1, rows[0].length);
+  }
 }
 
 function readActivitiesCatalog_() {
@@ -441,11 +479,16 @@ function writeMembersRoster_(book, members) {
     String(member.id || ''), member.num || '', String(member.characterName || member.name || ''),
     String(member.guild || ''), Number(member.cp) || 0, true
   ]));
-  sheet.clearContents();
-  sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
-  if (rows.length > 1) applyCheckboxesSafely_(sheet.getRange(2, 6, rows.length - 1, 1));
-  sheet.setFrozenRows(1);
-  sheet.autoResizeColumns(1, rows[0].length);
+  if (rows.length && rows[0].length) {
+    const lastRow = sheet.getLastRow();
+    sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+    if (lastRow > rows.length) {
+      sheet.getRange(rows.length + 1, 1, lastRow - rows.length, rows[0].length).clearContent();
+    }
+    if (rows.length > 1) applyCheckboxesSafely_(sheet.getRange(2, 6, rows.length - 1, 1));
+    sheet.setFrozenRows(1);
+    if (lastRow === 0) sheet.autoResizeColumns(1, rows[0].length);
+  }
 }
 
 // Server-side audit trail. This is append-only from the web app and stores
