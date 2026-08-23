@@ -879,35 +879,35 @@ function renderBossTimerCards() {
         const nextSpawnHtml = b.nextSpawn ? formatBossNextSpawnDisplay(b.nextSpawn) : (b.respawnType === 'interval' ? `<span class="text-slate-500 text-[10.5px]">รอลงเวลา</span>` : '<span class="text-slate-500 text-xs">-</span>');
 
         const avatarThumb = b.avatar
-          ? `<img src="${escapeHtml(b.avatar)}" alt="${escapeHtml(b.name)}" class="w-9 h-9 rounded-xl object-cover border ${avatarRing} shrink-0 bg-slate-900" onerror="this.onerror=null; this.src=''; this.parentElement.innerHTML='<div class=\\'w-9 h-9 rounded-xl bg-slate-800 border ${avatarRing} flex items-center justify-center text-amber-400\\'><i class=\\'fa-solid fa-dragon text-xs\\'></i></div>';" />`
-          : `<div class="w-9 h-9 rounded-xl bg-slate-800 border ${avatarRing} flex items-center justify-center text-amber-400/90 shrink-0"><i class="fa-solid fa-dragon text-xs"></i></div>`;
+          ? `<img src="${escapeHtml(b.avatar)}" alt="${escapeHtml(b.name)}" class="w-11 h-11 rounded-2xl object-cover border ${avatarRing} shrink-0 bg-slate-900 shadow-md" onerror="this.onerror=null; this.src=''; this.parentElement.innerHTML='<div class=\\'w-11 h-11 rounded-2xl bg-slate-800 border ${avatarRing} flex items-center justify-center text-amber-400 text-sm\\'><i class=\\'fa-solid fa-dragon\\'></i></div>';" />`
+          : `<div class="w-11 h-11 rounded-2xl bg-slate-800 border ${avatarRing} flex items-center justify-center text-amber-400/90 text-sm shrink-0 shadow-inner"><i class="fa-solid fa-dragon"></i></div>`;
 
         let typeIcon = isGuildActivity
-          ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">กิลด์</span>`
-          : (isHighTier ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">บอสสูง</span>` : '');
+          ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">กิลด์</span>`
+          : (isHighTier ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">บอสสูง</span>` : '');
 
         rowsHtml += `
           <tr id="boss-card-${b.id}" class="${rowBg} border-b border-slate-800/60 group">
             <!-- 1. สถานะ -->
-            <td class="py-2.5 px-3 text-center align-middle w-24">
+            <td class="py-3 px-3 text-center align-middle w-24">
               <div id="boss-status-badge-${b.id}">${statusBadge}</div>
             </td>
 
             <!-- 2. ข้อมูลบอส -->
-            <td class="py-2.5 px-3 align-middle">
-              <div class="flex items-center gap-2.5">
+            <td class="py-3 px-3 align-middle">
+              <div class="flex items-center gap-3">
                 <div class="relative cursor-pointer shrink-0" onclick="${isAdminActive ? `openEditBossModal('${b.id}')` : `openBossDropLogModal('${b.id}')`}" title="${isAdminActive ? 'คลิกแก้ไขรูปโปรไฟล์บอส' : escapeHtml(b.name)}">
                   ${avatarThumb}
                 </div>
                 <div class="min-w-0">
-                  <div class="flex items-center gap-1.5 flex-wrap">
-                    <span class="text-sm font-black ${nameColorClass} truncate max-w-[160px] sm:max-w-[200px]" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>
-                    <span class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold border ${levelBadgeClass}">Lv.${escapeHtml(b.level || '??')}</span>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-base sm:text-lg font-black ${nameColorClass} truncate max-w-[220px] sm:max-w-[320px]" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold border ${levelBadgeClass}">Lv.${escapeHtml(b.level || '??')}</span>
                     ${typeIcon}
                   </div>
-                  <div class="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
-                    <span class="truncate max-w-[140px]"><i class="fa-solid fa-location-dot text-slate-500 text-[10px] mr-1"></i>${escapeHtml(b.map || 'ไม่ระบุแมพ')}</span>
-                    ${b.note ? `<span class="text-amber-400/80 truncate max-w-[120px] font-mono text-[10px]"><i class="fa-solid fa-note-sticky text-[9px] mr-1"></i>${escapeHtml(b.note)}</span>` : ''}
+                  <div class="flex items-center gap-2.5 text-xs text-slate-400 mt-0.5">
+                    <span class="truncate max-w-[160px]"><i class="fa-solid fa-location-dot text-slate-500 text-[11px] mr-1"></i>${escapeHtml(b.map || 'ไม่ระบุแมพ')}</span>
+                    ${b.note ? `<span class="text-amber-400/90 truncate max-w-[140px] font-mono text-[11px]"><i class="fa-solid fa-note-sticky text-[10px] mr-1"></i>${escapeHtml(b.note)}</span>` : ''}
                   </div>
                 </div>
               </div>

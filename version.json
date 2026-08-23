@@ -1,5 +1,5 @@
 {
-  "version": "1.2.3",
-  "buildTime": 1787082000000,
-  "releaseNotes": "Update Thai source label and remove row hover highlight"
+  "version": "1.2.4",
+  "buildTime": 1787083000000,
+  "releaseNotes": "Enlarge boss names and avatars in table view"
 }
