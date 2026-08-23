@@ -941,18 +941,97 @@ function clearSelectedBosses() {
   updateSelectedBossesUI();
 }
 
+async function safeCopyToClipboard(text) {
+  if (!text) return false;
+  // 1. Try modern Async Clipboard API
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (e) {
+      console.warn('[Clipboard] navigator.clipboard.writeText failed:', e);
+    }
+  }
+
+  // 2. Try classic textarea execCommand
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.top = '0';
+    textarea.style.left = '0';
+    textarea.style.width = '2em';
+    textarea.style.height = '2em';
+    textarea.style.padding = '0';
+    textarea.style.border = 'none';
+    textarea.style.outline = 'none';
+    textarea.style.boxShadow = 'none';
+    textarea.style.background = 'transparent';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    if (successful) return true;
+  } catch (err) {
+    console.error('[Clipboard] document.execCommand copy failed:', err);
+  }
+
+  return false;
+}
+
+function openGameChatCopyPreviewModal(text) {
+  let modal = document.getElementById('boss-game-chat-copy-modal');
+  if (!modal) {
+    const div = document.createElement('div');
+    div.id = 'boss-game-chat-copy-modal';
+    div.className = 'fixed inset-0 z-[80] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in';
+    div.innerHTML = `
+      <div class="apple-modal-box relative w-full max-w-md bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-amber-500/60 rounded-3xl p-5 shadow-2xl space-y-3.5" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">📋</span>
+            <h3 class="text-sm font-bold text-white">ข้อความสำหรับแชทเกมส์</h3>
+          </div>
+          <button type="button" onclick="document.getElementById('boss-game-chat-copy-modal').classList.add('hidden')" class="text-slate-400 hover:text-white p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+        <p class="text-[11px] text-slate-400">กดปุ่มคัดลอกด้านล่าง หรือแตะกล่องข้อความเพื่อนำไปวางในแชทเกมส์:</p>
+        <textarea id="boss-game-chat-textarea" readonly rows="8" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-500 select-all leading-relaxed"></textarea>
+        <div class="flex items-center justify-end gap-2 pt-1">
+          <button type="button" onclick="document.getElementById('boss-game-chat-copy-modal').classList.add('hidden')" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs font-semibold">ปิด</button>
+          <button type="button" onclick="const ta = document.getElementById('boss-game-chat-textarea'); ta.select(); document.execCommand('copy'); if (typeof showToast === 'function') showToast('📋 คัดลอกข้อความสำเร็จ!', 'success');" class="px-5 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 rounded-xl text-xs font-black shadow-lg flex items-center gap-1.5"><i class="fa-solid fa-copy"></i> คัดลอกทั้งหมด</button>
+        </div>
+      </div>
+    `;
+    div.onclick = () => div.classList.add('hidden');
+    document.body.appendChild(div);
+    modal = div;
+  }
+  const textarea = document.getElementById('boss-game-chat-textarea');
+  if (textarea) textarea.value = text;
+  modal.classList.remove('hidden');
+  if (textarea) {
+    textarea.focus();
+    textarea.select();
+  }
+}
+
 async function copySelectedBossesToGameChat() {
   const now = new Date();
   let list = [];
 
-  if (selectedBossIds.size > 0) {
+  if (selectedBossIds && selectedBossIds.size > 0) {
     // If user ticked specific bosses, copy those
     list = bossList
       .filter(b => selectedBossIds.has(b.id))
       .map(b => {
         const nextSpawn = getBossNextSpawn(b);
         const diffMs = nextSpawn ? nextSpawn.getTime() - now.getTime() : null;
-        return { ...b, nextSpawn, diffMs };
+        const status = getBossStatus(b, nextSpawn, now);
+        return { ...b, nextSpawn, diffMs, status };
       });
   } else {
     // If no boss specifically ticked, copy upcoming active bosses
@@ -970,38 +1049,42 @@ async function copySelectedBossesToGameChat() {
     list = bossList.map(b => {
       const nextSpawn = getBossNextSpawn(b);
       const diffMs = nextSpawn ? nextSpawn.getTime() - now.getTime() : null;
-      return { ...b, nextSpawn, diffMs };
+      const status = getBossStatus(b, nextSpawn, now);
+      return { ...b, nextSpawn, diffMs, status };
     });
   }
 
-  // Sort by diffMs so upcoming bosses appear first
+  // Sort: Alive first, then Soon, then Cooldown by nearest nextSpawn, then unrecorded
   list.sort((a, b) => {
-    if (a.diffMs === null && b.diffMs === null) return 0;
-    if (a.diffMs === null) return 1;
-    if (b.diffMs === null) return -1;
-    return a.diffMs - b.diffMs;
+    const order = { alive: 1, soon: 2, cooldown: 3, unrecorded: 4 };
+    if (order[a.status] !== order[b.status]) {
+      return (order[a.status] || 99) - (order[b.status] || 99);
+    }
+    if (a.diffMs !== null && b.diffMs !== null) {
+      return a.diffMs - b.diffMs;
+    }
+    return 0;
   });
 
   const lines = list.map(b => formatBossForGameChat(b));
   const fullText = lines.join('\n');
 
-  try {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(fullText);
-    } else {
-      const area = document.createElement('textarea');
-      area.value = fullText; area.style.position = 'fixed'; area.style.opacity = '0';
-      document.body.appendChild(area); area.focus(); area.select();
-      document.execCommand('copy'); area.remove();
-    }
+  if (!fullText.trim()) {
+    if (typeof showToast === 'function') showToast('ไม่มีข้อมูลบอสสำหรับคัดลอก', 'warning');
+    return;
+  }
+
+  const success = await safeCopyToClipboard(fullText);
+  if (success) {
     if (typeof showToast === 'function') {
-      showToast(selectedBossIds.size > 0 
-        ? `📋 คัดลอกบอสที่เลือก ${list.length} ตัวสำหรับแชทเกมส์เรียบร้อยแล้ว!`
-        : `📋 คัดลอกเวลาบอส ${list.length} ตัวสำหรับแชทเกมส์เรียบร้อยแล้ว!`, 'success');
+      showToast(selectedBossIds && selectedBossIds.size > 0 
+        ? `📋 คัดลอกบอสที่เลือก ${list.length} ตัวแล้ว! วาง (Ctrl+V) ในแชทเกมส์ได้ทันที 🎉`
+        : `📋 คัดลอกเวลาบอส ${list.length} ตัวแล้ว! วาง (Ctrl+V) ในแชทเกมส์ได้ทันที 🎉`, 'success');
     }
     if (typeof playChime === 'function') playChime();
-  } catch (error) {
-    if (typeof showToast === 'function') showToast('คัดลอกข้อมูลไม่สำเร็จ', 'warning');
+  } else {
+    // Fallback: Open popup modal displaying text box with auto-select
+    openGameChatCopyPreviewModal(fullText);
   }
 }
 
@@ -1387,18 +1470,11 @@ async function copyBossInfo(bossId) {
   const boss = bossList.find(item => item.id === bossId);
   if (!boss) return;
   const text = formatBossForGameChat(boss);
-  try {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text);
-    } else {
-      const area = document.createElement('textarea');
-      area.value = text; area.style.position = 'fixed'; area.style.opacity = '0';
-      document.body.appendChild(area); area.focus(); area.select();
-      document.execCommand('copy'); area.remove();
-    }
-    if (typeof showToast === 'function') showToast(`📋 คัดลอก "${text}" แล้ว`, 'success');
-  } catch (error) {
-    if (typeof showToast === 'function') showToast('คัดลอกข้อมูลไม่สำเร็จ', 'warning');
+  const success = await safeCopyToClipboard(text);
+  if (success) {
+    if (typeof showToast === 'function') showToast(`📋 คัดลอก "${text}" แล้ว! วางในแชทเกมส์ได้ทันที`, 'success');
+  } else {
+    openGameChatCopyPreviewModal(text);
   }
 }
 
@@ -4465,6 +4541,8 @@ window.toggleSelectAllBosses = toggleSelectAllBosses;
 window.clearSelectedBosses = clearSelectedBosses;
 window.copySelectedBossesToGameChat = copySelectedBossesToGameChat;
 window.formatBossForGameChat = formatBossForGameChat;
+window.safeCopyToClipboard = safeCopyToClipboard;
+window.openGameChatCopyPreviewModal = openGameChatCopyPreviewModal;
 
 
 
