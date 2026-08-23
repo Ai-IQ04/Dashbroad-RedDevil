@@ -1222,11 +1222,15 @@ function renderBossTimerCards() {
         const isGuildActivity = GUILD_SCORING_BOSS_IDS.has(b.id) || (b.name && /lucus|bahel|libitina|rakajeth|tumier|neva|icarut|morti|motti|arena|camalia|world/i.test(b.name));
         const isHighTier = isHighLevelBoss(b.level, b.id, b.name);
 
-        let nameColorClass = 'text-emerald-300 font-bold';
+        let nameColorClass = 'text-emerald-400 font-black drop-shadow-[0_1px_4px_rgba(52,211,153,0.35)]';
+        let tagBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0"><i class="fa-solid fa-shield-halved text-[8px] mr-1"></i>ทั่วไป</span>`;
+
         if (isGuildActivity) {
-          nameColorClass = 'text-amber-400 font-black';
+          nameColorClass = 'text-amber-400 font-black drop-shadow-[0_1px_4px_rgba(251,191,36,0.4)]';
+          tagBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/50 shrink-0"><i class="fa-solid fa-star text-[8px] text-amber-400 mr-1"></i>กิลด์</span>`;
         } else if (isHighTier) {
-          nameColorClass = 'text-rose-300 font-black';
+          nameColorClass = 'text-rose-400 font-black drop-shadow-[0_1px_4px_rgba(244,63,94,0.4)]';
+          tagBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/50 shrink-0"><i class="fa-solid fa-skull-crossbones text-[8px] text-rose-400 mr-1"></i>ระดับสูง</span>`;
         }
 
         let statusBadge = '';
@@ -1257,40 +1261,41 @@ function renderBossTimerCards() {
         listRowsHtml += `
           <div id="boss-card-${b.id}" oncontextmenu="event.preventDefault(); copyBossForGameChat('${b.id}'); return false;"
             title="${escapeHtml(b.name)} (คลิกขวาเพื่อคัดลอกลงแชทเกมส์)"
-            class="boss-card ${rowBg} flex items-center justify-between gap-2.5 sm:gap-4 px-3 sm:px-4 py-2.5 border-b border-slate-800/60 transition cursor-pointer">
+            class="boss-card ${rowBg} flex items-center justify-between gap-3 sm:gap-4 px-3.5 sm:px-4 py-2.5 border-b border-slate-800/60 transition cursor-pointer">
             
             <!-- 1. สถานะ & ข้อมูลบอส -->
-            <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+            <div class="flex items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
               <div class="shrink-0 w-20 sm:w-24">${statusBadge}</div>
               <div class="min-w-0 flex items-center gap-2 flex-wrap sm:flex-nowrap flex-1">
-                <span class="text-xs sm:text-sm ${nameColorClass} truncate max-w-[150px] sm:max-w-[220px]" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>
-                <span class="text-[9.5px] font-mono text-slate-400 px-1.5 py-0.2 rounded bg-slate-900 border border-slate-800 shrink-0">Lv.${escapeHtml(b.level || '??')}</span>
-                <span class="text-[11px] text-slate-400 truncate max-w-[130px] hidden md:inline"><i class="fa-solid fa-location-dot text-slate-500 text-[10px] mr-1"></i>${escapeHtml(b.map || 'ไม่ระบุแมพ')}</span>
+                <span class="text-sm sm:text-base md:text-lg ${nameColorClass} truncate max-w-[170px] sm:max-w-[280px]" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>
+                <span class="text-[10px] font-mono text-slate-400 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 shrink-0">Lv.${escapeHtml(b.level || '??')}</span>
+                ${tagBadge}
+                <span class="text-xs text-slate-400 truncate max-w-[140px] hidden md:inline"><i class="fa-solid fa-location-dot text-slate-500 text-[10px] mr-1"></i>${escapeHtml(b.map || 'ไม่ระบุแมพ')}</span>
               </div>
             </div>
 
             <!-- 2. เวลาเกิดรอบถัดไป -->
-            <div class="text-center shrink-0 min-w-[80px] sm:min-w-[120px] hidden xs:block">
-              <span class="text-[11.5px] sm:text-xs font-mono font-bold text-amber-300/90">${nextSpawnText}</span>
+            <div class="text-center shrink-0 min-w-[85px] sm:min-w-[130px] hidden xs:block">
+              <span class="text-xs sm:text-sm font-mono font-bold text-amber-300">${nextSpawnText}</span>
             </div>
 
             <!-- 3. เวลานับถอยหลัง -->
-            <div id="boss-cd-${b.id}" class="text-xs sm:text-sm font-mono font-black ${cdColor} tracking-tight min-w-[75px] sm:min-w-[95px] text-right shrink-0">
+            <div id="boss-cd-${b.id}" class="text-sm sm:text-base font-mono font-black ${cdColor} tracking-tight min-w-[80px] sm:min-w-[110px] text-right shrink-0">
               ${countdownText}
             </div>
 
             <!-- 4. ปุ่มจัดการด่วน -->
-            <div class="flex items-center gap-1 shrink-0">
+            <div class="flex items-center gap-1.5 shrink-0">
               <button onclick="copyBossForGameChat('${b.id}')"
-                class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-slate-700 flex items-center justify-center transition shadow-sm"
+                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-slate-700 flex items-center justify-center transition shadow-sm"
                 title="คลิกเพื่อคัดลอกลงแชทเกมส์">
-                <i class="fa-solid fa-copy text-[11px]"></i>
+                <i class="fa-solid fa-copy text-xs"></i>
               </button>
               ${isAdminActive ? `
               <button onclick="openBossKillConfirmModal('${b.id}')"
-                class="w-7 h-7 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 flex items-center justify-center transition shadow-sm"
+                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 flex items-center justify-center transition shadow-sm"
                 title="บันทึกบอสตาย (Kill Confirm)">
-                <i class="fa-solid fa-skull text-[11px]"></i>
+                <i class="fa-solid fa-skull text-xs"></i>
               </button>` : ''}
             </div>
 
