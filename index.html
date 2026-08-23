@@ -3885,6 +3885,13 @@
             <span data-i18n="btn_weekly_summary">สรุปคะแนน</span>
           </button>
 
+          <!-- 🏆 ปุ่มเปิดสรุป Top 10 & Export Image -->
+          <button onclick="openTop10SummaryModal()"
+            class="apple-btn apple-btn-teal inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
+            <i class="fa-solid fa-trophy text-xs"></i>
+            <span data-i18n="btn_top10_summary">สรุป Top 10</span>
+          </button>
+
           <button onclick="openMemberDashboard()"
             class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm">
             <i class="fa-solid fa-user-check text-xs"></i>
@@ -9184,6 +9191,65 @@
       m.cp = Number(m.weeklyCp[currentWeekNumber]) || 0;
     }
     const ensureMemberWeeklyChecks = ensureMemberWeeklyData;
+
+    // คำนวณความคืบหน้าและการเติบโตของ CP (Weekly CP Progression & Growth Calculation)
+    function calculateCpGrowth(member, weekNumber = currentWeekNumber) {
+      if (!member) return { currentCp: 0, prevCp: null, delta: 0, pct: '0.0', cycleDelta: 0, cyclePct: '0.0', baseCp: 0, history: [0, 0, 0, 0] };
+      ensureMemberWeeklyData(member);
+      const targetWeek = Math.max(1, Math.min(4, parseInt(weekNumber) || 1));
+      const currentCp = Number(member.weeklyCp && member.weeklyCp[targetWeek] !== undefined ? member.weeklyCp[targetWeek] : member.cp) || 0;
+
+      let prevCp = null;
+      if (targetWeek > 1) {
+        prevCp = Number(member.weeklyCp && member.weeklyCp[targetWeek - 1] !== undefined ? member.weeklyCp[targetWeek - 1] : 0);
+      }
+
+      const delta = prevCp !== null && prevCp > 0 ? (currentCp - prevCp) : null;
+      const pct = (prevCp !== null && prevCp > 0 && delta !== null) ? ((delta / prevCp) * 100).toFixed(1) : null;
+
+      const baseCp = Number(member.weeklyCp && member.weeklyCp[1] !== undefined ? member.weeklyCp[1] : currentCp) || 0;
+      const cycleDelta = baseCp > 0 ? (currentCp - baseCp) : 0;
+      const cyclePct = baseCp > 0 ? ((cycleDelta / baseCp) * 100).toFixed(1) : '0.0';
+
+      const history = [1, 2, 3, 4].map(w => Number(member.weeklyCp && member.weeklyCp[w] !== undefined ? member.weeklyCp[w] : 0));
+
+      return {
+        currentCp,
+        prevCp,
+        delta,
+        pct,
+        cycleDelta,
+        cyclePct,
+        baseCp,
+        history
+      };
+    }
+
+    function renderCpGrowthBadgeHtml(member, weekNumber = currentWeekNumber) {
+      const growth = calculateCpGrowth(member, weekNumber);
+      if (growth.delta === null) return '';
+      if (growth.delta > 0) {
+        const formattedDelta = growth.delta >= 1000000 
+          ? `+${(growth.delta / 1000000).toFixed(2)}M` 
+          : growth.delta >= 1000 
+            ? `+${(growth.delta / 1000).toFixed(1)}k` 
+            : `+${growth.delta}`;
+        return `<span class="inline-flex items-center gap-0.5 px-1 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shrink-0" title="เพิ่มขึ้น +${growth.delta.toLocaleString()} (${growth.pct}%) เทียบกับสัปดาห์ก่อน">
+          <i class="fa-solid fa-arrow-trend-up text-[7px]"></i>${formattedDelta}
+        </span>`;
+      }
+      if (growth.delta < 0) {
+        const formattedDelta = Math.abs(growth.delta) >= 1000000 
+          ? `-${(Math.abs(growth.delta) / 1000000).toFixed(2)}M` 
+          : Math.abs(growth.delta) >= 1000 
+            ? `-${(Math.abs(growth.delta) / 1000).toFixed(1)}k` 
+            : `${growth.delta}`;
+        return `<span class="inline-flex items-center gap-0.5 px-1 py-0.2 rounded text-[9px] font-mono font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 shrink-0" title="ลดลง ${growth.delta.toLocaleString()} (${growth.pct}%) เทียบกับสัปดาห์ก่อน">
+          <i class="fa-solid fa-arrow-trend-down text-[7px]"></i>${formattedDelta}
+        </span>`;
+      }
+      return `<span class="text-[9px] font-mono text-slate-500 shrink-0" title="ไม่มีการเปลี่ยนแปลง">±0</span>`;
+    }
 
     // ตรวจสอบเวอร์ชันข้อมูล
     let storedVersion = localStorage.getItem('guild_data_version');
@@ -14978,9 +15044,12 @@ Output strictly valid JSON with no markdown formatting.`;
               onclick="${isScoringAdmin ? `openQuickEditCpModal(${member.id})` : ''}"
               title="${isScoringAdmin ? `คลิกเพื่อแก้ไข CP ประจำ ${getWeekName(currentWeekNumber)}` : 'CP'}"
             >
-              <div class="flex items-center justify-center gap-1">
-                <span>${member.cp ? Number(member.cp).toLocaleString() : '-'}</span>
-                ${isScoringAdmin ? '<i class="fa-solid fa-pen text-[8px] opacity-0 group-hover/cp:opacity-100 text-amber-400 transition ml-0.5"></i>' : ''}
+              <div class="flex flex-col items-center justify-center gap-0.5">
+                <div class="flex items-center justify-center gap-1">
+                  <span>${member.cp ? Number(member.cp).toLocaleString() : '-'}</span>
+                  ${isScoringAdmin ? '<i class="fa-solid fa-pen text-[8px] opacity-0 group-hover/cp:opacity-100 text-amber-400 transition ml-0.5"></i>' : ''}
+                </div>
+                ${renderCpGrowthBadgeHtml(member, currentWeekNumber)}
               </div>
             </td>
 
@@ -15936,12 +16005,57 @@ Output strictly valid JSON with no markdown formatting.`;
         </div>`;
       }).join('');
 
+      const growth = calculateCpGrowth(member, weekNumber);
+      const cpHistory = [1, 2, 3, 4].map(w => {
+        const val = Number(member.weeklyCp && member.weeklyCp[w] !== undefined ? member.weeklyCp[w] : 0);
+        return { week: w, cp: val };
+      });
+      const validCps = cpHistory.filter(h => h.cp > 0);
+      const minCp = validCps.length ? Math.min(...validCps.map(h => h.cp)) : 0;
+      const maxCp = validCps.length ? Math.max(...validCps.map(h => h.cp)) : 0;
+      const cpRange = maxCp - minCp || 1;
+
+      const svgWidth = 280;
+      const svgHeight = 45;
+      const padX = 25;
+      const padY = 8;
+      const pts = cpHistory.map((h, i) => {
+        const x = padX + (i * ((svgWidth - padX * 2) / 3));
+        const normalized = validCps.length > 1 && h.cp > 0 ? (h.cp - minCp) / cpRange : 0.5;
+        const y = (svgHeight - padY) - (normalized * (svgHeight - padY * 2));
+        return { ...h, x, y, active: h.cp > 0 };
+      });
+      const validPts = pts.filter(p => p.active);
+      const polylinePoints = validPts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+      const sparklineSvg = `
+        <svg viewBox="0 0 ${svgWidth} ${svgHeight + 12}" class="w-full h-12 overflow-visible">
+          <defs>
+            <linearGradient id="cpGrad-${member.id}" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#38bdf8" />
+              <stop offset="100%" stop-color="#a855f7" />
+            </linearGradient>
+          </defs>
+          ${validPts.length > 1 ? `<polyline fill="none" stroke="url(#cpGrad-${member.id})" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${polylinePoints}" />` : ''}
+          ${pts.map(p => `
+            <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.week === weekNumber ? '4.5' : '3'}" fill="${p.week === weekNumber ? '#38bdf8' : p.active ? '#a855f7' : '#334155'}" stroke="${p.week === weekNumber ? '#ffffff' : '#0f172a'}" stroke-width="1.5" />
+            <text x="${p.x.toFixed(1)}" y="${svgHeight + 10}" text-anchor="middle" font-size="8" fill="${p.week === weekNumber ? '#38bdf8' : '#64748b'}" font-weight="${p.week === weekNumber ? 'bold' : 'normal'}">W${p.week}</text>
+          `).join('')}
+        </svg>
+      `;
+
+      const cycleDeltaTone = growth.cycleDelta > 0 ? 'text-emerald-400' : growth.cycleDelta < 0 ? 'text-rose-400' : 'text-slate-400';
+      const cycleDeltaSign = growth.cycleDelta > 0 ? '+' : '';
+
       container.innerHTML = `<div class="bg-gradient-to-br from-sky-950/70 via-slate-950 to-indigo-950/60 rounded-2xl border border-sky-500/30 p-4 space-y-3">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div class="text-[10px] uppercase tracking-wider text-sky-300 font-bold">สรุปส่วนตัว · สัปดาห์ ${weekNumber}</div>
             <h4 class="text-base font-bold text-white mt-1">${escapeHtml(member.characterName || member.name || member.id)}</h4>
-            <p class="text-[11px] text-slate-400 mt-0.5">${escapeHtml(member.guild || '-')} · CP ${Number(member.cp || 0).toLocaleString()}</p>
+            <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
+              <span>${escapeHtml(member.guild || '-')} · CP ${Number(member.cp || 0).toLocaleString()}</span>
+              ${renderCpGrowthBadgeHtml(member, weekNumber)}
+            </p>
           </div>
           <div class="text-right">
             <div class="text-2xl font-black ${scoreTone} font-mono">${score}<span class="text-xs text-slate-400">/${maxScore}</span></div>
@@ -15955,6 +16069,39 @@ Output strictly valid JSON with no markdown formatting.`;
           <div class="bg-slate-900/70 rounded-xl p-2"><div class="text-[10px] text-slate-500">อันดับกิลด์</div><div class="text-sm font-bold text-sky-300">#${guildRank || '-'}</div></div>
           <div class="bg-slate-900/70 rounded-xl p-2"><div class="text-[10px] text-slate-500">เทียบสัปดาห์ก่อน</div><div class="text-[11px] font-semibold mt-1">${deltaHtml}</div></div>
         </div>
+
+        <!-- CP Progression Track (กราฟและพัฒนาการพลังรบรายสัปดาห์) -->
+        <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800/80 space-y-2.5">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-1.5">
+              <i class="fa-solid fa-chart-line text-xs text-sky-400"></i>
+              <span class="text-xs font-bold text-slate-200">พัฒนาการพลังรบ (Weekly CP Progression)</span>
+            </div>
+            <div class="text-[11px] font-mono font-bold ${cycleDeltaTone}">
+              ${growth.cycleDelta !== 0 ? `รอบนี้ ${cycleDeltaSign}${growth.cycleDelta.toLocaleString()} (${cycleDeltaSign}${growth.cyclePct}%)` : 'รอบนี้คงที่'}
+            </div>
+          </div>
+          
+          <div class="py-1">
+            ${sparklineSvg}
+          </div>
+
+          <div class="grid grid-cols-4 gap-1.5 pt-1 text-center">
+            ${cpHistory.map(h => {
+              const isCurrent = h.week === weekNumber;
+              const wGrowth = calculateCpGrowth(member, h.week);
+              const badge = wGrowth.delta !== null && wGrowth.delta !== 0 ? (wGrowth.delta > 0 ? `<span class="text-[8px] font-mono font-bold text-emerald-400">+${(wGrowth.delta/1000).toFixed(0)}k</span>` : `<span class="text-[8px] font-mono font-bold text-rose-400">${(wGrowth.delta/1000).toFixed(0)}k</span>`) : '<span class="text-[8px] font-mono text-slate-500">-</span>';
+              return `
+                <div class="rounded-lg p-1.5 border ${isCurrent ? 'bg-sky-950/60 border-sky-500/50 text-white shadow-sm' : 'bg-slate-950/60 border-slate-800/80 text-slate-300'}">
+                  <div class="text-[9px] font-semibold ${isCurrent ? 'text-sky-300' : 'text-slate-400'}">W${h.week}</div>
+                  <div class="text-[10px] font-mono font-bold truncate mt-0.5">${h.cp > 0 ? Number(h.cp).toLocaleString() : '-'}</div>
+                  <div class="mt-0.5">${badge}</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-1.5 border-t border-slate-800/80 pt-3">${activityRows || '<span class="text-xs text-slate-500">ยังไม่มีกิจกรรม</span>'}</div>
       </div>`;
     }
@@ -17454,10 +17601,25 @@ Output strictly valid JSON with no markdown formatting.`;
     }
 
     // ================= ฟีเจอร์: สรุปคะแนน 10 อันดับแรก & เซฟรูปภาพ (Top 10 Export) =================
-    function openTop10SummaryModal() {
-      const modal = document.getElementById('top10-summary-modal');
-      if (!modal) return;
+    let currentTop10Mode = 'score'; // 'score' | 'growth'
 
+    function switchTop10Mode(mode) {
+      currentTop10Mode = mode;
+      const btnScore = document.getElementById('btn-top10-mode-score');
+      const btnGrowth = document.getElementById('btn-top10-mode-growth');
+      if (btnScore && btnGrowth) {
+        if (mode === 'score') {
+          btnScore.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm border border-emerald-400/40';
+          btnGrowth.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-900/90 text-slate-400 hover:text-white border border-slate-700/70';
+        } else {
+          btnGrowth.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 shadow-sm border border-yellow-300/60 font-black';
+          btnScore.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-900/90 text-slate-400 hover:text-white border border-slate-700/70';
+        }
+      }
+      renderTop10Content();
+    }
+
+    function renderTop10Content() {
       const weekLabel = document.getElementById('top10-card-week');
       if (weekLabel) weekLabel.textContent = t('current_week', { week: currentWeekNumber });
 
@@ -17467,13 +17629,79 @@ Output strictly valid JSON with no markdown formatting.`;
         dateLabel.textContent = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
       }
 
-      const totalScoreSum = members.reduce((sum, m) => sum + calculateTotalScore(m.checks), 0);
-      const avgScore = members.length > 0 ? (totalScoreSum / members.length).toFixed(1) : "0.0";
+      const titleEl = document.getElementById('top10-card-title');
+      const badgeEl = document.getElementById('top10-card-badge');
       const kpiLabel = document.getElementById('top10-card-kpi');
-      if (kpiLabel) kpiLabel.textContent = `AVG SCORE: ${avgScore} PTS`;
-
       const listContainer = document.getElementById('top10-card-list');
-      if (listContainer) {
+      if (!listContainer) return;
+
+      if (currentTop10Mode === 'growth') {
+        if (titleEl) titleEl.textContent = 'CP GROWTH RANKING';
+        if (badgeEl) badgeEl.textContent = 'TOP GROWTH';
+
+        const membersWithGrowth = members.map(m => {
+          const growth = calculateCpGrowth(m, currentWeekNumber);
+          return { member: m, growth };
+        });
+
+        // จัดอันดับตาม Delta มาก -> น้อย, ตามด้วย Pct, ตามด้วย CP
+        membersWithGrowth.sort((a, b) => {
+          const deltaA = a.growth.delta !== null ? a.growth.delta : -99999999;
+          const deltaB = b.growth.delta !== null ? b.growth.delta : -99999999;
+          if (deltaB !== deltaA) return deltaB - deltaA;
+          return (Number(b.member.cp) || 0) - (Number(a.member.cp) || 0);
+        });
+
+        const top10 = membersWithGrowth.slice(0, 10);
+        const validGrowths = top10.filter(item => item.growth.delta !== null && item.growth.delta > 0);
+        const avgGrowth = validGrowths.length ? Math.round(validGrowths.reduce((sum, item) => sum + item.growth.delta, 0) / validGrowths.length) : 0;
+        if (kpiLabel) kpiLabel.textContent = `AVG GROWTH: +${avgGrowth.toLocaleString()} CP`;
+
+        listContainer.innerHTML = top10.map((item, idx) => {
+          const m = item.member;
+          const g = item.growth;
+          const isRed = m.guild === 'RedDevil';
+          const medals = ['👑 #1', '🥈 #2', '🥉 #3'];
+          const rankDisplay = idx < 3 ? medals[idx] : `#${idx + 1}`;
+          const rankColor = idx === 0 ? 'text-amber-400 font-black' : idx === 1 ? 'text-slate-200 font-bold' : idx === 2 ? 'text-amber-400 font-bold' : 'text-slate-300 font-mono font-bold';
+          const bgRank = idx === 0 ? 'bg-amber-50 border-amber-300/80 shadow-sm' : idx === 1 ? 'bg-slate-100 border-slate-300/80' : idx === 2 ? 'bg-orange-50 border-orange-300/80' : 'bg-slate-50 border-slate-200';
+          
+          const deltaDisplay = g.delta !== null && g.delta > 0
+            ? `<div class="text-right"><span class="text-emerald-400 font-black font-mono text-sm sm:text-base">+${g.delta.toLocaleString()}</span><div class="text-[10px] text-emerald-300/90 font-bold font-mono">(+${g.pct}%)</div></div>`
+            : g.delta !== null && g.delta < 0
+              ? `<div class="text-right"><span class="text-rose-400 font-black font-mono text-sm sm:text-base">${g.delta.toLocaleString()}</span><div class="text-[10px] text-rose-300/90 font-bold font-mono">(${g.pct}%)</div></div>`
+              : `<span class="text-slate-400 font-bold font-mono text-xs">±0</span>`;
+
+          return `
+            <div class="flex items-center justify-between px-3.5 py-2.5 rounded-xl border ${bgRank} gap-3" style="box-sizing: border-box;">
+              <div class="flex items-center gap-3 min-w-0 flex-1">
+                <span class="w-11 shrink-0 text-center text-sm ${rankColor}">${rankDisplay}</span>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2 flex-wrap" style="line-height: 1.4;">
+                    <span class="font-bold text-white text-sm" style="letter-spacing: normal;">${escapeHtml(m.characterName)}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isRed ? 'bg-rose-500/20 text-rose-300 border border-rose-500/35' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/35'}">${isRed ? '🔴 RedDevil' : '🔵 BlueDevil'}</span>
+                  </div>
+                  <div class="text-[11px] text-slate-400 font-mono mt-1" style="letter-spacing: normal;">
+                    CP ปัจจุบัน: <strong class="text-amber-300 font-bold">${m.cp ? Number(m.cp).toLocaleString() : '0'}</strong>
+                    ${g.prevCp ? ` • สัปดาห์ก่อน: ${g.prevCp.toLocaleString()}` : ''}
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-right shrink-0 pl-2">
+                ${deltaDisplay}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        if (titleEl) titleEl.textContent = 'GUILD LEADERBOARD';
+        if (badgeEl) badgeEl.textContent = 'TOP 10';
+
+        const totalScoreSum = members.reduce((sum, m) => sum + calculateTotalScore(m.checks), 0);
+        const avgScore = members.length > 0 ? (totalScoreSum / members.length).toFixed(1) : "0.0";
+        if (kpiLabel) kpiLabel.textContent = `AVG SCORE: ${avgScore} PTS`;
+
         const sorted = [...members].sort((a, b) => {
           const scoreDiff = calculateTotalScore(b.checks) - calculateTotalScore(a.checks);
           if (scoreDiff !== 0) return scoreDiff;
@@ -17514,7 +17742,12 @@ Output strictly valid JSON with no markdown formatting.`;
           `;
         }).join('');
       }
+    }
 
+    function openTop10SummaryModal(mode = 'score') {
+      const modal = document.getElementById('top10-summary-modal');
+      if (!modal) return;
+      switchTop10Mode(mode);
       modal.classList.remove('hidden');
     }
 
@@ -20113,6 +20346,20 @@ Output strictly valid JSON with no markdown formatting.`;
         </button>
       </div>
 
+      <!-- Mode Switch Tabs -->
+      <div class="flex items-center gap-2 pt-3 pb-1 border-b border-slate-800/80">
+        <button id="btn-top10-mode-score" onclick="switchTop10Mode('score')"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm border border-emerald-400/40">
+          <i class="fa-solid fa-trophy text-xs"></i>
+          <span>🏆 คะแนนกิจกรรม</span>
+        </button>
+        <button id="btn-top10-mode-growth" onclick="switchTop10Mode('growth')"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-900/90 text-slate-400 hover:text-white border border-slate-700/70">
+          <i class="fa-solid fa-chart-line text-xs text-amber-400"></i>
+          <span>⚡ พัฒนาการ CP สูงสุด</span>
+        </button>
+      </div>
+
       <!-- Capture Container Preview Card (Element to be captured by html2canvas) -->
       <div class="my-4 overflow-x-auto p-1 flex justify-center">
         <div id="top10-capture-card"
@@ -20128,9 +20375,9 @@ Output strictly valid JSON with no markdown formatting.`;
               </div>
               <div>
                 <div class="flex items-center gap-2">
-                  <h2 class="text-xl font-black text-white tracking-wider" style="line-height: 1.2;">GUILD LEADERBOARD
+                  <h2 id="top10-card-title" class="text-xl font-black text-white tracking-wider" style="line-height: 1.2;">GUILD LEADERBOARD
                   </h2>
-                  <span
+                  <span id="top10-card-badge"
                     class="px-2.5 py-0.5 rounded-full bg-indigo-500/25 text-indigo-200 border border-indigo-500/50 text-[11px] font-black font-mono">TOP
                     10</span>
                 </div>

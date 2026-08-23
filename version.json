@@ -1,5 +1,5 @@
 {
-  "version": "1.5.7",
-  "buildTime": 1787117000000,
-  "releaseNotes": "Fix member ID type matching across attendance check and quick edit actions"
+  "version": "1.5.8",
+  "buildTime": 1787118000000,
+  "releaseNotes": "Add Weekly CP Progression, CP Growth badges, sparklines, and Top 10 Most Improved CP leaderboard"
 }

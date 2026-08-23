@@ -354,8 +354,17 @@ function readAttendance_() {
           characterName: name,
           guild: guildIndex >= 0 ? String(item[guildIndex] || '') : '',
           cp: cpIndex >= 0 ? Number(item[cpIndex]) || 0 : 0,
+          weeklyCp: { 1: 0, 2: 0, 3: 0, 4: 0 },
           weeklyChecks: { 1: [], 2: [], 3: [], 4: [] }
         };
+      }
+      if (!merged[key].weeklyCp) {
+        merged[key].weeklyCp = { 1: merged[key].cp || 0, 2: merged[key].cp || 0, 3: merged[key].cp || 0, 4: merged[key].cp || 0 };
+      }
+      if (cpIndex >= 0) {
+        const weekCpVal = Number(item[cpIndex]) || 0;
+        merged[key].weeklyCp[week] = weekCpVal;
+        merged[key].cp = weekCpVal;
       }
       if (activityIndexes.length > 0) {
         merged[key].weeklyChecks[week] = activityIndexes.map(index => checkboxValue_(item[index]));
@@ -396,7 +405,7 @@ function writeAttendance_(payload) {
         const checks = member.weeklyChecks && member.weeklyChecks[week] || [];
         rows.push([
           String(member.id || ''), member.num || '', String(member.characterName || ''),
-          String(member.guild || ''), Number(member.cp) || 0
+          String(member.guild || ''), (member.weeklyCp && member.weeklyCp[week] !== undefined) ? Number(member.weeklyCp[week]) : (Number(member.cp) || 0)
         ].concat(activities.map((_, index) => Boolean(checks[index]))));
       });
 
