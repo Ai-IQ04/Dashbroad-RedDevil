@@ -690,9 +690,10 @@ function checkBossAlerts() {
 }
 
 function getBossAlertWebNow_() {
-  const offsetValue = fetchBossAlertFirebase_('.info/serverTimeOffset');
-  const offsetMs = Number(offsetValue);
-  return new Date(Date.now() + (isFinite(offsetMs) ? offsetMs : 0));
+  // Firebase Realtime Database returns HTTP 400 for the special `.info` path
+  // through this REST endpoint. Apps Script triggers already use a reliable
+  // server clock, so avoid querying `.info/serverTimeOffset` here.
+  return new Date();
 }
 
 function fetchBossAlertFirebase_(path) {
