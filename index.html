@@ -4457,9 +4457,9 @@
           </button>
         </div>
  
-        <button id="btn-copy-selected-bosses" onclick="copySelectedBossesToGameChat()"
+        <button id="btn-copy-selected-bosses" onclick="copySelectedBossesToGameChat()" oncontextmenu="event.preventDefault(); copySelectedBossesToGameChat(); return false;"
           class="apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold shadow-md shadow-amber-500/20"
-          title="คัดลอกรายชื่อและเวลาเกิดของบอสเพื่อนำไปวางในแชทเกมส์ (หากติ๊กเลือกจะคัดลอกเฉพาะตัวที่เลือก หากไม่ติ๊กจะคัดลอกตัวที่กำลังจะเกิดทั้งหมด)">
+          title="คัดลอกรายชื่อและเวลาเกิดของบอสลงแชทเกมส์ (คลิกซ้ายหรือคลิกขวาเพื่อคัดลอก)">
           <i class="fa-solid fa-copy text-xs"></i>
           <span id="btn-copy-bosses-text">📋 คัดลอกแชทเกมส์</span>
           <span id="boss-selected-count-badge" class="hidden px-1.5 py-0.2 bg-slate-950 text-amber-300 text-[10px] font-black rounded-full shadow leading-tight">0</span>
@@ -22190,7 +22190,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=9.1"></script>
+  <script src="boss_timer.js?v=9.2"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {

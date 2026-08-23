@@ -1172,7 +1172,7 @@ function renderBossTimerCards() {
           : `<div class="w-11 h-11 rounded-2xl bg-slate-800 border ${avatarRing} flex items-center justify-center text-amber-400/90 text-sm shrink-0 shadow-inner"><i class="fa-solid fa-dragon"></i></div>`;
 
         rowsHtml += `
-          <tr id="boss-card-${b.id}" class="${rowBg} border-b border-slate-800/60 group hover:bg-slate-900/40 transition">
+          <tr id="boss-card-${b.id}" oncontextmenu="event.preventDefault(); copyBossInfo('${b.id}'); return false;" title="${escapeHtml(b.name)} (คลิกขวาเพื่อคัดลอกลงแชทเกมส์)" class="${rowBg} border-b border-slate-800/60 group hover:bg-slate-900/40 transition cursor-pointer">
             <!-- 0. เลือกบอสเพื่อคัดลอก -->
             <td class="py-3 px-3 text-center align-middle w-12" onclick="event.stopPropagation();">
               <input type="checkbox" data-boss-id="${b.id}" class="boss-select-chk w-4 h-4 rounded border-slate-700 bg-slate-900 text-amber-500 focus:ring-amber-500/50 cursor-pointer"
@@ -1414,7 +1414,7 @@ function renderBossTimerCards() {
     const guildCardClass = isGuildActivity ? ' boss-card-guild' : '';
 
     html += `
-      <div id="boss-card-${b.id}" class="boss-card${guildCardClass}${alertCardClass} relative flex flex-col justify-between bg-gradient-to-b ${cardBg} border ${cardBorder} rounded-3xl p-4 shadow-xl backdrop-blur-md transition hover:scale-[1.015] duration-200">
+      <div id="boss-card-${b.id}" oncontextmenu="event.preventDefault(); copyBossInfo('${b.id}'); return false;" title="${escapeHtml(b.name)} (คลิกขวาเพื่อคัดลอกลงแชทเกมส์)" class="boss-card${guildCardClass}${alertCardClass} relative flex flex-col justify-between bg-gradient-to-b ${cardBg} border ${cardBorder} rounded-3xl p-4 shadow-xl backdrop-blur-md transition hover:scale-[1.015] duration-200 cursor-pointer">
         <div>
           <!-- Top Row: Checkbox + Type & Status Badges -->
           <div class="flex items-center justify-between gap-1.5 mb-2.5">
