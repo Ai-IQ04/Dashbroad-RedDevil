@@ -520,7 +520,7 @@ async function testBossDiscordAlert() {
 function getBossTimerSourceLabel(boss, timer, isEn) {
   if (timer && timer.customNextSpawn) return isEn ? 'Admin custom time' : 'เวลา Admin ตั้งเอง';
   if (boss.respawnType === 'interval') return isEn ? `Interval ${boss.intervalHours}h` : `นับจากเวลาตาย ${boss.intervalHours} ชม.`;
-  return isEn ? `Fixed • ${boss.scheduleText || 'Schedule'}` : `ตาราง固定 • ${boss.scheduleText || 'ตามตาราง'}`;
+  return isEn ? `Fixed • ${boss.scheduleText || 'Schedule'}` : `เกิดตามตาราง • ${boss.scheduleText || 'ตามตาราง'}`;
 }
 
 // Initialize Boss Data
@@ -852,15 +852,18 @@ function renderBossTimerCards() {
         let avatarRing = isGuildActivity ? 'border-amber-500/50' : (isHighTier ? 'border-rose-500/50' : 'border-emerald-500/40');
 
         let statusBadge = '';
+        let rowBg = '';
         if (b.status === 'alive') {
-          rowBg = 'bg-rose-950/20 hover:bg-rose-950/35';
+          rowBg = 'bg-rose-950/20';
           statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-gradient-to-r from-rose-600 to-red-600 text-white border border-rose-400 flex items-center justify-center gap-1.5 shadow-md shadow-rose-600/40"><i class="fa-solid fa-circle text-[6px] text-rose-200 animate-ping"></i><span class="animate-pulse">เกิดแล้ว</span></span>`;
         } else if (b.status === 'soon') {
-          rowBg = 'bg-amber-950/15 hover:bg-amber-950/30';
+          rowBg = 'bg-amber-950/15';
           statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 border border-amber-300 flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/40"><i class="fa-solid fa-clock text-[9px] text-slate-950 animate-spin" style="animation-duration: 4s;"></i><span class="animate-pulse font-extrabold">ใกล้เกิด</span></span>`;
         } else if (b.status === 'cooldown') {
+          rowBg = 'bg-slate-900/20';
           statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-950/80 text-sky-300 border border-sky-500/50 flex items-center justify-center gap-1.5"><i class="fa-solid fa-hourglass-half text-[8px] text-sky-400"></i> รอเกิด</span>`;
         } else {
+          rowBg = '';
           statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-800/90 text-slate-300 border border-slate-700 flex items-center justify-center gap-1.5">⚪ ยังไม่ลงเวลา</span>`;
         }
 
@@ -884,7 +887,7 @@ function renderBossTimerCards() {
           : (isHighTier ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">บอสสูง</span>` : '');
 
         rowsHtml += `
-          <tr id="boss-card-${b.id}" class="${rowBg} transition border-b border-slate-800/60 group">
+          <tr id="boss-card-${b.id}" class="${rowBg} border-b border-slate-800/60 group">
             <!-- 1. สถานะ -->
             <td class="py-2.5 px-3 text-center align-middle w-24">
               <div id="boss-status-badge-${b.id}">${statusBadge}</div>
