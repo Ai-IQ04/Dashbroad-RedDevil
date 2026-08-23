@@ -12780,7 +12780,8 @@ Output strictly valid JSON with no markdown formatting.`;
     }
 
     // ================= คลิกเช็คชื่อ (เฉพาะ Admin พร้อมระบบ Double Click & ป้องกันยกเลิกหลัง 5 นาที) =================
-    // Checkbox actions use a single click.
+    let lastCheckTapTracker = {};
+    let checkSingleTapTimeout = null;
 
     function handleCheckClick(memberId, activityIndex, event) {
       if (event) {
@@ -12792,7 +12793,25 @@ Output strictly valid JSON with no markdown formatting.`;
         return;
       }
 
-      toggleCheck(memberId, activityIndex);
+      const key = `${memberId}_${activityIndex}`;
+      const now = Date.now();
+      const lastTap = lastCheckTapTracker[key] || 0;
+      const DOUBLE_TAP_THRESHOLD_MS = 450;
+
+      if ((now - lastTap) <= DOUBLE_TAP_THRESHOLD_MS && (now - lastTap) > 0) {
+        lastCheckTapTracker[key] = 0;
+        if (checkSingleTapTimeout) {
+          clearTimeout(checkSingleTapTimeout);
+          checkSingleTapTimeout = null;
+        }
+        toggleCheck(memberId, activityIndex);
+      } else {
+        lastCheckTapTracker[key] = now;
+        if (checkSingleTapTimeout) clearTimeout(checkSingleTapTimeout);
+        checkSingleTapTimeout = setTimeout(() => {
+          lastCheckTapTracker[key] = 0;
+        }, DOUBLE_TAP_THRESHOLD_MS + 50);
+      }
       return;
 
       if (false) {
