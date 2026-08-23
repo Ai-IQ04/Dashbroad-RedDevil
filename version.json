@@ -1,5 +1,5 @@
 {
-  "version": "1.4.2",
-  "buildTime": 1787101000000,
-  "releaseNotes": "Lock spawn time to exact 50% grid center in simple list view"
+  "version": "1.4.3",
+  "buildTime": 1787103000000,
+  "releaseNotes": "One-way Google Sheets 1-minute auto backup"
 }

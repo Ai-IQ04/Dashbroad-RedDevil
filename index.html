@@ -8863,17 +8863,13 @@
     let isFirebaseReady = false;
     let isRemoteSyncing = false;
 
-    // ================= Google Sheets two-way attendance sync =================
-    // Deploy google-apps-script.gs as a Web app, then paste its /exec URL here.
-    // The spreadsheet ID is intentionally kept here so the Apps Script endpoint
-    // can be reused without exposing a Google service-account credential.
+    // ================= Google Sheets one-way backup (1-minute periodic) =================
+    // Google Sheets is used as an ingestion/backup destination.
+    // Realtime database is managed by Firebase.
     const GOOGLE_SHEET_ID = '1q-pBcNrc7gNpOg28Zq5D8yYOuMqCk8WD8nWP-SyToqA';
     const GOOGLE_SHEETS_SYNC_URL = window.GOOGLE_SHEETS_SYNC_URL || '';
     const GOOGLE_SHEETS_SYNC_TOKEN = window.GOOGLE_SHEETS_SYNC_TOKEN || '';
-    // Firebase is the realtime source for the dashboard. Sheets remains a
-    // two-way backup/report source and is checked periodically, not on every
-    // small UI update.
-    const GOOGLE_SHEETS_POLL_MS = 20000;
+    const GOOGLE_SHEETS_BACKUP_MS = 60000; // 1 minute
     let googleSheetsSyncTimer = null;
     let googleSheetsPollTimer = null;
     let googleSheetsLastRemoteSignature = '';
@@ -9276,16 +9272,13 @@
     }
 
     function scheduleGoogleSheetsPush() {
-      if (!googleSheetsIsConfigured()) return;
-      clearTimeout(googleSheetsSyncTimer);
-      googleSheetsSyncTimer = setTimeout(pushToGoogleSheets, 500);
+      // Immediate push on each click is disabled in favor of scheduled 10-minute backup
+      return;
     }
 
     async function pushToGoogleSheets() {
       if (!googleSheetsIsConfigured()) return;
       if (googleSheetsRequestInFlight) {
-        // Keep a delete/edit queued instead of silently dropping it while a
-        // previous polling or write request is still in progress.
         googleSheetsPushPending = true;
         return;
       }
@@ -9302,13 +9295,13 @@
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: 'write', requestId: googleSheetsRequestId('write'), token: GOOGLE_SHEETS_SYNC_TOKEN, ...payload })
         });
+        console.info('[Google Sheets] One-way 10-minute snapshot backup sent successfully.');
       } catch (error) {
         console.warn('[Google Sheets] write failed:', error);
       } finally {
         googleSheetsRequestInFlight = false;
         if (googleSheetsPushPending) {
           googleSheetsPushPending = false;
-          scheduleGoogleSheetsPush();
         }
       }
     }
@@ -9355,127 +9348,19 @@
     }
 
     async function pullFromGoogleSheets() {
-      if (!googleSheetsIsConfigured() || googleSheetsRequestInFlight) return;
-      try {
-        const response = await fetch(`${GOOGLE_SHEETS_SYNC_URL}?action=read&spreadsheetId=${encodeURIComponent(GOOGLE_SHEET_ID)}&token=${encodeURIComponent(GOOGLE_SHEETS_SYNC_TOKEN)}&ts=${Date.now()}`, { cache: 'no-store' });
-        const result = await response.json();
-        if (!result || !result.ok || !Array.isArray(result.members)) return;
-        let activitiesChanged = false;
-        if (Array.isArray(result.activities) && result.activities.length > 0) {
-          const remoteActivities = result.activities.map(activity => ({
-            key: activity.key || '',
-            name: activity.name || activity.key || 'Activity',
-            shortName: activity.shortName || activity.name || activity.key || 'Activity',
-            day: activity.day || '',
-            weight: Number(activity.weight) || 0
-          }));
-          const localActivitySignature = googleSheetsSignature(ACTIVITIES.map(activity => ({
-            key: activity.key, name: activity.name, shortName: activity.shortName,
-            day: activity.day, weight: Number(activity.weight) || 0
-          })));
-          const remoteActivitySignature = googleSheetsSignature(remoteActivities);
-          if (localActivitySignature !== remoteActivitySignature) {
-            ACTIVITIES = remoteActivities;
-            saveActivities();
-            activitiesChanged = true;
-          }
-        }
-        // Older deployments may have members but no Activities catalog yet.
-        // Push the current activity weights so the sheet can return the % data.
-        if (!Array.isArray(result.activities) || result.activities.length === 0) {
-          scheduleGoogleSheetsPush();
-        }
-        if (result.lockedWeeks && typeof result.lockedWeeks === 'object') {
-          const remoteLocks = { 1: false, 2: false, 3: false, 4: false, ...result.lockedWeeks };
-          if (JSON.stringify(remoteLocks) !== JSON.stringify(lockedWeeks)) {
-            lockedWeeks = remoteLocks;
-            localStorage.setItem('guild_locked_weeks', JSON.stringify(lockedWeeks));
-            if (typeof renderWeekTabs === 'function') renderWeekTabs();
-            if (typeof renderLockBanner === 'function') renderLockBanner();
-            if (typeof updateAdminUI === 'function') updateAdminUI();
-          }
-        }
-        if (result.members.length === 0) {
-          // First run: create the four sheet tabs from the existing app data.
-          scheduleGoogleSheetsPush();
-          return;
-        }
-        const signature = googleSheetsSignature(result.members);
-        if (!signature || (signature === googleSheetsLastRemoteSignature && !activitiesChanged)) return;
-        googleSheetsLastRemoteSignature = signature;
-
-        const localById = new Map(members.map(member => [String(member.id), member]));
-        const remoteIds = new Set(result.members.map(remote => String(remote.id)));
-        const deletedMemberIds = getDeletedMemberIds();
-        let changed = activitiesChanged;
-        result.members.forEach(remote => {
-          // Do not let an old Week tab resurrect a character that was removed
-          // locally while the Apps Script roster is being updated.
-          if (deletedMemberIds.has(String(remote.id))) return;
-          let local = localById.get(String(remote.id)) || members.find(member =>
-            String(member.characterName || member.name || '').trim().toLowerCase() === String(remote.characterName || '').trim().toLowerCase());
-          if (!local) {
-            local = {
-              id: remote.id,
-              characterName: remote.characterName || remote.name || '',
-              name: remote.characterName || remote.name || '',
-              guild: remote.guild || '',
-              cp: Number(remote.cp) || 0,
-              checks: new Array(ACTIVITIES.length).fill(false),
-              weeklyChecks: {},
-              weeklyCp: {}
-            };
-            members.push(local);
-            localById.set(String(local.id), local);
-            changed = true;
-          }
-          if (remote.num !== undefined && local.num !== remote.num) { local.num = remote.num; changed = true; }
-          if (remote.characterName && local.characterName !== remote.characterName) { local.characterName = remote.characterName; local.name = remote.characterName; changed = true; }
-          if (remote.guild !== undefined && local.guild !== remote.guild) { local.guild = remote.guild; changed = true; }
-          if (remote.cp !== undefined && Number(local.cp) !== Number(remote.cp)) { local.cp = Number(remote.cp) || 0; changed = true; }
-          ensureMemberWeeklyData(local);
-          for (let week = 1; week <= 4; week++) {
-            const checks = Array.isArray(remote.weeklyChecks?.[week]) ? remote.weeklyChecks[week].map(Boolean) : null;
-            if (!checks) continue;
-            const next = new Array(ACTIVITIES.length).fill(false);
-            checks.slice(0, ACTIVITIES.length).forEach((value, index) => { next[index] = value; });
-            if (JSON.stringify(local.weeklyChecks[week]) !== JSON.stringify(next)) {
-              local.weeklyChecks[week] = next;
-              changed = true;
-            }
-          }
-        });
-        if (result.rosterComplete) {
-          const kept = members.filter(member => remoteIds.has(String(member.id)));
-          if (kept.length !== members.length) {
-            members.splice(0, members.length, ...kept);
-            changed = true;
-          }
-        }
-        if (changed) {
-          isRemoteSyncing = true;
-          members.forEach(ensureMemberWeeklyData);
-          localStorage.setItem('guild_members_data', JSON.stringify(members));
-          if (fbDb) {
-            await fbDb.ref('guild_app/members_data').set(members);
-          }
-          updateKPIs();
-          renderTable();
-          isRemoteSyncing = false;
-        }
-      } catch (error) {
-        console.warn('[Google Sheets] read failed:', error);
-      }
+      // One-way ingest mode: Web app is the source of truth, sheet never overwrites local data.
+      return;
     }
 
     function initGoogleSheetsSync() {
       if (!googleSheetsIsConfigured()) {
-        console.info('[Google Sheets] Sync is not configured. Set GOOGLE_SHEETS_SYNC_URL to the Apps Script /exec URL.');
+        console.info('[Google Sheets] Sync is not configured. Google Cloud Trigger or Webhook will manage 1-minute backups.');
         return;
       }
-      pullFromGoogleSheets();
+      // Backup push snapshot every 1 minute (60,000 ms) as client fallback
+      pushToGoogleSheets();
       clearInterval(googleSheetsPollTimer);
-      googleSheetsPollTimer = setInterval(pullFromGoogleSheets, GOOGLE_SHEETS_POLL_MS);
+      googleSheetsPollTimer = setInterval(pushToGoogleSheets, GOOGLE_SHEETS_BACKUP_MS);
     }
 
     // ฟังก์ชันบันทึกข้อมูล (บันทึกลง LocalStorage + ซิงค์ขึ้น Firebase Realtime)
@@ -9500,7 +9385,6 @@
         fbDb.ref('guild_app/weekly_history').set(weeklyArchives);
         fbDb.ref('guild_app/cycle_history').set(cycleArchives);
       }
-      if (!isRemoteSyncing) scheduleGoogleSheetsPush();
     }
 
 

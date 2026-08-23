@@ -1,20 +1,30 @@
-# ตั้งค่าซิงก์เช็คชื่อกับ Google Sheets
+# ตั้งค่าระบบดึงข้อมูลลง Google Sheets อัตโนมัติทุก 1 นาที (One-Way Ingest)
 
-1. สร้างหรือเปิด Google Sheet แล้วนำ Spreadsheet ID ไปใส่ใน `google-apps-script.gs`
-2. เปิด Extensions → Apps Script แล้ววางโค้ดจากไฟล์ `google-apps-script.gs`
-3. กด Deploy → New deployment → Web app
-   - Execute as: Me
-   - Who has access: Anyone
-4. คัดลอก URL ที่ลงท้ายด้วย `/exec`
-5. คัดลอก `google-sheets-config.example.js` เป็น `google-sheets-config.js` แล้วใส่ URL และ token ที่สร้างใหม่:
+ระบบนี้จะทำหน้าที่เป็น **คลังสำรองข้อมูล (Backup & Archive)** โดยจะดึงข้อมูลจากหน้าเว็บ/Firebase มาบันทึกลง Google Sheets ทุกๆ 1 นาทีแบบทางเดียว (ไม่ส่งข้อมูลกลับไปทับหน้าเว็บ)
 
-```js
-window.GOOGLE_SHEETS_SYNC_URL = 'วาง-URL-ที่ลงท้ายด้วย-/exec-ตรงนี้';
-window.GOOGLE_SHEETS_SYNC_TOKEN = 'วาง-token-ส่วนตัวตรงนี้';
-```
+---
 
-ห้ามนำ `google-sheets-config.js` หรือ token จริงขึ้น GitHub และควร rotate token เดิมที่เคยฝังอยู่ใน source code แล้ว
+### ขั้นตอนการตั้งค่า
 
-เมื่อเปิดเว็บครั้งแรก ระบบจะสร้างแท็บ `Week 1` ถึง `Week 4` อัตโนมัติ โดยคอลัมน์กิจกรรมจะเป็น checkbox ทุกการแก้ไขจากหน้าเว็บหรือในชีตจะถูกตรวจสอบและซิงก์ภายในประมาณ 3 วินาที
+1. **เปิด Google Sheets ของคุณ**
+2. ไปที่เมนู **ส่วนขยาย (Extensions) → Apps Script**
+3. คัดลอกโค้ดทั้งหมดจากไฟล์ `google-apps-script.gs` ไปวางแทนที่โค้ดเดิมใน Apps Script
+4. ตรวจสอบบรรทัดบนสุด:
+   - `SPREADSHEET_ID`: ใส่ ID ของ Google Sheets ของคุณ (มีค่าเริ่มต้นพร้อมใช้งานแล้ว)
+   - `FIREBASE_DATABASE_URL`: URL ฐานข้อมูล Firebase
+5. **เปิดใช้งานการดึงข้อมูลอัตโนมัติทุก 1 นาที:**
+   - ที่แถบเครื่องมือด้านบน เลือกฟังก์ชัน `setup1MinuteSyncTrigger`
+   - กดปุ่ม **เรียกใช้ (Run)** 1 ครั้ง
+   - กดยอมรับสิทธิ์ (Review Permissions / Advanced → Go to Project)
+   - ระบบจะสร้าง Time-driven Trigger ดึงข้อมูลลงชีตทุกๆ 1 นาทีโดยอัตโนมัติตลอด 24 ชม.
+6. **(ทางเลือก) ทดสอบดึงข้อมูลทันที:**
+   - เลือกฟังก์ชัน `pullFromWebDatabase` แล้วกด **เรียกใช้ (Run)**
+   - สลับไปดูที่หน้า Google Sheet จะเห็นแท็บ `Members`, `Activities`, และ `Week 1 - 4` ถูกอัปเดตข้อมูลครบถ้วน
 
-หากชีตมีข้อมูลอยู่ก่อน แนะนำให้สำรองข้อมูลก่อนกดใช้งานครั้งแรก เพราะการส่งข้อมูลจากเว็บครั้งแรกจะจัดรูปแบบแท็บทั้ง 4 ให้ตรงกับข้อมูลสมาชิกในเว็บ
+---
+
+### จุดเด่นของระบบใหม่
+* **One-Way Ingestion:** รับเข้าชีตอย่างเดียว ตัดปัญหาชีตส่งข้อมูลเก่ามาเขียนทับหน้าเว็บ 100%
+* **Serverless 24/7:** ทำงานบน Google Cloud โดยตรง ดึงข้อมูลไปบันทึกทุก 1 นาทีตามรอบ
+* **Fast Web Performance:** หน้าเว็บทำงานลื่นไหล ไม่มีอาการหน่วงจากการยิง Google Sheets ทุกคลิก
+

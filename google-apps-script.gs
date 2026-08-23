@@ -8,7 +8,8 @@
  * A: Member ID, B: Number, C: Character Name, D: Guild, E: CP,
  * F onward: one checkbox column per activity.
  */
-const SPREADSHEET_ID = 'YOUR_GOOGLE_SPREADSHEET_ID';
+const SPREADSHEET_ID = '1q-pBcNrc7gNpOg28Zq5D8yYOuMqCk8WD8nWP-SyToqA';
+const FIREBASE_DATABASE_URL = 'https://reddevil-f229e-default-rtdb.asia-southeast1.firebasedatabase.app';
 const WEEK_COUNT = 4;
 const MEMBERS_SHEET_NAME = 'Members';
 const AUDIT_SHEET_NAME = 'Audit Log';
@@ -17,6 +18,83 @@ const REQUEST_TTL_SECONDS = 600;
 const BACKUP_RETENTION_DAYS = 30;
 // Keep this value private and rotate it if the web app URL or source is shared.
 const SYNC_TOKEN = 'GENERATE_AND_STORE_A_PRIVATE_SYNC_TOKEN';
+
+/**
+ * ดึงข้อมูลจากหน้าเว็บ / Firebase Realtime Database มาบันทึกลง Google Sheet ทุกๆ 1 นาที (One-Way Ingest)
+ * ระบบจะทำงานอัตโนมัติบน Google Cloud ตลอด 24 ชม. แม้ไม่มีใครเปิดหน้าเว็บ
+ */
+function pullFromWebDatabase() {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) return;
+  try {
+    const membersUrl = FIREBASE_DATABASE_URL + '/guild_app/members_data.json';
+    const activitiesUrl = FIREBASE_DATABASE_URL + '/guild_app/activities_data.json';
+    
+    const membersRes = UrlFetchApp.fetch(membersUrl, { muteHttpExceptions: true });
+    if (membersRes.getResponseCode() !== 200) {
+      throw new Error('Firebase members_data fetch failed with status: ' + membersRes.getResponseCode());
+    }
+    const rawMembers = JSON.parse(membersRes.getContentText() || '[]');
+    let members = Array.isArray(rawMembers) ? rawMembers : Object.values(rawMembers || {});
+    // กรองเฉพาะสมาชิกที่มีข้อมูลถูกต้อง
+    members = members.filter(function(m) {
+      return m && (m.characterName || m.name || m.id !== undefined);
+    });
+
+    let activities = [];
+    try {
+      const actRes = UrlFetchApp.fetch(activitiesUrl, { muteHttpExceptions: true });
+      if (actRes.getResponseCode() === 200) {
+        const rawActivities = JSON.parse(actRes.getContentText() || '[]');
+        activities = Array.isArray(rawActivities) ? rawActivities : Object.values(rawActivities || {});
+      }
+    } catch (_) {}
+
+    if (!activities.length) {
+      activities = readActivitiesCatalog_();
+    }
+
+    if (members.length > 0) {
+      writeAttendance_({
+        members: members,
+        activities: activities
+      });
+      appendAuditLog_({ adminEmail: 'cron-1min' }, 'cron_pull_1min', {
+        membersCount: members.length,
+        activitiesCount: activities.length,
+        timestamp: new Date().toISOString()
+      });
+      Logger.log('Successfully pulled and updated ' + members.length + ' members to Google Sheets.');
+    }
+  } catch (err) {
+    Logger.log('pullFromWebDatabase error: ' + err);
+    appendAuditLog_({ adminEmail: 'cron-error' }, 'cron_error', { error: String(err) });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * ติดตั้ง Trigger ให้ Apps Script ดึงข้อมูลจาก Firebase อัตโนมัติทุกๆ 1 นาที
+ * (กด Run ฟังก์ชันนี้ 1 ครั้งใน Google Apps Script เพื่อเปิดใช้งาน)
+ */
+function setup1MinuteSyncTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function(trigger) {
+    if (trigger.getHandlerFunction() === 'pullFromWebDatabase') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+  ScriptApp.newTrigger('pullFromWebDatabase')
+    .timeBased()
+    .everyMinutes(1)
+    .create();
+  Logger.log('ติดตั้ง 1-Minute Trigger สำเร็จแล้ว!');
+}
+
+// Alias for backward compatibility
+function setup10MinuteSyncTrigger() {
+  setup1MinuteSyncTrigger();
+}
 
 function doGet(e) {
   try {
