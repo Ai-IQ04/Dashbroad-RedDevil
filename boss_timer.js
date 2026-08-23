@@ -3146,12 +3146,12 @@ async function discoverActiveGeminiModel(apiKey) {
           .map(m => m.name.replace(/^models\//, ''));
 
         if (available.length > 0) {
-          // Priority: 3.5-flash > 3.6-flash > 3.7-flash > 3-flash > 3.1-flash > flash-latest > any flash > first available
+          // Priority: 1.5-flash-latest > 1.5-flash > 2.0-flash > any flash > first available
           const preferred =
-            available.find(m => /gemini-2\.5-flash/i.test(m)) ||
-            available.find(m => /gemini-2\.0-flash/i.test(m)) ||
             available.find(m => /gemini-1\.5-flash-latest/i.test(m)) ||
+            available.find(m => /gemini-1\.5-flash$/i.test(m)) ||
             available.find(m => /gemini-1\.5-flash/i.test(m)) ||
+            available.find(m => /gemini-2\.0-flash/i.test(m)) ||
             available.find(m => /flash/i.test(m)) ||
             available[0];
 
@@ -3178,12 +3178,11 @@ async function callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiK
 
   const candidateList = [
     { apiVer: discovered.apiVer, model: discovered.model },
-    { apiVer: 'v1beta', model: 'gemini-2.0-flash' },
     { apiVer: 'v1beta', model: 'gemini-1.5-flash' },
     { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' },
-    { apiVer: 'v1', model: 'gemini-1.5-flash' },
-    { apiVer: 'v1beta', model: 'gemini-2.5-flash' },
-    { apiVer: 'v1beta', model: 'gemini-1.5-pro' }
+    { apiVer: 'v1beta', model: 'gemini-2.0-flash' },
+    { apiVer: 'v1beta', model: 'gemini-2.0-flash-exp' },
+    { apiVer: 'v1', model: 'gemini-1.5-flash' }
   ];
 
   let lastError = null;

@@ -1,5 +1,5 @@
 {
-  "version": "1.4.7",
-  "buildTime": 1787107000000,
-  "releaseNotes": "Revert AI squad attendance scanner to stable single-image mode with duplicate check prevention"
+  "version": "1.4.8",
+  "buildTime": 1787108000000,
+  "releaseNotes": "Use standard stable Gemini Flash models for OCR without Pro 404 errors"
 }

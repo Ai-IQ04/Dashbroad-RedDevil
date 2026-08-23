@@ -11574,12 +11574,12 @@
               .map(m => m.name.replace(/^models\//, ''));
 
             if (available.length > 0) {
-              // Priority: 2.5-flash > 2.0-flash > 1.5-flash-latest > 1.5-flash > flash > first available
+              // Priority: 1.5-flash-latest > 1.5-flash > 2.0-flash > any flash > first available
               const preferred =
-                available.find(m => /gemini-2\.5-flash/i.test(m)) ||
-                available.find(m => /gemini-2\.0-flash/i.test(m)) ||
                 available.find(m => /gemini-1\.5-flash-latest/i.test(m)) ||
+                available.find(m => /gemini-1\.5-flash$/i.test(m)) ||
                 available.find(m => /gemini-1\.5-flash/i.test(m)) ||
+                available.find(m => /gemini-2\.0-flash/i.test(m)) ||
                 available.find(m => /flash/i.test(m)) ||
                 available[0];
 
@@ -11606,12 +11606,11 @@
 
       const candidateList = [
         { apiVer: discovered.apiVer, model: discovered.model },
-        { apiVer: 'v1beta', model: 'gemini-2.0-flash' },
         { apiVer: 'v1beta', model: 'gemini-1.5-flash' },
         { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' },
-        { apiVer: 'v1', model: 'gemini-1.5-flash' },
-        { apiVer: 'v1beta', model: 'gemini-2.5-flash' },
-        { apiVer: 'v1beta', model: 'gemini-1.5-pro' }
+        { apiVer: 'v1beta', model: 'gemini-2.0-flash' },
+        { apiVer: 'v1beta', model: 'gemini-2.0-flash-exp' },
+        { apiVer: 'v1', model: 'gemini-1.5-flash' }
       ];
 
       let lastError = null;
