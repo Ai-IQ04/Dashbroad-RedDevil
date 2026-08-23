@@ -338,13 +338,16 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
 }
 
 // Helper: คำนวณเวลาที่บอสจะเกิดรอบถัดไป (รวมตรรกะซ้ำซ้อนไว้ที่เดียว)
-// - ถ้ามี customNextSpawn (Admin ตั้งเวลาเอง) ให้ใช้ค่านั้น
-// - ถ้าไม่มี ให้คำนวณจาก defeatedTime ตามประเภทของบอส (interval / fixed)
+// - ถ้าเป็นบอสตามตาราง (Fixed Schedule) ให้คำนวณตามตารางเวลาไทยเสมอ
+// - ถ้าเป็นบอสตามรอบเวลา (Interval) และมี customNextSpawn ให้ใช้ค่านั้น ถ้าไม่มีให้คำนวณจากเวลาตาย
 function getBossNextSpawn(boss) {
   const timer = bossTimerData[boss.id] || {};
-  // World Boss always follows the official daily 10:00 / 19:00 schedule.
-  // Ignore legacy customNextSpawn values that can otherwise override it.
-  if (timer.customNextSpawn && boss.id !== 'world_boss') {
+  // บอสตามตาราง (Fixed Schedule) ทั้งหมด จะต้องยึดตามตารางเวลาหลักของเกมในโซนเวลาไทยเสมอ
+  // ไม่ให้ค่า customNextSpawn เก่าหรือผิดพลาดมาทับเวลาตารางจริง
+  if (boss.respawnType === 'fixed') {
+    return calculateNextSpawnDate(boss, timer.defeatedTime);
+  }
+  if (timer.customNextSpawn) {
     const custom = new Date(timer.customNextSpawn);
     if (!isNaN(custom.getTime())) return custom;
   }
