@@ -1,5 +1,5 @@
 {
-  "version": "1.5.0",
-  "buildTime": 1787110000000,
-  "releaseNotes": "Force Service Worker v50 purge and enforce pure v1beta Gemini Vision engine"
+  "version": "1.5.1",
+  "buildTime": 1787111000000,
+  "releaseNotes": "Add Dual OCR Engine (Google Gemini AI + Offline Local Tesseract OCR) with auto-fallback"
 }

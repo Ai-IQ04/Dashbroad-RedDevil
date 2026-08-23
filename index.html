@@ -11888,9 +11888,138 @@
       });
     }
 
+    let squadOcrEngineMode = 'gemini'; // 'gemini' | 'tesseract'
+
+    function setSquadOcrEngine(mode) {
+      squadOcrEngineMode = mode;
+      const btnGemini = document.getElementById('btn-squad-engine-gemini');
+      const btnTess = document.getElementById('btn-squad-engine-tesseract');
+      const badge = document.getElementById('squad-engine-badge');
+
+      if (mode === 'tesseract') {
+        if (btnTess) btnTess.className = 'px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition bg-amber-600 text-white shadow';
+        if (btnGemini) btnGemini.className = 'px-2.5 py-1 rounded-lg text-[10.5px] font-medium transition text-slate-400 hover:text-white';
+        if (badge) {
+          badge.textContent = 'Local Tesseract (Offline)';
+          badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40';
+        }
+      } else {
+        if (btnGemini) btnGemini.className = 'px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition bg-purple-600 text-white shadow';
+        if (btnTess) btnTess.className = 'px-2.5 py-1 rounded-lg text-[10.5px] font-medium transition text-slate-400 hover:text-white';
+        if (badge) {
+          badge.textContent = 'Google Gemini Vision';
+          badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/40';
+        }
+      }
+    }
+
     function handleSquadFileSelect(file) {
       if (!file) return;
-      processSquadImageWithGemini(file);
+      const apiKey = localStorage.getItem('guild_boss_gemini_api_key') || (typeof bossGeminiApiKey !== 'undefined' ? bossGeminiApiKey : '');
+      if (squadOcrEngineMode === 'tesseract' || !apiKey) {
+        processSquadImageWithTesseract(file);
+      } else {
+        processSquadImageWithGemini(file);
+      }
+    }
+
+    async function processSquadImageWithTesseract(file) {
+      const dropzonePrompt = document.getElementById('squad-dropzone-prompt');
+      const previewBox = document.getElementById('squad-image-preview-box');
+      const previewImg = document.getElementById('squad-image-preview');
+      const statusEl = document.getElementById('squad-ai-status');
+      const resultsContainer = document.getElementById('squad-results-container');
+
+      if (previewImg) {
+        previewImg.src = URL.createObjectURL(file);
+        if (previewBox) previewBox.classList.remove('hidden');
+        if (dropzonePrompt) dropzonePrompt.classList.add('hidden');
+      }
+
+      if (statusEl) {
+        statusEl.innerHTML = `<i class="fa-solid fa-bolt fa-spin text-amber-400 mr-1.5"></i> กำลังเตรียม Local OCR (Tesseract) สแกนภาพบนเครื่อง...`;
+        statusEl.classList.remove('hidden');
+      }
+      if (resultsContainer) resultsContainer.classList.add('hidden');
+
+      try {
+        if (typeof Tesseract === 'undefined') {
+          await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+        }
+
+        const { data: { text } } = await Tesseract.recognize(file, 'tha+eng', {
+          logger: m => {
+            if (statusEl && m.status === 'recognizing text') {
+              const pct = Math.round((m.progress || 0) * 100);
+              statusEl.innerHTML = `<i class="fa-solid fa-bolt text-amber-400 mr-1.5"></i> Local OCR กำลังอ่านภาพบนเครื่อง (${pct}%)...`;
+            }
+          }
+        });
+
+        // Match detected text lines against guild members roster
+        const lines = (text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        const detectedMembers = [];
+        const confidenceByName = {};
+        const seenNames = new Set();
+
+        members.forEach(member => {
+          const mName = (member.characterName || member.name || '').trim();
+          if (!mName) return;
+          const normMName = normalizeMemberNameForMatch(mName);
+          if (!normMName) return;
+
+          let bestMatch = false;
+          let matchConfidence = 0;
+
+          for (const line of lines) {
+            const normLine = normalizeMemberNameForMatch(line);
+            if (normLine.includes(normMName)) {
+              bestMatch = true;
+              matchConfidence = 95;
+              break;
+            }
+            if (normMName.length >= 4 && normLine.includes(normMName.substring(0, normMName.length - 1))) {
+              bestMatch = true;
+              matchConfidence = 85;
+              break;
+            }
+            const words = line.split(/\s+/);
+            for (const w of words) {
+              const normW = normalizeMemberNameForMatch(w);
+              if (normW === normMName) {
+                bestMatch = true;
+                matchConfidence = 90;
+                break;
+              }
+            }
+            if (bestMatch) break;
+          }
+
+          if (bestMatch && !seenNames.has(mName.toLowerCase())) {
+            seenNames.add(mName.toLowerCase());
+            detectedMembers.push(mName);
+            confidenceByName[mName] = matchConfidence;
+          }
+        });
+
+        if (detectedMembers.length === 0) {
+          if (statusEl) {
+            statusEl.innerHTML = `<span class="text-amber-300 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Local OCR อ่านภาพแล้วแต่ไม่พบชื่อที่ตรงกับสมาชิกในกิลด์ กรุณาลองใช้ภาพที่คมชัดขึ้น หรือสลับเป็นโหมด Google AI</span>`;
+          }
+          return;
+        }
+
+        renderSquadScanResults({
+          squads: [{ squadNumber: 1, members: detectedMembers }],
+          confidenceByName
+        });
+        showToast(`⚡ Local OCR สแกนพบสมาชิก ${detectedMembers.length} คน!`, 'success');
+      } catch (tessErr) {
+        console.error('Local Tesseract OCR Error:', tessErr);
+        if (statusEl) {
+          statusEl.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Local OCR ไม่สำเร็จ: ${escapeHtml(tessErr.message || 'เกิดข้อผิดพลาด')}</span>`;
+        }
+      }
     }
 
     async function processSquadImageWithGemini(file) {
@@ -11908,10 +12037,12 @@
 
       const apiKey = localStorage.getItem('guild_boss_gemini_api_key') || (typeof bossGeminiApiKey !== 'undefined' ? bossGeminiApiKey : '');
       if (!apiKey) {
+        // Auto fallback to local OCR
         if (statusEl) {
-          statusEl.innerHTML = `<span class="text-amber-300 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ยังไม่ได้ใส่ Google Gemini API Key กรุณาให้ Super Admin ใส่ Key ในเมนู '⚙️ ตั้งค่า Discord / Sheets' ก่อนใช้งาน</span>`;
+          statusEl.innerHTML = `<span class="text-indigo-300 font-medium"><i class="fa-solid fa-bolt mr-1"></i> ไม่พบคีย์ Gemini ➔ กำลังสลับไปใช้ Local OCR บนเครื่องให้อัตโนมัติ...</span>`;
           statusEl.classList.remove('hidden');
         }
+        setTimeout(() => processSquadImageWithTesseract(file), 400);
         return;
       }
 
@@ -11959,10 +12090,11 @@ Output strictly valid JSON with no markdown wrapping:
         const parsedData = await callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey);
         renderSquadScanResults(parsedData);
       } catch (err) {
-        console.error('Google Gemini Squad Scan Error:', err);
+        console.warn('Google Gemini failed, auto falling back to Local Tesseract OCR:', err);
         if (statusEl) {
-          statusEl.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Google Gemini สแกนไม่สำเร็จ: ${escapeHtml(err.message || 'โปรดตรวจสอบ API Key')}</span>`;
+          statusEl.innerHTML = `<span class="text-amber-300 font-medium"><i class="fa-solid fa-bolt text-amber-400 mr-1.5"></i> Google AI (${escapeHtml(err.message || '')}) ➔ กำลังสลับไปใช้ Local OCR บนเครื่องให้อัตโนมัติ...</span>`;
         }
+        setTimeout(() => processSquadImageWithTesseract(file), 800);
       }
     }
 
@@ -21366,20 +21498,38 @@ Output strictly valid JSON with no markdown formatting.`;
       </button>
 
       <!-- Header -->
-      <div class="flex items-center gap-3 pb-3 border-b border-slate-800 shrink-0">
-        <div
-          class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center text-xl border border-indigo-400/40 shadow-md">
-          <i class="fa-solid fa-camera-retro"></i>
+      <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-800 shrink-0">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center text-xl border border-indigo-400/40 shadow-md">
+            <i class="fa-solid fa-camera-retro"></i>
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
+              <span>สแกนรูป "จัดการชุมนุม" ติ๊กคะแนนบอส</span>
+              <span id="squad-engine-badge"
+                class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/40">Dual AI + Local OCR</span>
+            </h3>
+            <p class="text-[11px] text-slate-400">สแกนรายชื่อและติ๊กถูกบอสให้อัตโนมัติใน 1 วินาที (รองรับทั้ง Google AI & Local OCR)</p>
+          </div>
         </div>
-        <div>
-          <h3 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
-            <span>AI สแกนรูป "จัดการชุมนุม" ติ๊กคะแนนบอส</span>
-            <span
-              class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/40">Gemini
-              Vision 99.9%</span>
-          </h3>
-          <p class="text-[11px] text-slate-400">แคปรูปหน้าต่างจัดการชุมนุมในเกมแล้วกด Ctrl + V
-            เพื่อสแกนและติ๊กถูกบอสให้ทุกคนใน 1 วินาที</p>
+      </div>
+
+      <!-- OCR Engine Mode Selector Bar -->
+      <div class="flex items-center justify-between gap-2 p-2 bg-slate-950/90 border border-slate-800 rounded-2xl mt-2 shrink-0">
+        <span class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5 pl-1">
+          <i class="fa-solid fa-microchip text-indigo-400"></i>
+          <span>เครื่องยนต์สแกน:</span>
+        </span>
+        <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+          <button type="button" id="btn-squad-engine-gemini" onclick="setSquadOcrEngine('gemini')"
+            class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition bg-purple-600 text-white shadow">
+            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Google AI (แนะนำ)
+          </button>
+          <button type="button" id="btn-squad-engine-tesseract" onclick="setSquadOcrEngine('tesseract')"
+            class="px-2.5 py-1 rounded-lg text-[10.5px] font-medium transition text-slate-400 hover:text-white">
+            <i class="fa-solid fa-bolt mr-1"></i>Local OCR (ไม่ต้องใช้ Key)
+          </button>
         </div>
       </div>
 
