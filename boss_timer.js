@@ -776,6 +776,11 @@ function renderBossTimerCards() {
     if (isAdminActive) {
       actionButtonsHtml = `
         <div class="mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center gap-2">
+          <button onclick="copyBossInfo('${escapeHtml(b.id)}')"
+            class="apple-btn apple-btn-sapphire inline-flex items-center justify-center p-2 text-xs font-semibold"
+            title="${isEn ? 'Copy boss name, map and spawn time' : 'คัดลอกชื่อบอส แมพ และเวลาเกิด'}">
+            <i class="fa-solid fa-copy"></i>
+          </button>
           <button onclick="openBossKillConfirmModal('${b.id}')"
             class="flex-1 apple-btn apple-btn-ruby inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold shadow-md shadow-rose-950/40 active:scale-95 transition"
             title="${tBoss('btn_record_kill_now', 'กดเพื่อยืนยันลงเวลาตาย / วางรูปภาพ Log (Ctrl+V)')}">
@@ -797,8 +802,13 @@ function renderBossTimerCards() {
     } else {
       actionButtonsHtml = `
         <div class="mt-3 pt-2.5 border-t border-slate-800/80">
+          <button onclick="copyBossInfo('${escapeHtml(b.id)}')"
+            class="apple-btn apple-btn-sapphire inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-semibold"
+            title="${isEn ? 'Copy boss name, map and spawn time' : 'คัดลอกชื่อบอส แมพ และเวลาเกิด'}">
+            <i class="fa-solid fa-copy"></i><span>${isEn ? 'Copy' : 'คัดลอก'}</span>
+          </button>
           <button onclick="openBossDropLogModal('${b.id}')"
-            class="w-full apple-btn apple-btn-slate inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-semibold text-slate-300 hover:text-white"
+            class="flex-1 apple-btn apple-btn-slate inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-semibold text-slate-300 hover:text-white"
             title="${tBoss('btn_drop_logs', 'ดูประวัติไอเทมดรอปของบอสตัวนี้')}">
             <i class="fa-solid fa-gift text-amber-400 text-xs"></i>
             <span>${tBoss('btn_drop_logs', 'ดูประวัติไอเทมดรอป')}</span>
@@ -872,6 +882,36 @@ function renderBossTimerCards() {
   });
 
   container.innerHTML = html;
+}
+
+async function copyBossInfo(bossId) {
+  const boss = bossList.find(item => item.id === bossId);
+  if (!boss) return;
+  const nextSpawn = getBossNextSpawn(boss);
+  const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
+  const map = boss.map || (isEn ? 'Unassigned map' : 'ไม่ระบุแมพ');
+  let timeText = isEn ? 'Spawn time not set' : 'ยังไม่ลงเวลาเกิด';
+  if (nextSpawn && !isNaN(nextSpawn.getTime())) {
+    const parts = getBangkokDateParts(nextSpawn);
+    const pad = n => String(n).padStart(2, '0');
+    timeText = pad(parts.day) + '/' + pad(parts.month) + ' ' + pad(parts.hour) + ':' + pad(parts.minute) + (isEn ? '' : ' น.');
+  }
+  const text = isEn
+    ? boss.name + ' | ' + map + ' | Spawn ' + timeText
+    : boss.name + ' | ' + map + ' | เกิด ' + timeText;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const area = document.createElement('textarea');
+      area.value = text; area.style.position = 'fixed'; area.style.opacity = '0';
+      document.body.appendChild(area); area.focus(); area.select();
+      document.execCommand('copy'); area.remove();
+    }
+    if (typeof showToast === 'function') showToast(isEn ? 'Boss information copied.' : 'คัดลอกข้อมูลบอสแล้ว', 'success');
+  } catch (error) {
+    if (typeof showToast === 'function') showToast(isEn ? 'Could not copy boss information.' : 'คัดลอกข้อมูลไม่สำเร็จ', 'warning');
+  }
 }
 
 // Format Countdown
@@ -3268,6 +3308,7 @@ window.deleteBossDropLog = deleteBossDropLog;
 window.processImageForBossOCR = processImageForBossOCR;
 window.toggleBossSound = toggleBossSound;
 window.renderBossTimerCards = renderBossTimerCards;
+window.copyBossInfo = copyBossInfo;
 window.closeBossAiOcrModal = closeBossAiOcrModal;
 window.handleConfirmOcrSave = handleConfirmOcrSave;
 window.clearAllBossTimers = clearAllBossTimers;
