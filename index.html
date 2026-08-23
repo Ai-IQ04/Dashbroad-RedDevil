@@ -7881,8 +7881,13 @@
 
     function isGuildScoringAdmin() {
       if (!isAdmin) return false;
-      const role = getCurrentAdminRole();
-      return role !== 'boss_admin'; // Only Super Admin and Full Admin have guild scoring controls
+      const role = String(getCurrentAdminRole() || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[\s-]+/g, '_');
+      // Full Admin / Super Admin can manage members. Boss Admin is limited
+      // to the boss timer and must never edit or delete characters.
+      return role !== 'boss_admin' && role !== 'bossadmin';
     }
 
     // ตรวจสอบว่าเป็น Admin ที่ควบคุมโมดูลบอสไทม์เมอร์ได้
