@@ -514,7 +514,7 @@ function initBossTimerModule() {
   bossTimerInterval = setInterval(() => {
     updateCountdowns();
     updateUpcomingBossWidget();
-    checkAndSendDiscordSpawnAlerts();
+    // Spawn alerts are handled by Apps Script to prevent duplicate Discord alerts.
   }, 1000);
 
   // Setup Paste Handler for instant OCR anywhere in Boss Tab
