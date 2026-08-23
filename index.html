@@ -7734,6 +7734,7 @@
     let googleSheetsPollTimer = null;
     let googleSheetsLastRemoteSignature = '';
     let googleSheetsRequestInFlight = false;
+    let googleSheetsPushPending = false;
     let pendingWeekReset = false;
 
     try {
@@ -8132,7 +8133,13 @@
     }
 
     async function pushToGoogleSheets() {
-      if (!googleSheetsIsConfigured() || googleSheetsRequestInFlight) return;
+      if (!googleSheetsIsConfigured()) return;
+      if (googleSheetsRequestInFlight) {
+        // Keep a delete/edit queued instead of silently dropping it while a
+        // previous polling or write request is still in progress.
+        googleSheetsPushPending = true;
+        return;
+      }
       const payload = getGoogleSheetsPayload();
       if (!payload.members.length || !payload.activities.length) {
         console.warn('[Google Sheets] Refusing to send an empty attendance payload.');
@@ -8150,6 +8157,10 @@
         console.warn('[Google Sheets] write failed:', error);
       } finally {
         googleSheetsRequestInFlight = false;
+        if (googleSheetsPushPending) {
+          googleSheetsPushPending = false;
+          scheduleGoogleSheetsPush();
+        }
       }
     }
 
