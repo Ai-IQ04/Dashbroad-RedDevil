@@ -3178,6 +3178,167 @@
       transform: translateY(-1px);
     }
 
+    /* ===== Universal Dark Neumorphic Modal Interiors (ทุก Modal ทุกฟังก์ชัน) ===== */
+
+    /* 1) Modal container box — พื้นหลังหลัก */
+    body.neo-dark [id$="-modal"] .apple-modal-box,
+    body.neo-dark [id$="-modal"]>div {
+      background: linear-gradient(145deg, #1e2832, #161f29) !important;
+      border-color: rgba(148, 163, 184, 0.18) !important;
+      color: var(--neo-text) !important;
+    }
+
+    /* 2) Header / Footer bars ภายใน Modal */
+    body.neo-dark [id$="-modal"] div[class*="border-b"],
+    body.neo-dark [id$="-modal"] div[class*="border-t"] {
+      border-color: rgba(148, 163, 184, 0.12) !important;
+    }
+
+    body.neo-dark [id$="-modal"] div[class*="bg-slate-950"],
+    body.neo-dark [id$="-modal"] div[class*="bg-slate-900"] {
+      background: linear-gradient(145deg, #1c2630, #151d26) !important;
+      background-image: linear-gradient(145deg, #1c2630, #151d26) !important;
+    }
+
+    /* 3) Dynamic content rows/cards ที่ JS สร้าง (แถวรายการ, การ์ดข้อมูล) */
+    body.neo-dark [id$="-modal"] div[class*="rounded-xl"],
+    body.neo-dark [id$="-modal"] div[class*="rounded-2xl"],
+    body.neo-dark [id$="-modal"] div[class*="rounded-lg"] {
+      background: linear-gradient(145deg, #242e39, #1c2630) !important;
+      border-color: rgba(255, 255, 255, 0.07) !important;
+      color: var(--neo-text) !important;
+    }
+
+    /* 4) แถวรายการใน list (space-y containers ภายใน) */
+    body.neo-dark [id$="-modal"] [class*="space-y-"]>div {
+      background: linear-gradient(145deg, #252f3b, #1d2731) !important;
+      border-color: rgba(255, 255, 255, 0.06) !important;
+      color: var(--neo-text) !important;
+      border-radius: 14px !important;
+      transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    }
+
+    body.neo-dark [id$="-modal"] [class*="space-y-"]>div:hover {
+      transform: translateY(-1px) !important;
+      box-shadow: 8px 8px 16px rgba(10, 14, 20, 0.5), -6px -6px 14px rgba(255, 255, 255, 0.035) !important;
+    }
+
+    /* 5) หัวข้อและข้อความ */
+    body.neo-dark [id$="-modal"] h1,
+    body.neo-dark [id$="-modal"] h2,
+    body.neo-dark [id$="-modal"] h3,
+    body.neo-dark [id$="-modal"] h4,
+    body.neo-dark [id$="-modal"] h5 {
+      color: #f4f7fb !important;
+    }
+
+    body.neo-dark [id$="-modal"] p,
+    body.neo-dark [id$="-modal"] label,
+    body.neo-dark [id$="-modal"] span[class*="text-slate-"] {
+      color: var(--neo-muted) !important;
+    }
+
+    body.neo-dark [id$="-modal"] .text-white,
+    body.neo-dark [id$="-modal"] strong {
+      color: #f0f4f8 !important;
+    }
+
+    /* 6) ป้ายสถานะ / Badge (สีไม่เปลี่ยน แต่พื้นเข้มขึ้น) */
+    body.neo-dark [id$="-modal"] span[class*="bg-emerald-"],
+    body.neo-dark [id$="-modal"] span[class*="bg-green-"] {
+      background: rgba(16, 185, 129, 0.18) !important;
+      color: #6ee7b7 !important;
+      border-color: rgba(52, 211, 153, 0.35) !important;
+    }
+
+    body.neo-dark [id$="-modal"] span[class*="bg-rose-"],
+    body.neo-dark [id$="-modal"] span[class*="bg-red-"] {
+      background: rgba(244, 63, 94, 0.18) !important;
+      color: #fda4af !important;
+      border-color: rgba(244, 63, 94, 0.35) !important;
+    }
+
+    body.neo-dark [id$="-modal"] span[class*="bg-amber-"],
+    body.neo-dark [id$="-modal"] span[class*="bg-orange-"],
+    body.neo-dark [id$="-modal"] span[class*="bg-yellow-"] {
+      background: rgba(251, 191, 36, 0.18) !important;
+      color: #fde68a !important;
+      border-color: rgba(251, 191, 36, 0.35) !important;
+    }
+
+    body.neo-dark [id$="-modal"] span[class*="bg-purple-"],
+    body.neo-dark [id$="-modal"] span[class*="bg-indigo-"] {
+      background: rgba(139, 92, 246, 0.18) !important;
+      color: #c4b5fd !important;
+      border-color: rgba(139, 92, 246, 0.35) !important;
+    }
+
+    body.neo-dark [id$="-modal"] span[class*="bg-sky-"],
+    body.neo-dark [id$="-modal"] span[class*="bg-blue-"],
+    body.neo-dark [id$="-modal"] span[class*="bg-cyan-"] {
+      background: rgba(56, 189, 248, 0.18) !important;
+      color: #bae6fd !important;
+      border-color: rgba(56, 189, 248, 0.35) !important;
+    }
+
+    /* 7) ปุ่ม Action ภายใน Modal — สไตล์ Neumorphic */
+    body.neo-dark [id$="-modal"] .apple-btn,
+    body.neo-dark [id$="-modal"] button[class*="apple-btn"] {
+      background: linear-gradient(145deg, #2d3844, #222c36) !important;
+      color: var(--neo-text) !important;
+      border-color: rgba(255, 255, 255, 0.08) !important;
+      box-shadow: 4px 4px 8px rgba(12, 17, 23, 0.5), -3px -3px 6px rgba(255, 255, 255, 0.04) !important;
+      border-radius: 14px !important;
+    }
+
+    body.neo-dark [id$="-modal"] .apple-btn:hover,
+    body.neo-dark [id$="-modal"] button[class*="apple-btn"]:hover {
+      background: linear-gradient(145deg, #343f4d, #28323e) !important;
+      border-color: rgba(251, 191, 36, 0.3) !important;
+      transform: translateY(-1px) !important;
+    }
+
+    /* 8) ปุ่มสี (อนุมัติ/ปฏิเสธ) — คงสีเดิมแต่ปรับพื้นเข้มขึ้น */
+    body.neo-dark [id$="-modal"] button[class*="bg-emerald-"],
+    body.neo-dark [id$="-modal"] button[class*="from-emerald-"] {
+      background: linear-gradient(145deg, #166534, #14532d) !important;
+      color: #bbf7d0 !important;
+      border-color: rgba(52, 211, 153, 0.4) !important;
+    }
+
+    body.neo-dark [id$="-modal"] button[class*="bg-rose-"],
+    body.neo-dark [id$="-modal"] button[class*="from-rose-"] {
+      background: linear-gradient(145deg, #9f1239, #881337) !important;
+      color: #fecdd3 !important;
+      border-color: rgba(244, 63, 94, 0.4) !important;
+    }
+
+    /* 9) เส้นคั่น / Divider ภายใน Modal */
+    body.neo-dark [id$="-modal"] hr,
+    body.neo-dark [id$="-modal"] [class*="border-t"],
+    body.neo-dark [id$="-modal"] [class*="border-b"] {
+      border-color: rgba(148, 163, 184, 0.1) !important;
+    }
+
+    /* 10) ข้อความเหตุผล / Comment bubbles */
+    body.neo-dark [id$="-modal"] div[class*="bg-slate-800"],
+    body.neo-dark [id$="-modal"] div[class*="bg-slate-700"] {
+      background: linear-gradient(145deg, #1e2832, #18212a) !important;
+      border-color: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    /* 11) Icon containers (วงกลม/สี่เหลี่ยมไอคอน) */
+    body.neo-dark [id$="-modal"] div[class*="bg-gradient-to-tr"],
+    body.neo-dark [id$="-modal"] div[class*="shadow-inner"] {
+      box-shadow: inset 3px 3px 6px rgba(10, 15, 20, 0.5), inset -3px -3px 6px rgba(255, 255, 255, 0.03) !important;
+    }
+
+    /* 12) Empty state / placeholder text */
+    body.neo-dark [id$="-modal"] div[class*="text-center"] p,
+    body.neo-dark [id$="-modal"] div[class*="text-center"] span {
+      color: var(--neo-muted) !important;
+    }
+
     /* Darker interiors for Weekly Summary and My Information. */
     body.neo-dark #weekly-history-modal>div,
     body.neo-dark #member-dashboard-modal>div {
