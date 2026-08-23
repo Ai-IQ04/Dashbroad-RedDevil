@@ -4456,6 +4456,13 @@
             ⏳ รอเกิด
           </button>
         </div>
+ 
+        <button id="btn-copy-selected-bosses" onclick="copySelectedBossesToGameChat()"
+          class="hidden apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold shadow-md shadow-amber-500/20 animate-pulse"
+          title="คัดลอกรายชื่อและเวลาเกิดของบอสที่ติ๊กเลือกทั้งหมดเพื่อนำไปวางในแชทเกมส์">
+          <i class="fa-solid fa-copy text-xs"></i>
+          <span>📋 คัดลอกลงแชทเกมส์ (<span id="boss-selected-count-badge">0</span>)</span>
+        </button>
 
         <button id="btn-boss-raid-plan-top" onclick="openBossRaidPlannerModal()"
           class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold shadow-sm"
@@ -22129,6 +22136,32 @@ Output strictly valid JSON with no markdown formatting.`;
 
   </div>
 
+  <!-- ================= 📋 แถบคัดลอกบอสลงแชทเกมส์แบบกลุ่ม (Floating Multi-Boss Copy Bar) ================= -->
+  <div id="boss-multi-copy-bar"
+    class="hidden fixed bottom-5 inset-x-0 mx-auto max-w-md w-[92%] sm:w-auto z-40 bg-slate-900/95 backdrop-blur-xl border border-amber-500/80 rounded-2xl p-3 shadow-2xl shadow-amber-500/30 text-white items-center justify-between gap-3 animate-slide-up">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center justify-center text-sm shrink-0">
+        <i class="fa-solid fa-list-check"></i>
+      </div>
+      <div class="min-w-0">
+        <span class="text-xs font-bold text-white block truncate">
+          เลือกบอส <span id="boss-selected-count-text" class="text-amber-400 font-mono font-black text-sm">0</span> ตัว
+        </span>
+        <span class="text-[10px] text-slate-400">คัดลอกเฉพาะชื่อและเวลาเกิด</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-1.5 shrink-0">
+      <button type="button" onclick="clearSelectedBosses()"
+        class="py-1.5 px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold rounded-xl transition">
+        ยกเลิก
+      </button>
+      <button type="button" onclick="copySelectedBossesToGameChat()"
+        class="py-1.5 px-3.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl shadow-md shadow-amber-500/30 active:scale-95 transition flex items-center gap-1.5">
+        <i class="fa-solid fa-copy"></i> <span>คัดลอกลงแชทเกมส์</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Auto Update Notification Banner & Detection Script -->
   <div id="app-auto-update-banner"
     class="fixed top-4 left-1/2 -translate-x-1/2 z-[99999] hidden max-w-md w-[92%] sm:w-auto">
@@ -22156,7 +22189,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=8.5"></script>
+  <script src="boss_timer.js?v=8.6"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
