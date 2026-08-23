@@ -15031,6 +15031,13 @@ Output strictly valid JSON with no markdown formatting.`;
                   >
                     <i class="fa-regular fa-pen-to-square"></i>
                   </button>
+                  <button 
+                    onclick="deleteMember(${member.id})" 
+                    class="w-5.5 h-5.5 rounded flex items-center justify-center text-slate-400 hover:text-rose-400 hover:bg-rose-500/20 transition text-[10px]"
+                    title="ลบตัวละคร"
+                  >
+                    <i class="fa-regular fa-trash-can"></i>
+                  </button>
                 ` : `
                   <span class="text-slate-600 text-[10px] font-mono" title="Guild Admin only">🔒</span>
                 `}
@@ -15648,27 +15655,28 @@ Output strictly valid JSON with no markdown formatting.`;
 
     function deleteMember(id, bypassLock = false) {
       if (!isGuildScoringAdmin()) {
-        showToast('เฉพาะ Admin กิลด์เท่านั้นที่สามารถลบสมาชิกได้', "warning");
+        showToast('เฉพาะ Admin กิลด์ (Super Admin หรือ Admin ทั่วไป) เท่านั้นที่สามารถลบสมาชิกได้', "warning");
         if (!isAdmin) openAdminEmailModal();
         return;
       }
       const member = members.find(m => m.id === id);
-      const name = member ? member.characterName : 'Member';
+      if (!member) return;
+      const name = member.characterName || 'Member';
 
-      if (confirm(t('confirm_delete_member', { name }))) {
+      if (confirm(`คุณต้องการลบตัวละคร "${name}" ออกจากระบบใช่หรือไม่?\n\n(ข้อมูลการเช็คชื่อของตัวละครนี้จะถูกลบออกด้วย)`)) {
         rememberDeletedMember(id);
         members = members.filter(m => String(m.id) !== String(id));
 
         addAuditLog(
           'member',
           `ลบสมาชิก "${name}"`,
-          `กิลด์เดิม: ${member ? member.guild : '-'} | CP: ${member ? Number(member.cp).toLocaleString() : 0}`,
+          `กิลด์เดิม: ${member.guild || '-'} | CP: ${member.cp ? Number(member.cp).toLocaleString() : 0}`,
           name
         );
 
         saveData();
         renderTable();
-        showToast(t('toast_member_deleted', { name }), "info");
+        showToast(`🗑️ ลบตัวละคร "${name}" เรียบร้อยแล้ว`, "info");
       }
     }
 
