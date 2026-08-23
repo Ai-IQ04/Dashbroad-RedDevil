@@ -829,6 +829,24 @@ function copySelectedTableBosses() {
 function renderBossTimerCards() {
   const container = document.getElementById('boss-cards-grid');
   if (!container) return;
+
+  // Rock-solid right-click delegation for both Table rows and Grid cards
+  if (!container._hasContextMenuAttached) {
+    container._hasContextMenuAttached = true;
+    container.addEventListener('contextmenu', (e) => {
+      // Ignore right-clicks inside input, textarea, or button elements
+      if (e.target.closest('input, textarea, button, select')) return;
+      const target = e.target.closest('[id^="boss-card-"]');
+      if (target) {
+        e.preventDefault();
+        const bossId = target.id.replace('boss-card-', '');
+        if (bossId) {
+          copyBossForGameChat(bossId);
+        }
+      }
+    });
+  }
+
   if (!Array.isArray(bossList) || bossList.length === 0) {
     rebuildBossList();
   }
@@ -1061,7 +1079,7 @@ function renderBossTimerCards() {
           : `<div class="w-11 h-11 rounded-2xl bg-slate-800 border ${avatarRing} flex items-center justify-center text-amber-400/90 text-sm shrink-0 shadow-inner"><i class="fa-solid fa-dragon"></i></div>`;
 
         rowsHtml += `
-          <tr id="boss-card-${b.id}" class="${rowBg} border-b border-slate-800/60 group hover:bg-slate-900/40 transition">
+          <tr id="boss-card-${b.id}" oncontextmenu="event.preventDefault(); copyBossForGameChat('${b.id}'); return false;" title="${escapeHtml(b.name)} (คลิกขวาเพื่อคัดลอกลงแชทเกมส์)" class="${rowBg} border-b border-slate-800/60 group hover:bg-slate-900/40 transition cursor-pointer">
             <!-- 0. ติ๊กเลือกบอสเพื่อคัดลอก -->
             <td class="py-3 px-3 text-center align-middle w-12" onclick="event.stopPropagation();">
               <input type="checkbox" data-boss-id="${b.id}" class="boss-table-chk w-4 h-4 rounded border-slate-700 bg-slate-900 text-amber-500 focus:ring-amber-500/50 cursor-pointer"

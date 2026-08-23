@@ -1,5 +1,5 @@
 {
-  "version": "1.3.6",
-  "buildTime": 1787095000000,
-  "releaseNotes": "Table-mode multi-select copy and clean single-click boss copy"
+  "version": "1.3.7",
+  "buildTime": 1787096000000,
+  "releaseNotes": "Robust right-click copy delegation across table and cards"
 }
