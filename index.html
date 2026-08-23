@@ -7729,7 +7729,10 @@
     const GOOGLE_SHEET_ID = '1q-pBcNrc7gNpOg28Zq5D8yYOuMqCk8WD8nWP-SyToqA';
     const GOOGLE_SHEETS_SYNC_URL = window.GOOGLE_SHEETS_SYNC_URL || '';
     const GOOGLE_SHEETS_SYNC_TOKEN = window.GOOGLE_SHEETS_SYNC_TOKEN || '';
-    const GOOGLE_SHEETS_POLL_MS = 3000;
+    // Firebase is the realtime source for the dashboard. Sheets remains a
+    // two-way backup/report source and is checked periodically, not on every
+    // small UI update.
+    const GOOGLE_SHEETS_POLL_MS = 20000;
     let googleSheetsSyncTimer = null;
     let googleSheetsPollTimer = null;
     let googleSheetsLastRemoteSignature = '';
@@ -8350,11 +8353,9 @@
       localStorage.setItem('guild_current_cycle', currentCycleNumber);
       updateKPIs();
       if (fbDb && !isRemoteSyncing) {
-        const memberUpdates = {};
-        members.forEach((member, index) => {
-          memberUpdates[index] = member;
-        });
-        fbDb.ref('guild_app/members_data').update(memberUpdates);
+        // set() is important here: update() leaves deleted array indexes in
+        // Firebase, which can resurrect a character after deletion.
+        fbDb.ref('guild_app/members_data').set(members);
         fbDb.ref('guild_app/weekly_history').set(weeklyArchives);
         fbDb.ref('guild_app/cycle_history').set(cycleArchives);
       }
