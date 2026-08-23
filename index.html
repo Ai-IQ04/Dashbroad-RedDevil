@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th" class="h-full notranslate" translate="no" id="html-root">
 
 <head>
@@ -1449,9 +1449,9 @@
       --neo-text: #edf2f7;
       --neo-muted: #a8b4c2;
       --neo-border: rgba(255, 255, 255, 0.06);
-      --neo-shadow-raised: 14px 14px 28px rgba(15, 20, 27, 0.7), -14px -14px 28px rgba(255, 255, 255, 0.035);
-      --neo-shadow-soft: 8px 8px 18px rgba(15, 20, 27, 0.58), -8px -8px 18px rgba(255, 255, 255, 0.03);
-      --neo-shadow-pressed: inset 7px 7px 14px rgba(15, 20, 27, 0.55), inset -7px -7px 14px rgba(255, 255, 255, 0.025);
+      --neo-shadow-raised: 14px 14px 28px rgba(12, 17, 23, 0.75), -14px -14px 28px rgba(255, 255, 255, 0.055);
+      --neo-shadow-soft: 8px 8px 18px rgba(12, 17, 23, 0.62), -8px -8px 18px rgba(255, 255, 255, 0.048);
+      --neo-shadow-pressed: inset 7px 7px 14px rgba(12, 17, 23, 0.6), inset -7px -7px 14px rgba(255, 255, 255, 0.04);
       background: #202832 !important;
       background-image: linear-gradient(145deg, #202832, #2b3641) !important;
     }
@@ -1459,9 +1459,6 @@
     body.neo-dark header,
     body.neo-dark .apple-btn,
     body.neo-dark button,
-    body.neo-dark input,
-    body.neo-dark select,
-    body.neo-dark textarea,
     body.neo-dark table,
     body.neo-dark thead,
     body.neo-dark tbody,
@@ -1472,6 +1469,27 @@
       color: var(--neo-text) !important;
       border-color: var(--neo-border) !important;
       box-shadow: var(--neo-shadow-soft) !important;
+    }
+
+    /* ช่องกรอกข้อมูล / Dropdown — แบบ Inset จมลึก (Neumorphic Pressed) */
+    body.neo-dark input,
+    body.neo-dark select,
+    body.neo-dark textarea {
+      background: #151d26 !important;
+      color: var(--neo-text) !important;
+      border-color: rgba(255, 255, 255, 0.07) !important;
+      border-radius: 14px !important;
+      box-shadow: inset 5px 5px 10px rgba(10, 15, 20, 0.65), inset -5px -5px 10px rgba(255, 255, 255, 0.025) !important;
+      padding: 10px 14px !important;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease !important;
+    }
+
+    body.neo-dark input:focus,
+    body.neo-dark select:focus,
+    body.neo-dark textarea:focus {
+      border-color: rgba(251, 191, 36, 0.4) !important;
+      box-shadow: inset 5px 5px 10px rgba(10, 15, 20, 0.65), inset -5px -5px 10px rgba(255, 255, 255, 0.025), 0 0 0 3px rgba(251, 191, 36, 0.12) !important;
+      outline: none !important;
     }
 
     body.neo-dark .apple-kpi-card,
