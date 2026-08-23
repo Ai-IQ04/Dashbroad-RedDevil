@@ -11158,8 +11158,7 @@ Output strictly valid JSON with no markdown wrapping:
         input.value = 'อัปเดต CP จากภาพ Ranking นี้ และแสดงรายการที่จับคู่ได้ให้ตรวจสอบ';
         input.focus();
       }
-      const fileInput = document.getElementById('nong-devil-file-input');
-      if (fileInput) fileInput.click();
+      showToast('เปิด AI แล้ว กด Ctrl+V เพื่อวางภาพ Ranking ได้เลย', 'info');
     }
 
     function initNongDevilGreeting() {
