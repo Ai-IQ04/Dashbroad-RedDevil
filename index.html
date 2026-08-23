@@ -12845,7 +12845,8 @@ Output strictly valid JSON with no markdown formatting.`;
         const FIVE_MINUTES_MS = 5 * 60 * 1000;
 
         // ถ้าไม่มี timestamp บันทึกไว้ หรือถูกติ๊กไว้เกิน 5 นาทีแล้ว ให้ถามยืนยันก่อน
-        if (!checkTimestamp || (now - checkTimestamp) > FIVE_MINUTES_MS) {
+        // Always confirm before removing an attendance check.
+        if (true) {
           let timeAgoStr = '';
           if (checkTimestamp) {
             const minsAgo = Math.floor((now - checkTimestamp) / 60000);
