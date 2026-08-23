@@ -1274,14 +1274,18 @@ function renderBossTimerCards() {
               </div>
             </div>
 
-            <!-- 2. เวลาเกิดรอบถัดไป -->
-            <div class="text-center shrink-0 min-w-[85px] sm:min-w-[130px] hidden xs:block">
-              <span class="text-xs sm:text-sm font-mono font-bold text-amber-300">${nextSpawnText}</span>
+            <!-- 2. เวลาเกิดรอบถัดไป (ตรงกลางเด่นชัด) -->
+            <div class="flex flex-col items-center justify-center text-center shrink-0 min-w-[90px] sm:min-w-[140px] px-1">
+              <span class="text-[9.5px] font-bold text-slate-400 uppercase tracking-wide">เวลาเกิด</span>
+              <div class="text-xs sm:text-sm md:text-[15px] font-mono font-black text-amber-300 tracking-wide">${nextSpawnText}</div>
             </div>
 
             <!-- 3. เวลานับถอยหลัง -->
-            <div id="boss-cd-${b.id}" class="text-sm sm:text-base font-mono font-black ${cdColor} tracking-tight min-w-[80px] sm:min-w-[110px] text-right shrink-0">
-              ${countdownText}
+            <div class="flex flex-col items-end justify-center text-right shrink-0 min-w-[80px] sm:min-w-[120px] px-1">
+              <span class="text-[9.5px] font-bold text-slate-400 uppercase tracking-wide">นับถอยหลัง</span>
+              <div id="boss-cd-${b.id}" class="text-xs sm:text-sm md:text-[15px] font-mono font-black ${cdColor} tracking-tight">
+                ${countdownText}
+              </div>
             </div>
 
             <!-- 4. ปุ่มจัดการด่วน -->

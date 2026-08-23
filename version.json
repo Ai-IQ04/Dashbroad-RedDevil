@@ -1,5 +1,5 @@
 {
-  "version": "1.4.0",
-  "buildTime": 1787099000000,
-  "releaseNotes": "Large boss names with tag-based color coding in simple list view"
+  "version": "1.4.1",
+  "buildTime": 1787100000000,
+  "releaseNotes": "Centered spawn time column and countdown in simple list view"
 }
