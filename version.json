@@ -1,5 +1,5 @@
 {
-  "version": "1.5.6",
-  "buildTime": 1787116000000,
-  "releaseNotes": "Implement Precise 20-Cell Grid Slicing and 3-Filter Multi-Pass OCR Engine"
+  "version": "1.5.7",
+  "buildTime": 1787117000000,
+  "releaseNotes": "Fix member ID type matching across attendance check and quick edit actions"
 }

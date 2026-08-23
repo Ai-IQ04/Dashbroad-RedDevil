@@ -14378,7 +14378,7 @@ Output strictly valid JSON with no markdown formatting.`;
         if (!isAdmin) openAdminEmailModal();
         return;
       }
-      const member = members.find(m => m.id === memberId);
+      const member = members.find(m => String(m.id) === String(memberId));
       if (!member) return;
 
       if (!bypassLock && isWeekLocked(currentWeekNumber)) {
@@ -14457,7 +14457,7 @@ Output strictly valid JSON with no markdown formatting.`;
         if (!isAdmin) openAdminEmailModal();
         return;
       }
-      const member = members.find(m => m.id === memberId);
+      const member = members.find(m => String(m.id) === String(memberId));
       if (!member) return;
 
       if (!bypassLock && isWeekLocked(currentWeekNumber)) {
@@ -15169,7 +15169,7 @@ Output strictly valid JSON with no markdown formatting.`;
         openAdminEmailModal();
         return;
       }
-      const member = members.find(m => m.id === memberId);
+      const member = members.find(m => String(m.id) === String(memberId));
       if (!member) return;
 
       if (!bypassLock && isWeekLocked(currentWeekNumber)) {
@@ -15203,9 +15203,9 @@ Output strictly valid JSON with no markdown formatting.`;
 
     function handleSaveQuickCp(e) {
       e.preventDefault();
-      const memberId = parseInt(document.getElementById('quick-cp-member-id').value);
+      const memberId = document.getElementById('quick-cp-member-id').value;
       const newCp = parseInt(document.getElementById('quick-cp-input').value) || 0;
-      const member = members.find(m => m.id === memberId);
+      const member = members.find(m => String(m.id) === String(memberId));
       if (!member) return;
 
       const oldCp = (member.weeklyCp && member.weeklyCp[currentWeekNumber]) || member.cp || 0;
@@ -15233,7 +15233,7 @@ Output strictly valid JSON with no markdown formatting.`;
         openAdminEmailModal();
         return;
       }
-      const member = members.find(m => m.id === memberId);
+      const member = members.find(m => String(m.id) === String(memberId));
       if (!member) return;
 
       if (!bypassLock && isWeekLocked(currentWeekNumber)) {
@@ -15265,12 +15265,12 @@ Output strictly valid JSON with no markdown formatting.`;
 
     function handleSaveQuickName(e) {
       e.preventDefault();
-      const memberId = parseInt(document.getElementById('quick-name-member-id').value);
+      const memberId = document.getElementById('quick-name-member-id').value;
       const newName = document.getElementById('quick-name-input').value.trim();
       const newGuild = document.getElementById('quick-name-guild-select').value;
       if (!newName) return;
 
-      const member = members.find(m => m.id === memberId);
+      const member = members.find(m => String(m.id) === String(memberId));
       if (!member) return;
 
       const oldName = member.characterName;
@@ -16608,7 +16608,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
       if (!memberId || !newCp) return;
 
-      const member = members.find(m => m.id === memberId);
+      const member = members.find(m => String(m.id) === String(memberId));
       if (!member) return;
 
       if (newCp === (member.cp || 0)) {
@@ -16873,7 +16873,7 @@ Output strictly valid JSON with no markdown formatting.`;
       }
       if (!confirm(`ยืนยันอนุมัติ CP ของ ${req.characterName} เป็น ${Number(req.newCp).toLocaleString()} ใช่หรือไม่?`)) return;
 
-      const member = members.find(m => m.id === req.memberId);
+      const member = members.find(m => String(m.id) === String(req.memberId));
       if (member) {
         ensureMemberWeeklyData(member);
         const targetWeek = req.weekNumber || currentWeekNumber;
@@ -16989,7 +16989,7 @@ Output strictly valid JSON with no markdown formatting.`;
       const weekNumber = parseInt(document.getElementById('appeal-week-select')?.value) || currentWeekNumber;
       if (!container) return;
 
-      const member = members.find(m => m.id === memberId);
+      const member = members.find(m => String(m.id) === String(memberId));
       const weeklyChecks = (member && member.weeklyChecks && member.weeklyChecks[weekNumber]) || (member ? member.checks : []);
 
       let html = '';
@@ -17029,7 +17029,7 @@ Output strictly valid JSON with no markdown formatting.`;
         return;
       }
 
-      const member = members.find(m => m.id === memberId);
+      const member = members.find(m => String(m.id) === String(memberId));
       if (!member) return;
 
       const checkedBoxes = Array.from(document.querySelectorAll('input[name="appeal-boss"]:checked'));
@@ -17225,7 +17225,7 @@ Output strictly valid JSON with no markdown formatting.`;
       }
       if (!confirm(`ยืนยันอนุมัติคำอุทธรณ์ของ ${req.characterName} จำนวน ${(req.bossIndices || []).length} กิจกรรมใช่หรือไม่?`)) return;
 
-      const member = members.find(m => m.id === req.memberId);
+      const member = members.find(m => String(m.id) === String(req.memberId));
       if (!member) {
         showToast('ไม่พบสมาชิกในรายชื่อปัจจุบัน จึงยังอนุมัติไม่ได้', 'error');
         return;
