@@ -1471,6 +1471,51 @@
       box-shadow: var(--neo-shadow-soft) !important;
     }
 
+    /* ===== Level 2: Transition + Border Radius ทั้งระบบ (Dark Mode) ===== */
+    body.neo-dark .boss-card,
+    body.neo-dark .apple-kpi-card,
+    body.neo-dark .apple-btn,
+    body.neo-dark #member-hub-container>button,
+    body.neo-dark [id$="-modal"]>div,
+    body.neo-dark #reward-catalog-grid>div,
+    body.neo-dark .reward-store-card,
+    body.neo-dark #admin-store-items-list>div,
+    body.neo-dark #store-tab-admin>div,
+    body.neo-dark #store-tab-history table {
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease !important;
+    }
+
+    /* Modal containers โค้งมนขึ้น */
+    body.neo-dark [id$="-modal"]>div {
+      border-radius: 22px !important;
+    }
+
+    /* การ์ดบอส + KPI โค้งมนขึ้น */
+    body.neo-dark .boss-card {
+      border-radius: 18px !important;
+    }
+
+    body.neo-dark .apple-kpi-card {
+      border-radius: 16px !important;
+    }
+
+    /* การ์ดร้านค้า + Admin items โค้งมนขึ้น */
+    body.neo-dark #reward-catalog-grid>div,
+    body.neo-dark .reward-store-card,
+    body.neo-dark #admin-store-items-list>div,
+    body.neo-dark #store-tab-admin>div {
+      border-radius: 16px !important;
+    }
+
+    /* ปุ่ม Member Hub โค้งมนขึ้น */
+    body.neo-dark #member-hub-container>button {
+      border-radius: 16px !important;
+    }
+
+    body.neo-dark #member-hub-container {
+      border-radius: 20px !important;
+    }
+
     /* ช่องกรอกข้อมูล / Dropdown — แบบ Inset จมลึก (Neumorphic Pressed) */
     body.neo-dark input,
     body.neo-dark select,
@@ -2288,6 +2333,47 @@
     body.neo-dark .apple-btn:active,
     body.neo-dark button:active {
       box-shadow: inset 7px 7px 14px rgba(15, 20, 27, 0.35), inset -7px -7px 14px rgba(255, 255, 255, 0.08) !important;
+    }
+
+    /* ===== Level 2: Dark Mode Hover Effects — ลอยขึ้น + เงาเปลี่ยน ===== */
+    /* การ์ดบอส hover (ยกเว้นการ์ดที่กำลังกระพริบ) */
+    body.neo-dark .boss-card:not(.boss-card-alive-alert):not(.boss-card-soon-alert):hover {
+      transform: translateY(-4px) !important;
+      box-shadow: 16px 16px 32px rgba(10, 14, 20, 0.78), -12px -12px 28px rgba(255, 255, 255, 0.06) !important;
+      border-color: rgba(251, 191, 36, 0.3) !important;
+    }
+
+    /* การ์ดร้านค้า hover */
+    body.neo-dark #reward-catalog-grid>div:hover,
+    body.neo-dark .reward-store-card:hover {
+      transform: translateY(-4px) !important;
+      box-shadow: 14px 14px 28px rgba(10, 14, 20, 0.75), -10px -10px 24px rgba(255, 255, 255, 0.055) !important;
+      border-color: rgba(251, 191, 36, 0.3) !important;
+    }
+
+    /* รายการ Admin Inventory hover */
+    body.neo-dark #admin-store-items-list>div:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 12px 12px 24px rgba(10, 14, 20, 0.72), -8px -8px 20px rgba(255, 255, 255, 0.05) !important;
+      border-color: rgba(251, 191, 36, 0.35) !important;
+    }
+
+    /* กล่อง Admin (แต้มพิเศษ / เพิ่มของรางวัล) hover */
+    body.neo-dark #store-tab-admin>div:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 12px 12px 24px rgba(10, 14, 20, 0.72), -8px -8px 20px rgba(255, 255, 255, 0.05) !important;
+    }
+
+    /* แถวตารางสมาชิก hover */
+    body.neo-dark #member-table-body tr:hover {
+      background: linear-gradient(145deg, #323e4c, #283240) !important;
+      border-color: rgba(251, 191, 36, 0.2) !important;
+    }
+
+    /* แถวตารางประวัติร้านค้า hover */
+    body.neo-dark #store-tab-history tbody tr:hover {
+      background: #2b3642 !important;
+      transform: translateX(2px) !important;
     }
 
     body:not(.neo-dark) #member-table-body button[class*="from-emerald-"] {
