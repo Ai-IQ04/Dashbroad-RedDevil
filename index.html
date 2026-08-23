@@ -13979,7 +13979,7 @@ Output strictly valid JSON with no markdown formatting.`;
         if (!isAdmin) openAdminEmailModal();
         return;
       }
-      const member = members.find(m => m.id === id);
+      const member = members.find(m => String(m.id) === String(id));
       if (!member) return;
 
       populateGuildSelects();
@@ -14084,7 +14084,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
       if (confirm(t('confirm_delete_member', { name }))) {
         rememberDeletedMember(id);
-        members = members.filter(m => m.id !== id);
+        members = members.filter(m => String(m.id) !== String(id));
 
         addAuditLog(
           'member',
