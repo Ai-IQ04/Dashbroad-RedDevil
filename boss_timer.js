@@ -901,7 +901,7 @@ function renderBossTimerCards() {
           : `<div class="w-11 h-11 rounded-2xl bg-slate-800 border ${avatarRing} flex items-center justify-center text-amber-400/90 text-sm shrink-0 shadow-inner"><i class="fa-solid fa-dragon"></i></div>`;
 
         rowsHtml += `
-          <tr id="boss-card-${b.id}" class="${rowBg} border-b border-slate-800/60 group hover:bg-slate-900/40 transition">
+          <tr id="boss-card-${b.id}" oncontextmenu="event.preventDefault(); copyBossForGameChat('${b.id}'); return false;" title="${escapeHtml(b.name)} (คลิกขวาเพื่อคัดลอกลงแชทเกมส์)" class="${rowBg} border-b border-slate-800/60 group hover:bg-slate-900/40 transition cursor-pointer">
             <!-- 1. สถานะ -->
             <td class="py-3 px-3 text-center align-middle w-24">
               <div id="boss-status-badge-${b.id}">${statusBadge}</div>
@@ -1131,7 +1131,7 @@ function renderBossTimerCards() {
     const guildCardClass = isGuildActivity ? ' boss-card-guild' : '';
 
     html += `
-      <div id="boss-card-${b.id}" class="boss-card${guildCardClass}${alertCardClass} relative flex flex-col justify-between bg-gradient-to-b ${cardBg} border ${cardBorder} rounded-3xl p-4 shadow-xl backdrop-blur-md transition hover:scale-[1.015] duration-200">
+      <div id="boss-card-${b.id}" oncontextmenu="event.preventDefault(); copyBossForGameChat('${b.id}'); return false;" title="${escapeHtml(b.name)} (คลิกขวาเพื่อคัดลอกลงแชทเกมส์)" class="boss-card${guildCardClass}${alertCardClass} relative flex flex-col justify-between bg-gradient-to-b ${cardBg} border ${cardBorder} rounded-3xl p-4 shadow-xl backdrop-blur-md transition hover:scale-[1.015] duration-200 cursor-pointer">
         <div>
           <!-- Top Row: Type & Status Badges -->
           <div class="flex items-center justify-between gap-1.5 mb-2.5">
@@ -1196,6 +1196,50 @@ function renderBossTimerCards() {
   });
 
   container.innerHTML = html;
+}
+
+// Right-click Quick Copy for Game Chat (Name & Spawn Time)
+function copyBossForGameChat(bossId) {
+  const boss = bossList.find(item => item.id === bossId);
+  if (!boss) return;
+  const nextSpawn = getBossNextSpawn(boss);
+  const now = new Date();
+  let timeStr = '-';
+  if (nextSpawn && !isNaN(nextSpawn.getTime())) {
+    const diffMs = nextSpawn.getTime() - now.getTime();
+    if (diffMs <= 0) {
+      timeStr = 'เกิดแล้ว';
+    } else {
+      const parts = getBangkokDateParts(nextSpawn);
+      const pad = n => String(n).padStart(2, '0');
+      timeStr = `${pad(parts.hour)}:${pad(parts.minute)}`;
+    }
+  }
+  const text = `${boss.name} ${timeStr}`;
+
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    textarea.style.top = '-9999px';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    textarea.setSelectionRange(0, text.length);
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+  } catch (e) {}
+
+  try {
+    if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+  } catch (e) {}
+
+  if (typeof showToast === 'function') showToast(`📋 คัดลอก "${text}" สำหรับแชทเกมส์แล้ว!`, 'success');
+  if (typeof playChime === 'function') playChime();
 }
 
 async function copyBossInfo(bossId) {
@@ -4293,16 +4337,7 @@ window.validateBossTimerData = validateBossTimerData;
 window.getBossDataHealth = getBossDataHealth;
 window.getBossSchedulePreview = getBossSchedulePreview;
 window.testBossDiscordAlert = testBossDiscordAlert;
-
-// Multi-select Boss Copy exports
-window.toggleSelectBoss = toggleSelectBoss;
-window.toggleSelectAllBosses = toggleSelectAllBosses;
-window.clearSelectedBosses = clearSelectedBosses;
-window.copySelectedBossesToGameChat = copySelectedBossesToGameChat;
-window.formatBossForGameChat = formatBossForGameChat;
-window.safeCopyToClipboard = safeCopyToClipboard;
-window.openGameChatCopyPreviewModal = openGameChatCopyPreviewModal;
-window.copyFromModalTextarea = copyFromModalTextarea;
+window.copyBossForGameChat = copyBossForGameChat;
 
 
 

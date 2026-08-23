@@ -1,5 +1,5 @@
 {
-  "version": "1.3.4",
-  "buildTime": 1787093000000,
-  "releaseNotes": "Remove multi-select copy bar and restore clean UI"
+  "version": "1.3.5",
+  "buildTime": 1787094000000,
+  "releaseNotes": "Clean right-click to copy boss info for game chat"
 }
