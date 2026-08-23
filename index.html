@@ -12007,8 +12007,8 @@
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            // Scale up for crystal clear OCR
-            const scale = Math.max(1, Math.min(2.5, 2400 / Math.max(img.width, img.height)));
+            // Optimal upscale for Thai & CJK game text OCR
+            const scale = Math.max(1.2, Math.min(2.8, 2600 / Math.max(img.width, img.height)));
             const width = Math.round(img.width * scale);
             const height = Math.round(img.height * scale);
             canvas.width = width;
@@ -12020,18 +12020,18 @@
             const imgData = ctx.getImageData(0, 0, width, height);
             const data = imgData.data;
 
-            // Step 1: Calculate brightness to detect dark mode
-            let totalBrightness = 0;
-            const step = 4 * 10;
+            // Step 1: Detect dark mode via luminance sampling
+            let totalLuminance = 0;
+            const step = 4 * 8;
             let sampleCount = 0;
             for (let i = 0; i < data.length; i += step) {
-              totalBrightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
+              totalLuminance += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
               sampleCount++;
             }
-            const avgBrightness = totalBrightness / (sampleCount || 1);
-            const isDarkMode = avgBrightness < 130;
+            const avgLuminance = totalLuminance / (sampleCount || 1);
+            const isDarkMode = avgLuminance < 135;
 
-            // Step 2: High-contrast binarization & thresholding
+            // Step 2: High-contrast binarization with tone-mark sharpening
             for (let i = 0; i < data.length; i += 4) {
               const r = data[i];
               const g = data[i + 1];
@@ -12039,14 +12039,14 @@
               const gray = 0.299 * r + 0.587 * g + 0.114 * b;
 
               if (isDarkMode) {
-                // Invert: Light text (gray > 75) becomes pure black (0), dark background becomes pure white (255)
-                const val = gray > 75 ? 0 : 255;
+                // Invert: Light text (gray > 68) becomes crisp black (0), dark bg becomes pure white (255)
+                const val = gray > 68 ? 0 : 255;
                 data[i] = val;
                 data[i + 1] = val;
                 data[i + 2] = val;
               } else {
-                // Light mode: Dark text becomes pure black, light background becomes pure white
-                const val = gray < 160 ? 0 : 255;
+                // Light mode: Dark text becomes black (0), light bg becomes white (255)
+                const val = gray < 165 ? 0 : 255;
                 data[i] = val;
                 data[i + 1] = val;
                 data[i + 2] = val;
@@ -12055,7 +12055,7 @@
 
             ctx.putImageData(imgData, 0, 0);
             canvas.toBlob(blob => {
-              if (blob) resolve({ blob, canvas, width, height, originalImg: img });
+              if (blob) resolve({ blob, canvas, width, height, originalImg: img, isDarkMode });
               else reject(new Error('Canvas toBlob failed'));
             }, 'image/png');
           };
@@ -12081,7 +12081,7 @@
       }
 
       if (statusEl) {
-        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400 mr-1.5"></i> กำลังปรับความคมชัดภาพแบบ High-Contrast & Binarization...`;
+        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400 mr-1.5"></i> กำลังวิเคราะห์และแยกช่องตารางจัดการชุมนุม (4 แถว x 5 ช่อง = 20 ช่อง)...`;
         statusEl.classList.remove('hidden');
       }
       if (resultsContainer) resultsContainer.classList.add('hidden');
@@ -12091,101 +12091,135 @@
           await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
         }
 
-        // 1. Preprocess image for maximum OCR readability
+        // 1. Preprocess image with high-contrast tone sharpening
         const { blob, canvas, width, height } = await preprocessImageForSquadOcr(file);
 
-        if (statusEl) {
-          statusEl.innerHTML = `<i class="fa-solid fa-bolt text-amber-400 mr-1.5"></i> Local OCR กำลังอ่านรายชื่อตัวละคร (Pass 1)...`;
-        }
+        const squads = [
+          { squadNumber: 1, members: [] },
+          { squadNumber: 2, members: [] },
+          { squadNumber: 3, members: [] },
+          { squadNumber: 4, members: [] }
+        ];
+        const confidenceByName = {};
+        const seenMemberIds = new Set();
+        let combinedOcrText = '';
 
-        // Pass 1: Full High-Contrast Image Scan
-        const res1 = await Tesseract.recognize(blob, 'tha+eng', {
-          logger: m => {
-            if (statusEl && m.status === 'recognizing text') {
-              const pct = Math.round((m.progress || 0) * 100);
-              statusEl.innerHTML = `<i class="fa-solid fa-bolt text-amber-400 mr-1.5"></i> Local OCR กำลังอ่านภาพบนเครื่อง (${pct}%)...`;
-            }
-          }
-        });
-
-        // Pass 2: Row Slicing (4 Squad Rows) for higher localized accuracy
-        let combinedText = res1?.data?.text || '';
+        // 2. Precise 4x5 Cell Grid Slicing (20 Targeted Text Zones)
         const numRows = 4;
-        const rowHeight = height / numRows;
+        const numCols = 5;
+        const cellW = width / numCols;
+        const cellH = height / numRows;
 
+        // Process 20 cells
         for (let r = 0; r < numRows; r++) {
-          const rowCanvas = document.createElement('canvas');
-          rowCanvas.width = width;
-          // Crop upper 65% of each row to avoid bottom weapon icon interference
-          rowCanvas.height = Math.round(rowHeight * 0.70);
-          const rCtx = rowCanvas.getContext('2d');
-          rCtx.drawImage(
-            canvas,
-            0, Math.round(r * rowHeight), width, Math.round(rowHeight * 0.70),
-            0, 0, width, Math.round(rowHeight * 0.70)
-          );
+          if (statusEl) {
+            statusEl.innerHTML = `<i class="fa-solid fa-microchip text-amber-400 mr-1.5"></i> Local OCR กำลังอ่านรายชื่อหน่วยที่ ${r + 1} / ${numRows}...`;
+          }
 
-          try {
-            const rowRes = await Tesseract.recognize(rowCanvas, 'tha+eng');
-            if (rowRes?.data?.text) {
-              combinedText += '\n' + rowRes.data.text;
-            }
-          } catch (_) {}
+          for (let c = 0; c < numCols; c++) {
+            const cellCanvas = document.createElement('canvas');
+            // Focus exclusively on the name area: skip top border & skip bottom weapon icons
+            const cropX = Math.round(c * cellW + cellW * 0.04);
+            const cropY = Math.round(r * cellH + cellH * 0.12);
+            const cropW = Math.round(cellW * 0.84);
+            const cropH = Math.round(cellH * 0.52);
+
+            cellCanvas.width = cropW;
+            cellCanvas.height = cropH;
+
+            const cCtx = cellCanvas.getContext('2d');
+            cCtx.fillStyle = '#FFFFFF';
+            cCtx.fillRect(0, 0, cropW, cropH);
+            cCtx.drawImage(
+              canvas,
+              cropX, cropY, cropW, cropH,
+              0, 0, cropW, cropH
+            );
+
+            try {
+              const cellRes = await Tesseract.recognize(cellCanvas, 'tha+eng');
+              const cellText = (cellRes?.data?.text || '').trim();
+              if (cellText) {
+                combinedOcrText += '\n' + cellText;
+                const match = findBestGuildMemberMatch(cellText, 0.58);
+                if (match && match.member) {
+                  const mId = match.member.id;
+                  const mName = match.member.characterName;
+                  if (!seenMemberIds.has(mId)) {
+                    seenMemberIds.add(mId);
+                    squads[r].members.push(mName);
+                    confidenceByName[mName] = Math.round(match.similarity * 100);
+                  }
+                }
+              }
+            } catch (_) {}
+          }
         }
 
-        // Extract all candidate segments (lines, words, phrases)
-        const rawTokens = combinedText
+        // 3. Fallback Pass: Full Page Scan to capture any missed text
+        if (statusEl) {
+          statusEl.innerHTML = `<i class="fa-solid fa-bolt text-amber-400 mr-1.5"></i> กำลังตรวจสอบรายชื่อและแมตช์ความคล้ายของตัวอักษร...`;
+        }
+
+        try {
+          const fullRes = await Tesseract.recognize(blob, 'tha+eng');
+          if (fullRes?.data?.text) {
+            combinedOcrText += '\n' + fullRes.data.text;
+          }
+        } catch (_) {}
+
+        // Tokenize and match any remaining guild members against full OCR text
+        const tokens = combinedOcrText
           .split(/[\r\n]+/)
           .map(l => l.trim())
           .filter(Boolean);
 
-        const detectedMembers = [];
-        const confidenceByName = {};
-        const seenMemberIds = new Set();
-
-        rawTokens.forEach(token => {
-          // Token as whole
-          const subTokens = [token, ...token.split(/[\s,;:|/\\_-]+/)].filter(t => t && t.length >= 2);
-
-          for (const cand of subTokens) {
-            const match = findBestGuildMemberMatch(cand, 0.60);
+        tokens.forEach(tok => {
+          const parts = [tok, ...tok.split(/[\s,;:|/\\_.-]+/)].filter(p => p && p.length >= 2);
+          for (const p of parts) {
+            const match = findBestGuildMemberMatch(p, 0.60);
             if (match && match.member) {
               const mId = match.member.id;
               const mName = match.member.characterName;
               if (!seenMemberIds.has(mId)) {
                 seenMemberIds.add(mId);
-                detectedMembers.push(mName);
+                // Assign to first squad that has space or squad 1
+                const targetSquad = squads.find(sq => sq.members.length < 5) || squads[0];
+                targetSquad.members.push(mName);
                 confidenceByName[mName] = Math.round(match.similarity * 100);
               }
             }
           }
         });
 
-        // Also check if any member name from the roster is contained anywhere in combinedText
+        // Roster-guided search: Match all member names against full text
         members.forEach(m => {
           if (seenMemberIds.has(m.id)) return;
           const cName = (m.characterName || m.name || '').trim();
           const normC = normalizeMemberNameForMatch(cName);
-          const normFull = normalizeMemberNameForMatch(combinedText);
+          const normFull = normalizeMemberNameForMatch(combinedOcrText);
           if (normC && normFull && normFull.includes(normC)) {
             seenMemberIds.add(m.id);
-            detectedMembers.push(cName);
+            const targetSquad = squads.find(sq => sq.members.length < 5) || squads[0];
+            targetSquad.members.push(cName);
             confidenceByName[cName] = 95;
           }
         });
 
-        if (detectedMembers.length === 0) {
+        const totalDetected = squads.reduce((sum, sq) => sum + sq.members.length, 0);
+
+        if (totalDetected === 0) {
           if (statusEl) {
-            statusEl.innerHTML = `<span class="text-amber-300 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Local OCR อ่านภาพแล้วแต่ไม่พบชื่อที่ตรงกับสมาชิกในกิลด์ กรุณาลองตรวจสอบรูปภาพ หรือสลับเป็นโหมด Google AI</span>`;
+            statusEl.innerHTML = `<span class="text-amber-300 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Local OCR อ่านภาพแล้วแต่ไม่พบชื่อที่ตรงกับสมาชิกในกิลด์ กรุณาลองใช้ภาพที่คมชัดขึ้น หรือสลับเป็นโหมด Google AI</span>`;
           }
           return;
         }
 
         renderSquadScanResults({
-          squads: [{ squadNumber: 1, members: detectedMembers }],
+          squads,
           confidenceByName
         });
-        showToast(`⚡ Local OCR สแกนพบสมาชิก ${detectedMembers.length} คน! 🎉`, 'success');
+        showToast(`⚡ Local OCR สแกนพบสมาชิกครบ ${totalDetected} คน! 🎉`, 'success');
       } catch (tessErr) {
         console.error('Local Tesseract OCR Error:', tessErr);
         if (statusEl) {
