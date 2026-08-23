@@ -3135,36 +3135,33 @@ Output strictly valid JSON with no markdown wrapping:
 async function discoverActiveGeminiModel(apiKey) {
   if (window.cachedGeminiModelEndpoint) return window.cachedGeminiModelEndpoint;
 
-  const apiVersions = ['v1beta', 'v1'];
-  for (const apiVer of apiVersions) {
-    try {
-      const listRes = await fetch(`https://generativelanguage.googleapis.com/${apiVer}/models?key=${apiKey}`);
-      if (listRes.ok) {
-        const listData = await listRes.json();
-        const available = (listData.models || [])
-          .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
-          .map(m => m.name.replace(/^models\//, ''));
+  try {
+    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+    if (listRes.ok) {
+      const listData = await listRes.json();
+      const available = (listData.models || [])
+        .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+        .map(m => m.name.replace(/^models\//, ''));
 
-        if (available.length > 0) {
-          // Priority: 1.5-flash-latest > 1.5-flash > 2.0-flash > any flash > first available
-          const preferred =
-            available.find(m => /gemini-1\.5-flash-latest/i.test(m)) ||
-            available.find(m => /gemini-1\.5-flash$/i.test(m)) ||
-            available.find(m => /gemini-1\.5-flash/i.test(m)) ||
-            available.find(m => /gemini-2\.0-flash/i.test(m)) ||
-            available.find(m => /flash/i.test(m)) ||
-            available[0];
+      if (available.length > 0) {
+        // Priority: 1.5-flash-latest > 1.5-flash > 2.0-flash > any flash > first available
+        const preferred =
+          available.find(m => /gemini-1\.5-flash-latest/i.test(m)) ||
+          available.find(m => /gemini-1\.5-flash$/i.test(m)) ||
+          available.find(m => /gemini-1\.5-flash/i.test(m)) ||
+          available.find(m => /gemini-2\.0-flash/i.test(m)) ||
+          available.find(m => /flash/i.test(m)) ||
+          available[0];
 
-          if (preferred) {
-            console.log(`[Gemini Discovery] Found active model: ${preferred} via ${apiVer}`);
-            window.cachedGeminiModelEndpoint = { apiVer, model: preferred };
-            return window.cachedGeminiModelEndpoint;
-          }
+        if (preferred) {
+          console.log(`[Gemini Discovery] Found active model: ${preferred} via v1beta`);
+          window.cachedGeminiModelEndpoint = { apiVer: 'v1beta', model: preferred };
+          return window.cachedGeminiModelEndpoint;
         }
       }
-    } catch (err) {
-      console.warn(`[Gemini Discovery] Failed to list models on ${apiVer}:`, err);
     }
+  } catch (err) {
+    console.warn('[Gemini Discovery] Failed to list models on v1beta:', err);
   }
 
   // Fallback defaults
@@ -3173,18 +3170,18 @@ async function discoverActiveGeminiModel(apiKey) {
 
 // Universal Gemini Vision Caller with Model Discovery & Auto-Fallback
 async function callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey) {
-  // 1. First attempt: Use Dynamically Discovered Model
   const discovered = await discoverActiveGeminiModel(apiKey);
 
   const candidateList = [
-    { apiVer: discovered.apiVer, model: discovered.model },
+    { apiVer: 'v1beta', model: discovered.model || 'gemini-1.5-flash' },
     { apiVer: 'v1beta', model: 'gemini-1.5-flash' },
     { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' },
     { apiVer: 'v1beta', model: 'gemini-2.0-flash' },
     { apiVer: 'v1beta', model: 'gemini-2.0-flash-exp' },
-    { apiVer: 'v1', model: 'gemini-1.5-flash' }
+    { apiVer: 'v1beta', model: 'gemini-1.5-flash-8b' }
   ];
 
+  let firstDetailedError = null;
   let lastError = null;
   const tried = new Set();
 
@@ -3221,8 +3218,26 @@ async function callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiK
 
       if (!res.ok) {
         const errText = await res.text();
-        console.warn(`Model ${item.model} (${item.apiVer}) returned ${res.status}:`, errText);
-        lastError = new Error(`Model ${item.model} (${res.status}): ${errText}`);
+        let parsedMsg = errText;
+        try {
+          const errObj = JSON.parse(errText);
+          if (errObj.error && errObj.error.message) {
+            parsedMsg = errObj.error.message;
+          }
+        } catch (_) {}
+
+        console.warn(`Model ${item.model} (${item.apiVer}) returned ${res.status}:`, parsedMsg);
+
+        let humanError = `Model ${item.model} (${res.status}): ${parsedMsg}`;
+        if (res.status === 400 && /API_KEY_INVALID|API key not valid/i.test(parsedMsg)) {
+          humanError = 'Google Gemini API Key ไม่ถูกต้อง กรุณาตรวจสอบ Key ในเมนู "⚙️ ตั้งค่า Discord / Sheets"';
+        } else if (res.status === 429 || /RESOURCE_EXHAUSTED|quota/i.test(parsedMsg)) {
+          humanError = 'Google Gemini API ใช้งานเกินโควต้าชั่วคราว (Rate Limit) กรุณารอสักครู่แล้วลองใหม่อีกครั้ง';
+        }
+
+        const err = new Error(humanError);
+        if (!firstDetailedError) firstDetailedError = err;
+        lastError = err;
         continue;
       }
 
@@ -3239,11 +3254,14 @@ async function callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiK
       return extractJsonFromGeminiResponse(textOutput);
     } catch (err) {
       console.warn(`Failed with ${key}:`, err);
+      if (!firstDetailedError) firstDetailedError = err;
       lastError = err;
     }
   }
 
-  throw lastError || new Error('All Gemini models failed. Please check your API key.');
+  // If dynamic cache was invalid, clear it
+  window.cachedGeminiModelEndpoint = null;
+  throw firstDetailedError || lastError || new Error('All Gemini models failed. Please check your API key.');
 }
 
 // Bulletproof JSON extractor for Google Gemini output

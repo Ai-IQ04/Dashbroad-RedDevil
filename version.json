@@ -1,5 +1,5 @@
 {
-  "version": "1.4.8",
-  "buildTime": 1787108000000,
-  "releaseNotes": "Use standard stable Gemini Flash models for OCR without Pro 404 errors"
+  "version": "1.4.9",
+  "buildTime": 1787109000000,
+  "releaseNotes": "Use official v1beta Gemini endpoints with human-readable API error messages"
 }
