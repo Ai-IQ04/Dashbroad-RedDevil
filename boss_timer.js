@@ -3,6 +3,19 @@
  * Completely decoupled from guild scoring logic.
  */
 
+// Safe fallback for escapeHtml
+if (typeof escapeHtml !== 'function') {
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+}
+
 // i18n helper for Boss Timer
 function tBoss(key, fallback) {
   if (typeof window.t === 'function') {
@@ -543,6 +556,7 @@ function renderBossTimerCards() {
   }
 
   const now = getBossNow();
+  const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
   let aliveCount = 0;
   let soonCount = 0;
 
@@ -566,7 +580,6 @@ function renderBossTimerCards() {
       }
     }
 
-    const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
     const hrUnit = isEn ? ' hrs' : ' ชม.';
     return {
       ...boss,
