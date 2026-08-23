@@ -12000,6 +12000,73 @@
       }
     }
 
+    function preprocessImageForSquadOcr(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            // Scale up for crystal clear OCR
+            const scale = Math.max(1, Math.min(2.5, 2400 / Math.max(img.width, img.height)));
+            const width = Math.round(img.width * scale);
+            const height = Math.round(img.height * scale);
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const imgData = ctx.getImageData(0, 0, width, height);
+            const data = imgData.data;
+
+            // Step 1: Calculate brightness to detect dark mode
+            let totalBrightness = 0;
+            const step = 4 * 10;
+            let sampleCount = 0;
+            for (let i = 0; i < data.length; i += step) {
+              totalBrightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
+              sampleCount++;
+            }
+            const avgBrightness = totalBrightness / (sampleCount || 1);
+            const isDarkMode = avgBrightness < 130;
+
+            // Step 2: High-contrast binarization & thresholding
+            for (let i = 0; i < data.length; i += 4) {
+              const r = data[i];
+              const g = data[i + 1];
+              const b = data[i + 2];
+              const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+
+              if (isDarkMode) {
+                // Invert: Light text (gray > 75) becomes pure black (0), dark background becomes pure white (255)
+                const val = gray > 75 ? 0 : 255;
+                data[i] = val;
+                data[i + 1] = val;
+                data[i + 2] = val;
+              } else {
+                // Light mode: Dark text becomes pure black, light background becomes pure white
+                const val = gray < 160 ? 0 : 255;
+                data[i] = val;
+                data[i + 1] = val;
+                data[i + 2] = val;
+              }
+            }
+
+            ctx.putImageData(imgData, 0, 0);
+            canvas.toBlob(blob => {
+              if (blob) resolve({ blob, canvas, width, height, originalImg: img });
+              else reject(new Error('Canvas toBlob failed'));
+            }, 'image/png');
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
     async function processSquadImageWithTesseract(file) {
       const dropzonePrompt = document.getElementById('squad-dropzone-prompt');
       const previewBox = document.getElementById('squad-image-preview-box');
@@ -12014,7 +12081,7 @@
       }
 
       if (statusEl) {
-        statusEl.innerHTML = `<i class="fa-solid fa-bolt fa-spin text-amber-400 mr-1.5"></i> กำลังเตรียม Local OCR (Tesseract) สแกนภาพบนเครื่อง...`;
+        statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin text-amber-400 mr-1.5"></i> กำลังปรับความคมชัดภาพแบบ High-Contrast & Binarization...`;
         statusEl.classList.remove('hidden');
       }
       if (resultsContainer) resultsContainer.classList.add('hidden');
@@ -12024,7 +12091,15 @@
           await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
         }
 
-        const { data: { text } } = await Tesseract.recognize(file, 'tha+eng', {
+        // 1. Preprocess image for maximum OCR readability
+        const { blob, canvas, width, height } = await preprocessImageForSquadOcr(file);
+
+        if (statusEl) {
+          statusEl.innerHTML = `<i class="fa-solid fa-bolt text-amber-400 mr-1.5"></i> Local OCR กำลังอ่านรายชื่อตัวละคร (Pass 1)...`;
+        }
+
+        // Pass 1: Full High-Contrast Image Scan
+        const res1 = await Tesseract.recognize(blob, 'tha+eng', {
           logger: m => {
             if (statusEl && m.status === 'recognizing text') {
               const pct = Math.round((m.progress || 0) * 100);
@@ -12033,22 +12108,52 @@
           }
         });
 
-        // Match detected text lines against guild members roster using advanced similarity
-        const lines = (text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        // Pass 2: Row Slicing (4 Squad Rows) for higher localized accuracy
+        let combinedText = res1?.data?.text || '';
+        const numRows = 4;
+        const rowHeight = height / numRows;
+
+        for (let r = 0; r < numRows; r++) {
+          const rowCanvas = document.createElement('canvas');
+          rowCanvas.width = width;
+          // Crop upper 65% of each row to avoid bottom weapon icon interference
+          rowCanvas.height = Math.round(rowHeight * 0.70);
+          const rCtx = rowCanvas.getContext('2d');
+          rCtx.drawImage(
+            canvas,
+            0, Math.round(r * rowHeight), width, Math.round(rowHeight * 0.70),
+            0, 0, width, Math.round(rowHeight * 0.70)
+          );
+
+          try {
+            const rowRes = await Tesseract.recognize(rowCanvas, 'tha+eng');
+            if (rowRes?.data?.text) {
+              combinedText += '\n' + rowRes.data.text;
+            }
+          } catch (_) {}
+        }
+
+        // Extract all candidate segments (lines, words, phrases)
+        const rawTokens = combinedText
+          .split(/[\r\n]+/)
+          .map(l => l.trim())
+          .filter(Boolean);
+
         const detectedMembers = [];
         const confidenceByName = {};
-        const seenNames = new Set();
+        const seenMemberIds = new Set();
 
-        lines.forEach(line => {
-          const words = line.split(/[\s,]+/);
-          const candidates = [line, ...words].filter(w => w && w.length >= 2);
+        rawTokens.forEach(token => {
+          // Token as whole
+          const subTokens = [token, ...token.split(/[\s,;:|/\\_-]+/)].filter(t => t && t.length >= 2);
 
-          for (const cand of candidates) {
-            const match = findBestGuildMemberMatch(cand, 0.65);
+          for (const cand of subTokens) {
+            const match = findBestGuildMemberMatch(cand, 0.60);
             if (match && match.member) {
+              const mId = match.member.id;
               const mName = match.member.characterName;
-              if (!seenNames.has(mName.toLowerCase())) {
-                seenNames.add(mName.toLowerCase());
+              if (!seenMemberIds.has(mId)) {
+                seenMemberIds.add(mId);
                 detectedMembers.push(mName);
                 confidenceByName[mName] = Math.round(match.similarity * 100);
               }
@@ -12056,9 +12161,22 @@
           }
         });
 
+        // Also check if any member name from the roster is contained anywhere in combinedText
+        members.forEach(m => {
+          if (seenMemberIds.has(m.id)) return;
+          const cName = (m.characterName || m.name || '').trim();
+          const normC = normalizeMemberNameForMatch(cName);
+          const normFull = normalizeMemberNameForMatch(combinedText);
+          if (normC && normFull && normFull.includes(normC)) {
+            seenMemberIds.add(m.id);
+            detectedMembers.push(cName);
+            confidenceByName[cName] = 95;
+          }
+        });
+
         if (detectedMembers.length === 0) {
           if (statusEl) {
-            statusEl.innerHTML = `<span class="text-amber-300 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Local OCR อ่านภาพแล้วแต่ไม่พบชื่อที่ตรงกับสมาชิกในกิลด์ กรุณาลองใช้ภาพที่คมชัดขึ้น หรือสลับเป็นโหมด Google AI</span>`;
+            statusEl.innerHTML = `<span class="text-amber-300 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Local OCR อ่านภาพแล้วแต่ไม่พบชื่อที่ตรงกับสมาชิกในกิลด์ กรุณาลองตรวจสอบรูปภาพ หรือสลับเป็นโหมด Google AI</span>`;
           }
           return;
         }
@@ -12067,7 +12185,7 @@
           squads: [{ squadNumber: 1, members: detectedMembers }],
           confidenceByName
         });
-        showToast(`⚡ Local OCR สแกนพบสมาชิก ${detectedMembers.length} คน!`, 'success');
+        showToast(`⚡ Local OCR สแกนพบสมาชิก ${detectedMembers.length} คน! 🎉`, 'success');
       } catch (tessErr) {
         console.error('Local Tesseract OCR Error:', tessErr);
         if (statusEl) {

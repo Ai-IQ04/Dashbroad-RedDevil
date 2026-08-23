@@ -1,5 +1,5 @@
 {
-  "version": "1.5.2",
-  "buildTime": 1787112000000,
-  "releaseNotes": "Add Levenshtein character similarity and subsegment fuzzy matching to attendance scanner"
+  "version": "1.5.3",
+  "buildTime": 1787113000000,
+  "releaseNotes": "Add High-Contrast Inversion Preprocessor and Multi-Pass Squad Row Slicing for Local OCR"
 }
