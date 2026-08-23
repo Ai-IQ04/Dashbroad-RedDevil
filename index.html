@@ -4163,6 +4163,10 @@
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800/80">
+          <button type="button" id="btn-delete-member-from-modal" onclick="deleteMemberFromEditModal()"
+            class="hidden mr-auto px-4 py-2 rounded-xl bg-rose-700/90 hover:bg-rose-600 text-white text-xs sm:text-sm shadow-md transition">
+            <i class="fa-solid fa-trash-can mr-1"></i>ลบตัวละคร
+          </button>
           <button type="button" onclick="closeAddMemberModal()"
             class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs sm:text-sm hover:bg-slate-700 transition"
             data-i18n="btn_cancel">ยกเลิก</button>
@@ -13413,13 +13417,6 @@ Output strictly valid JSON with no markdown formatting.`;
                   >
                     <i class="fa-regular fa-pen-to-square"></i>
                   </button>
-                  <button 
-                    onclick="deleteMember(${member.id})" 
-                    class="w-5.5 h-5.5 rounded flex items-center justify-center text-slate-500 hover:text-rose-400 hover:bg-rose-500/20 transition text-[10px]"
-                    title="${t('tooltip_delete_char')}"
-                  >
-                    <i class="fa-regular fa-trash-can"></i>
-                  </button>
                 ` : `
                   <span class="text-slate-600 text-[10px] font-mono" title="Guild Admin only">🔒</span>
                 `}
@@ -13925,6 +13922,8 @@ Output strictly valid JSON with no markdown formatting.`;
       populateGuildSelects();
       document.getElementById('modal-member-title').innerHTML = `<i class="fa-solid fa-user-plus text-emerald-400"></i><span>${t('modal_add_title')}</span>`;
       document.getElementById('edit-member-id').value = "";
+      const deleteButton = document.getElementById('btn-delete-member-from-modal');
+      if (deleteButton) deleteButton.classList.add('hidden');
       document.getElementById('new-char-name').value = "";
       document.getElementById('new-guild').value = guildsList[0] ? guildsList[0].name : "RedDevil";
       document.getElementById('new-cp').value = "";
@@ -13952,6 +13951,8 @@ Output strictly valid JSON with no markdown formatting.`;
       populateGuildSelects();
       document.getElementById('modal-member-title').innerHTML = `<i class="fa-regular fa-pen-to-square text-amber-400"></i><span>${t('modal_edit_title', { name: escapeHtml(member.characterName) })}</span>`;
       document.getElementById('edit-member-id').value = member.id;
+      const deleteButton = document.getElementById('btn-delete-member-from-modal');
+      if (deleteButton) deleteButton.classList.remove('hidden');
       document.getElementById('new-char-name').value = member.characterName || "";
       document.getElementById('new-guild').value = member.guild || (guildsList[0] ? guildsList[0].name : "RedDevil");
       document.getElementById('new-cp').value = member.cp || "";
@@ -13962,6 +13963,15 @@ Output strictly valid JSON with no markdown formatting.`;
 
     function closeAddMemberModal() {
       document.getElementById('add-member-modal').classList.add('hidden');
+    }
+
+    function deleteMemberFromEditModal() {
+      const editId = document.getElementById('edit-member-id')?.value;
+      if (!editId) return;
+      const member = members.find(m => String(m.id) === String(editId));
+      if (!member) return;
+      closeAddMemberModal();
+      deleteMember(member.id);
     }
 
     function handleSaveMember(e) {
