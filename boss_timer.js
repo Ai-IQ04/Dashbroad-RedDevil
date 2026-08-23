@@ -1261,46 +1261,46 @@ function renderBossTimerCards() {
         listRowsHtml += `
           <div id="boss-card-${b.id}" oncontextmenu="event.preventDefault(); copyBossForGameChat('${b.id}'); return false;"
             title="${escapeHtml(b.name)} (คลิกขวาเพื่อคัดลอกลงแชทเกมส์)"
-            class="boss-card ${rowBg} flex items-center justify-between gap-3 sm:gap-4 px-3.5 sm:px-4 py-2.5 border-b border-slate-800/60 transition cursor-pointer">
+            class="boss-card ${rowBg} grid grid-cols-12 items-center gap-2 px-3.5 sm:px-5 py-2.5 border-b border-slate-800/60 transition cursor-pointer">
             
-            <!-- 1. สถานะ & ข้อมูลบอส -->
-            <div class="flex items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
-              <div class="shrink-0 w-20 sm:w-24">${statusBadge}</div>
-              <div class="min-w-0 flex items-center gap-2 flex-wrap sm:flex-nowrap flex-1">
-                <span class="text-sm sm:text-base md:text-lg ${nameColorClass} truncate max-w-[170px] sm:max-w-[280px]" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>
+            <!-- 1. ฝั่งซ้าย: สถานะ & ข้อมูลบอส -->
+            <div class="col-span-5 sm:col-span-5 flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+              <div class="shrink-0 w-16 sm:w-20">${statusBadge}</div>
+              <div class="min-w-0 flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
+                <span class="text-sm sm:text-base md:text-lg ${nameColorClass} truncate max-w-[130px] sm:max-w-[240px]" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>
                 <span class="text-[10px] font-mono text-slate-400 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 shrink-0">Lv.${escapeHtml(b.level || '??')}</span>
                 ${tagBadge}
-                <span class="text-xs text-slate-400 truncate max-w-[140px] hidden md:inline"><i class="fa-solid fa-location-dot text-slate-500 text-[10px] mr-1"></i>${escapeHtml(b.map || 'ไม่ระบุแมพ')}</span>
+                <span class="text-xs text-slate-400 truncate max-w-[130px] hidden lg:inline"><i class="fa-solid fa-location-dot text-slate-500 text-[10px] mr-1"></i>${escapeHtml(b.map || 'ไม่ระบุแมพ')}</span>
               </div>
             </div>
 
-            <!-- 2. เวลาเกิดรอบถัดไป (ตรงกลางเด่นชัด) -->
-            <div class="flex flex-col items-center justify-center text-center shrink-0 min-w-[90px] sm:min-w-[140px] px-1">
-              <span class="text-[9.5px] font-bold text-slate-400 uppercase tracking-wide">เวลาเกิด</span>
+            <!-- 2. ตรงกลางเป๊ะ 50%: เวลาเกิดรอบถัดไป -->
+            <div class="col-span-3 sm:col-span-3 flex flex-col items-center justify-center text-center">
+              <span class="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider">เวลาเกิด</span>
               <div class="text-xs sm:text-sm md:text-[15px] font-mono font-black text-amber-300 tracking-wide">${nextSpawnText}</div>
             </div>
 
-            <!-- 3. เวลานับถอยหลัง -->
-            <div class="flex flex-col items-end justify-center text-right shrink-0 min-w-[80px] sm:min-w-[120px] px-1">
-              <span class="text-[9.5px] font-bold text-slate-400 uppercase tracking-wide">นับถอยหลัง</span>
-              <div id="boss-cd-${b.id}" class="text-xs sm:text-sm md:text-[15px] font-mono font-black ${cdColor} tracking-tight">
-                ${countdownText}
+            <!-- 3. ฝั่งขวา: เวลานับถอยหลัง & ปุ่มจัดการด่วน -->
+            <div class="col-span-4 sm:col-span-4 flex items-center justify-end gap-2 sm:gap-3">
+              <div class="flex flex-col items-end justify-center text-right">
+                <span class="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">นับถอยหลัง</span>
+                <div id="boss-cd-${b.id}" class="text-xs sm:text-sm md:text-[15px] font-mono font-black ${cdColor} tracking-tight">
+                  ${countdownText}
+                </div>
               </div>
-            </div>
-
-            <!-- 4. ปุ่มจัดการด่วน -->
-            <div class="flex items-center gap-1.5 shrink-0">
-              <button onclick="copyBossForGameChat('${b.id}')"
-                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-slate-700 flex items-center justify-center transition shadow-sm"
-                title="คลิกเพื่อคัดลอกลงแชทเกมส์">
-                <i class="fa-solid fa-copy text-xs"></i>
-              </button>
-              ${isAdminActive ? `
-              <button onclick="openBossKillConfirmModal('${b.id}')"
-                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 flex items-center justify-center transition shadow-sm"
-                title="บันทึกบอสตาย (Kill Confirm)">
-                <i class="fa-solid fa-skull text-xs"></i>
-              </button>` : ''}
+              <div class="flex items-center gap-1 shrink-0">
+                <button onclick="copyBossForGameChat('${b.id}')"
+                  class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-slate-700 flex items-center justify-center transition shadow-sm"
+                  title="คลิกเพื่อคัดลอกลงแชทเกมส์">
+                  <i class="fa-solid fa-copy text-xs"></i>
+                </button>
+                ${isAdminActive ? `
+                <button onclick="openBossKillConfirmModal('${b.id}')"
+                  class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 flex items-center justify-center transition shadow-sm"
+                  title="บันทึกบอสตาย (Kill Confirm)">
+                  <i class="fa-solid fa-skull text-xs"></i>
+                </button>` : ''}
+              </div>
             </div>
 
           </div>

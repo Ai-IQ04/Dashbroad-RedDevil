@@ -1,5 +1,5 @@
 {
-  "version": "1.4.1",
-  "buildTime": 1787100000000,
-  "releaseNotes": "Centered spawn time column and countdown in simple list view"
+  "version": "1.4.2",
+  "buildTime": 1787101000000,
+  "releaseNotes": "Lock spawn time to exact 50% grid center in simple list view"
 }
