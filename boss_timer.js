@@ -703,6 +703,7 @@ function renderBossTimerCards() {
   }
 
   filtered.forEach(b => {
+    try {
     const isGuildActivity = GUILD_SCORING_BOSS_IDS.has(b.id) || (b.name && /lucus|bahel|libitina|rakajeth|tumier|neva|icarut|morti|motti|arena|camalia|world/i.test(b.name));
     const isHighTier = isHighLevelBoss(b.level, b.id, b.name);
 
@@ -882,6 +883,10 @@ function renderBossTimerCards() {
         ${actionButtonsHtml}
       </div>
     `;
+    } catch (error) {
+      console.error('[Boss Timer] Failed to render boss card:', b && b.id, error);
+      html += `<div class="boss-card relative bg-slate-900 border border-slate-700 rounded-2xl p-4"><h4 class="text-lg font-black text-white">${escapeHtml((b && b.name) || 'Unknown Boss')}</h4><p class="text-xs text-slate-400 mt-1">${escapeHtml((b && b.map) || '')}</p></div>`;
+    }
   });
 
   container.innerHTML = html;
