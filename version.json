@@ -1,5 +1,5 @@
 {
-  "version": "1.4.9",
-  "buildTime": 1787109000000,
-  "releaseNotes": "Use official v1beta Gemini endpoints with human-readable API error messages"
+  "version": "1.5.0",
+  "buildTime": 1787110000000,
+  "releaseNotes": "Force Service Worker v50 purge and enforce pure v1beta Gemini Vision engine"
 }
