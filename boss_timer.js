@@ -538,6 +538,9 @@ function initBossTimerModule() {
 function renderBossTimerCards() {
   const container = document.getElementById('boss-cards-grid');
   if (!container) return;
+  if (!Array.isArray(bossList) || bossList.length === 0) {
+    rebuildBossList();
+  }
 
   const now = getBossNow();
   let aliveCount = 0;
