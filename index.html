@@ -8104,6 +8104,27 @@
       return `${action}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     }
 
+    function getDeletedMemberIds() {
+      try {
+        const value = JSON.parse(localStorage.getItem('guild_deleted_member_ids') || '[]');
+        return new Set(Array.isArray(value) ? value.map(String) : []);
+      } catch (_) {
+        return new Set();
+      }
+    }
+
+    function rememberDeletedMember(id) {
+      const deleted = getDeletedMemberIds();
+      deleted.add(String(id));
+      localStorage.setItem('guild_deleted_member_ids', JSON.stringify([...deleted]));
+    }
+
+    function forgetDeletedMember(id) {
+      const deleted = getDeletedMemberIds();
+      deleted.delete(String(id));
+      localStorage.setItem('guild_deleted_member_ids', JSON.stringify([...deleted]));
+    }
+
     function scheduleGoogleSheetsPush() {
       if (!googleSheetsIsConfigured()) return;
       clearTimeout(googleSheetsSyncTimer);
@@ -8225,8 +8246,12 @@
 
         const localById = new Map(members.map(member => [String(member.id), member]));
         const remoteIds = new Set(result.members.map(remote => String(remote.id)));
+        const deletedMemberIds = getDeletedMemberIds();
         let changed = activitiesChanged;
         result.members.forEach(remote => {
+          // Do not let an old Week tab resurrect a character that was removed
+          // locally while the Apps Script roster is being updated.
+          if (deletedMemberIds.has(String(remote.id))) return;
           let local = localById.get(String(remote.id)) || members.find(member =>
             String(member.characterName || member.name || '').trim().toLowerCase() === String(remote.characterName || '').trim().toLowerCase());
           if (!local) {
@@ -14014,6 +14039,7 @@ Output strictly valid JSON with no markdown formatting.`;
             4: new Array(ACTIVITIES.length).fill(false)
           }
         };
+        forgetDeletedMember(newMember.id);
         members.unshift(newMember);
 
         addAuditLog(
@@ -14041,6 +14067,7 @@ Output strictly valid JSON with no markdown formatting.`;
       const name = member ? member.characterName : 'Member';
 
       if (confirm(t('confirm_delete_member', { name }))) {
+        rememberDeletedMember(id);
         members = members.filter(m => m.id !== id);
 
         addAuditLog(
