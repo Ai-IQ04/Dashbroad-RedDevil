@@ -111,18 +111,122 @@ const DEFAULT_BOSS_DATABASE = [
   { id: 'reddevil_guild_boss', name: 'RedDevil Guild Boss', level: '00', map: 'Guild Base', respawnType: 'fixed', scheduleText: 'Sun 19:05', fixedTimes: [{ days: [0], time: '19:05' }], note: 'Guild Base' }
 ];
 
+// Smart parser: แปลงข้อความตารางเวลา (scheduleText) เป็นโครงสร้าง fixedTimes โดยอัตโนมัติ
+// รองรับภาษาไทย/อังกฤษ เช่น:
+// - "Mon 10:30 / Thu 18:00"
+// - "Daily 10:00 / 19:00" หรือ "ทุกวัน 20:00"
+// - "Fri/Sat/Sun 19:25" หรือ "ศุกร์ เสาร์ อาทิตย์ 19:25"
+// - "20:00"
+function parseScheduleTextToFixedTimes(scheduleText) {
+  if (!scheduleText || typeof scheduleText !== 'string') return [];
+  const text = scheduleText.trim();
+  if (!text) return [];
+
+  const dayMap = {
+    // อาทิตย์ (0)
+    'sun': 0, 'sunday': 0, 'อาทิตย์': 0, 'อา': 0,
+    // จันทร์ (1)
+    'mon': 1, 'monday': 1, 'จันทร์': 1, 'จ': 1,
+    // อังคาร (2)
+    'tue': 2, 'tues': 2, 'tuesday': 2, 'อังคาร': 2, 'อ': 2,
+    // พุธ (3)
+    'wed': 3, 'wednesday': 3, 'พุธ': 3, 'พ': 3,
+    // พฤหัสบดี (4)
+    'thu': 4, 'thur': 4, 'thurs': 4, 'thursday': 4, 'พฤหัส': 4, 'พฤหัสบดี': 4, 'พฤ': 4,
+    // ศุกร์ (5)
+    'fri': 5, 'friday': 5, 'ศุกร์': 5, 'ศ': 5,
+    // เสาร์ (6)
+    'sat': 6, 'saturday': 6, 'เสาร์': 6, 'ส': 6
+  };
+
+  const allDays = [0, 1, 2, 3, 4, 5, 6];
+  const results = [];
+
+  const timeRegex = /\b([01]?\d|2[0-3])[:.]([0-5]\d)\b/g;
+  let match;
+  const timeList = [];
+  while ((match = timeRegex.exec(text)) !== null) {
+    timeList.push({
+      timeRaw: match[0],
+      hour: match[1],
+      min: match[2],
+      index: match.index,
+      endIndex: timeRegex.lastIndex
+    });
+  }
+
+  if (timeList.length === 0) return [];
+
+  let lastDaysFound = null;
+
+  for (let i = 0; i < timeList.length; i++) {
+    const cur = timeList[i];
+    const prevEnd = i === 0 ? 0 : timeList[i - 1].endIndex;
+    const chunkBefore = text.slice(prevEnd, cur.index).toLowerCase();
+
+    const isDaily = /daily|everyday|every\s*day|ทุกวัน|ทุกๆวัน/i.test(chunkBefore);
+    let days = [];
+
+    if (isDaily) {
+      days = [...allDays];
+    } else {
+      const words = chunkBefore.split(/[\s,\/\\|;\-_+&]+/);
+      for (const w of words) {
+        const cleanW = w.replace(/[^a-zA-Zก-๙]/g, '');
+        if (dayMap[cleanW] !== undefined && !days.includes(dayMap[cleanW])) {
+          days.push(dayMap[cleanW]);
+        }
+      }
+    }
+
+    if (days.length > 0) {
+      lastDaysFound = [...days];
+    } else if (lastDaysFound && lastDaysFound.length > 0) {
+      // ใช้รอบวันก่อนหน้าถ้าเป็นรูปแบบ เช่น 'Daily 10:00 / 19:00' หรือ 'Sat 14:00 / 18:00'
+      days = [...lastDaysFound];
+    } else {
+      days = [...allDays];
+    }
+
+    const timeStr = `${String(cur.hour).padStart(2, '0')}:${String(cur.min).padStart(2, '0')}`;
+    results.push({ days: [...days], time: timeStr });
+  }
+
+  return results;
+}
+
 // Helper to rebuild bossList merged with custom configs
 function rebuildBossList() {
   bossList = DEFAULT_BOSS_DATABASE.map(b => {
     const custom = bossCustomConfigs[b.id] || {};
+    const scheduleText = (custom.scheduleText !== undefined && custom.scheduleText !== null) ? custom.scheduleText : b.scheduleText;
+
+    // ถ้ามีการระบุ scheduleText ให้แปลงเป็น fixedTimes อัตโนมัติ
+    let fixedTimes = custom.fixedTimes;
+    if (!fixedTimes && scheduleText) {
+      const parsed = parseScheduleTextToFixedTimes(scheduleText);
+      if (parsed && parsed.length > 0) fixedTimes = parsed;
+    }
+    if (!fixedTimes || fixedTimes.length === 0) {
+      fixedTimes = b.fixedTimes || null;
+    }
+
+    // ตัดสิน respawnType
+    let respawnType = custom.respawnType || b.respawnType;
+    if (scheduleText && (!custom.intervalHours && !b.intervalHours)) {
+      respawnType = 'fixed';
+    }
+
     return {
       ...b,
       name: custom.name || b.name,
       level: custom.level || b.level,
       map: custom.map || b.map,
       avatar: custom.avatar || null,
-      intervalHours: (custom.intervalHours !== undefined && custom.intervalHours !== null) ? Number(custom.intervalHours) : b.intervalHours,
-      scheduleText: custom.scheduleText || b.scheduleText,
+      respawnType: respawnType,
+      intervalHours: (custom.intervalHours !== undefined && custom.intervalHours !== null && custom.intervalHours !== '') ? Number(custom.intervalHours) : b.intervalHours,
+      scheduleText: scheduleText,
+      fixedTimes: fixedTimes,
       note: (custom.note !== undefined && custom.note !== null) ? custom.note : b.note
     };
   });
@@ -297,35 +401,39 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
   }
 
   // 2. Fixed schedule bosses: คำนวณเวลารอบถัดไปตามตารางเวลาในโซนเวลาไทย (+7)
-  if (boss.respawnType === 'fixed' && Array.isArray(boss.fixedTimes)) {
-    // Always search from the later of the last defeat and current Thai time.
-    // Otherwise an old defeat record can make the 7-day search window expire.
+  let fixedTimes = Array.isArray(boss.fixedTimes) && boss.fixedTimes.length > 0 ? boss.fixedTimes : null;
+  if (!fixedTimes && boss.scheduleText) {
+    const parsed = parseScheduleTextToFixedTimes(boss.scheduleText);
+    if (parsed && parsed.length > 0) fixedTimes = parsed;
+  }
+
+  if (fixedTimes && fixedTimes.length > 0) {
     const nowBangkok = getBangkokDateParts(now);
 
     let nearest = null;
-    for (let offset = 0; offset <= 7; offset++) {
+    // ค้นหารอบเกิดล่วงหน้า 14 วัน (offset 0 ถึง 14) เพื่อให้ครอบคลุมบอสสัปดาห์ละ 1 ครั้งได้อย่างแม่นยำ
+    for (let offset = 0; offset <= 14; offset++) {
       const checkDate = new Date(Date.UTC(nowBangkok.year, nowBangkok.month - 1, nowBangkok.day + offset));
       const checkBangkok = getBangkokDateParts(checkDate);
       const dayOfWeek = new Date(Date.UTC(checkBangkok.year, checkBangkok.month - 1, checkBangkok.day)).getUTCDay();
 
-      for (const ft of boss.fixedTimes) {
-        if (ft.days.includes(dayOfWeek)) {
-          const [h, m] = ft.time.split(':').map(Number);
-          const candidate = createDateFromBangkokParts({
-            year: checkBangkok.year,
-            month: checkBangkok.month,
-            day: checkBangkok.day,
-            hour: h,
-            minute: m,
-            second: 0
-          });
+      for (const ft of fixedTimes) {
+        if (ft.days && ft.days.includes(dayOfWeek) && ft.time) {
+          const [h, m] = String(ft.time).replace('.', ':').split(':').map(Number);
+          if (!isNaN(h) && !isNaN(m)) {
+            const candidate = createDateFromBangkokParts({
+              year: checkBangkok.year,
+              month: checkBangkok.month,
+              day: checkBangkok.day,
+              hour: h,
+              minute: m,
+              second: 0
+            });
 
-          // Fixed-schedule bosses follow the timetable regardless of the
-          // recorded defeat time. Defeat time is history only; it must not
-          // push a future 10:00 slot to 19:00.
-          if (candidate > now) {
-            if (!nearest || candidate < nearest) {
-              nearest = candidate;
+            if (candidate.getTime() > now.getTime()) {
+              if (!nearest || candidate.getTime() < nearest.getTime()) {
+                nearest = candidate;
+              }
             }
           }
         }
@@ -337,19 +445,15 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
   return null;
 }
 
-// Helper: คำนวณเวลาที่บอสจะเกิดรอบถัดไป (รวมตรรกะซ้ำซ้อนไว้ที่เดียว)
-// - ถ้าเป็นบอสตามตาราง (Fixed Schedule) ให้คำนวณตามตารางเวลาไทยเสมอ
-// - ถ้าเป็นบอสตามรอบเวลา (Interval) และมี customNextSpawn ให้ใช้ค่านั้น ถ้าไม่มีให้คำนวณจากเวลาตาย
+// Helper: คำนวณเวลาที่บอสจะเกิดรอบถัดไป
+// - ถ้ามี customNextSpawn ที่กำหนดเอง ให้ใช้ค่านั้นก่อน
+// - ถ้าเป็นบอสตามตาราง (Fixed Schedule) ให้คำนวณตามตารางเวลาไทย
+// - ถ้าเป็นบอสตามรอบเวลา (Interval) ให้คำนวณจากเวลาตาย
 function getBossNextSpawn(boss) {
   const timer = bossTimerData[boss.id] || {};
-  // บอสตามตาราง (Fixed Schedule) ทั้งหมด จะต้องยึดตามตารางเวลาหลักของเกมในโซนเวลาไทยเสมอ
-  // ไม่ให้ค่า customNextSpawn เก่าหรือผิดพลาดมาทับเวลาตารางจริง
-  if (boss.respawnType === 'fixed') {
-    return calculateNextSpawnDate(boss, timer.defeatedTime);
-  }
   if (timer.customNextSpawn) {
     const custom = new Date(timer.customNextSpawn);
-    if (!isNaN(custom.getTime())) return custom;
+    if (!isNaN(custom.getTime()) && custom.getTime() > 0) return custom;
   }
   return calculateNextSpawnDate(boss, timer.defeatedTime);
 }
@@ -550,12 +654,36 @@ function initBossTimerModule() {
   } catch (e) { }
 }
 
-// Render Boss Cards
+// View Mode: 'grid' | 'table'
+let currentBossViewMode = localStorage.getItem('guild_boss_view_mode') || 'grid';
+
+function switchBossViewMode(mode) {
+  currentBossViewMode = mode;
+  try {
+    localStorage.setItem('guild_boss_view_mode', mode);
+  } catch (e) { }
+  renderBossTimerCards();
+}
+
+// Render Boss Cards or Table
 function renderBossTimerCards() {
   const container = document.getElementById('boss-cards-grid');
   if (!container) return;
   if (!Array.isArray(bossList) || bossList.length === 0) {
     rebuildBossList();
+  }
+
+  // Update View Mode Toggle Buttons UI
+  const btnGrid = document.getElementById('btn-view-grid');
+  const btnTable = document.getElementById('btn-view-table');
+  if (btnGrid && btnTable) {
+    if (currentBossViewMode === 'table') {
+      btnTable.className = "boss-view-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition flex items-center gap-1.5 shadow-sm";
+      btnGrid.className = "boss-view-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5";
+    } else {
+      btnGrid.className = "boss-view-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition flex items-center gap-1.5 shadow-sm";
+      btnTable.className = "boss-view-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5";
+    }
   }
 
   const now = getBossNow();
@@ -586,10 +714,6 @@ function renderBossTimerCards() {
     const hrUnit = isEn ? ' hrs' : ' ชม.';
     return {
       ...boss,
-      // ข้อมูลไทม์เมอร์ของบอสตัวนี้ (defeatedTime, nextSpawnTime, customNextSpawn)
-      // - เดิมเขียนแค่ `timer,` ซึ่งตัวแปร timer ไม่ได้ถูกประกาศในฟังก์ชันนี้
-      //   ทำให้เกิด ReferenceError: timer is not defined → ฟังก์ชันหยุดทำงาน → ไม่มีการ์ดบอสแสดง
-      // - แก้เป็น bossTimerData[boss.id] เพื่อให้ได้ข้อมูลไทม์เมอร์ที่ถูกต้องของบอสแต่ละตัว
       timer: bossTimerData[boss.id] || {},
       nextSpawn,
       status,
@@ -656,26 +780,21 @@ function renderBossTimerCards() {
     const emptyMsg = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en')
       ? 'No bosses found matching your search criteria'
       : 'ไม่พบบอสที่ตรงกับเงื่อนไขการค้นหา';
+    container.className = "w-full py-12 text-center text-slate-500";
     container.innerHTML = `
-      <div class="col-span-full py-12 text-center text-slate-500">
-        <i class="fa-solid fa-dragon text-4xl mb-2 text-slate-700"></i>
-        <p class="text-xs">${emptyMsg}</p>
-      </div>
+      <i class="fa-solid fa-dragon text-4xl mb-2 text-slate-700"></i>
+      <p class="text-xs">${emptyMsg}</p>
     `;
     return;
   }
 
-  let html = '';
   // Set of Guild Activity / Scoring Bosses
   const GUILD_SCORING_BOSS_IDS = new Set([
     'lucus', 'bahel', 'libitina', 'rakajeth', 'tumier', 'nevaeh', 'icaruthia', 'motti', 'guild_arena', 'camalia', 'world_boss', 'reddevil_guild_boss'
   ]);
 
-  // ใช้ isBossTimerAdmin() เพื่อให้สอดคล้องกับเช็คสิทธิ์อื่นๆ ในโมดูล
-  // (Admin ทุก role: superadmin, admin, boss_admin ควบคุมบอสไทม์เมอร์ได้)
   const isAdminActive = (typeof isBossTimerAdmin !== 'undefined' && isBossTimerAdmin());
 
-  // Helper to identify High-Level Boss (Level >= 100 or special high-tier raids)
   function isHighLevelBoss(levelStr, bossId, bossName) {
     if (bossId === 'world_boss' || (bossName && /world boss|arene|guild boss/i.test(bossName))) return true;
     if (!levelStr) return false;
@@ -718,15 +837,175 @@ function renderBossTimerCards() {
     }
   }
 
+  // ================= RENDER MODE: TABLE VIEW =================
+  if (currentBossViewMode === 'table') {
+    container.className = "w-full overflow-x-auto pb-4";
+    let rowsHtml = '';
+
+    filtered.forEach(b => {
+      try {
+        const isGuildActivity = GUILD_SCORING_BOSS_IDS.has(b.id) || (b.name && /lucus|bahel|libitina|rakajeth|tumier|neva|icarut|morti|motti|arena|camalia|world/i.test(b.name));
+        const isHighTier = isHighLevelBoss(b.level, b.id, b.name);
+
+        let nameColorClass = isGuildActivity ? 'text-amber-400 font-bold' : (isHighTier ? 'text-rose-300 font-bold' : 'text-emerald-300 font-bold');
+        let levelBadgeClass = isGuildActivity ? 'bg-amber-950 text-amber-300 border-amber-500/40' : (isHighTier ? 'bg-rose-950 text-rose-300 border-rose-500/40' : 'bg-emerald-950 text-emerald-300 border-emerald-500/40');
+        let avatarRing = isGuildActivity ? 'border-amber-500/50' : (isHighTier ? 'border-rose-500/50' : 'border-emerald-500/40');
+
+        let statusBadge = '';
+        let rowBg = 'bg-slate-900/40 hover:bg-slate-900/80';
+        let alertCardClass = '';
+
+        if (b.status === 'alive') {
+          alertCardClass = ' boss-card-alive-alert';
+          rowBg = 'bg-rose-950/25 hover:bg-rose-950/40';
+          statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-gradient-to-r from-rose-600 to-red-600 text-white border border-rose-400 flex items-center justify-center gap-1.5 shadow-md shadow-rose-600/40"><i class="fa-solid fa-circle text-[6px] text-rose-200 animate-ping"></i><span class="animate-pulse">เกิดแล้ว</span></span>`;
+        } else if (b.status === 'soon') {
+          alertCardClass = ' boss-card-soon-alert';
+          rowBg = 'bg-amber-950/20 hover:bg-amber-950/35';
+          statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 border border-amber-300 flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/40"><i class="fa-solid fa-clock text-[9px] text-slate-950 animate-spin" style="animation-duration: 4s;"></i><span class="animate-pulse font-extrabold">ใกล้เกิด</span></span>`;
+        } else if (b.status === 'cooldown') {
+          statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-950/80 text-sky-300 border border-sky-500/50 flex items-center justify-center gap-1.5"><i class="fa-solid fa-hourglass-half text-[8px] text-sky-400"></i> รอเกิด</span>`;
+        } else {
+          statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-800/90 text-slate-300 border border-slate-700 flex items-center justify-center gap-1.5">⚪ ยังไม่ลงเวลา</span>`;
+        }
+
+        const countdownText = formatCountdown(b.diffMs, b.status);
+        const cdColorClass = b.status === 'alive' ? 'boss-countdown-alive animate-pulse' : (b.status === 'soon' ? 'boss-countdown-soon animate-pulse' : (b.status === 'cooldown' ? 'text-sky-300' : 'text-slate-500'));
+
+        const defeatedDate = b.timer.defeatedTime ? new Date(b.timer.defeatedTime) : null;
+        const defeatedIsFuture = defeatedDate && !isNaN(defeatedDate.getTime()) && defeatedDate.getTime() > now.getTime() + 60 * 1000;
+        const lastDefeatedHtml = defeatedIsFuture
+          ? `<span class="text-rose-300 font-mono text-[11px]">⚠️ เวลาอนาคต</span>`
+          : (defeatedDate ? `<span class="font-mono text-[11px] text-slate-300">${formatBossLastDefeatedDisplay(defeatedDate)}</span>` : '<span class="text-slate-500 text-xs">-</span>');
+
+        const nextSpawnHtml = b.nextSpawn ? formatBossNextSpawnDisplay(b.nextSpawn) : (b.respawnType === 'interval' ? `<span class="text-slate-500 text-[10.5px]">รอลงเวลา</span>` : '<span class="text-slate-500 text-xs">-</span>');
+
+        const avatarThumb = b.avatar
+          ? `<img src="${escapeHtml(b.avatar)}" alt="${escapeHtml(b.name)}" class="w-9 h-9 rounded-xl object-cover border ${avatarRing} shrink-0 bg-slate-900" onerror="this.onerror=null; this.src=''; this.parentElement.innerHTML='<div class=\\'w-9 h-9 rounded-xl bg-slate-800 border ${avatarRing} flex items-center justify-center text-amber-400\\'><i class=\\'fa-solid fa-dragon text-xs\\'></i></div>';" />`
+          : `<div class="w-9 h-9 rounded-xl bg-slate-800 border ${avatarRing} flex items-center justify-center text-amber-400/90 shrink-0"><i class="fa-solid fa-dragon text-xs"></i></div>`;
+
+        let typeIcon = isGuildActivity
+          ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">กิลด์</span>`
+          : (isHighTier ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">บอสสูง</span>` : '');
+
+        rowsHtml += `
+          <tr id="boss-card-${b.id}" class="${rowBg}${alertCardClass} transition border-b border-slate-800/60 group">
+            <!-- 1. สถานะ -->
+            <td class="py-2.5 px-3 text-center align-middle w-24">
+              <div id="boss-status-badge-${b.id}">${statusBadge}</div>
+            </td>
+
+            <!-- 2. ข้อมูลบอส -->
+            <td class="py-2.5 px-3 align-middle">
+              <div class="flex items-center gap-2.5">
+                <div class="relative cursor-pointer shrink-0" onclick="${isAdminActive ? `openEditBossModal('${b.id}')` : `openBossDropLogModal('${b.id}')`}" title="${isAdminActive ? 'คลิกแก้ไขรูปโปรไฟล์บอส' : escapeHtml(b.name)}">
+                  ${avatarThumb}
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-sm font-black ${nameColorClass} truncate max-w-[160px] sm:max-w-[200px]" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>
+                    <span class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold border ${levelBadgeClass}">Lv.${escapeHtml(b.level || '??')}</span>
+                    ${typeIcon}
+                  </div>
+                  <div class="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
+                    <span class="truncate max-w-[140px]"><i class="fa-solid fa-location-dot text-slate-500 text-[10px] mr-1"></i>${escapeHtml(b.map || 'ไม่ระบุแมพ')}</span>
+                    ${b.note ? `<span class="text-amber-400/80 truncate max-w-[120px] font-mono text-[10px]"><i class="fa-solid fa-note-sticky text-[9px] mr-1"></i>${escapeHtml(b.note)}</span>` : ''}
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <!-- 3. เวลานับถอยหลัง -->
+            <td class="py-2.5 px-3 text-center align-middle w-32">
+              <div id="boss-cd-${b.id}" class="text-base sm:text-lg font-black font-mono tracking-wider ${cdColorClass}">
+                ${countdownText}
+              </div>
+              <div class="text-[9px] text-slate-500 font-mono mt-0.5 truncate max-w-[120px] mx-auto">${escapeHtml(b.sourceLabel)}</div>
+            </td>
+
+            <!-- 4. เวลาเกิดรอบถัดไป -->
+            <td class="py-2.5 px-3 align-middle text-xs font-mono">
+              <div id="boss-next-${b.id}" class="leading-tight">${nextSpawnHtml}</div>
+            </td>
+
+            <!-- 5. รอบเวลาเกิด -->
+            <td class="py-2.5 px-3 align-middle text-xs">
+              <span class="px-2 py-0.5 rounded-lg bg-slate-950 border border-slate-800 text-[11px] text-amber-300 font-mono font-bold inline-block">
+                ${escapeHtml(b.respawnLabel)}
+              </span>
+            </td>
+
+            <!-- 6. เวลาตายล่าสุด -->
+            <td class="py-2.5 px-3 align-middle text-xs">
+              ${lastDefeatedHtml}
+            </td>
+
+            <!-- 7. จัดการด่วน -->
+            <td class="py-2.5 px-3 text-center align-middle w-36">
+              <div class="flex items-center justify-center gap-1">
+                <button onclick="openBossKillConfirmModal('${b.id}')"
+                  class="w-7 h-7 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 flex items-center justify-center transition shadow-sm"
+                  title="บันทึกเวลาบอสตาย (Kill Confirm)">
+                  <i class="fa-solid fa-skull text-[11px]"></i>
+                </button>
+                ${isAdminActive ? `
+                <button onclick="openEditBossModal('${b.id}')"
+                  class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-slate-700 flex items-center justify-center transition shadow-sm"
+                  title="แก้ไขข้อมูลบอส">
+                  <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                </button>` : ''}
+                <button onclick="openBossDropLogModal('${b.id}')"
+                  class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-slate-700 flex items-center justify-center transition shadow-sm"
+                  title="ดูประวัติไอเทมดรอป">
+                  <i class="fa-solid fa-gift text-[11px]"></i>
+                </button>
+                <button onclick="copyBossInfo('${b.id}')"
+                  class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 flex items-center justify-center transition shadow-sm"
+                  title="คัดลอกข้อมูลบอส">
+                  <i class="fa-regular fa-copy text-[11px]"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      } catch (err) {
+        console.error('[Boss Table] Render row error:', b && b.id, err);
+      }
+    });
+
+    container.innerHTML = `
+      <div class="rounded-2xl border border-slate-800 bg-slate-950/70 shadow-2xl backdrop-blur-md overflow-hidden">
+        <table class="w-full text-left border-collapse min-w-[820px]">
+          <thead>
+            <tr class="border-b border-slate-800 bg-slate-900/90 text-slate-400 font-bold uppercase tracking-wider text-[11px]">
+              <th class="py-3 px-3 text-center w-24">สถานะ</th>
+              <th class="py-3 px-3">ข้อมูลบอส</th>
+              <th class="py-3 px-3 text-center w-32">เวลานับถอยหลัง</th>
+              <th class="py-3 px-3">เกิดรอบถัดไป</th>
+              <th class="py-3 px-3">รอบเวลาเกิด</th>
+              <th class="py-3 px-3">ตายล่าสุด</th>
+              <th class="py-3 px-3 text-center w-36">จัดการด่วน</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 font-sans">
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </div>
+    `;
+    return;
+  }
+
+  // ================= RENDER MODE: GRID CARDS (Default) =================
+  container.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-3.5";
+  let html = '';
+
   filtered.forEach(b => {
     try {
     const isGuildActivity = GUILD_SCORING_BOSS_IDS.has(b.id) || (b.name && /lucus|bahel|libitina|rakajeth|tumier|neva|icarut|morti|motti|arena|camalia|world/i.test(b.name));
     const isHighTier = isHighLevelBoss(b.level, b.id, b.name);
 
     // 1. Color Palette based on Boss Tier:
-    // - Guild Activity: Yellow / Gold Theme
-    // - High Tier Field Boss (Lv. 100+): Red / Ruby Theme
-    // - Normal Field Boss (Lv. < 100): Green / Emerald Theme
     let nameColorClass = '';
     let levelBadgeClass = '';
     let typeBadge = '';
@@ -765,16 +1044,16 @@ function renderBossTimerCards() {
 
     if (b.status === 'alive') {
       alertCardClass = ' boss-card-alive-alert';
-      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white border border-rose-300 flex items-center gap-1.5 shadow-lg shadow-rose-600/50"><i class="fa-solid fa-circle text-[7px] text-rose-200 animate-ping"></i><span class="animate-pulse">${tBoss('boss_status_spawned', 'เกิดแล้ว (ALIVE!)')}</span></span>`;
+      statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-gradient-to-r from-rose-600 to-red-600 text-white border border-rose-400 flex items-center gap-1.5 shadow-lg shadow-rose-600/50"><i class="fa-solid fa-circle text-[7px] text-rose-200 animate-ping"></i><span class="animate-pulse">${tBoss('boss_status_spawned', 'เกิดแล้ว (ALIVE!)')}</span></span>`;
       cardBorder = 'border-rose-500 ring-2 ring-rose-500/50 shadow-2xl shadow-rose-950/80';
     } else if (b.status === 'soon') {
       alertCardClass = ' boss-card-soon-alert';
-      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-yellow-500/25 text-yellow-300 border border-yellow-400 flex items-center gap-1.5 shadow-md shadow-yellow-950/60"><i class="fa-solid fa-clock text-[9px] text-yellow-400 animate-spin" style="animation-duration: 4s;"></i><span class="animate-pulse">${tBoss('boss_status_soon', 'ใกล้เกิด (<30m)')}</span></span>`;
+      statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 border border-amber-300 flex items-center gap-1.5 shadow-md shadow-amber-500/50"><i class="fa-solid fa-clock text-[9px] text-slate-950 animate-spin" style="animation-duration: 4s;"></i><span class="animate-pulse font-extrabold">${tBoss('boss_status_soon', 'ใกล้เกิด (<30m)')}</span></span>`;
       cardBorder = 'border-amber-400/80 ring-2 ring-amber-400/40 shadow-xl shadow-amber-950/60';
     } else if (b.status === 'cooldown') {
-      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40 flex items-center gap-1"><i class="fa-solid fa-hourglass-half text-[8px] text-sky-400"></i> ${tBoss('boss_status_cooldown', 'รอเกิด')}</span>`;
+      statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-950/80 text-sky-300 border border-sky-500/50 flex items-center gap-1.5"><i class="fa-solid fa-hourglass-half text-[8px] text-sky-400"></i> ${tBoss('boss_status_cooldown', 'รอเกิด')}</span>`;
     } else {
-      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-800/90 text-slate-400 border border-slate-700">⚪ ${tBoss('boss_status_unrecorded', 'ยังไม่ลงเวลา')}</span>`;
+      statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-800/90 text-slate-300 border border-slate-700 flex items-center gap-1.5">⚪ ${tBoss('boss_status_unrecorded', 'ยังไม่ลงเวลา')}</span>`;
       cardBorder = 'border-slate-800 hover:border-slate-700';
     }
 
@@ -837,7 +1116,6 @@ function renderBossTimerCards() {
       `;
     }
 
-    // คลาสพิเศษสำหรับการ์ดบอสกิจกรรม (กิจกรรมกิลด์) เพื่อใช้ปรับสไตล์ "การ์เดี้ยน" เฉพาะการ์ดนี้
     const guildCardClass = isGuildActivity ? ' boss-card-guild' : '';
 
     html += `
@@ -1755,8 +2033,120 @@ function handleGlobalPasteForOCR(e) {
   }
 }
 
-// ================= Boss Edit Modal (Name, Level, Map, Avatar, Schedule, Notes) =================
+// ================= Boss Edit Modal & Multi-Slot Schedule Builder =================
 let editingBossAvatarData = null; // Stored Base64 or URL during modal editing
+let currentEditingScheduleSlots = []; // Array of { days: [0..6], time: "HH:MM" }
+
+function toggleScheduleDayButton(dayNum) {
+  const btn = document.getElementById(`btn-sch-day-${dayNum}`);
+  if (!btn) return;
+  const isSelected = btn.classList.contains('bg-amber-500');
+  if (isSelected) {
+    btn.className = "sch-day-btn px-2.5 py-1 text-xs font-bold rounded-xl border border-slate-700 bg-slate-900 text-slate-300 transition";
+  } else {
+    btn.className = "sch-day-btn px-2.5 py-1 text-xs font-bold rounded-xl border border-amber-400 bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30 transition";
+  }
+}
+
+function setQuickScheduleDays(type) {
+  const allDays = [0, 1, 2, 3, 4, 5, 6];
+  let targetDays = [];
+  if (type === 'all') targetDays = [0, 1, 2, 3, 4, 5, 6];
+  else if (type === 'weekdays') targetDays = [1, 2, 3, 4, 5];
+  else if (type === 'fri-sun') targetDays = [5, 6, 0];
+  else if (type === 'clear') targetDays = [];
+
+  allDays.forEach(d => {
+    const btn = document.getElementById(`btn-sch-day-${d}`);
+    if (!btn) return;
+    if (targetDays.includes(d)) {
+      btn.className = "sch-day-btn px-2.5 py-1 text-xs font-bold rounded-xl border border-amber-400 bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30 transition";
+    } else {
+      btn.className = "sch-day-btn px-2.5 py-1 text-xs font-bold rounded-xl border border-slate-700 bg-slate-900 text-slate-300 transition";
+    }
+  });
+}
+
+function getSelectedScheduleDays() {
+  const selected = [];
+  [0, 1, 2, 3, 4, 5, 6].forEach(d => {
+    const btn = document.getElementById(`btn-sch-day-${d}`);
+    if (btn && btn.classList.contains('bg-amber-500')) {
+      selected.push(d);
+    }
+  });
+  return selected;
+}
+
+function formatScheduleSlotLabel(slot) {
+  if (!slot || !Array.isArray(slot.days) || slot.days.length === 0) return '';
+  const dayShortMap = { 0: 'อา', 1: 'จ', 2: 'อ', 3: 'พ', 4: 'พฤ', 5: 'ศ', 6: 'ส' };
+  let dayStr = '';
+  if (slot.days.length === 7) {
+    dayStr = 'ทุกวัน';
+  } else {
+    dayStr = slot.days.map(d => dayShortMap[d] !== undefined ? dayShortMap[d] : d).join(', ');
+  }
+  return `${dayStr} ${slot.time} น.`;
+}
+
+function renderEditingScheduleSlots() {
+  const container = document.getElementById('edit-schedule-slots-container');
+  const hiddenInput = document.getElementById('edit-boss-schedule');
+  if (!container) return;
+
+  if (currentEditingScheduleSlots.length === 0) {
+    container.innerHTML = `<span class="text-slate-500 text-[11px]">ยังไม่มีรอบเวลา (คลิกเลือกวัน + เวลา แล้วกด "เพิ่มรอบนี้")</span>`;
+    if (hiddenInput) hiddenInput.value = '';
+    return;
+  }
+
+  const dayEnMap = { 0: 'Sun', 1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat' };
+  const textParts = currentEditingScheduleSlots.map(s => {
+    if (s.days.length === 7) return `Daily ${s.time}`;
+    return `${s.days.map(d => dayEnMap[d] || d).join('/')} ${s.time}`;
+  });
+  if (hiddenInput) hiddenInput.value = textParts.join(' / ');
+
+  container.innerHTML = currentEditingScheduleSlots.map((s, idx) => `
+    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-semibold shadow-sm">
+      <i class="fa-solid fa-clock text-[10px] text-amber-400"></i>
+      <span>${escapeHtml(formatScheduleSlotLabel(s))}</span>
+      <button type="button" onclick="removeScheduleSlot(${idx})" class="w-4 h-4 rounded-full bg-rose-500/30 hover:bg-rose-500 text-rose-200 hover:text-white flex items-center justify-center text-[9px] transition ml-0.5" title="ลบรอบนี้">✕</button>
+    </span>
+  `).join('');
+}
+
+function addScheduleSlotFromBuilder() {
+  const selectedDays = getSelectedScheduleDays();
+  const hourSelect = document.getElementById('edit-schedule-builder-hour');
+  const minSelect = document.getElementById('edit-schedule-builder-min');
+  const hour = hourSelect ? hourSelect.value : '20';
+  const min = minSelect ? minSelect.value : '00';
+  const timeStr = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+
+  if (selectedDays.length === 0) {
+    showToast('กรุณาคลิกเลือกวันอย่างน้อย 1 วัน (เช่น จ, อ หรือ ทุกวัน)', 'warning');
+    return;
+  }
+
+  // Add slot
+  currentEditingScheduleSlots.push({
+    days: [...selectedDays],
+    time: timeStr
+  });
+
+  renderEditingScheduleSlots();
+  setQuickScheduleDays('clear');
+  showToast(`➕ เพิ่มรอบเวลา ${formatScheduleSlotLabel({ days: selectedDays, time: timeStr })} เรียบร้อย`, 'success');
+}
+
+function removeScheduleSlot(index) {
+  if (index >= 0 && index < currentEditingScheduleSlots.length) {
+    currentEditingScheduleSlots.splice(index, 1);
+    renderEditingScheduleSlots();
+  }
+}
 
 function openEditBossModal(bossId) {
   // เช็คสิทธิ์: เฉพาะ Admin เท่านั้นที่แก้ไขข้อมูลบอสได้
@@ -1775,7 +2165,6 @@ function openEditBossModal(bossId) {
   const levelInput = document.getElementById('edit-boss-level');
   const mapInput = document.getElementById('edit-boss-map');
   const intervalInput = document.getElementById('edit-boss-interval');
-  const scheduleInput = document.getElementById('edit-boss-schedule');
   const noteInput = document.getElementById('edit-boss-note');
   const avatarPreview = document.getElementById('edit-boss-avatar-preview');
   const avatarPlaceholder = document.getElementById('edit-boss-avatar-placeholder');
@@ -1785,8 +2174,7 @@ function openEditBossModal(bossId) {
   if (nameInput) nameInput.value = boss.name || '';
   if (levelInput) levelInput.value = boss.level || '';
   if (mapInput) mapInput.value = boss.map || '';
-  if (intervalInput) intervalInput.value = boss.intervalHours || '';
-  if (scheduleInput) scheduleInput.value = boss.scheduleText || '';
+  if (intervalInput) intervalInput.value = (boss.intervalHours !== null && boss.intervalHours !== undefined) ? boss.intervalHours : '';
   if (noteInput) noteInput.value = boss.note || '';
 
   editingBossAvatarData = boss.avatar || null;
@@ -1794,13 +2182,41 @@ function openEditBossModal(bossId) {
 
   updateEditBossAvatarDisplay();
 
-  // Populate timer section in edit modal
+  // Initialize Schedule Builder Slots
+  if (boss.fixedTimes && Array.isArray(boss.fixedTimes) && boss.fixedTimes.length > 0) {
+    currentEditingScheduleSlots = JSON.parse(JSON.stringify(boss.fixedTimes));
+  } else if (boss.scheduleText) {
+    currentEditingScheduleSlots = parseScheduleTextToFixedTimes(boss.scheduleText);
+  } else {
+    currentEditingScheduleSlots = [];
+  }
+  renderEditingScheduleSlots();
+  setQuickScheduleDays('clear');
+
+  // Populate timer section in edit modal (Defeated Time & Next Spawn Calendar)
   const timer = bossTimerData[bossId] || {};
   const editDefDateInput = document.getElementById('edit-boss-def-date');
   const editDefHourSelect = document.getElementById('edit-boss-def-hour');
   const editDefMinSelect = document.getElementById('edit-boss-def-min');
+  const editNextDateInput = document.getElementById('edit-boss-next-date');
+  const editNextHourSelect = document.getElementById('edit-boss-next-hour');
+  const editNextMinSelect = document.getElementById('edit-boss-next-min');
   const pad = n => String(n).padStart(2, '0');
 
+  // Next Spawn Calendar Picker
+  const currentNextSpawn = getBossNextSpawn(boss);
+  if (currentNextSpawn && !isNaN(currentNextSpawn.getTime())) {
+    const bangkokNext = getBangkokDateParts(currentNextSpawn);
+    if (editNextDateInput) editNextDateInput.value = `${bangkokNext.year}-${pad(bangkokNext.month)}-${pad(bangkokNext.day)}`;
+    if (editNextHourSelect) editNextHourSelect.value = pad(bangkokNext.hour);
+    if (editNextMinSelect) editNextMinSelect.value = pad(bangkokNext.minute);
+  } else {
+    if (editNextDateInput) editNextDateInput.value = '';
+    if (editNextHourSelect) editNextHourSelect.value = '20';
+    if (editNextMinSelect) editNextMinSelect.value = '00';
+  }
+
+  // Defeated Time Picker
   if (timer.defeatedTime) {
     const d = new Date(timer.defeatedTime);
     const bangkok = getBangkokDateParts(d);
@@ -1894,6 +2310,34 @@ function clearBossAvatar() {
   updateEditBossAvatarDisplay();
 }
 
+function applyQuickNextSpawnTime(type) {
+  populate24HourSelects();
+  const dateInput = document.getElementById('edit-boss-next-date');
+  const hourSelect = document.getElementById('edit-boss-next-hour');
+  const minSelect = document.getElementById('edit-boss-next-min');
+  if (!dateInput || !hourSelect || !minSelect) return;
+
+  const pad = n => String(n).padStart(2, '0');
+  const now = getBossNow();
+  const nowBangkok = getBangkokDateParts(now);
+
+  if (type === 'today') {
+    dateInput.value = `${nowBangkok.year}-${pad(nowBangkok.month)}-${pad(nowBangkok.day)}`;
+    hourSelect.value = '20';
+    minSelect.value = '00';
+  } else if (type === 'tomorrow') {
+    const tmrw = new Date(now.getTime() + 86400000);
+    const tmrwBangkok = getBangkokDateParts(tmrw);
+    dateInput.value = `${tmrwBangkok.year}-${pad(tmrwBangkok.month)}-${pad(tmrwBangkok.day)}`;
+    hourSelect.value = '10';
+    minSelect.value = '30';
+  } else if (type === 'clear') {
+    dateInput.value = '';
+    hourSelect.value = '20';
+    minSelect.value = '00';
+  }
+}
+
 function applyQuickEditDefTime(minutesAgo) {
   populate24HourSelects();
   const dateInput = document.getElementById('edit-boss-def-date');
@@ -1929,14 +2373,28 @@ function handleSaveEditBoss(e) {
     return;
   }
 
-  // 1. Update Custom Boss Config
+  // 1. Save schedule from Schedule Builder (or parsed text)
+  let fixedTimesToSave = (currentEditingScheduleSlots && currentEditingScheduleSlots.length > 0) ? currentEditingScheduleSlots : null;
+  if (!fixedTimesToSave && scheduleVal) {
+    fixedTimesToSave = parseScheduleTextToFixedTimes(scheduleVal);
+  }
+
+  let respawnType = 'interval';
+  if (fixedTimesToSave && fixedTimesToSave.length > 0) {
+    respawnType = 'fixed';
+  } else if (!intervalVal && scheduleVal) {
+    respawnType = 'fixed';
+  }
+
   bossCustomConfigs[currentEditBossId] = {
     name: nameVal,
     level: levelVal,
     map: mapVal,
     avatar: editingBossAvatarData || null,
+    respawnType: respawnType,
     intervalHours: intervalVal !== '' ? Number(intervalVal) : null,
     scheduleText: scheduleVal || null,
+    fixedTimes: (fixedTimesToSave && fixedTimesToSave.length > 0) ? fixedTimesToSave : null,
     note: noteVal || null,
     updatedAt: new Date().toISOString()
   };
@@ -1946,7 +2404,40 @@ function handleSaveEditBoss(e) {
     fbDb.ref('guild_app/boss_custom_configs').set(bossCustomConfigs);
   }
 
-  // 2. Check if defeat time was modified in edit modal
+  // 2. Check if Next Spawn Date was set or cleared via Calendar Picker
+  const editNextDateVal = document.getElementById('edit-boss-next-date')?.value;
+  const editNextHourVal = document.getElementById('edit-boss-next-hour')?.value;
+  const editNextMinVal = document.getElementById('edit-boss-next-min')?.value;
+
+  if (editNextDateVal && editNextHourVal !== '' && editNextMinVal !== '') {
+    const [nextYear, nextMonth, nextDay] = editNextDateVal.split('-').map(Number);
+    const nextDt = createDateFromBangkokParts({
+      year: nextYear,
+      month: nextMonth,
+      day: nextDay,
+      hour: Number(editNextHourVal),
+      minute: Number(editNextMinVal),
+      second: 0
+    });
+    if (!isNaN(nextDt.getTime())) {
+      if (!bossTimerData[currentEditBossId]) bossTimerData[currentEditBossId] = {};
+      bossTimerData[currentEditBossId].customNextSpawn = nextDt.toISOString();
+      bossTimerData[currentEditBossId].nextSpawnTime = nextDt.toISOString();
+      bossTimerData[currentEditBossId].updatedAt = new Date().toISOString();
+      localStorage.setItem('guild_boss_timers', JSON.stringify(bossTimerData));
+      if (typeof fbDb !== 'undefined' && fbDb) {
+        fbDb.ref('guild_app/boss_timers/' + currentEditBossId).update(bossTimerData[currentEditBossId]);
+      }
+    }
+  } else if (!editNextDateVal && bossTimerData[currentEditBossId] && bossTimerData[currentEditBossId].customNextSpawn) {
+    delete bossTimerData[currentEditBossId].customNextSpawn;
+    localStorage.setItem('guild_boss_timers', JSON.stringify(bossTimerData));
+    if (typeof fbDb !== 'undefined' && fbDb) {
+      fbDb.ref('guild_app/boss_timers/' + currentEditBossId + '/customNextSpawn').remove();
+    }
+  }
+
+  // 3. Check if defeat time was modified in edit modal
   const editDefDateVal = document.getElementById('edit-boss-def-date').value;
   const editDefHourVal = document.getElementById('edit-boss-def-hour').value;
   const editDefMinVal = document.getElementById('edit-boss-def-min').value;
@@ -3253,12 +3744,19 @@ window.handleBossAvatarFileSelect = handleBossAvatarFileSelect;
 window.updateBossAvatarFromUrl = updateBossAvatarFromUrl;
 window.clearBossAvatar = clearBossAvatar;
 window.applyQuickEditDefTime = applyQuickEditDefTime;
+window.applyQuickNextSpawnTime = applyQuickNextSpawnTime;
+window.toggleScheduleDayButton = toggleScheduleDayButton;
+window.setQuickScheduleDays = setQuickScheduleDays;
+window.addScheduleSlotFromBuilder = addScheduleSlotFromBuilder;
+window.removeScheduleSlot = removeScheduleSlot;
+window.renderEditingScheduleSlots = renderEditingScheduleSlots;
 window.resetSingleBossTimer = resetSingleBossTimer;
 window.openBossDropLogModal = openBossDropLogModal;
 window.closeBossDropLogModal = closeBossDropLogModal;
 window.deleteBossDropLog = deleteBossDropLog;
 window.processImageForBossOCR = processImageForBossOCR;
 window.toggleBossSound = toggleBossSound;
+window.switchBossViewMode = switchBossViewMode;
 window.renderBossTimerCards = renderBossTimerCards;
 window.copyBossInfo = copyBossInfo;
 window.closeBossAiOcrModal = closeBossAiOcrModal;

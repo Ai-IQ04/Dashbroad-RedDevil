@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lord Nine Guild Auction</title>
+<style>
+  :root {
+    --bg: #ebf0f5;
+    --title: #1e293b;
+    --body: #334155;
+    --muted: #64748b;
+    --accent: #ff6b00;
+    --success: #10b981;
+    --danger: #ef4444;
+
+    --shadow-flat: 10px 10px 22px rgba(180,195,212,0.75), -10px -10px 22px rgba(255,255,255,0.95);
+    --shadow-flat-sm: 5px 5px 12px rgba(180,195,212,0.75), -5px -5px 12px rgba(255,255,255,0.95);
+    --shadow-inset: inset 4px 4px 9px rgba(180,195,212,0.75), inset -4px -4px 9px rgba(255,255,255,0.95);
+    --shadow-inset-sm: inset 2px 2px 6px rgba(180,195,212,0.75), inset -2px -2px 6px rgba(255,255,255,0.95);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--body);
+    font-family: 'Segoe UI', 'Noto Sans Thai', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    padding: 24px 20px 80px;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  /* Header */
+  header.topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg);
+    border-radius: 24px;
+    padding: 14px 20px;
+    box-shadow: var(--shadow-flat);
+    margin-bottom: 20px;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .mark {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: linear-gradient(145deg, #ff8a3d, #ff6b00);
+    box-shadow: var(--shadow-flat-sm);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 800; font-size: 18px;
+  }
+  .brand .name { font-weight: 800; color: var(--title); font-size: 16px; }
+  .brand .sub { font-size: 11px; color: var(--muted); }
+
+  .pill-nav { display: flex; gap: 8px; background: var(--bg); border-radius: 999px; padding: 6px; box-shadow: var(--shadow-inset-sm); }
+  .pill-nav button {
+    border: none; background: transparent; padding: 8px 18px; border-radius: 999px;
+    font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer;
+    transition: all .2s ease;
+  }
+  .pill-nav button.active { background: var(--bg); color: var(--accent); box-shadow: var(--shadow-flat-sm); }
+
+  .user-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg); border-radius: 999px; padding: 6px 14px 6px 6px;
+    box-shadow: var(--shadow-flat-sm);
+  }
+  .user-badge .avatar { width: 30px; height: 30px; border-radius: 50%; background: #cbd5e1; box-shadow: var(--shadow-inset-sm); }
+  .user-badge .u-name { font-size: 12px; font-weight: 700; color: var(--title); }
+  .user-badge .u-role { font-size: 10px; color: var(--accent); font-weight: 700; }
+
+  /* Section title */
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin: 26px 4px 14px; }
+  .section-head h2 { font-size: 16px; color: var(--title); margin: 0; }
+  .section-head .count { font-size: 12px; color: var(--muted); background: var(--bg); box-shadow: var(--shadow-inset-sm); padding: 4px 10px; border-radius: 999px; }
+
+  /* Toggle */
+  .toggle-row { display: flex; align-items: center; gap: 10px; }
+  .toggle { width: 46px; height: 26px; border-radius: 999px; background: var(--bg); box-shadow: var(--shadow-inset-sm); position: relative; cursor: pointer; }
+  .toggle .knob { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--bg); box-shadow: var(--shadow-flat-sm); transition: left .2s ease, background .2s ease; }
+  .toggle.on .knob { left: 23px; background: var(--accent); box-shadow: var(--shadow-flat-sm); }
+  .toggle-label { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+  /* Grid of cards */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+
+  .card {
+    background: var(--bg); border-radius: 24px; padding: 18px;
+    box-shadow: var(--shadow-flat); cursor: pointer;
+    transition: transform .15s ease;
+  }
+  .card:hover { transform: translateY(-3px); }
+
+  .card .thumb {
+    height: 130px; border-radius: 18px; margin-bottom: 12px;
+    box-shadow: var(--shadow-inset);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 34px;
+    background: linear-gradient(145deg, #dfe7ee, #f5f8fb);
+  }
+  .card .badge-type {
+    display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .04em;
+    padding: 3px 10px; border-radius: 999px; margin-bottom: 8px;
+  }
+  .badge-type.auction { color: var(--accent); background: rgba(255,107,0,0.12); }
+  .badge-type.draw { color: #7c3aed; background: rgba(124,58,237,0.12); }
+
+  .card .title { font-size: 14px; font-weight: 700; color: var(--title); margin: 0 0 10px; }
+
+  .well { border-radius: 14px; box-shadow: var(--shadow-inset); padding: 10px 12px; margin-bottom: 8px; }
+  .well .label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .well .value { font-size: 15px; font-weight: 800; color: var(--title); }
+  .well .value.price { color: var(--accent); }
+  .well .value.time { color: var(--danger); font-variant-numeric: tabular-nums; }
+
+  .card .meta-row { display: flex; justify-content: space-between; gap: 8px; }
+  .card .meta-row .well { flex: 1; margin-bottom: 0; }
+
+  /* Modal */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(30,41,59,0.35);
+    display: none; align-items: center; justify-content: center; padding: 20px; z-index: 50;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: var(--bg); border-radius: 26px; padding: 26px;
+    box-shadow: var(--shadow-flat); max-width: 420px; width: 100%;
+    max-height: 88vh; overflow-y: auto;
+  }
+  .modal h3 { color: var(--title); margin: 0 0 4px; font-size: 18px; }
+  .modal .modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .modal .thumb-lg { height: 150px; border-radius: 18px; box-shadow: var(--shadow-inset); margin-bottom: 16px; display:flex;align-items:center;justify-content:center;font-size:44px; background: linear-gradient(145deg, #dfe7ee, #f5f8fb);}
+
+  .bid-input-row { display: flex; align-items: center; gap: 10px; margin: 14px 0; }
+  .bid-input-row .well { flex: 1; text-align: center; margin-bottom: 0; }
+  .step-btn {
+    width: 40px; height: 40px; border-radius: 12px; border: none; background: var(--bg);
+    box-shadow: var(--shadow-flat-sm); color: var(--title); font-size: 18px; font-weight: 800; cursor: pointer;
+  }
+  .step-btn:active { box-shadow: var(--shadow-inset-sm); }
+
+  .btn-primary {
+    width: 100%; padding: 14px; border: none; border-radius: 16px;
+    background: linear-gradient(145deg, #ff8a3d, var(--accent)); color: white;
+    font-weight: 800; font-size: 14px; box-shadow: var(--shadow-flat-sm); cursor: pointer; margin-top: 6px;
+  }
+  .btn-ghost {
+    width: 100%; padding: 12px; border: none; border-radius: 16px; margin-top: 10px;
+    background: var(--bg); color: var(--muted); font-weight: 700; font-size: 13px;
+    box-shadow: var(--shadow-inset-sm); cursor: pointer;
+  }
+  .close-x {
+    float: right; width: 30px; height: 30px; border-radius: 50%; border: none;
+    background: var(--bg); box-shadow: var(--shadow-flat-sm); color: var(--muted); cursor: pointer;
+  }
+
+  .bid-history { margin-top: 16px; }
+  .bid-history .h-title { font-size: 11px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: .04em; }
+  .bid-item { display: flex; justify-content: space-between; padding: 8px 12px; border-radius: 12px; box-shadow: var(--shadow-inset-sm); margin-bottom: 6px; font-size: 12px; }
+  .bid-item .who { color: var(--title); font-weight: 700; }
+  .bid-item .amt { color: var(--accent); font-weight: 800; }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--bg); box-shadow: var(--shadow-flat); border-radius: 16px;
+    padding: 12px 20px; font-size: 13px; font-weight: 700; color: var(--title);
+    display: flex; align-items: center; gap: 8px; z-index: 60; opacity: 0; pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+  .toast .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+
+  .wallet-note { font-size: 11px; color: var(--muted); background: var(--bg); box-shadow: var(--shadow-inset-sm); border-radius: 12px; padding: 10px 12px; margin-top: 14px; line-height: 1.5; }
+  .wallet-note b { color: var(--title); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark">L9</div>
+      <div>
+        <div class="name">Lord Nine Guild</div>
+        <div class="sub">ระบบประมูล &amp; สุ่มไอเทมกิลด์</div>
+      </div>
+    </div>
+
+    <div class="pill-nav" id="viewNav">
+      <button class="active" data-view="all">ทั้งหมด</button>
+      <button data-view="auction">ประมูล</button>
+      <button data-view="draw">สุ่มไอเทม</button>
+    </div>
+
+    <div class="user-badge">
+      <div class="avatar"></div>
+      <div>
+        <div class="u-name">GhostRaider99</div>
+        <div class="u-role">Raider</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="section-head">
+    <h2>ไอเทมที่กำลังเปิดอยู่</h2>
+    <div class="toggle-row">
+      <span class="toggle-label">ซ่อนที่ปิดแล้ว</span>
+      <div class="toggle on" id="hideClosedToggle"><div class="knob"></div></div>
+    </div>
+  </div>
+
+  <div class="grid" id="itemGrid"></div>
+
+</div>
+
+<div class="overlay" id="modalOverlay">
+  <div class="modal" id="modalBody"></div>
+</div>
+
+<div class="toast" id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
+
+<script>
+const items = [
+  { id:1, type:'AUCTION', title:'Ebon Wraith Blade +9', emoji:'🗡️', price:420, step:10, bids:[ {who:'Kael_x', amt:420}, {who:'Nyra', amt:380}, {who:'Soulbane', amt:350} ], endsIn: 5*3600 + 12*60 },
+  { id:2, type:'AUCTION', title:'Phoenix Guardian Wings', emoji:'🪽', price:890, step:20, bids:[ {who:'Firewatch', amt:890}, {who:'Kael_x', amt:850} ], endsIn: 1*3600 + 47*60 },
+  { id:3, type:'DRAW', title:'Elder Rune Stone (x3 slots)', emoji:'🔮', price:150, slots:3, entries:11, endsIn: 8*3600 + 5*60 },
+  { id:4, type:'AUCTION', title:'Void Reaper Cloak', emoji:'🧥', price:260, step:10, bids:[ {who:'Nyra', amt:260} ], endsIn: 22*60 },
+  { id:5, type:'DRAW', title:'Guild Mount: Ashen Drake', emoji:'🐉', price:300, slots:1, entries:27, endsIn: 3*3600 + 30*60 },
+  { id:6, type:'AUCTION', title:'Sunfall Great Bow', emoji:'🏹', price:150, step:10, bids:[], endsIn: 12*3600 + 0*60 },
+];
+
+let currentView = 'all';
+const grid = document.getElementById('itemGrid');
+const overlay = document.getElementById('modalOverlay');
+const modalBody = document.getElementById('modalBody');
+
+function fmtTime(sec) {
+  if (sec <= 0) return 'ปิดแล้ว';
+  const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+  return h > 0 ? `${h}ชม ${m}น` : `${m}น ${s}วิ`;
+}
+
+function render() {
+  grid.innerHTML = '';
+  const list = items.filter(i => currentView === 'all' || (currentView === 'auction' && i.type==='AUCTION') || (currentView === 'draw' && i.type==='DRAW'));
+  list.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.onclick = () => openModal(item.id);
+    if (item.type === 'AUCTION') {
+      card.innerHTML = `
+        <div class="thumb">${item.emoji}</div>
+        <span class="badge-type auction">ประมูล</span>
+        <div class="title">${item.title}</div>
+        <div class="meta-row">
+          <div class="well"><div class="label">ราคาปัจจุบัน</div><div class="value price">${item.price} USDT</div></div>
+          <div class="well"><div class="label">เหลือเวลา</div><div class="value time" data-timer="${item.id}">${fmtTime(item.endsIn)}</div></div>
+        </div>`;
+    } else {
+      card.innerHTML = `
+        <div class="thumb">${item.emoji}</div>
+        <span class="badge-type draw">สุ่มไอเทม</span>
+        <div class="title">${item.title}</div>
+        <div class="meta-row">
+          <div class="well"><div class="label">ราคาคงที่</div><div class="value price">${item.price} USDT</div></div>
+          <div class="well"><div class="label">ผู้ร่วมสุ่ม</div><div class="value">${item.entries} คน</div></div>
+        </div>`;
+    }
+    grid.appendChild(card);
+  });
+}
+
+function openModal(id) {
+  const item = items.find(i => i.id === id);
+  if (item.type === 'AUCTION') {
+    const nextBid = item.price + item.step;
+    modalBody.innerHTML = `
+      <button class="close-x" onclick="closeModal()">✕</button>
+      <span class="badge-type auction">ประมูล</span>
+      <h3>${item.title}</h3>
+      <div class="modal-sub">การประมูลจะขยายอัตโนมัติ 5 นาที หากมีการบิดใหม่ในช่วง 5 นาทีสุดท้าย</div>
+      <div class="thumb-lg">${item.emoji}</div>
+
+      <div class="meta-row" style="margin-bottom:12px;">
+        <div class="well"><div class="label">ราคาปัจจุบัน</div><div class="value price">${item.price} USDT</div></div>
+        <div class="well"><div class="label">เหลือเวลา</div><div class="value time">${fmtTime(item.endsIn)}</div></div>
+      </div>
+
+      <div class="bid-input-row">
+        <button class="step-btn" onclick="closeModal()">–</button>
+        <div class="well"><div class="label">บิดครั้งถัดไป</div><div class="value price" id="nextBidVal">${nextBid} USDT</div></div>
+        <button class="step-btn" onclick="closeModal()">+</button>
+      </div>
+
+      <button class="btn-primary" onclick="placeBid(${item.id})">วางบิด ${nextBid} USDT</button>
+      <button class="btn-ghost" onclick="closeModal()">ยกเลิก</button>
+
+      <div class="bid-history">
+        <div class="h-title">ประวัติการบิด</div>
+        ${item.bids.map(b => `<div class="bid-item"><span class="who">${b.who}</span><span class="amt">${b.amt} USDT</span></div>`).join('') || '<div class="bid-item"><span class="who">ยังไม่มีผู้บิด</span></div>'}
+      </div>
+
+      <div class="wallet-note"><b>การชำระเงิน:</b> เมื่อชนะการประมูล โอน USDT บนเครือข่าย Kaia ไปยังกระเป๋า Guild Master ภายใน 24 ชม. ระบบตรวจสอบ On-Chain อัตโนมัติ</div>
+    `;
+  } else {
+    modalBody.innerHTML = `
+      <button class="close-x" onclick="closeModal()">✕</button>
+      <span class="badge-type draw">สุ่มไอเทม</span>
+      <h3>${item.title}</h3>
+      <div class="modal-sub">ระบบสุ่มแบบ Pseudorandom พร้อมสำรองลำดับถัดไปอัตโนมัติ (Rank 1, 2, 3...)</div>
+      <div class="thumb-lg">${item.emoji}</div>
+
+      <div class="meta-row" style="margin-bottom:12px;">
+        <div class="well"><div class="label">ราคาคงที่</div><div class="value price">${item.price} USDT</div></div>
+        <div class="well"><div class="label">จำนวนสิทธิ์</div><div class="value">${item.slots}</div></div>
+      </div>
+
+      <div class="well" style="margin-bottom:14px;">
+        <div class="label">ผู้เข้าร่วมสุ่มขณะนี้</div>
+        <div class="value">${item.entries} คน</div>
+      </div>
+
+      <button class="btn-primary" onclick="joinDraw(${item.id})">เข้าร่วมสุ่ม — ${item.price} USDT</button>
+      <button class="btn-ghost" onclick="closeModal()">ยกเลิก</button>
+
+      <div class="wallet-note"><b>เงื่อนไข:</b> หากถูกสุ่มแล้วไม่ชำระภายใน 24 ชม. สิทธิ์จะถูกโอนไปยังลำดับถัดไปโดยอัตโนมัติ</div>
+    `;
+  }
+  overlay.classList.add('show');
+}
+
+function closeModal() { overlay.classList.remove('show'); }
+overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function placeBid(id) {
+  const item = items.find(i => i.id === id);
+  item.price += item.step;
+  item.bids.unshift({ who: 'GhostRaider99 (คุณ)', amt: item.price });
+  closeModal();
+  render();
+  showToast(`วางบิด ${item.price} USDT สำเร็จ`);
+}
+
+function joinDraw(id) {
+  const item = items.find(i => i.id === id);
+  item.entries += 1;
+  closeModal();
+  render();
+  showToast('เข้าร่วมสุ่มไอเทมสำเร็จ');
+}
+
+document.getElementById('viewNav').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#viewNav button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentView = btn.dataset.view;
+  render();
+});
+
+document.getElementById('hideClosedToggle').addEventListener('click', function() {
+  this.classList.toggle('on');
+});
+
+render();
+
+setInterval(() => {
+  items.forEach(i => { if (i.endsIn > 0) i.endsIn--; });
+  document.querySelectorAll('[data-timer]').forEach(el => {
+    const item = items.find(i => i.id == el.dataset.timer);
+    if (item) el.textContent = fmtTime(item.endsIn);
+  });
+}, 1000);
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th" class="h-full notranslate" translate="no" id="html-root">
 
 <head>
@@ -4487,9 +4487,23 @@
         </button>
       </div>
 
-      <!-- Search & Paste Hint -->
-      <div class="flex items-center gap-2">
-        <div class="relative w-44 sm:w-60">
+      <!-- Search, View Switcher & Paste Hint -->
+      <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+        <!-- View Mode Switcher: Grid vs Table -->
+        <div class="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-0.5 text-xs font-semibold shrink-0">
+          <button id="btn-view-grid" onclick="switchBossViewMode('grid')"
+            class="boss-view-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition flex items-center gap-1.5" title="มุมมองการ์ด (Grid)">
+            <i class="fa-solid fa-table-cells-large text-xs"></i>
+            <span class="hidden sm:inline">การ์ด</span>
+          </button>
+          <button id="btn-view-table" onclick="switchBossViewMode('table')"
+            class="boss-view-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5" title="มุมมองตาราง (Table)">
+            <i class="fa-solid fa-table-list text-xs"></i>
+            <span class="hidden sm:inline">ตาราง</span>
+          </button>
+        </div>
+
+        <div class="relative w-40 sm:w-56">
           <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
           <input type="text" id="boss-search-input" oninput="currentBossSearch=this.value; renderBossTimerCards();"
             placeholder="ค้นหาชื่อบอส, แมพ, เลเวล..." data-i18n-placeholder="boss_search_placeholder"
@@ -11809,12 +11823,16 @@
       const container = document.getElementById('squad-activity-options');
       if (!container || !Array.isArray(ACTIVITIES)) return;
       const selected = new Set(getSelectedSquadActivities());
+      // Default to selecting the first activity if none is selected
+      if (selected.size === 0 && ACTIVITIES.length > 0) {
+        selected.add(0);
+      }
       container.innerHTML = ACTIVITIES.map((act, idx) => {
         const checked = selected.has(idx) ? 'checked' : '';
         const label = `${act.shortName || act.name || 'Boss'} • ${act.day || '-'} • ${act.weight || 0}%`;
         return `
           <label class="flex items-center gap-2 p-2.5 bg-slate-900/80 border border-slate-700 rounded-xl cursor-pointer hover:border-indigo-500/60 transition">
-            <input type="checkbox" name="squad-activity-checkbox" value="${idx}" class="accent-indigo-500" ${checked}>
+            <input type="checkbox" name="squad-activity-checkbox" value="${idx}" class="accent-indigo-500" ${checked} onchange="updateSquadSelectionSummary()">
             <span class="font-bold text-slate-200 text-[11px]">${escapeHtml(label)}</span>
           </label>
         `;
@@ -11967,7 +11985,7 @@ Tasks:
 2. Extract all character names placed in each squad slot (including Chinese, Japanese, and special characters like yn官, Hanchirisu改善, Birkenstockツ, Starix死, etc.).
 3. Match each detected character name against the guild roster if a matching member exists.
 
-Also provide confidenceByName with a numeric confidence from 0 to 100 for every detected name. Use lower confidence when the screenshot is blurry or the roster match is uncertain.
+Also provide confidenceByName with a numeric confidence from 0 to 100 for every detected name.
 
 Output strictly valid JSON with no markdown wrapping:
 {
@@ -12021,7 +12039,7 @@ Output strictly valid JSON with no markdown wrapping:
           const guildMember = members.find(m => {
             const cName = (m.characterName || m.name || '').trim();
             return cName.toLowerCase() === cleanName.toLowerCase() ||
-              cName.replace(/\s+/g, '') === cleanName.replace(/\s+/g, '');
+              cName.replace(/\s+/g, '').toLowerCase() === cleanName.replace(/\s+/g, '').toLowerCase();
           });
 
           const itemId = `squad_item_${itemCounter++}`;
@@ -12032,7 +12050,7 @@ Output strictly valid JSON with no markdown wrapping:
             rawName: cleanName,
             member: guildMember || null,
             confidence,
-            selected: !!guildMember && confidence >= 85 // Low-confidence matches require manual review.
+            selected: Boolean(guildMember) // Automatically select all recognized guild members!
           });
         });
       });
@@ -12074,7 +12092,7 @@ Output strictly valid JSON with no markdown wrapping:
           const guildName = item.member ? (item.member.guild || '-') : 'ไม่พบในกิลด์';
 
           const confidenceLabel = item.confidence > 0 ? `${item.confidence}%` : 'ตรวจสอบเอง';
-          const confidenceClass = item.confidence >= 85 ? 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10' : 'text-amber-300 border-amber-500/30 bg-amber-500/10';
+          const confidenceClass = item.confidence >= 80 ? 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10' : 'text-amber-300 border-amber-500/30 bg-amber-500/10';
           const cardClass = item.selected
             ? 'bg-indigo-950/40 border-indigo-500/50 shadow-sm'
             : 'bg-slate-950/60 border-slate-800 opacity-60';
@@ -12197,7 +12215,13 @@ Output strictly valid JSON with no markdown wrapping:
 
       const selectedActivities = getSelectedSquadActivities();
       if (!selectedActivities.length) {
-        showToast('กรุณาเลือกกิจกรรม/บอสอย่างน้อย 1 ตัวก่อนบันทึก', 'warning');
+        showToast('กรุณาเลือกกิจกรรม/บอสอย่างน้อย 1 ตัวในขั้นตอนที่ 1 ก่อนบันทึก', 'warning');
+        const actSection = document.getElementById('squad-activity-options');
+        if (actSection) {
+          actSection.scrollIntoView({ behavior: 'smooth' });
+          actSection.classList.add('ring-2', 'ring-amber-400');
+          setTimeout(() => actSection.classList.remove('ring-2', 'ring-amber-400'), 2500);
+        }
         return;
       }
 
@@ -12208,60 +12232,53 @@ Output strictly valid JSON with no markdown wrapping:
       }
 
       const actNames = selectedActivities.map(idx => ACTIVITIES[idx]?.shortName || ACTIVITIES[idx]?.name || `บอส ${idx + 1}`);
-      const summaryText = `
-        <div class="space-y-1">
-          <div>• สัปดาห์: <span class="font-bold text-white">${escapeHtml(getWeekName(currentWeekNumber))}</span></div>
-          <div>• จำนวนที่เลือก: <span class="font-bold text-white">${selectedItems.length} คน</span></div>
-          <div>• จำนวนบอสที่เลือก: <span class="font-bold text-white">${selectedActivities.length} ตัว</span></div>
-          <div>• ชื่อกิจกรรม/บอส: <span class="font-bold text-white">${escapeHtml(actNames.join(', '))}</span></div>
-          <div>• รายชื่อที่จะบันทึก: <span class="font-bold text-white">${selectedItems.map(item => escapeHtml(item.member.characterName || item.member.name)).slice(0, 5).join(', ')}${selectedItems.length > 5 ? ' ...' : ''}</span></div>
-        </div>
-      `;
 
-      openPreSaveCheckConfirmModal(summaryText, () => {
-        let affectedCount = 0;
-        selectedItems.forEach(item => {
-          const targetName = item.member.characterName || item.member.name;
-          const m = members.find(mem => (mem.characterName || mem.name) === targetName);
-          if (m) {
-            ensureMemberWeeklyData(m);
-            selectedActivities.forEach(actIdx => {
-              m.checks[actIdx] = true;
-              if (!Array.isArray(m.weeklyChecks[currentWeekNumber])) {
-                m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
-              }
-              m.weeklyChecks[currentWeekNumber][actIdx] = true;
-            });
-            affectedCount++;
-          }
-        });
+      let affectedCount = 0;
+      selectedItems.forEach(item => {
+        const targetName = item.member.characterName || item.member.name;
+        const m = members.find(mem => (mem.characterName || mem.name) === targetName);
+        if (m) {
+          ensureMemberWeeklyData(m);
+          selectedActivities.forEach(actIdx => {
+            m.checks[actIdx] = true;
+            if (!Array.isArray(m.weeklyChecks[currentWeekNumber])) {
+              m.weeklyChecks[currentWeekNumber] = new Array(ACTIVITIES.length).fill(false);
+            }
+            m.weeklyChecks[currentWeekNumber][actIdx] = true;
+          });
+          affectedCount++;
+        }
+      });
 
-        aiScanArchives.push({
-          scannedAt: new Date().toISOString(),
-          admin: currentAdminEmail || 'Admin',
-          week: currentWeekNumber,
-          activities: selectedActivities.map(index => ACTIVITIES[index]?.key || index),
-          detected: detectedSquadItems.map(item => ({
-            name: item.rawName,
-            memberId: item.member ? item.member.id : null,
-            confidence: item.confidence || 0,
-            selected: Boolean(item.selected)
-          })),
-          affectedCount
-        });
-        saveData();
-        renderTable();
-        updateKPIs();
-        closeAiSquadCheckModal();
+      aiScanArchives.push({
+        scannedAt: new Date().toISOString(),
+        admin: currentAdminEmail || 'Admin',
+        week: currentWeekNumber,
+        activities: selectedActivities.map(index => ACTIVITIES[index]?.key || index),
+        detected: detectedSquadItems.map(item => ({
+          name: item.rawName,
+          memberId: item.member ? item.member.id : null,
+          confidence: item.confidence || 0,
+          selected: Boolean(item.selected)
+        })),
+        affectedCount
+      });
 
+      saveData();
+      renderTable();
+      updateKPIs();
+      closeAiSquadCheckModal();
+
+      if (typeof addAuditLog === 'function') {
         addAuditLog(
           'batch',
           `AI สแกนรูปชุมนุมติ๊กบอส (${selectedActivities.length} ตัว)`,
           `สแกนจากรูปภาพจัดการชุมนุม | ติ๊กถูกสำเร็จ: ${affectedCount} คน | ${getWeekName(currentWeekNumber)} | บอส: ${actNames.join(', ')}`
         );
+      }
 
-        showToast(`📸 ติ๊กถูกบอส ${actNames.join(', ')} ให้สมาชิก ${affectedCount} คน เรียบร้อยแล้ว! 🎉`, 'success');
-      });
+      showToast(`📸 ติ๊กถูกบอส ${actNames.join(', ')} ให้สมาชิก ${affectedCount} คน เรียบร้อยแล้ว! 🎉`, 'success');
+      if (typeof playChime === 'function') playChime();
     }
 
     // Global Paste Listener for AI Squad Attendance Check (when in Scoring Module)
@@ -20657,20 +20674,114 @@ Output strictly valid JSON with no markdown formatting.`;
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">ตารางเวลาเกิดประจำสัปดาห์ (ถ้ามี):</label>
-              <input type="text" id="edit-boss-schedule" placeholder="เช่น Mon 18:00 / Wed 10:30"
-                class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-amber-400 focus:outline-none font-mono text-[11px]" />
+          <!-- Interactive Multi-Day Fixed Schedule Builder -->
+          <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-2xl space-y-2.5">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                <i class="fa-solid fa-clock-rotate-left text-amber-400"></i>
+                <span>🗓️ ตารางวันเกิดประจำสัปดาห์ (ยืดหยุ่นได้ 1 - 7 วัน):</span>
+              </label>
+              <div class="flex items-center gap-1 text-[10px] font-mono">
+                <button type="button" onclick="setQuickScheduleDays('all')"
+                  class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-md">ทุกวัน</button>
+                <button type="button" onclick="setQuickScheduleDays('weekdays')"
+                  class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-md">จ-ศ</button>
+                <button type="button" onclick="setQuickScheduleDays('fri-sun')"
+                  class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-md">ศ-ส-อา</button>
+                <button type="button" onclick="setQuickScheduleDays('clear')"
+                  class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-rose-300 rounded-md">ล้าง</button>
+              </div>
             </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">หมายเหตุ / ทริคการตี (Note):</label>
-              <input type="text" id="edit-boss-note" placeholder="เช่น บอสกิจกรรมกิลด์"
-                class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-amber-400 focus:outline-none" />
+
+            <!-- Day selector pills (Sunday = 0, Monday = 1, ...) -->
+            <div class="flex items-center gap-1 flex-wrap">
+              <span class="text-[10px] text-slate-400 mr-1">เลือกวัน:</span>
+              <button type="button" id="btn-sch-day-0" onclick="toggleScheduleDayButton(0)"
+                class="sch-day-btn px-2.5 py-1 text-xs font-bold rounded-xl border border-slate-700 bg-slate-900 text-slate-300 transition">อา</button>
+              <button type="button" id="btn-sch-day-1" onclick="toggleScheduleDayButton(1)"
+                class="sch-day-btn px-2.5 py-1 text-xs font-bold rounded-xl border border-slate-700 bg-slate-900 text-slate-300 transition">จ</button>
+              <button type="button" id="btn-sch-day-2" onclick="toggleScheduleDayButton(2)"
+                class="sch-day-btn px-2.5 py-1 text-xs font-bold rounded-xl border border-slate-700 bg-slate-900 text-slate-300 transition">อ</button>
+              <button type="button" id="btn-sch-day-3" onclick="toggleScheduleDayButton(3)"
+                class="sch-day-btn px-2.5 py-1 text-xs font-bold rounded-xl border border-slate-700 bg-slate-900 text-slate-300 transition">พ</button>
+              <button type="button" id="btn-sch-day-4" onclick="toggleScheduleDayButton(4)"
+                class="sch-day-btn px-2.5 py-1 text-xs font-bold rounded-xl border border-slate-700 bg-slate-900 text-slate-300 transition">พฤ</button>
+              <button type="button" id="btn-sch-day-5" onclick="toggleScheduleDayButton(5)"
+                class="sch-day-btn px-2.5 py-1 text-xs font-bold rounded-xl border border-slate-700 bg-slate-900 text-slate-300 transition">ศ</button>
+              <button type="button" id="btn-sch-day-6" onclick="toggleScheduleDayButton(6)"
+                class="sch-day-btn px-2.5 py-1 text-xs font-bold rounded-xl border border-slate-700 bg-slate-900 text-slate-300 transition">ส</button>
             </div>
+
+            <!-- Time selector & Add Slot button -->
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-slate-400">เวลา:</span>
+              <div class="flex items-center gap-1 font-mono flex-1">
+                <select id="edit-schedule-builder-hour"
+                  class="picker-hour-select flex-1 bg-slate-900 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-1.5 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
+                <span class="text-amber-400 font-bold">:</span>
+                <select id="edit-schedule-builder-min"
+                  class="picker-min-select flex-1 bg-slate-900 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-1.5 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
+              </div>
+              <button type="button" onclick="addScheduleSlotFromBuilder()"
+                class="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 text-xs font-bold rounded-xl transition flex items-center gap-1 shrink-0">
+                <i class="fa-solid fa-plus text-[10px]"></i> เพิ่มรอบนี้
+              </button>
+            </div>
+
+            <!-- Active Slots List -->
+            <div class="pt-1">
+              <label class="block text-[10px] text-slate-400 mb-1">📌 รอบเวลาที่ตั้งไว้สำหรับบอสตัวนี้:</label>
+              <div id="edit-schedule-slots-container" class="flex flex-wrap gap-1.5 min-h-[32px] p-2 bg-slate-900/90 border border-slate-800 rounded-xl items-center">
+                <!-- Slot tags rendered dynamically -->
+              </div>
+            </div>
+
+            <input type="hidden" id="edit-boss-schedule" />
           </div>
 
-          <!-- Time Override Section in 24hr -->
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">หมายเหตุ / ทริคการตี (Note):</label>
+            <input type="text" id="edit-boss-note" placeholder="เช่น บอสกิจกรรมกิลด์"
+              class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 focus:border-amber-400 focus:outline-none" />
+          </div>
+
+          <!-- Calendar: Next Spawn Date & Time Override Picker -->
+          <div class="p-3 bg-gradient-to-br from-slate-950/90 to-amber-950/20 border border-amber-500/30 rounded-2xl space-y-2 shadow-inner">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-calendar-days text-amber-400"></i>
+                <span>📅 ปฏิทินเลือกวัน & เวลาเกิดรอบถัดไป:</span>
+              </label>
+              <div class="flex items-center gap-1 text-[10px] font-mono">
+                <button type="button" onclick="applyQuickNextSpawnTime('today')"
+                  class="px-2 py-0.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-lg">วันนี้</button>
+                <button type="button" onclick="applyQuickNextSpawnTime('tomorrow')"
+                  class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg">พรุ่งนี้</button>
+                <button type="button" onclick="applyQuickNextSpawnTime('clear')"
+                  class="px-2 py-0.5 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-500/30 rounded-lg" title="ใช้เวลาคำนวณตามตาราง">ล้างเวลา</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5 font-medium">วันที่เกิดบนปฏิทิน:</label>
+                <input type="date" id="edit-boss-next-date"
+                  class="w-full bg-slate-900 border border-amber-500/40 text-amber-200 text-xs rounded-xl p-2 focus:border-amber-400 focus:outline-none font-mono" />
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5 font-medium">เวลาเกิด (HH:MM):</label>
+                <div class="flex items-center gap-1 font-mono">
+                  <select id="edit-boss-next-hour"
+                    class="picker-hour-select flex-1 bg-slate-900 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl p-2 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
+                  <span class="text-amber-400 font-bold">:</span>
+                  <select id="edit-boss-next-min"
+                    class="picker-min-select flex-1 bg-slate-900 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl p-2 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
+                </div>
+              </div>
+            </div>
+            <p class="text-[10px] text-slate-400">💡 เลือกวันที่ในปฏิทินและเวลา ระบบจะเริ่มนับถอยหลังไปยังเวลาที่กำหนดทันที</p>
+          </div>
+
+          <!-- Time Override Section in 24hr (Defeated Time) -->
           <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-2xl space-y-2">
             <div class="flex items-center justify-between">
               <label class="text-xs font-bold text-slate-300">⏱️ เวลาตายล่าสุด (รูปแบบ 24 ชม.):</label>
@@ -20685,12 +20796,12 @@ Output strictly valid JSON with no markdown formatting.`;
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div>
-                <label class="block text-[10px] text-slate-500 mb-0.5">วันที่</label>
+                <label class="block text-[10px] text-slate-500 mb-0.5">วันที่ตาย</label>
                 <input type="date" id="edit-boss-def-date"
                   class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl p-2 focus:border-amber-400 focus:outline-none font-mono" />
               </div>
               <div>
-                <label class="block text-[10px] text-slate-500 mb-0.5">เวลา (HH:MM)</label>
+                <label class="block text-[10px] text-slate-500 mb-0.5">เวลาที่ตาย (HH:MM)</label>
                 <div class="flex items-center gap-1 font-mono">
                   <select id="edit-boss-def-hour"
                     class="picker-hour-select flex-1 bg-slate-900 border border-slate-700 text-amber-300 text-xs font-bold rounded-xl p-2 focus:border-amber-400 focus:outline-none text-center cursor-pointer"></select>
