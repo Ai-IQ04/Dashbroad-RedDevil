@@ -8195,6 +8195,11 @@
             activitiesChanged = true;
           }
         }
+        // Older deployments may have members but no Activities catalog yet.
+        // Push the current activity weights so the sheet can return the % data.
+        if (!Array.isArray(result.activities) || result.activities.length === 0) {
+          scheduleGoogleSheetsPush();
+        }
         if (result.lockedWeeks && typeof result.lockedWeeks === 'object') {
           const remoteLocks = { 1: false, 2: false, 3: false, 4: false, ...result.lockedWeeks };
           if (JSON.stringify(remoteLocks) !== JSON.stringify(lockedWeeks)) {
