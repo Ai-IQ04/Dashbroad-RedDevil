@@ -1562,11 +1562,13 @@
       background: transparent !important;
     }
 
-    body.neo-dark .boss-card:not(.boss-card-alive-alert):not(.boss-card-soon-alert) {
+    body.neo-dark .boss-card {
       background: linear-gradient(145deg, #303c49, #242e39) !important;
+      color: var(--neo-text) !important;
+    }
+    body.neo-dark .boss-card:not(.boss-card-alive-alert):not(.boss-card-soon-alert) {
       border-color: rgba(255, 255, 255, 0.08) !important;
       box-shadow: var(--neo-shadow-raised) !important;
-      color: var(--neo-text) !important;
     }
 
     body.neo-dark .boss-card [class*="bg-slate-"],
@@ -21262,7 +21264,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=7.3"></script>
+  <script src="boss_timer.js?v=7.4"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
@@ -21337,6 +21339,7 @@ Output strictly valid JSON with no markdown formatting.`;
 </body>
 
 </html>
+
 
 
 

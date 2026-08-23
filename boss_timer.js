@@ -764,18 +764,15 @@ function renderBossTimerCards() {
       alertCardClass = ' boss-card-alive-alert';
       statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white border border-rose-300 flex items-center gap-1.5 shadow-lg shadow-rose-600/50"><i class="fa-solid fa-circle text-[7px] text-rose-200 animate-ping"></i><span class="animate-pulse">${tBoss('boss_status_spawned', 'เกิดแล้ว (ALIVE!)')}</span></span>`;
       cardBorder = 'border-rose-500 ring-2 ring-rose-500/50 shadow-2xl shadow-rose-950/80';
-      cardBg = 'from-rose-950/60 via-slate-900 to-slate-950';
     } else if (b.status === 'soon') {
       alertCardClass = ' boss-card-soon-alert';
       statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-yellow-500/25 text-yellow-300 border border-yellow-400 flex items-center gap-1.5 shadow-md shadow-yellow-950/60"><i class="fa-solid fa-clock text-[9px] text-yellow-400 animate-spin" style="animation-duration: 4s;"></i><span class="animate-pulse">${tBoss('boss_status_soon', 'ใกล้เกิด (<30m)')}</span></span>`;
       cardBorder = 'border-amber-400/80 ring-2 ring-amber-400/40 shadow-xl shadow-amber-950/60';
-      cardBg = 'from-amber-950/40 via-slate-900 to-slate-950';
     } else if (b.status === 'cooldown') {
       statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40 flex items-center gap-1"><i class="fa-solid fa-hourglass-half text-[8px] text-sky-400"></i> ${tBoss('boss_status_cooldown', 'รอเกิด')}</span>`;
     } else {
       statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-800/90 text-slate-400 border border-slate-700">⚪ ${tBoss('boss_status_unrecorded', 'ยังไม่ลงเวลา')}</span>`;
       cardBorder = 'border-slate-800 hover:border-slate-700';
-      cardBg = 'from-slate-900/90 to-slate-950/90';
     }
 
     const countdownText = formatCountdown(b.diffMs, b.status);
