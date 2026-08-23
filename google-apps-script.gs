@@ -24,6 +24,7 @@ function doGet(e) {
     return jsonOutput_({
       ok: true,
       members: readAttendance_(),
+      activities: readActivitiesCatalog_(),
       rosterComplete: hasMembersRoster_(),
       lockedWeeks: readLockedWeeks_(),
       health: readSyncHealth_()
@@ -291,6 +292,7 @@ function writeAttendance_(payload) {
   }
 
   writeMembersRoster_(book, members);
+  writeActivitiesCatalog_(book, activities);
   for (let week = 1; week <= WEEK_COUNT; week++) {
     if (lockedWeeks[week]) continue;
     const sheet = getOrCreateSheet_(book, 'Week ' + week);
@@ -317,6 +319,41 @@ function writeAttendance_(payload) {
   } finally {
     lock.releaseLock();
   }
+}
+
+function writeActivitiesCatalog_(book, activities) {
+  const sheet = book.getSheetByName('Activities') || book.insertSheet('Activities');
+  const rows = [['Index', 'Key', 'Name', 'Short Name', 'Day', 'Weight %']];
+  activities.forEach(function(activity, index) {
+    rows.push([
+      index,
+      String(activity.key || ('activity_' + (index + 1))),
+      String(activity.name || ('Activity ' + (index + 1))),
+      String(activity.shortName || activity.name || ('Activity ' + (index + 1))),
+      String(activity.day || ''),
+      Number(activity.weight) || 0
+    ]);
+  });
+  sheet.clearContents();
+  sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, rows[0].length);
+}
+
+function readActivitiesCatalog_() {
+  const book = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = book.getSheetByName('Activities');
+  if (!sheet || sheet.getLastRow() < 2) return [];
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 6).getValues().map(function(row, index) {
+    return {
+      index: Number(row[0]) || index,
+      key: String(row[1] || ('activity_' + (index + 1))),
+      name: String(row[2] || ''),
+      shortName: String(row[3] || row[2] || ''),
+      day: String(row[4] || ''),
+      weight: Number(row[5]) || 0
+    };
+  });
 }
 
 function writeMembersRoster_(book, members) {

@@ -8064,7 +8064,10 @@
         activities: ACTIVITIES.map((activity, index) => ({
           index,
           key: activity.key || `activity_${index + 1}`,
-          name: activity.name || `Activity ${index + 1}`
+          name: activity.name || `Activity ${index + 1}`,
+          shortName: activity.shortName || activity.name || `Activity ${index + 1}`,
+          day: activity.day || '',
+          weight: Number(activity.weight) || 0
         })),
         members: members.map(member => {
           ensureMemberWeeklyData(member);
@@ -8172,6 +8175,26 @@
         const response = await fetch(`${GOOGLE_SHEETS_SYNC_URL}?action=read&spreadsheetId=${encodeURIComponent(GOOGLE_SHEET_ID)}&token=${encodeURIComponent(GOOGLE_SHEETS_SYNC_TOKEN)}&ts=${Date.now()}`, { cache: 'no-store' });
         const result = await response.json();
         if (!result || !result.ok || !Array.isArray(result.members)) return;
+        let activitiesChanged = false;
+        if (Array.isArray(result.activities) && result.activities.length > 0) {
+          const remoteActivities = result.activities.map(activity => ({
+            key: activity.key || '',
+            name: activity.name || activity.key || 'Activity',
+            shortName: activity.shortName || activity.name || activity.key || 'Activity',
+            day: activity.day || '',
+            weight: Number(activity.weight) || 0
+          }));
+          const localActivitySignature = googleSheetsSignature(ACTIVITIES.map(activity => ({
+            key: activity.key, name: activity.name, shortName: activity.shortName,
+            day: activity.day, weight: Number(activity.weight) || 0
+          })));
+          const remoteActivitySignature = googleSheetsSignature(remoteActivities);
+          if (localActivitySignature !== remoteActivitySignature) {
+            ACTIVITIES = remoteActivities;
+            saveActivities();
+            activitiesChanged = true;
+          }
+        }
         if (result.lockedWeeks && typeof result.lockedWeeks === 'object') {
           const remoteLocks = { 1: false, 2: false, 3: false, 4: false, ...result.lockedWeeks };
           if (JSON.stringify(remoteLocks) !== JSON.stringify(lockedWeeks)) {
@@ -8188,12 +8211,12 @@
           return;
         }
         const signature = googleSheetsSignature(result.members);
-        if (!signature || signature === googleSheetsLastRemoteSignature) return;
+        if (!signature || (signature === googleSheetsLastRemoteSignature && !activitiesChanged)) return;
         googleSheetsLastRemoteSignature = signature;
 
         const localById = new Map(members.map(member => [String(member.id), member]));
         const remoteIds = new Set(result.members.map(remote => String(remote.id)));
-        let changed = false;
+        let changed = activitiesChanged;
         result.members.forEach(remote => {
           let local = localById.get(String(remote.id)) || members.find(member =>
             String(member.characterName || member.name || '').trim().toLowerCase() === String(remote.characterName || '').trim().toLowerCase());
