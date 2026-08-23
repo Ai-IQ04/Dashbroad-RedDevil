@@ -13941,13 +13941,6 @@ Output strictly valid JSON with no markdown formatting.`;
       const member = members.find(m => m.id === id);
       if (!member) return;
 
-      if (!bypassLock && isWeekLocked(currentWeekNumber)) {
-        requestRetroactiveEditPermission(() => {
-          openEditMemberModal(id, true);
-        }, `แก้ไขข้อมูลสมาชิก "${member.characterName}" (${getWeekName(currentWeekNumber)})`);
-        return;
-      }
-
       populateGuildSelects();
       document.getElementById('modal-member-title').innerHTML = `<i class="fa-regular fa-pen-to-square text-amber-400"></i><span>${t('modal_edit_title', { name: escapeHtml(member.characterName) })}</span>`;
       document.getElementById('edit-member-id').value = member.id;
@@ -14046,13 +14039,6 @@ Output strictly valid JSON with no markdown formatting.`;
       }
       const member = members.find(m => m.id === id);
       const name = member ? member.characterName : 'Member';
-
-      if (!bypassLock && isWeekLocked(currentWeekNumber)) {
-        requestRetroactiveEditPermission(() => {
-          deleteMember(id, true);
-        }, `ลบสมาชิก "${name}" (${getWeekName(currentWeekNumber)})`);
-        return;
-      }
 
       if (confirm(t('confirm_delete_member', { name }))) {
         members = members.filter(m => m.id !== id);
