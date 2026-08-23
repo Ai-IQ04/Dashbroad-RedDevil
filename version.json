@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
-  "buildTime": 1787089000000,
-  "releaseNotes": "Clean scope restructure and fix game-chat boss copy"
+  "version": "1.3.1",
+  "buildTime": 1787090000000,
+  "releaseNotes": "Fix modal copy with interactive feedback and range select"
 }

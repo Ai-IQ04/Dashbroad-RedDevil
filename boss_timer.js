@@ -769,44 +769,106 @@ function clearSelectedBosses() {
   updateSelectedBossesUI();
 }
 
-async function safeCopyToClipboard(text) {
-  if (!text) return false;
-  // 1. Try modern Async Clipboard API
-  if (navigator.clipboard && window.isSecureContext) {
-    try {
-      await navigator.clipboard.writeText(text);
-      return true;
-    } catch (e) {
-      console.warn('[Clipboard] navigator.clipboard.writeText failed:', e);
+function safeCopyToClipboard(text) {
+  if (!text) return Promise.resolve(false);
+
+  return new Promise((resolve) => {
+    // 1. Try modern Async Clipboard API
+    if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(text)
+        .then(() => resolve(true))
+        .catch(() => {
+          // Fallback to execCommand
+          resolve(execCommandCopyFallback(text));
+        });
+      return;
+    }
+    // 2. Fallback to execCommand
+    resolve(execCommandCopyFallback(text));
+  });
+}
+
+function execCommandCopyFallback(text) {
+  let textarea;
+  let success = false;
+  try {
+    textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    textarea.style.top = '-9999px';
+    textarea.style.opacity = '0';
+    textarea.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(textarea);
+
+    if (navigator.userAgent.match(/ipad|iphone|ios/i)) {
+      const range = document.createRange();
+      range.selectNodeContents(textarea);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      textarea.setSelectionRange(0, 999999);
+    } else {
+      textarea.focus();
+      textarea.select();
+    }
+
+    success = document.execCommand('copy');
+  } catch (err) {
+    console.error('[Clipboard] execCommand copy failed:', err);
+    success = false;
+  } finally {
+    if (textarea && textarea.parentNode) {
+      textarea.parentNode.removeChild(textarea);
     }
   }
+  return success;
+}
 
-  // 2. Try classic textarea execCommand
-  try {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.setAttribute('readonly', '');
-    textarea.style.position = 'fixed';
-    textarea.style.top = '0';
-    textarea.style.left = '0';
-    textarea.style.width = '2em';
-    textarea.style.height = '2em';
-    textarea.style.padding = '0';
-    textarea.style.border = 'none';
-    textarea.style.outline = 'none';
-    textarea.style.boxShadow = 'none';
-    textarea.style.background = 'transparent';
-    document.body.appendChild(textarea);
-    textarea.focus();
-    textarea.select();
-    const successful = document.execCommand('copy');
-    document.body.removeChild(textarea);
-    if (successful) return true;
-  } catch (err) {
-    console.error('[Clipboard] document.execCommand copy failed:', err);
+function copyFromModalTextarea() {
+  const ta = document.getElementById('boss-game-chat-textarea');
+  if (!ta) return;
+
+  const text = ta.value;
+  ta.focus();
+  ta.select();
+  ta.setSelectionRange(0, 99999);
+
+  const applySuccessUi = () => {
+    const btn = document.getElementById('btn-modal-copy-all');
+    if (btn) {
+      btn.innerHTML = `<i class="fa-solid fa-check text-emerald-950 text-sm"></i> <span>คัดลอกสำเร็จแล้ว! 🎉</span>`;
+      btn.className = 'px-5 py-2.5 bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-950 font-black rounded-xl text-xs shadow-lg shadow-emerald-500/30 flex items-center gap-1.5 transition';
+      setTimeout(() => {
+        if (btn) {
+          btn.innerHTML = `<i class="fa-solid fa-copy"></i> <span>คัดลอกทั้งหมด</span>`;
+          btn.className = 'px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-amber-500/30 flex items-center gap-1.5 transition active:scale-95';
+        }
+      }, 3000);
+    }
+    if (typeof showToast === 'function') showToast('📋 คัดลอกข้อความสำเร็จแล้ว! นำไปวางในแชทเกมส์ได้เลย', 'success');
+    if (typeof playChime === 'function') playChime();
+  };
+
+  if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    navigator.clipboard.writeText(text).then(applySuccessUi).catch(() => {
+      try {
+        const ok = document.execCommand('copy');
+        if (ok) applySuccessUi();
+        else if (typeof showToast === 'function') showToast('กรุณากดค้างที่กล่องข้อความแล้วเลือก "คัดลอก"', 'info');
+      } catch (e) {
+        if (typeof showToast === 'function') showToast('กรุณากดค้างที่กล่องข้อความแล้วเลือก "คัดลอก"', 'info');
+      }
+    });
+  } else {
+    try {
+      const ok = document.execCommand('copy');
+      if (ok) applySuccessUi();
+      else if (typeof showToast === 'function') showToast('กรุณากดค้างที่กล่องข้อความแล้วเลือก "คัดลอก"', 'info');
+    } catch (e) {
+      if (typeof showToast === 'function') showToast('กรุณากดค้างที่กล่องข้อความแล้วเลือก "คัดลอก"', 'info');
+    }
   }
-
-  return false;
 }
 
 function openGameChatCopyPreviewModal(text) {
@@ -814,7 +876,7 @@ function openGameChatCopyPreviewModal(text) {
   if (!modal) {
     const div = document.createElement('div');
     div.id = 'boss-game-chat-copy-modal';
-    div.className = 'fixed inset-0 z-[80] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in';
+    div.className = 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in';
     div.innerHTML = `
       <div class="apple-modal-box relative w-full max-w-md bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-amber-500/60 rounded-3xl p-5 shadow-2xl space-y-3.5" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between pb-2 border-b border-slate-800">
@@ -826,11 +888,13 @@ function openGameChatCopyPreviewModal(text) {
             <i class="fa-solid fa-xmark text-lg"></i>
           </button>
         </div>
-        <p class="text-[11px] text-slate-400">กดปุ่มคัดลอกด้านล่าง หรือแตะกล่องข้อความเพื่อนำไปวางในแชทเกมส์:</p>
-        <textarea id="boss-game-chat-textarea" readonly rows="8" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-500 select-all leading-relaxed"></textarea>
-        <div class="flex items-center justify-end gap-2 pt-1">
-          <button type="button" onclick="document.getElementById('boss-game-chat-copy-modal').classList.add('hidden')" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs font-semibold">ปิด</button>
-          <button type="button" onclick="const ta = document.getElementById('boss-game-chat-textarea'); ta.select(); document.execCommand('copy'); if (typeof showToast === 'function') showToast('📋 คัดลอกข้อความสำเร็จ!', 'success');" class="px-5 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 rounded-xl text-xs font-black shadow-lg flex items-center gap-1.5"><i class="fa-solid fa-copy"></i> คัดลอกทั้งหมด</button>
+        <p class="text-[11px] text-slate-300">แตะที่กล่องข้อความเพื่อเลือกทั้งหมด หรือกดปุ่ม <b>"คัดลอกทั้งหมด"</b> ด้านล่าง:</p>
+        <textarea id="boss-game-chat-textarea" rows="9" onclick="this.focus(); this.select();" class="w-full bg-slate-950 border border-amber-500/50 rounded-2xl p-3 text-sm text-amber-300 font-mono focus:outline-none focus:ring-2 focus:ring-amber-500/50 leading-relaxed cursor-pointer shadow-inner"></textarea>
+        <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
+          <button type="button" onclick="document.getElementById('boss-game-chat-copy-modal').classList.add('hidden')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">ปิด</button>
+          <button type="button" id="btn-modal-copy-all" onclick="copyFromModalTextarea()" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-amber-500/30 flex items-center gap-1.5 transition active:scale-95">
+            <i class="fa-solid fa-copy"></i> <span>คัดลอกทั้งหมด</span>
+          </button>
         </div>
       </div>
     `;
@@ -4543,6 +4607,7 @@ window.copySelectedBossesToGameChat = copySelectedBossesToGameChat;
 window.formatBossForGameChat = formatBossForGameChat;
 window.safeCopyToClipboard = safeCopyToClipboard;
 window.openGameChatCopyPreviewModal = openGameChatCopyPreviewModal;
+window.copyFromModalTextarea = copyFromModalTextarea;
 
 
 
