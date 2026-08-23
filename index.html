@@ -4458,10 +4458,11 @@
         </div>
  
         <button id="btn-copy-selected-bosses" onclick="copySelectedBossesToGameChat()"
-          class="hidden apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold shadow-md shadow-amber-500/20 animate-pulse"
-          title="คัดลอกรายชื่อและเวลาเกิดของบอสที่ติ๊กเลือกทั้งหมดเพื่อนำไปวางในแชทเกมส์">
+          class="apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold shadow-md shadow-amber-500/20"
+          title="คัดลอกรายชื่อและเวลาเกิดของบอสเพื่อนำไปวางในแชทเกมส์ (หากติ๊กเลือกจะคัดลอกเฉพาะตัวที่เลือก หากไม่ติ๊กจะคัดลอกตัวที่กำลังจะเกิดทั้งหมด)">
           <i class="fa-solid fa-copy text-xs"></i>
-          <span>📋 คัดลอกลงแชทเกมส์ (<span id="boss-selected-count-badge">0</span>)</span>
+          <span id="btn-copy-bosses-text">📋 คัดลอกแชทเกมส์</span>
+          <span id="boss-selected-count-badge" class="hidden px-1.5 py-0.2 bg-slate-950 text-amber-300 text-[10px] font-black rounded-full shadow leading-tight">0</span>
         </button>
 
         <button id="btn-boss-raid-plan-top" onclick="openBossRaidPlannerModal()"
@@ -22189,7 +22190,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=8.6"></script>
+  <script src="boss_timer.js?v=8.7"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {

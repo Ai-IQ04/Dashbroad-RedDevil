@@ -1,5 +1,5 @@
 {
-  "version": "1.2.7",
-  "buildTime": 1787086000000,
-  "releaseNotes": "Add multi-select boss copy for in-game chat format"
+  "version": "1.2.8",
+  "buildTime": 1787087000000,
+  "releaseNotes": "Make game-chat boss copy button permanently visible and one-click ready"
 }

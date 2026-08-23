@@ -864,10 +864,18 @@ function updateSelectedBossesUI() {
   const bar = document.getElementById('boss-multi-copy-bar');
   const countText = document.getElementById('boss-selected-count-text');
   const topBadge = document.getElementById('boss-selected-count-badge');
-  const topBtn = document.getElementById('btn-copy-selected-bosses');
+  const topBtnText = document.getElementById('btn-copy-bosses-text');
 
   if (countText) countText.textContent = count;
-  if (topBadge) topBadge.textContent = count;
+  if (topBadge) {
+    topBadge.textContent = count;
+    if (count > 0) topBadge.classList.remove('hidden');
+    else topBadge.classList.add('hidden');
+  }
+
+  if (topBtnText) {
+    topBtnText.textContent = count > 0 ? `📋 คัดลอกที่เลือก` : `📋 คัดลอกแชทเกมส์`;
+  }
 
   if (bar) {
     if (count > 0) {
@@ -879,20 +887,9 @@ function updateSelectedBossesUI() {
     }
   }
 
-  if (topBtn) {
-    if (count > 0) {
-      topBtn.classList.remove('hidden');
-      topBtn.classList.add('inline-flex');
-    } else {
-      topBtn.classList.add('hidden');
-      topBtn.classList.remove('inline-flex');
-    }
-  }
-
   // Update table select all checkbox
   const selectAllChk = document.getElementById('boss-select-all-table');
   if (selectAllChk) {
-    const now = new Date();
     const visible = bossList.filter(b => {
       if (currentBossFilter === 'alive' && b.status !== 'alive') return false;
       if (currentBossFilter === 'soon' && b.status !== 'soon') return false;
@@ -945,19 +942,37 @@ function clearSelectedBosses() {
 }
 
 async function copySelectedBossesToGameChat() {
-  if (selectedBossIds.size === 0) {
-    if (typeof showToast === 'function') showToast('กรุณาติ๊กเลือกบอสอย่างน้อย 1 ตัวเพื่อคัดลอกครับ', 'warning');
-    return;
+  const now = new Date();
+  let list = [];
+
+  if (selectedBossIds.size > 0) {
+    // If user ticked specific bosses, copy those
+    list = bossList
+      .filter(b => selectedBossIds.has(b.id))
+      .map(b => {
+        const nextSpawn = getBossNextSpawn(b);
+        const diffMs = nextSpawn ? nextSpawn.getTime() - now.getTime() : null;
+        return { ...b, nextSpawn, diffMs };
+      });
+  } else {
+    // If no boss specifically ticked, copy upcoming active bosses
+    list = bossList
+      .map(b => {
+        const nextSpawn = getBossNextSpawn(b);
+        const diffMs = nextSpawn ? nextSpawn.getTime() - now.getTime() : null;
+        const status = getBossStatus(b, nextSpawn, now);
+        return { ...b, nextSpawn, diffMs, status };
+      })
+      .filter(b => b.status === 'alive' || b.status === 'soon' || b.status === 'cooldown' || b.nextSpawn);
   }
 
-  const now = new Date();
-  const list = bossList
-    .filter(b => selectedBossIds.has(b.id))
-    .map(b => {
+  if (list.length === 0) {
+    list = bossList.map(b => {
       const nextSpawn = getBossNextSpawn(b);
       const diffMs = nextSpawn ? nextSpawn.getTime() - now.getTime() : null;
       return { ...b, nextSpawn, diffMs };
     });
+  }
 
   // Sort by diffMs so upcoming bosses appear first
   list.sort((a, b) => {
@@ -980,7 +995,9 @@ async function copySelectedBossesToGameChat() {
       document.execCommand('copy'); area.remove();
     }
     if (typeof showToast === 'function') {
-      showToast(`📋 คัดลอกรายชื่อบอส ${list.length} ตัวสำหรับแชทเกมส์เรียบร้อยแล้ว!`, 'success');
+      showToast(selectedBossIds.size > 0 
+        ? `📋 คัดลอกบอสที่เลือก ${list.length} ตัวสำหรับแชทเกมส์เรียบร้อยแล้ว!`
+        : `📋 คัดลอกเวลาบอส ${list.length} ตัวสำหรับแชทเกมส์เรียบร้อยแล้ว!`, 'success');
     }
     if (typeof playChime === 'function') playChime();
   } catch (error) {
