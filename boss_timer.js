@@ -1212,98 +1212,107 @@ function renderBossTimerCards() {
     return;
   }
 
-  // ================= RENDER MODE: SIMPLE / COMPACT VIEW =================
+  // ================= RENDER MODE: SIMPLE / LIST VIEW =================
   if (currentBossViewMode === 'simple') {
-    container.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-2.5";
-    let simpleHtml = '';
+    container.className = "flex flex-col gap-0";
+    let listRowsHtml = '';
 
     filtered.forEach(b => {
       try {
         const isGuildActivity = GUILD_SCORING_BOSS_IDS.has(b.id) || (b.name && /lucus|bahel|libitina|rakajeth|tumier|neva|icarut|morti|motti|arena|camalia|world/i.test(b.name));
         const isHighTier = isHighLevelBoss(b.level, b.id, b.name);
 
-        let nameColorClass = 'text-emerald-300';
-        let cardBorder = 'border-slate-800/90 hover:border-slate-700 bg-slate-950/80';
-        let avatarBorder = 'border-slate-700';
-
+        let nameColorClass = 'text-emerald-300 font-bold';
         if (isGuildActivity) {
           nameColorClass = 'text-amber-400 font-black';
-          avatarBorder = 'border-amber-500/60';
         } else if (isHighTier) {
           nameColorClass = 'text-rose-300 font-black';
-          avatarBorder = 'border-rose-500/60';
         }
 
-        let statusPill = '';
+        let statusBadge = '';
+        let rowBg = '';
         let cdColor = 'text-slate-400';
+
         if (b.status === 'alive') {
-          cardBorder = 'border-rose-500/80 bg-rose-950/20 ring-1 ring-rose-500/40 shadow-lg shadow-rose-950/40';
-          statusPill = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-600 text-white animate-pulse">เกิดแล้ว</span>`;
-          cdColor = 'text-rose-300 animate-pulse font-black';
+          rowBg = 'bg-rose-950/25 hover:bg-rose-950/40';
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white flex items-center gap-1 animate-pulse shadow-sm"><i class="fa-solid fa-circle text-[6px]"></i> เกิดแล้ว</span>`;
+          cdColor = 'text-rose-300 font-black animate-pulse';
         } else if (b.status === 'soon') {
-          cardBorder = 'border-amber-500/80 bg-amber-950/20 ring-1 ring-amber-500/40 shadow-md shadow-amber-950/30';
-          statusPill = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500 text-slate-950 animate-pulse">ใกล้เกิด</span>`;
-          cdColor = 'text-amber-300 animate-pulse font-black';
+          rowBg = 'bg-amber-950/20 hover:bg-amber-950/35';
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-950 flex items-center gap-1 animate-pulse shadow-sm"><i class="fa-solid fa-clock text-[8px]"></i> ใกล้เกิด</span>`;
+          cdColor = 'text-amber-300 font-black animate-pulse';
         } else if (b.status === 'cooldown') {
-          statusPill = `<span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-sky-950 text-sky-300 border border-sky-800">รอเกิด</span>`;
+          rowBg = 'hover:bg-slate-900/40';
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-950 text-sky-300 border border-sky-800/80 flex items-center gap-1"><i class="fa-solid fa-hourglass-half text-[7px]"></i> รอเกิด</span>`;
           cdColor = 'text-sky-300 font-bold';
         } else {
-          statusPill = `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-900 text-slate-400 border border-slate-800">-</span>`;
+          rowBg = 'hover:bg-slate-900/30';
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-900 text-slate-400 border border-slate-800">⚪ ยังไม่ลงเวลา</span>`;
           cdColor = 'text-slate-500';
         }
 
         const countdownText = formatCountdown(b.diffMs, b.status);
         const nextSpawnText = b.nextSpawn ? formatBossNextSpawnDisplay(b.nextSpawn) : (b.respawnType === 'interval' ? 'รอลงเวลา' : '-');
 
-        const avatarThumb = b.avatar
-          ? `<img src="${escapeHtml(b.avatar)}" alt="${escapeHtml(b.name)}" class="w-10 h-10 rounded-xl object-cover border ${avatarBorder} shrink-0 bg-slate-900 shadow-sm" onerror="this.onerror=null; this.src=''; this.parentElement.innerHTML='<div class=\\'w-10 h-10 rounded-xl bg-slate-800 border ${avatarBorder} flex items-center justify-center text-amber-400 text-xs\\'><i class=\\'fa-solid fa-dragon\\'></i></div>';" />`
-          : `<div class="w-10 h-10 rounded-xl bg-slate-800 border ${avatarBorder} flex items-center justify-center text-amber-400/90 text-xs shrink-0 shadow-inner"><i class="fa-solid fa-dragon"></i></div>`;
-
-        simpleHtml += `
+        listRowsHtml += `
           <div id="boss-card-${b.id}" oncontextmenu="event.preventDefault(); copyBossForGameChat('${b.id}'); return false;"
-            title="${escapeHtml(b.name)} (คลิกขวาเพื่อคัดลอก)"
-            class="boss-card relative flex items-center justify-between gap-2.5 p-2.5 rounded-2xl border ${cardBorder} backdrop-blur-md transition hover:scale-[1.015] duration-150 cursor-pointer shadow-md">
+            title="${escapeHtml(b.name)} (คลิกขวาเพื่อคัดลอกลงแชทเกมส์)"
+            class="boss-card ${rowBg} flex items-center justify-between gap-2.5 sm:gap-4 px-3 sm:px-4 py-2.5 border-b border-slate-800/60 transition cursor-pointer">
             
-            <div class="flex items-center gap-2.5 min-w-0 flex-1">
-              <div class="relative shrink-0" onclick="${isAdminActive ? `openEditBossModal('${b.id}')` : `openBossDropLogModal('${b.id}')`}" title="${isAdminActive ? 'แก้ไขข้อมูลบอส' : escapeHtml(b.name)}">
-                ${avatarThumb}
-              </div>
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-1.5 leading-tight">
-                  <span class="text-xs sm:text-[13px] font-bold ${nameColorClass} truncate" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>
-                  <span class="text-[9px] font-mono text-slate-400">Lv.${escapeHtml(b.level || '??')}</span>
-                </div>
-                <div class="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
-                  <span class="truncate max-w-[90px]"><i class="fa-solid fa-location-dot text-slate-500 text-[9px] mr-0.5"></i>${escapeHtml(b.map || 'ไม่ระบุ')}</span>
-                  <span class="font-mono text-amber-300/90 truncate">${nextSpawnText}</span>
-                </div>
+            <!-- 1. สถานะ & ข้อมูลบอส -->
+            <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+              <div class="shrink-0 w-20 sm:w-24">${statusBadge}</div>
+              <div class="min-w-0 flex items-center gap-2 flex-wrap sm:flex-nowrap flex-1">
+                <span class="text-xs sm:text-sm ${nameColorClass} truncate max-w-[150px] sm:max-w-[220px]" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>
+                <span class="text-[9.5px] font-mono text-slate-400 px-1.5 py-0.2 rounded bg-slate-900 border border-slate-800 shrink-0">Lv.${escapeHtml(b.level || '??')}</span>
+                <span class="text-[11px] text-slate-400 truncate max-w-[130px] hidden md:inline"><i class="fa-solid fa-location-dot text-slate-500 text-[10px] mr-1"></i>${escapeHtml(b.map || 'ไม่ระบุแมพ')}</span>
               </div>
             </div>
 
-            <div class="flex flex-col items-end shrink-0 gap-1">
-              <div class="flex items-center gap-1">
-                ${statusPill}
-                <button onclick="copyBossForGameChat('${b.id}')" class="w-6 h-6 rounded-lg bg-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-slate-700 flex items-center justify-center transition" title="คัดลอกลงแชทเกมส์">
-                  <i class="fa-solid fa-copy text-[10px]"></i>
-                </button>
-                ${isAdminActive ? `
-                <button onclick="openBossKillConfirmModal('${b.id}')" class="w-6 h-6 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 flex items-center justify-center transition" title="บันทึกบอสตาย">
-                  <i class="fa-solid fa-skull text-[10px]"></i>
-                </button>` : ''}
-              </div>
-              <div id="boss-cd-${b.id}" class="text-[12px] font-mono font-black ${cdColor} tracking-tight">
-                ${countdownText}
-              </div>
+            <!-- 2. เวลาเกิดรอบถัดไป -->
+            <div class="text-center shrink-0 min-w-[80px] sm:min-w-[120px] hidden xs:block">
+              <span class="text-[11.5px] sm:text-xs font-mono font-bold text-amber-300/90">${nextSpawnText}</span>
+            </div>
+
+            <!-- 3. เวลานับถอยหลัง -->
+            <div id="boss-cd-${b.id}" class="text-xs sm:text-sm font-mono font-black ${cdColor} tracking-tight min-w-[75px] sm:min-w-[95px] text-right shrink-0">
+              ${countdownText}
+            </div>
+
+            <!-- 4. ปุ่มจัดการด่วน -->
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="copyBossForGameChat('${b.id}')"
+                class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 border border-slate-700 flex items-center justify-center transition shadow-sm"
+                title="คลิกเพื่อคัดลอกลงแชทเกมส์">
+                <i class="fa-solid fa-copy text-[11px]"></i>
+              </button>
+              ${isAdminActive ? `
+              <button onclick="openBossKillConfirmModal('${b.id}')"
+                class="w-7 h-7 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 flex items-center justify-center transition shadow-sm"
+                title="บันทึกบอสตาย (Kill Confirm)">
+                <i class="fa-solid fa-skull text-[11px]"></i>
+              </button>` : ''}
             </div>
 
           </div>
         `;
       } catch (err) {
-        console.error('[Simple View] Render item error:', b && b.id, err);
+        console.error('[List View] Render row error:', b && b.id, err);
       }
     });
 
-    container.innerHTML = simpleHtml;
+    container.innerHTML = `
+      <div class="rounded-2xl border border-slate-800 bg-slate-950/70 shadow-2xl backdrop-blur-md overflow-hidden">
+        <!-- List Header Bar -->
+        <div class="px-4 py-2.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between text-xs font-bold text-slate-300">
+          <span class="flex items-center gap-1.5"><i class="fa-solid fa-list-ul text-amber-400"></i> รายชื่อบอส (${filtered.length} ตัว)</span>
+          <span class="text-[11px] text-slate-400 font-normal hidden sm:inline">คลิกปุ่ม 📋 หรือคลิกขวาที่แถวเพื่อก๊อปปี้ลงแชทเกมส์</span>
+        </div>
+        <div class="divide-y divide-slate-800/60 font-sans">
+          ${listRowsHtml}
+        </div>
+      </div>
+    `;
     return;
   }
 
