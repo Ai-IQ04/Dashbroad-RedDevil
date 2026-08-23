@@ -665,178 +665,6 @@ function switchBossViewMode(mode) {
   renderBossTimerCards();
 }
 
-// Render Boss Cards or Table
-function renderBossTimerCards() {
-  const container = document.getElementById('boss-cards-grid');
-  if (!container) return;
-  if (!Array.isArray(bossList) || bossList.length === 0) {
-    rebuildBossList();
-  }
-
-  // Update View Mode Toggle Buttons UI
-  const btnGrid = document.getElementById('btn-view-grid');
-  const btnTable = document.getElementById('btn-view-table');
-  if (btnGrid && btnTable) {
-    if (currentBossViewMode === 'table') {
-      btnTable.className = "boss-view-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition flex items-center gap-1.5 shadow-sm";
-      btnGrid.className = "boss-view-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5";
-    } else {
-      btnGrid.className = "boss-view-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition flex items-center gap-1.5 shadow-sm";
-      btnTable.className = "boss-view-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5";
-    }
-  }
-
-  const now = getBossNow();
-  const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
-  let aliveCount = 0;
-  let soonCount = 0;
-
-  const bossStatuses = bossList.map(boss => {
-    // ใช้ helper getBossNextSpawn() เพื่อรวมตรรกะคำนวณเวลากำเนิดไว้ที่เดียว
-    let nextSpawn = getBossNextSpawn(boss);
-
-    let status = 'unrecorded'; // 'alive' | 'soon' | 'cooldown' | 'unrecorded'
-    let diffMs = null;
-
-    if (nextSpawn && !isNaN(nextSpawn.getTime())) {
-      diffMs = nextSpawn.getTime() - now.getTime();
-      if (diffMs <= 0) {
-        status = 'alive';
-        aliveCount++;
-      } else if (diffMs <= 30 * 60 * 1000) {
-        status = 'soon';
-        soonCount++;
-      } else {
-        status = 'cooldown';
-      }
-    }
-
-    const hrUnit = isEn ? ' hrs' : ' ชม.';
-    return {
-      ...boss,
-      timer: bossTimerData[boss.id] || {},
-      nextSpawn,
-      status,
-      diffMs,
-      respawnLabel: boss.respawnType === 'interval' ? (boss.intervalHours + hrUnit) : (boss.scheduleText || 'Fixed'),
-      sourceLabel: getBossTimerSourceLabel(boss, bossTimerData[boss.id] || {}, isEn)
-    };
-  });
-
-  // Update Badges
-  const aliveBadge = document.getElementById('badge-boss-alive-count');
-  const aliveBadgeHub = document.getElementById('badge-boss-alive-count-hub');
-  [aliveBadge, aliveBadgeHub].forEach(badge => {
-    if (badge) {
-      if (aliveCount > 0) {
-        badge.textContent = aliveCount;
-        badge.classList.remove('hidden');
-      } else {
-        badge.classList.add('hidden');
-      }
-    }
-  });
-
-  const statAlive = document.getElementById('stat-boss-alive-count');
-  if (statAlive) statAlive.textContent = aliveCount;
-
-  const statSoon = document.getElementById('stat-boss-soon-count');
-  if (statSoon) statSoon.textContent = soonCount;
-
-  const statTotal = document.getElementById('stat-boss-total-count');
-  if (statTotal) statTotal.textContent = bossList.length;
-
-  // Filter & Search
-  let filtered = bossStatuses.filter(b => {
-    if (currentBossFilter === 'alive' && b.status !== 'alive') return false;
-    if (currentBossFilter === 'soon' && b.status !== 'soon') return false;
-    if (currentBossFilter === 'cooldown' && b.status !== 'cooldown') return false;
-    if (currentBossFilter === 'fixed' && b.respawnType !== 'fixed') return false;
-    if (currentBossFilter === 'interval' && b.respawnType !== 'interval') return false;
-
-    if (currentBossSearch) {
-      const q = currentBossSearch.toLowerCase();
-      const matchName = b.name.toLowerCase().includes(q);
-      const matchMap = (b.map || '').toLowerCase().includes(q);
-      const matchLv = (b.level || '').toLowerCase().includes(q);
-      if (!matchName && !matchMap && !matchLv) return false;
-    }
-    return true;
-  });
-
-  // Sort: Alive first, then Soon, then Cooldown by nearest nextSpawn, then Unrecorded
-  filtered.sort((a, b) => {
-    const order = { alive: 1, soon: 2, cooldown: 3, unrecorded: 4 };
-    if (order[a.status] !== order[b.status]) {
-      return order[a.status] - order[b.status];
-    }
-    if (a.diffMs !== null && b.diffMs !== null) {
-      return a.diffMs - b.diffMs;
-    }
-    return 0;
-  });
-
-  if (filtered.length === 0) {
-    const emptyMsg = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en')
-      ? 'No bosses found matching your search criteria'
-      : 'ไม่พบบอสที่ตรงกับเงื่อนไขการค้นหา';
-    container.className = "w-full py-12 text-center text-slate-500";
-    container.innerHTML = `
-      <i class="fa-solid fa-dragon text-4xl mb-2 text-slate-700"></i>
-      <p class="text-xs">${emptyMsg}</p>
-    `;
-    return;
-  }
-
-  // Set of Guild Activity / Scoring Bosses
-  const GUILD_SCORING_BOSS_IDS = new Set([
-    'lucus', 'bahel', 'libitina', 'rakajeth', 'tumier', 'nevaeh', 'icaruthia', 'motti', 'guild_arena', 'camalia', 'world_boss', 'reddevil_guild_boss'
-  ]);
-
-  const isAdminActive = (typeof isBossTimerAdmin !== 'undefined' && isBossTimerAdmin());
-
-  function isHighLevelBoss(levelStr, bossId, bossName) {
-    if (bossId === 'world_boss' || (bossName && /world boss|arene|guild boss/i.test(bossName))) return true;
-    if (!levelStr) return false;
-    const nums = String(levelStr).match(/\d+/g);
-    if (nums && nums.some(n => Number(n) >= 100)) return true;
-    return false;
-  }
-
-  // Sync toolbar admin controls
-  const maintBtn = document.getElementById('btn-boss-maint-top');
-  const pasteHint = document.getElementById('boss-paste-hint');
-  const integrationsBtn = document.getElementById('btn-boss-integrations-top');
-  const isSuperAdminActive = (typeof isSuperAdmin !== 'undefined' && isSuperAdmin);
-
-  if (maintBtn) {
-    if (isAdminActive) {
-      maintBtn.classList.remove('hidden');
-      maintBtn.classList.add('inline-flex');
-    } else {
-      maintBtn.classList.add('hidden');
-      maintBtn.classList.remove('inline-flex');
-    }
-  }
-  if (pasteHint) {
-    if (isAdminActive) {
-      pasteHint.classList.remove('hidden');
-      pasteHint.classList.add('md:inline');
-    } else {
-      pasteHint.classList.add('hidden');
-      pasteHint.classList.remove('md:inline');
-    }
-  }
-  if (integrationsBtn) {
-    if (isSuperAdminActive) {
-      integrationsBtn.classList.remove('hidden');
-      integrationsBtn.classList.add('inline-flex');
-    } else {
-      integrationsBtn.classList.add('hidden');
-      integrationsBtn.classList.remove('inline-flex');
-    }
-  }
-
 // Multi-select state for game chat copy
 let selectedBossIds = new Set();
 
@@ -1087,6 +915,178 @@ async function copySelectedBossesToGameChat() {
     openGameChatCopyPreviewModal(fullText);
   }
 }
+
+// Render Boss Cards or Table
+function renderBossTimerCards() {
+  const container = document.getElementById('boss-cards-grid');
+  if (!container) return;
+  if (!Array.isArray(bossList) || bossList.length === 0) {
+    rebuildBossList();
+  }
+
+  // Update View Mode Toggle Buttons UI
+  const btnGrid = document.getElementById('btn-view-grid');
+  const btnTable = document.getElementById('btn-view-table');
+  if (btnGrid && btnTable) {
+    if (currentBossViewMode === 'table') {
+      btnTable.className = "boss-view-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition flex items-center gap-1.5 shadow-sm";
+      btnGrid.className = "boss-view-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5";
+    } else {
+      btnGrid.className = "boss-view-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition flex items-center gap-1.5 shadow-sm";
+      btnTable.className = "boss-view-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5";
+    }
+  }
+
+  const now = getBossNow();
+  const isEn = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en');
+  let aliveCount = 0;
+  let soonCount = 0;
+
+  const bossStatuses = bossList.map(boss => {
+    // ใช้ helper getBossNextSpawn() เพื่อรวมตรรกะคำนวณเวลากำเนิดไว้ที่เดียว
+    let nextSpawn = getBossNextSpawn(boss);
+
+    let status = 'unrecorded'; // 'alive' | 'soon' | 'cooldown' | 'unrecorded'
+    let diffMs = null;
+
+    if (nextSpawn && !isNaN(nextSpawn.getTime())) {
+      diffMs = nextSpawn.getTime() - now.getTime();
+      if (diffMs <= 0) {
+        status = 'alive';
+        aliveCount++;
+      } else if (diffMs <= 30 * 60 * 1000) {
+        status = 'soon';
+        soonCount++;
+      } else {
+        status = 'cooldown';
+      }
+    }
+
+    const hrUnit = isEn ? ' hrs' : ' ชม.';
+    return {
+      ...boss,
+      timer: bossTimerData[boss.id] || {},
+      nextSpawn,
+      status,
+      diffMs,
+      respawnLabel: boss.respawnType === 'interval' ? (boss.intervalHours + hrUnit) : (boss.scheduleText || 'Fixed'),
+      sourceLabel: getBossTimerSourceLabel(boss, bossTimerData[boss.id] || {}, isEn)
+    };
+  });
+
+  // Update Badges
+  const aliveBadge = document.getElementById('badge-boss-alive-count');
+  const aliveBadgeHub = document.getElementById('badge-boss-alive-count-hub');
+  [aliveBadge, aliveBadgeHub].forEach(badge => {
+    if (badge) {
+      if (aliveCount > 0) {
+        badge.textContent = aliveCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+  });
+
+  const statAlive = document.getElementById('stat-boss-alive-count');
+  if (statAlive) statAlive.textContent = aliveCount;
+
+  const statSoon = document.getElementById('stat-boss-soon-count');
+  if (statSoon) statSoon.textContent = soonCount;
+
+  const statTotal = document.getElementById('stat-boss-total-count');
+  if (statTotal) statTotal.textContent = bossList.length;
+
+  // Filter & Search
+  let filtered = bossStatuses.filter(b => {
+    if (currentBossFilter === 'alive' && b.status !== 'alive') return false;
+    if (currentBossFilter === 'soon' && b.status !== 'soon') return false;
+    if (currentBossFilter === 'cooldown' && b.status !== 'cooldown') return false;
+    if (currentBossFilter === 'fixed' && b.respawnType !== 'fixed') return false;
+    if (currentBossFilter === 'interval' && b.respawnType !== 'interval') return false;
+
+    if (currentBossSearch) {
+      const q = currentBossSearch.toLowerCase();
+      const matchName = b.name.toLowerCase().includes(q);
+      const matchMap = (b.map || '').toLowerCase().includes(q);
+      const matchLv = (b.level || '').toLowerCase().includes(q);
+      if (!matchName && !matchMap && !matchLv) return false;
+    }
+    return true;
+  });
+
+  // Sort: Alive first, then Soon, then Cooldown by nearest nextSpawn, then Unrecorded
+  filtered.sort((a, b) => {
+    const order = { alive: 1, soon: 2, cooldown: 3, unrecorded: 4 };
+    if (order[a.status] !== order[b.status]) {
+      return order[a.status] - order[b.status];
+    }
+    if (a.diffMs !== null && b.diffMs !== null) {
+      return a.diffMs - b.diffMs;
+    }
+    return 0;
+  });
+
+  if (filtered.length === 0) {
+    const emptyMsg = (typeof window.currentLang !== 'undefined' && window.currentLang === 'en')
+      ? 'No bosses found matching your search criteria'
+      : 'ไม่พบบอสที่ตรงกับเงื่อนไขการค้นหา';
+    container.className = "w-full py-12 text-center text-slate-500";
+    container.innerHTML = `
+      <i class="fa-solid fa-dragon text-4xl mb-2 text-slate-700"></i>
+      <p class="text-xs">${emptyMsg}</p>
+    `;
+    return;
+  }
+
+  // Set of Guild Activity / Scoring Bosses
+  const GUILD_SCORING_BOSS_IDS = new Set([
+    'lucus', 'bahel', 'libitina', 'rakajeth', 'tumier', 'nevaeh', 'icaruthia', 'motti', 'guild_arena', 'camalia', 'world_boss', 'reddevil_guild_boss'
+  ]);
+
+  const isAdminActive = (typeof isBossTimerAdmin !== 'undefined' && isBossTimerAdmin());
+
+  function isHighLevelBoss(levelStr, bossId, bossName) {
+    if (bossId === 'world_boss' || (bossName && /world boss|arene|guild boss/i.test(bossName))) return true;
+    if (!levelStr) return false;
+    const nums = String(levelStr).match(/\d+/g);
+    if (nums && nums.some(n => Number(n) >= 100)) return true;
+    return false;
+  }
+
+  // Sync toolbar admin controls
+  const maintBtn = document.getElementById('btn-boss-maint-top');
+  const pasteHint = document.getElementById('boss-paste-hint');
+  const integrationsBtn = document.getElementById('btn-boss-integrations-top');
+  const isSuperAdminActive = (typeof isSuperAdmin !== 'undefined' && isSuperAdmin);
+
+  if (maintBtn) {
+    if (isAdminActive) {
+      maintBtn.classList.remove('hidden');
+      maintBtn.classList.add('inline-flex');
+    } else {
+      maintBtn.classList.add('hidden');
+      maintBtn.classList.remove('inline-flex');
+    }
+  }
+  if (pasteHint) {
+    if (isAdminActive) {
+      pasteHint.classList.remove('hidden');
+      pasteHint.classList.add('md:inline');
+    } else {
+      pasteHint.classList.add('hidden');
+      pasteHint.classList.remove('md:inline');
+    }
+  }
+  if (integrationsBtn) {
+    if (isSuperAdminActive) {
+      integrationsBtn.classList.remove('hidden');
+      integrationsBtn.classList.add('inline-flex');
+    } else {
+      integrationsBtn.classList.add('hidden');
+      integrationsBtn.classList.remove('inline-flex');
+    }
+  }
 
   // ================= RENDER MODE: TABLE VIEW =================
   if (currentBossViewMode === 'table') {
