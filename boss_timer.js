@@ -3064,95 +3064,6 @@ function sendBossKillDiscordAlert(killLogEntry) {
   }
 }
 
-// Check & Send Realtime Discord Spawn Alerts (5-Min Soon Warning & Spawned Alert)
-async function checkAndSendDiscordSpawnAlerts() {
-  if (!bossDiscordWebhookUrl) return;
-
-  const now = getBossNow();
-  const nowMs = now.getTime();
-
-  // ล้าง sentDiscordAlerts ที่เก่าเกินไป (spawn ที่ผ่านไปแล้วเกิน 30 นาที)
-  // เพื่อไม่ให้ Set โตขึ้นเรื่อยๆ โดยไม่มีขีดจำกัด
-  const expiredKeys = [];
-  sentDiscordAlerts.forEach(key => {
-    // รูปแบบ key: `${bossId}_5m_${spawnUnix}` หรือ `${bossId}_spawned_${spawnUnix}`
-    const parts = key.split('_');
-    const spawnUnix = Number(parts[parts.length - 1]);
-    if (!isNaN(spawnUnix) && (spawnUnix * 1000) < (nowMs - 30 * 60 * 1000)) {
-      expiredKeys.push(key);
-    }
-  });
-  expiredKeys.forEach(k => sentDiscordAlerts.delete(k));
-
-  // สร้างข้อความ @mention จาก Role ID ที่ตั้งค่าไว้ (ไม่ hardcode)
-  const roleMention = bossDiscordRoleId ? `<@&${bossDiscordRoleId}>` : '';
-
-  for (const boss of bossList) {
-    // ใช้ helper getBossNextSpawn() เพื่อรวมตรรกะคำนวณเวลากำเนิดไว้ที่เดียว
-    let nextSpawn = getBossNextSpawn(boss);
-
-    if (!nextSpawn || isNaN(nextSpawn.getTime())) continue;
-
-    const diffMs = nextSpawn.getTime() - nowMs;
-    const spawnUnix = Math.floor(nextSpawn.getTime() / 1000);
-    const pad = n => String(n).padStart(2, '0');
-    const timeHHmm = formatBangkokClock(nextSpawn);
-    const bossDisplayName = `Lv.${boss.level || '??'}, ${boss.name}`;
-
-    // 🟡 1. แจ้งเตือนก่อนเกิด 5 นาที (เหลือ 0 ถึง 5 นาที)
-    if (diffMs > 0 && diffMs <= BOSS_WARNING_WINDOW_MS) {
-      const alertKey = `${boss.id}_5m_${spawnUnix}`;
-      if (!sentDiscordAlerts.has(alertKey)) {
-        sentDiscordAlerts.add(alertKey);
-        if (typeof fbDb !== 'undefined' && fbDb) {
-          fbDb.ref(`guild_app/sent_discord_alerts/${alertKey}`).set(Date.now());
-        }
-
-        const embed5m = {
-          color: 0xFFD700, // สีเหลืองทอง
-          author: { name: 'LORDNINE S.6' },
-          title: `⏳ SOON • ${bossDisplayName}`,
-          description: `# 🕖 ${timeHHmm}\n\n> ▎ 🗺️ **Map**: \`${boss.map || '-'}\`\n> ▎ ⏳ **Get ready!** Boss spawns in 5 minutes (<t:${spawnUnix}:R>)`,
-          footer: { text: '🛡️ LORD NINE SYSTEM • Dashboard RedDevil' },
-          timestamp: nextSpawn.toISOString()
-        };
-        // ใส่ thumbnail เฉพาะเมื่อ avatar เป็น URL http/https จริง (Discord ไม่รับ base64 data URI)
-        if (boss.avatar && /^https?:\/\//i.test(boss.avatar)) {
-          embed5m.thumbnail = { url: boss.avatar };
-        }
-
-        sendDiscordWebhookPayload({ content: roleMention, embeds: [embed5m] });
-      }
-    }
-
-    // 🔴 2. แจ้งเตือนเมื่อบอสเกิดแล้ว (เมื่อเลยเวลาเกิดมาไม่เกิน 15 นาที)
-    if (diffMs <= 0 && diffMs >= -15 * 60 * 1000) {
-      const alertKey = `${boss.id}_spawned_${spawnUnix}`;
-      if (!sentDiscordAlerts.has(alertKey)) {
-        sentDiscordAlerts.add(alertKey);
-        if (typeof fbDb !== 'undefined' && fbDb) {
-          fbDb.ref(`guild_app/sent_discord_alerts/${alertKey}`).set(Date.now());
-        }
-
-        const embedSpawned = {
-          color: 0xFF2A2A, // สีแดงสด
-          author: { name: 'LORDNINE S.6' },
-          title: `🔴 SPAWN • ${bossDisplayName}`,
-          description: `# 🕖 ${timeHHmm}\n\n> ▎ 🗺️ **Map**: \`${boss.map || '-'}\`\n> ▎ 🚨 **Boss has spawned!** Hunt it now`,
-          footer: { text: '🛡️ LORD NINE SYSTEM • Dashboard RedDevil' },
-          timestamp: now.toISOString()
-        };
-        // ใส่ thumbnail เฉพาะเมื่อ avatar เป็น URL http/https จริง (Discord ไม่รับ base64 data URI)
-        if (boss.avatar && /^https?:\/\//i.test(boss.avatar)) {
-          embedSpawned.thumbnail = { url: boss.avatar };
-        }
-
-        sendDiscordWebhookPayload({ content: roleMention, embeds: [embedSpawned] });
-      }
-    }
-  }
-}
-
 // Test Discord Webhook
 async function testDiscordWebhook() {
   const input = document.getElementById('discord-webhook-url-input');
@@ -3362,7 +3273,6 @@ window.openSheetWebhookSettingsModal = openSheetWebhookSettingsModal;
 window.closeSheetWebhookSettingsModal = closeSheetWebhookSettingsModal;
 window.saveSheetWebhookUrl = saveSheetWebhookUrl;
 window.sendKillLogToGoogleSheet = sendKillLogToGoogleSheet;
-window.checkAndSendDiscordSpawnAlerts = checkAndSendDiscordSpawnAlerts;
 window.testDiscordWebhook = testDiscordWebhook;
 window.updateWebhookStatusUi = updateWebhookStatusUi;
 

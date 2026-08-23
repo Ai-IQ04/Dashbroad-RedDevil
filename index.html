@@ -3183,6 +3183,41 @@
       transform: translateY(-1px);
     }
 
+    /* ===== Unified Dark Mode Orange Icons (ไอคอนทั้งหมดในโหมดมืด) ===== */
+    body.neo-dark i.fa-discord,
+    body.neo-dark .fa-brands.fa-discord,
+    body.neo-dark i[class*="text-amber-"],
+    body.neo-dark i[class*="text-orange-"],
+    body.neo-dark i[class*="text-yellow-"],
+    body.neo-dark i[class*="text-indigo-"],
+    body.neo-dark i[class*="text-purple-"],
+    body.neo-dark span[class*="text-amber-"]>i,
+    body.neo-dark span[class*="text-orange-"]>i,
+    body.neo-dark div[class*="text-amber-"]>i,
+    body.neo-dark div[class*="text-orange-"]>i,
+    body.neo-dark div[class*="text-indigo-"]>i,
+    body.neo-dark #scoring-sub-header i.fa-calendar-week,
+    body.neo-dark #btn-discord-modal-top i,
+    body.neo-dark #discord-registrations-modal .fa-discord,
+    body.neo-dark #member-hub-container i,
+    body.neo-dark [id$="-modal"] .h-10>i,
+    body.neo-dark [id$="-modal"] .h-11>i,
+    body.neo-dark [id$="-modal"] .h-9>i,
+    body.neo-dark [id$="-modal"] .w-10>i,
+    body.neo-dark [id$="-modal"] div[class*="rounded-xl"]>i,
+    body.neo-dark [id$="-modal"] div[class*="rounded-2xl"]>i {
+      color: #fb923c !important;
+      -webkit-text-fill-color: #fb923c !important;
+    }
+
+    /* กล่องพื้นหลังไอคอน Discord / Modal Header ในโหมดมืด */
+    body.neo-dark #discord-registrations-modal div[class*="bg-indigo-600/30"],
+    body.neo-dark [id$="-modal"] div[class*="bg-purple-500/20"],
+    body.neo-dark [id$="-modal"] div[class*="from-indigo-950"] {
+      background: linear-gradient(145deg, rgba(249, 115, 22, 0.2), rgba(194, 65, 12, 0.25)) !important;
+      border-color: rgba(253, 186, 116, 0.4) !important;
+    }
+
     /* ===== Dark Mode Segmented Nav Switcher (เช็คชื่อ & บอสไทม์เมอร์) ===== */
     /* แคปซูลด้านนอก (Outer Well) */
     body.neo-dark header div[class*="bg-slate-900/95"],
@@ -21796,7 +21831,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
   <!-- Tesseract.js & Boss Timer Script (with cache-busting) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="boss_timer.js?v=7.8"></script>
+  <script src="boss_timer.js?v=7.9"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof initBossTimerModule === 'function') {
@@ -21871,6 +21906,7 @@ Output strictly valid JSON with no markdown formatting.`;
 </body>
 
 </html>
+
 
 
 
