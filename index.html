@@ -9229,8 +9229,8 @@
     // Google Sheets is used as an ingestion/backup destination.
     // Realtime database is managed by Firebase.
     const GOOGLE_SHEET_ID = '1q-pBcNrc7gNpOg28Zq5D8yYOuMqCk8WD8nWP-SyToqA';
-    const GOOGLE_SHEETS_SYNC_URL = window.GOOGLE_SHEETS_SYNC_URL || '';
-    const GOOGLE_SHEETS_SYNC_TOKEN = window.GOOGLE_SHEETS_SYNC_TOKEN || '';
+    const GOOGLE_SHEETS_SYNC_URL = window.GOOGLE_SHEETS_SYNC_URL || 'https://script.google.com/macros/s/AKfycbzqZhY2SZRMFSkpsr9ragIJx-OPLHQTbU1S7DPZ2oCewXDL6ocsSkJOmwkEpsbt7Jb3/exec';
+    const GOOGLE_SHEETS_SYNC_TOKEN = window.GOOGLE_SHEETS_SYNC_TOKEN || 'f269e32f78187948e65f92272a6446c4b250133471c406e8cb50423ef02fe8c0';
     const GOOGLE_SHEETS_BACKUP_MS = 60000; // 1 minute
     let googleSheetsSyncTimer = null;
     let googleSheetsPollTimer = null;
