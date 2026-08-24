@@ -407,6 +407,35 @@ process.on('uncaughtException', (err) => {
   console.error('⚠️ [Uncaught Exception]:', err);
 });
 
+/**
+ * ⚡ ฟังก์ชันส่งข้อความเข้าห้อง Discord โดยตรงผ่าน Discord REST API (Direct HTTP POST)
+ * ข้อดี: ทำงานได้ทันที ไม่ต้องรอ WebSocket Gateway และไม่ติดขัดปัญหา Network บน Cloud
+ */
+async function sendDiscordMessageDirect({ channelId, content, embeds }) {
+  const token = CONFIG.DISCORD_BOT_TOKEN;
+  if (!token) throw new Error('ไม่มี Discord Token');
+
+  const url = `https://discord.com/api/v10/channels/${channelId}/messages`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bot ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      content: content || undefined,
+      embeds: embeds || []
+    })
+  });
+
+  if (!response.ok) {
+    const errBody = await response.text().catch(() => '');
+    throw new Error(`Discord REST HTTP ${response.status}: ${errBody}`);
+  }
+
+  return await response.json();
+}
+
 let outboundAlertsInProgress = false;
 async function checkOutboundAlertsCommand() {
   if (outboundAlertsInProgress) return;
@@ -422,44 +451,64 @@ async function checkOutboundAlertsCommand() {
     for (const [key, item] of Object.entries(data)) {
       if (!item) continue;
       const targetChannelId = item.channelId || CONFIG.ADMIN_REQUEST_CHANNEL_ID || '1541279270096212068';
-      let channel = null;
+
+      const fallbackRole = CONFIG.ADMIN_ROLE_ID ? `<@&${CONFIG.ADMIN_ROLE_ID}>` : '<@&1508502265097621544>';
+      let content = (item.content !== undefined && item.content !== null && item.content !== '') ? item.content : (item.mentionTag || fallbackRole);
+      // แก้ไขกรณี tag มี typo เช่น <a& เป็น <@&
+      if (typeof content === 'string' && content.startsWith('<a&')) {
+        content = content.replace(/^<a&/, '<@&');
+      }
+
+      const embedObj = {
+        title: item.title || '🔔 มีคำขอใหม่จากสมาชิก',
+        color: Number(item.color) || 0x3B82F6,
+        description: item.description || undefined,
+        timestamp: item.timestamp ? new Date(item.timestamp).toISOString() : new Date().toISOString(),
+        footer: { text: '🛡️ LORD NINE SYSTEM • Dashboard RedDevil' },
+        fields: Array.isArray(item.fields) ? item.fields.map(f => ({
+          name: String(f.name || ''),
+          value: String(f.value || ''),
+          inline: Boolean(f.inline)
+        })) : []
+      };
+
+      let sent = false;
+      // พยายามส่งผ่าน Direct REST API ก่อนเพื่อความรวดเร็วสูงสุด
       try {
-        channel = await client.channels.fetch(targetChannelId).catch(() => null);
-      } catch (chErr) {
-        console.warn(`⚠️ ไม่สามารถเข้าถึงห้องแจ้งเตือน ID ${targetChannelId}:`, chErr.message);
+        await sendDiscordMessageDirect({
+          channelId: targetChannelId,
+          content: content || undefined,
+          embeds: [embedObj]
+        });
+        console.log(`📤 [Direct REST Alert] ส่งแจ้งเตือนคำขอเข้าห้อง ${targetChannelId} เรียบร้อยแล้ว (Mention: ${content})`);
+        sent = true;
+      } catch (restErr) {
+        console.warn(`⚠️ [Direct REST Alert] ส่งผ่าน REST ไม่สำเร็จ (${restErr.message}) กำลังลองผ่าน Discord Client...`);
       }
 
-      if (channel && channel.isTextBased()) {
-        const embed = new EmbedBuilder()
-          .setTitle(item.title || '🔔 มีคำขอใหม่จากสมาชิก')
-          .setColor(item.color || 0x3B82F6)
-          .setTimestamp(item.timestamp ? new Date(item.timestamp) : new Date())
-          .setFooter({ text: '🛡️ LORD NINE SYSTEM • Dashboard RedDevil' });
-
-        if (Array.isArray(item.fields)) {
-          item.fields.forEach(f => {
-            if (f.name && f.value) embed.addFields({ name: String(f.name), value: String(f.value), inline: Boolean(f.inline) });
-          });
-        }
-        if (item.description) embed.setDescription(item.description);
-
-        const fallbackRole = CONFIG.ADMIN_ROLE_ID ? `<@&${CONFIG.ADMIN_ROLE_ID}>` : '<@&1508502265097621544>';
-        let content = (item.content !== undefined && item.content !== null && item.content !== '') ? item.content : (item.mentionTag || fallbackRole);
-        // แก้ไขกรณี tag มี typo เช่น <a& เป็น <@&
-        if (typeof content === 'string' && content.startsWith('<a&')) {
-          content = content.replace(/^<a&/, '<@&');
-        }
-
+      // Fallback: หาก REST มีปัญหา ลองส่งผ่าน Client ปกติ
+      if (!sent) {
         try {
-          await channel.send({ content: content || undefined, embeds: [embed] });
-          console.log(`📤 [Bot Alert] ส่งแจ้งเตือนคำขอเข้าห้อง ${targetChannelId} เรียบร้อยแล้ว (Mention: ${content})`);
-        } catch (sendErr) {
-          console.error(`❌ ไม่สามารถส่งข้อความเข้าห้อง ${targetChannelId} ได้:`, sendErr.message);
+          const channel = await client.channels.fetch(targetChannelId).catch(() => null);
+          if (channel && channel.isTextBased()) {
+            const embed = new EmbedBuilder()
+              .setTitle(embedObj.title)
+              .setColor(embedObj.color)
+              .setTimestamp(new Date(embedObj.timestamp))
+              .setFooter(embedObj.footer);
+            if (embedObj.description) embed.setDescription(embedObj.description);
+            embedObj.fields.forEach(f => embed.addFields(f));
+
+            await channel.send({ content: content || undefined, embeds: [embed] });
+            console.log(`📤 [Client Alert] ส่งแจ้งเตือนคำขอเข้าห้อง ${targetChannelId} เรียบร้อยแล้ว`);
+            sent = true;
+          }
+        } catch (clientErr) {
+          console.error(`❌ [Client Alert] ไม่สามารถส่งผ่าน Client ได้เช่นกัน:`, clientErr.message);
         }
-      } else {
-        console.warn(`⚠️ [Bot Alert] ไม่พบห้องข้อความ ID: ${targetChannelId} (อาจไม่มีสิทธิ์เข้าห้องหรือ ID ผิด)`);
       }
 
+      // ลบคำขอออกจากคิวเมื่อดำเนินการแล้ว
       await fetch(`${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/outbound_alerts/${key}.json`, {
         method: 'DELETE'
       }).catch(() => {});
@@ -480,20 +529,11 @@ async function handleBotReady() {
   console.log(`📢 ห้องแจ้งเตือนคำขอ Admin: ${CONFIG.ADMIN_REQUEST_CHANNEL_ID || '1541279270096212068'}`);
   console.log('====================================================');
 
-  // ส่ง Heartbeat ทันที
-  await sendHeartbeat().catch(() => {});
-
-  // เริ่มต้นระบบตรวจจับคำขอและการซิงค์แบบ Real-time ทันที (Non-blocking)
-  setInterval(checkOutboundAlertsCommand, 3000);
-  setInterval(checkFirebaseSyncCommand, SYNC_POLL_INTERVAL_MS);
-  checkOutboundAlertsCommand().catch(e => console.warn('⚠️ Init alert poll error:', e.message));
-  checkFirebaseSyncCommand().catch(e => console.warn('⚠️ Init sync poll error:', e.message));
-
   // รันงานพื้นหลัง: สแกนประวัติการลงทะเบียน และซิงค์สมาชิกในเซิร์ฟเวอร์
   scanRegistrationHistory().catch(e => console.warn('⚠️ Scan registration error:', e.message));
   syncDiscordServerMembers().catch(e => console.warn('⚠️ Sync members error:', e.message));
 
-  // ซิงค์รายชื่อสมาชิก Discord และส่ง Heartbeat ทุกๆ 30 วินาที
+  // ซิงค์รายชื่อสมาชิก Discord ทุกๆ 30 วินาที
   setInterval(async () => {
     try {
       await syncDiscordServerMembers();
@@ -505,6 +545,16 @@ async function handleBotReady() {
 
 client.once('ready', handleBotReady);
 client.once('clientReady', handleBotReady);
+
+// 🚀 เริ่มต้นระบบตรวจจับคำขอ ซิงค์คำสั่ง และส่ง Heartbeat ทันทีตั้งแต่วินาทีแรก (Instant 24/7 Engine)
+console.log('⚡ [Instant Engine] เริ่มต้นระบบตรวจจับคำขอ Real-time Poller และ Heartbeat ทันที...');
+setInterval(checkOutboundAlertsCommand, 3000);
+setInterval(checkFirebaseSyncCommand, SYNC_POLL_INTERVAL_MS);
+setInterval(() => sendHeartbeat().catch(() => {}), 15000);
+
+sendHeartbeat().catch(() => {});
+checkOutboundAlertsCommand().catch(() => {});
+checkFirebaseSyncCommand().catch(() => {});
 
 // 👥 ดักฟังสมาชิกเข้าใหม่ / อัปเดตชื่อใน Discord
 client.on('guildMemberAdd', async (member) => {
@@ -537,7 +587,7 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-// 🚀 เริ่มต้นล็อกอิน Discord
+// 🚀 เริ่มต้นล็อกอิน Discord Gateway (Background Process)
 if (CONFIG.DISCORD_BOT_TOKEN && !CONFIG.DISCORD_BOT_TOKEN.startsWith('วาง_')) {
   console.log('🔄 กำลังเชื่อมต่อ Discord Gateway...');
   client.login(CONFIG.DISCORD_BOT_TOKEN)
