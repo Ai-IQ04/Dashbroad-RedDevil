@@ -10405,6 +10405,17 @@
         }
       });
 
+      // 13a. ดักฟังคำขอรีเซ็ตรหัส PIN (PIN Reset Requests)
+      fbDb.ref('guild_app/pin_reset_requests').on('value', snapshot => {
+        const val = snapshot.val();
+        if (Array.isArray(val)) {
+          pinResetRequests = val;
+          localStorage.setItem('guild_pin_reset_requests', JSON.stringify(pinResetRequests));
+          updateRewardPendingBadge();
+          if (typeof renderRewardApprovalList === 'function') renderRewardApprovalList();
+        }
+      });
+
       // 13b. ดักฟังการตั้งค่าสัปดาห์ที่นับแต้ม (Store Week Config)
       fbDb.ref('guild_app/store_week_config').on('value', snapshot => {
         const val = snapshot.val();
@@ -19928,6 +19939,7 @@ Output strictly valid JSON with no markdown formatting.`;
     let storeRewards = parseLocalStorageJson('guild_reward_store_items', DEFAULT_STORE_REWARDS);
     let storeRewardLogs = parseLocalStorageJson('guild_reward_store_logs', []);
     let memberPins = parseLocalStorageJson('guild_member_pins', {});
+    let pinResetRequests = parseLocalStorageJson('guild_pin_reset_requests', []);
     // ✅ กำหนดสัปดาห์ที่นับแต้มสำหรับแลกไอเทม (Admin ตั้งค่าได้)
     let storeWeekConfig = parseLocalStorageJson('guild_store_week_config', { 1: true, 2: true, 3: true, 4: true });
     let uploadedStoreImageBase64 = null;
@@ -19937,19 +19949,24 @@ Output strictly valid JSON with no markdown formatting.`;
       localStorage.setItem('guild_reward_store_items', JSON.stringify(storeRewards));
       localStorage.setItem('guild_reward_store_logs', JSON.stringify(storeRewardLogs));
       localStorage.setItem('guild_store_week_config', JSON.stringify(storeWeekConfig));
+      localStorage.setItem('guild_pin_reset_requests', JSON.stringify(pinResetRequests));
       updateRewardPendingBadge();
       if (typeof saveData === 'function') saveData();
       if (fbDb) {
         fbDb.ref('guild_app/reward_store_items').set(storeRewards);
         fbDb.ref('guild_app/reward_store_logs').set(storeRewardLogs);
         fbDb.ref('guild_app/store_week_config').set(storeWeekConfig);
+        fbDb.ref('guild_app/pin_reset_requests').set(pinResetRequests);
       }
     }
 
     function saveMemberPins() {
       localStorage.setItem('guild_member_pins', JSON.stringify(memberPins));
+      localStorage.setItem('guild_pin_reset_requests', JSON.stringify(pinResetRequests));
+      updateRewardPendingBadge();
       if (fbDb) {
         fbDb.ref('guild_app/member_pins').set(memberPins);
+        fbDb.ref('guild_app/pin_reset_requests').set(pinResetRequests);
       }
     }
 
@@ -20072,8 +20089,10 @@ Output strictly valid JSON with no markdown formatting.`;
       const badge = document.getElementById('reward-pending-badge');
       if (!badge) return;
       const pendingCount = (storeRewardLogs || []).filter(l => l.status === 'pending' || l.status === 'won_pending_delivery').length;
-      if (pendingCount > 0 && isAdmin) {
-        badge.textContent = pendingCount;
+      const pinReqCount = (pinResetRequests || []).filter(r => r.status === 'pending').length;
+      const totalPending = pendingCount + pinReqCount;
+      if (totalPending > 0 && isAdmin) {
+        badge.textContent = totalPending;
         badge.classList.remove('hidden');
       } else {
         badge.classList.add('hidden');
@@ -20526,12 +20545,15 @@ Output strictly valid JSON with no markdown formatting.`;
 
       const charName = member.characterName || member.name;
 
+      const forgotWrap = document.getElementById('member-pin-forgot-wrap');
+
       if (mode === 'set') {
         if (titleEl) titleEl.textContent = t('modal_pin_set_title');
         if (subtitleEl) subtitleEl.textContent = `ตั้งรหัส PIN 4 หลักเพื่อปกป้องคะแนนของตัวละคร "${charName}"`;
         if (labelEl) labelEl.textContent = t('pin_label_set', { name: charName });
         if (confirmBox) confirmBox.classList.remove('hidden');
         if (hintBox) hintBox.classList.remove('hidden');
+        if (forgotWrap) forgotWrap.classList.add('hidden');
         if (submitBtn) submitBtn.innerHTML = `<i class="fa-solid fa-key"></i> <span>${t('btn_set_pin')}</span>`;
       } else {
         if (titleEl) titleEl.textContent = t('modal_pin_title');
@@ -20539,6 +20561,7 @@ Output strictly valid JSON with no markdown formatting.`;
         if (labelEl) labelEl.textContent = t('pin_label_enter', { name: charName });
         if (confirmBox) confirmBox.classList.add('hidden');
         if (hintBox) hintBox.classList.add('hidden');
+        if (forgotWrap) forgotWrap.classList.remove('hidden');
         if (submitBtn) submitBtn.innerHTML = `<i class="fa-solid fa-lock-open"></i> <span>${t('btn_confirm_pin')}</span>`;
       }
 
@@ -20554,6 +20577,100 @@ Output strictly valid JSON with no markdown formatting.`;
         modal.classList.remove('flex');
       }
       activePinContext = null;
+    }
+
+    function requestMemberPinResetFromModal() {
+      if (!activePinContext || !activePinContext.member) return;
+      const m = activePinContext.member;
+      const charName = m.characterName || m.name;
+
+      // ตรวจสอบว่าเคยยื่นคำขอค้างไว้แล้วหรือไม่
+      const existingReq = (pinResetRequests || []).find(r => r.memberName === charName && r.status === 'pending');
+      if (existingReq) {
+        showToast(`ตัวละคร "${charName}" มียื่นคำขอรีเซ็ต PIN ค้างอยู่แล้ว กรุณารอ Admin ดำเนินการ`, 'info');
+        closePinModal();
+        return;
+      }
+
+      if (!confirm(`คุณต้องการส่งคำขอรีเซ็ตรหัส PIN ของตัวละคร "${charName}" ไปยัง Admin ใช่หรือไม่?\n\n(เมื่อ Admin อนุมัติ คุณจะสามารถตั้งรหัส PIN ใหม่ได้ทันที)`)) {
+        return;
+      }
+
+      const reqEntry = {
+        id: 'PIN-REQ-' + Date.now(),
+        memberName: charName,
+        guild: m.guild || 'Guild',
+        timestamp: Date.now(),
+        dateStr: new Date().toLocaleString('th-TH'),
+        status: 'pending'
+      };
+
+      if (!Array.isArray(pinResetRequests)) pinResetRequests = [];
+      pinResetRequests.unshift(reqEntry);
+      saveMemberPins();
+
+      if (typeof addAuditLog === 'function') {
+        addAuditLog(
+          'store',
+          `ยื่นคำขอรีเซ็ตรหัส PIN ประจำตัวละคร`,
+          `สมาชิกตัวละคร "${charName}" (${m.guild || 'Guild'}) แจ้งลืมรหัส PIN`,
+          charName
+        );
+      }
+
+      showToast(`ส่งคำขอรีเซ็ตรหัส PIN ของ "${charName}" ไปยัง Admin เรียบร้อยแล้ว!`, 'success');
+      closePinModal();
+      updateRewardPendingBadge();
+
+      sendMemberRequestDiscordAlert({
+        title: '🔑 มีคำขอรีเซ็ตรหัส PIN ประจำตัวละคร!',
+        color: 0xF59E0B,
+        fields: [
+          { name: '👤 ตัวละคร', value: `**${charName}** (${m.guild || 'Guild'})`, inline: true },
+          { name: '📝 รายละเอียด', value: `แจ้งลืมรหัส PIN และขอให้ Admin รีเซ็ตเพื่อตั้งใหม่`, inline: true },
+          { name: '🕒 เวลาที่ส่ง', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
+        ]
+      });
+    }
+
+    function approvePinResetRequest(reqId) {
+      if (!isAdmin) return;
+      const req = (pinResetRequests || []).find(x => x.id === reqId);
+      if (!req) return;
+
+      if (!confirm(`ยืนยันการอนุมัติรีเซ็ตรหัส PIN ของตัวละคร "${req.memberName}" หรือไม่?\n(สมาชิกจะสามารถตั้งรหัสใหม่ได้ทันที)`)) return;
+
+      delete memberPins[req.memberName];
+      pinResetRequests = pinResetRequests.filter(x => x.id !== reqId);
+      saveMemberPins();
+
+      if (typeof addAuditLog === 'function') {
+        addAuditLog(
+          'store',
+          `อนุมัติคำขอรีเซ็ตรหัส PIN ของตัวละคร "${req.memberName}"`,
+          `โดย Admin: ${currentAdminEmail || 'Admin'} (ล้าง PIN เดิมเรียบร้อย)`,
+          req.memberName
+        );
+      }
+
+      showToast(`อนุมัติรีเซ็ต PIN ของ "${req.memberName}" สำเร็จ สมาชิกตั้งรหัสใหม่ได้แล้ว`, 'success');
+      renderRewardApprovalList();
+      updateRewardPendingBadge();
+    }
+
+    function rejectPinResetRequest(reqId) {
+      if (!isAdmin) return;
+      const req = (pinResetRequests || []).find(x => x.id === reqId);
+      if (!req) return;
+
+      if (!confirm(`ปฏิเสธคำขอรีเซ็ต PIN ของ "${req.memberName}" ใช่หรือไม่?`)) return;
+
+      pinResetRequests = pinResetRequests.filter(x => x.id !== reqId);
+      saveMemberPins();
+
+      showToast(`ปฏิเสธคำขอรีเซ็ต PIN ของ "${req.memberName}" เรียบร้อยแล้ว`, 'info');
+      renderRewardApprovalList();
+      updateRewardPendingBadge();
     }
 
     function submitPinForm(e) {
@@ -20735,15 +20852,61 @@ Output strictly valid JSON with no markdown formatting.`;
       const pendingContainer = document.getElementById('reward-approval-pending-list');
       const deliveryContainer = document.getElementById('reward-approval-delivery-list');
       const processedContainer = document.getElementById('reward-approval-processed-list');
+      const pinSection = document.getElementById('reward-approval-pin-reset-section');
+      const pinContainer = document.getElementById('reward-approval-pin-reset-list');
+      const pinBadge = document.getElementById('reward-approval-pin-count-badge');
       const pendingBadge = document.getElementById('reward-approval-count-badge');
       if (!pendingContainer) return;
 
+      const activePinReqs = (pinResetRequests || []).filter(r => r.status === 'pending');
       const pendingList = (storeRewardLogs || []).filter(l => l.status === 'pending');
       const deliveryList = (storeRewardLogs || []).filter(l => l.status === 'won_pending_delivery');
       const processedList = (storeRewardLogs || []).filter(l => l.status === 'delivered' || l.status === 'rejected');
 
       if (pendingBadge) {
-        pendingBadge.textContent = `${pendingList.length + deliveryList.length} รายการ`;
+        pendingBadge.textContent = `${activePinReqs.length + pendingList.length + deliveryList.length} รายการ`;
+      }
+
+      // Render PIN Reset Requests
+      if (pinSection && pinContainer) {
+        if (activePinReqs.length > 0) {
+          pinSection.classList.remove('hidden');
+          if (pinBadge) pinBadge.textContent = `${activePinReqs.length} คำขอ`;
+          pinContainer.innerHTML = activePinReqs.map(req => {
+            return `
+              <div class="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-950 border border-amber-500/50 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-400/40 flex items-center justify-center text-lg shrink-0">
+                    <i class="fa-solid fa-key"></i>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm font-bold text-white">${escapeHtml(req.memberName)}</span>
+                      <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">${escapeHtml(req.guild || 'Guild')}</span>
+                      <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">ขอยื่นรีเซ็ตรหัส PIN</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-0.5 font-mono">
+                      เวลาที่ยื่นคำขอ: <span class="text-slate-300">${escapeHtml(req.dateStr || '')}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2 self-end sm:self-center">
+                  <button type="button" onclick="approvePinResetRequest('${req.id}')"
+                    class="apple-btn px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1.5 shadow-md transition active:scale-95">
+                    <i class="fa-solid fa-check"></i> <span>อนุมัติรีเซ็ต PIN</span>
+                  </button>
+                  <button type="button" onclick="rejectPinResetRequest('${req.id}')"
+                    class="apple-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-300 flex items-center gap-1 transition active:scale-95">
+                    <i class="fa-solid fa-xmark"></i> <span>ปฏิเสธ</span>
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          pinSection.classList.add('hidden');
+        }
       }
 
       // Group Pending Requests by Item
@@ -23565,6 +23728,19 @@ Output strictly valid JSON with no markdown formatting.`;
       <!-- Content Scrollable Area -->
       <div class="flex-1 overflow-y-auto pr-1 py-3 space-y-5">
 
+        <!-- Section 0: PIN Reset Requests (คำขอรีเซ็ตรหัส PIN จากสมาชิก) -->
+        <div id="reward-approval-pin-reset-section" class="hidden">
+          <div class="flex items-center justify-between mb-2.5">
+            <h4 class="text-xs sm:text-sm font-bold text-amber-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-key text-amber-400"></i> คำขอรีเซ็ตรหัส PIN (PIN Reset Requests)
+            </h4>
+            <span id="reward-approval-pin-count-badge" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black font-mono">0 คำขอ</span>
+          </div>
+          <div id="reward-approval-pin-reset-list" class="space-y-2">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
         <!-- Section 1: Pending & Random Draw -->
         <div>
           <div class="flex items-center justify-between mb-2.5">
@@ -23714,6 +23890,15 @@ Output strictly valid JSON with no markdown formatting.`;
           <button type="submit" id="btn-member-pin-submit"
             class="flex-1 py-2.5 px-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-500/20 active:scale-95 transition flex items-center justify-center gap-1.5">
             <i class="fa-solid fa-lock-open"></i> <span>ยืนยันรหัส PIN</span>
+          </button>
+        </div>
+
+        <!-- ปุ่มลืมรหัส PIN (เฉพาะโหมด Verify) -->
+        <div id="member-pin-forgot-wrap" class="pt-2 border-t border-slate-800/80">
+          <button type="button" onclick="requestMemberPinResetFromModal()"
+            class="text-[11.5px] text-amber-400/90 hover:text-amber-300 hover:underline flex items-center justify-center gap-1.5 w-full transition py-1 font-medium">
+            <i class="fa-solid fa-circle-question text-amber-400"></i>
+            <span>ลืมรหัส PIN? ส่งคำขอให้ Admin ช่วยรีเซ็ต</span>
           </button>
         </div>
       </form>
