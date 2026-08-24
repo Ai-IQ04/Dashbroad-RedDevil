@@ -1,5 +1,5 @@
 {
-  "version": "1.6.0",
-  "buildTime": 1787123000000,
-  "releaseNotes": "Enhanced Attendance Appeal Approval modal with evidence lightbox, score & dividend impact simulation, and quick reject reasons"
+  "version": "1.6.1",
+  "buildTime": 1787124000000,
+  "releaseNotes": "Update Admin Request alerts to mention role 1508502265097621544 exclusively in channel 1541279270096212068"
 }

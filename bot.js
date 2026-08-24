@@ -50,7 +50,8 @@ let CONFIG = {
   BOSS_ALERT_CHANNEL_ID: '1538638951089180742',
   ANNOUNCEMENT_CHANNEL_ID: '1539252263132860516',
   ADMIN_REQUEST_CHANNEL_ID: '1541279270096212068',
-  MENTION_TAG: '@Member',
+  ADMIN_ROLE_ID: '1508502265097621544',
+  MENTION_TAG: '<@&1508495658162851970>',
   FIREBASE_DB_URL: 'https://reddevil-f229e-default-rtdb.asia-southeast1.firebasedatabase.app'
 };
 
@@ -388,9 +389,10 @@ async function checkOutboundAlertsCommand() {
         }
         if (item.description) embed.setDescription(item.description);
 
-        const content = item.content || item.mentionTag || '';
+        const fallbackRole = CONFIG.ADMIN_ROLE_ID ? `<@&${CONFIG.ADMIN_ROLE_ID}>` : '<@&1508502265097621544>';
+        const content = (item.content !== undefined && item.content !== null && item.content !== '') ? item.content : (item.mentionTag || fallbackRole);
         await channel.send({ content: content || undefined, embeds: [embed] });
-        console.log(`📤 [Bot Alert] ส่งแจ้งเตือนคำขอเข้าห้อง ${targetChannelId} เรียบร้อยแล้ว`);
+        console.log(`📤 [Bot Alert] ส่งแจ้งเตือนคำขอเข้าห้อง ${targetChannelId} เรียบร้อยแล้ว (Mention: ${content})`);
       }
 
       await fetch(`${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/outbound_alerts/${key}.json`, {

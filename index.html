@@ -9562,39 +9562,12 @@
 
     function sendMemberRequestDiscordAlert({ title, color, fields, mentionAdmin = true }) {
       const targetChannelId = '1541279270096212068';
-      const webhookUrl = (typeof bossDiscordWebhookUrl !== 'undefined' && bossDiscordWebhookUrl) || localStorage.getItem('guild_boss_discord_webhook');
-      const roleId = (typeof bossDiscordRoleId !== 'undefined' && bossDiscordRoleId) || localStorage.getItem('guild_boss_discord_role_id') || '1508495658162851970';
-      const roleMention = (mentionAdmin && roleId) ? `<@&${roleId}>` : '';
+      // บทบาทสำหรับผู้ดูแล/แอดมินที่ต้องแท็กเมื่อมีคำขอต่างๆ เข้ามา
+      const adminRoleId = '1508502265097621544';
+      const roleMention = mentionAdmin ? `<@&${adminRoleId}>` : '';
 
-      const payload = {
-        content: roleMention,
-        embeds: [{
-          title: title,
-          color: color || 0x3B82F6,
-          fields: fields || [],
-          footer: { text: '🛡️ LORD NINE SYSTEM • Dashboard RedDevil' },
-          timestamp: new Date().toISOString()
-        }]
-      };
-
-      // 1. ส่งผ่าน Webhook (หากมีการตั้งค่า Webhook ในระบบ)
-      if (webhookUrl) {
-        if (typeof sendDiscordWebhookPayload === 'function') {
-          sendDiscordWebhookPayload(payload);
-        } else {
-          try {
-            fetch(webhookUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            }).catch(e => console.warn('Request Discord Webhook error:', e));
-          } catch (e) {
-            console.warn('Request Discord Webhook error:', e);
-          }
-        }
-      }
-
-      // 2. ส่งผ่าน Discord Bot (bot.js) ตรงเข้าห้อง 1541279270096212068
+      // ส่งผ่าน Discord Bot (bot.js) ตรงเข้าห้องคำขอ Admin: 1541279270096212068 เท่านั้น
+      // (ไม่ส่งไปยัง Webhook ห้องบอส 1538638951089180742)
       if (typeof fbDb !== 'undefined' && fbDb) {
         const alertKey = 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
         fbDb.ref('guild_app/bot_commands/outbound_alerts/' + alertKey).set({
@@ -9607,6 +9580,7 @@
         });
       }
     }
+
 
     function savePendingAdminRequests() {
       localStorage.setItem('guild_pending_admins', JSON.stringify(pendingAdminRequests));
