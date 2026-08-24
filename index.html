@@ -3552,10 +3552,19 @@
       }
     }
 
-    /* ตัวเลขนับบอสที่เกิดบนปุ่ม (Boss Alive Badge) — สว่างวาบเด่นชัดทั้งสองโหมด */
-    #badge-boss-alive-count,
-    body.neo-dark #badge-boss-alive-count,
-    body:not(.neo-dark) #badge-boss-alive-count {
+    /* กฎซ่อนชัดเจนเมื่อไม่มีข้อมูล หรือมีคลาส .hidden (ถ้าเป็น 0 ไม่ต้องแสดง) */
+    .hidden,
+    #badge-boss-alive-count.hidden,
+    span[id$="-pending-badge"].hidden,
+    span[id*="pending-badge"].hidden,
+    span[id*="count-badge"].hidden {
+      display: none !important;
+    }
+
+    /* ตัวเลขนับบอสที่เกิดบนปุ่ม (Boss Alive Badge) — สว่างวาบเด่นชัดเมื่อมีบอสเกิด (>0) */
+    #badge-boss-alive-count:not(.hidden),
+    body.neo-dark #badge-boss-alive-count:not(.hidden),
+    body:not(.neo-dark) #badge-boss-alive-count:not(.hidden) {
       background: linear-gradient(135deg, #ef4444, #b91c1c) !important;
       color: #ffffff !important;
       -webkit-text-fill-color: #ffffff !important;
@@ -3606,17 +3615,17 @@
       }
     }
 
-    /* ป้ายแจ้งเตือนคำขออนุมัติทั้งหมด (All Approval Pending Badges) — ทั้ง Dark & Light Mode */
-    #appeal-pending-badge,
-    #char-edit-pending-badge,
-    #reward-pending-badge,
-    #guild-join-pending-badge,
-    #admin-pending-badge,
-    #cp-pending-badge,
-    #appeal-count-badge,
-    #reward-approval-count-badge,
-    span[id$="-pending-badge"],
-    span[id*="pending-badge"] {
+    /* ป้ายแจ้งเตือนคำขออนุมัติทั้งหมด (All Approval Pending Badges) — แสดงเฉพาะเมื่อมีคำขอค้างอยู่ (>0) */
+    #appeal-pending-badge:not(.hidden),
+    #char-edit-pending-badge:not(.hidden),
+    #reward-pending-badge:not(.hidden),
+    #guild-join-pending-badge:not(.hidden),
+    #admin-pending-badge:not(.hidden),
+    #cp-pending-badge:not(.hidden),
+    #appeal-count-badge:not(.hidden),
+    #reward-approval-count-badge:not(.hidden),
+    span[id$="-pending-badge"]:not(.hidden),
+    span[id*="pending-badge"]:not(.hidden) {
       background: linear-gradient(135deg, #f59e0b, #ef4444) !important;
       color: #ffffff !important;
       -webkit-text-fill-color: #ffffff !important;
@@ -3636,7 +3645,7 @@
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
     }
 
-    /* ไอคอนบนปุ่มที่มีคำขออนุมัติค้างอยู่ (Highlight Icons with Gold/Amber Aura) */
+    /* ไอคอนบนปุ่มที่มีคำขออนุมัติค้างอยู่ (Highlight Icons with Gold/Amber Aura เฉพาะเมื่อมีคำขอ) */
     button:has(span[id*="pending-badge"]:not(.hidden):not(:empty)) i,
     button:has(span[id$="-pending-badge"]:not(.hidden):not(:empty)) i {
       filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.95)) !important;
