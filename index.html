@@ -20827,25 +20827,184 @@ Output strictly valid JSON with no markdown formatting.`;
     function renderGuildJoinApprovalList() {
       const pendingEl = document.getElementById('guild-join-approval-pending-list');
       const processedEl = document.getElementById('guild-join-approval-processed-list');
+      const pendingHeading = document.getElementById('guild-join-pending-heading');
+      const processedHeading = document.getElementById('guild-join-processed-heading');
+      const headerBadge = document.getElementById('guild-join-header-badge');
+      const searchInput = document.getElementById('guild-join-search-input');
+      const searchTerm = String(searchInput ? searchInput.value : '').trim().toLowerCase();
+
       if (!pendingEl || !processedEl) return;
-      const pending = (guildJoinRequests || []).filter(r => r.status === 'pending');
-      const processed = (guildJoinRequests || []).filter(r => r.status !== 'pending').slice(0, 30);
+
+      const allPending = (guildJoinRequests || []).filter(r => r.status === 'pending');
+      const allProcessed = (guildJoinRequests || []).filter(r => r.status !== 'pending');
+
       updateGuildJoinBadge();
-      pendingEl.innerHTML = pending.length ? pending.map(req => `
-        <div class="bg-slate-900/90 border border-emerald-500/30 rounded-2xl p-3.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          <div class="min-w-0 flex-1 space-y-1">
-            <div class="flex items-center gap-2 flex-wrap"><b class="text-white">${escapeHtml(req.characterName)}</b><span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">${escapeHtml(req.guild)}</span><span class="text-slate-300 text-xs">CP ${Number(req.cp).toLocaleString()}</span></div>
-            <div class="text-[11px] text-slate-300">${escapeHtml(t('guild_join_class'))}: <b class="text-amber-200">${escapeHtml(req.className || '-')}</b> · ${escapeHtml(req.contact || '-')}</div>
-            <div class="text-[11px] text-slate-400">${escapeHtml(req.reason || '-')}</div>
-            <div class="text-[10px] text-slate-500 font-mono">${new Date(req.requestedAt || Date.now()).toLocaleString(currentLang === 'th' ? 'th-TH' : 'en-US')}</div>
+
+      // Filter by search keyword
+      const pending = allPending.filter(r => {
+        if (!searchTerm) return true;
+        return (
+          String(r.characterName || '').toLowerCase().includes(searchTerm) ||
+          String(r.contact || '').toLowerCase().includes(searchTerm) ||
+          String(r.className || '').toLowerCase().includes(searchTerm) ||
+          String(r.guild || '').toLowerCase().includes(searchTerm)
+        );
+      });
+
+      const processed = allProcessed.filter(r => {
+        if (!searchTerm) return true;
+        return (
+          String(r.characterName || '').toLowerCase().includes(searchTerm) ||
+          String(r.contact || '').toLowerCase().includes(searchTerm) ||
+          String(r.className || '').toLowerCase().includes(searchTerm) ||
+          String(r.guild || '').toLowerCase().includes(searchTerm) ||
+          String(r.processedBy || '').toLowerCase().includes(searchTerm)
+        );
+      }).slice(0, 40);
+
+      // Update counters in headings (Fix {count} bug)
+      if (pendingHeading) {
+        pendingHeading.textContent = `คำขอรอตรวจสอบ (${allPending.length})`;
+      }
+      if (processedHeading) {
+        processedHeading.textContent = `ประวัติคำขอล่าสุด (${allProcessed.length})`;
+      }
+      if (headerBadge) {
+        headerBadge.textContent = `${allPending.length} คำขอใหม่`;
+        if (allPending.length > 0) {
+          headerBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[inset_1px_1px_3px_rgba(0,0,0,0.4)] animate-pulse';
+        } else {
+          headerBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-slate-800 text-slate-400 border border-slate-700/60 shadow-[inset_1px_1px_3px_rgba(0,0,0,0.4)]';
+        }
+      }
+
+      // 1. Render Pending List (Neumorphic Convex Cards)
+      if (pending.length > 0) {
+        pendingEl.innerHTML = pending.map(req => {
+          const reqDate = req.requestedAt ? new Date(req.requestedAt).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+          return `
+            <div class="bg-slate-900/95 border border-slate-700/60 rounded-2xl p-4 shadow-[6px_6px_16px_rgba(0,0,0,0.45),-4px_-4px_12px_rgba(255,255,255,0.025)] flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 transition hover:border-slate-600">
+              <div class="min-w-0 flex-1 space-y-2">
+                <div class="flex items-center gap-2.5 flex-wrap">
+                  <span class="text-sm font-bold text-white tracking-wide">${escapeHtml(req.characterName)}</span>
+                  <span class="text-[10.5px] px-2.5 py-0.5 rounded-xl font-bold ${req.guild === 'BlueDevil' ? 'bg-sky-500/15 text-sky-300 border border-sky-500/30' : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'} shadow-[inset_1px_1px_3px_rgba(0,0,0,0.4)]">
+                    🛡️ ${escapeHtml(req.guild || 'RedDevil')}
+                  </span>
+                  <span class="text-[11px] px-2.5 py-0.5 rounded-xl font-mono font-bold bg-amber-500/10 text-amber-300 border border-amber-500/25 shadow-[inset_1px_1px_3px_rgba(0,0,0,0.4)]">
+                    ⚔️ CP ${Number(req.cp || 0).toLocaleString()}
+                  </span>
+                  <span class="text-[11px] px-2 py-0.5 rounded-xl bg-slate-950/60 text-slate-300 border border-slate-800 shadow-[inset_1px_1px_2px_rgba(0,0,0,0.5)]">
+                    🏹 ${escapeHtml(req.className || '-')}
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-3 text-[11px] text-slate-400 flex-wrap">
+                  <span class="flex items-center gap-1 text-slate-300">
+                    <i class="fa-solid fa-address-card text-emerald-400"></i> ${escapeHtml(req.contact || '-')}
+                  </span>
+                  <span>•</span>
+                  <span class="text-slate-400 font-mono text-[10.5px]">
+                    <i class="fa-regular fa-clock mr-0.5"></i> ${reqDate} น.
+                  </span>
+                </div>
+
+                ${req.reason ? `
+                  <div class="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80 text-[11px] text-slate-300 shadow-[inset_2px_2px_5px_rgba(0,0,0,0.5)] leading-relaxed">
+                    <span class="text-slate-500 font-semibold mr-1">เหตุผล:</span>${escapeHtml(req.reason)}
+                  </div>
+                ` : ''}
+              </div>
+
+              <!-- Action Soft Buttons -->
+              <div class="flex items-center gap-2 shrink-0 flex-wrap pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-800">
+                <button type="button" onclick="approveGuildJoinRequest('${req.id}')"
+                  class="px-3.5 py-2 rounded-xl bg-emerald-900/40 hover:bg-emerald-800/60 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.02)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] flex items-center gap-1.5">
+                  <i class="fa-solid fa-check"></i> อนุมัติ
+                </button>
+                <button type="button" onclick="requestGuildJoinInfo('${req.id}')"
+                  class="px-3 py-2 rounded-xl bg-sky-900/40 hover:bg-sky-800/60 border border-sky-500/40 text-sky-300 text-xs font-medium transition shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.02)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] flex items-center gap-1.5">
+                  <i class="fa-solid fa-circle-question"></i> ขอข้อมูล
+                </button>
+                <button type="button" onclick="rejectGuildJoinRequest('${req.id}')"
+                  class="px-3 py-2 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/40 text-rose-300 text-xs font-medium transition shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.02)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] flex items-center gap-1.5">
+                  <i class="fa-solid fa-xmark"></i> ปฏิเสธ
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        pendingEl.innerHTML = `
+          <div class="py-8 px-4 text-center rounded-2xl bg-slate-950/50 border border-slate-800/70 shadow-[inset_3px_3px_8px_rgba(0,0,0,0.5),inset_-2px_-2px_6px_rgba(255,255,255,0.02)] space-y-2">
+            <div class="w-10 h-10 mx-auto rounded-2xl bg-slate-900 border border-slate-800 text-slate-500 flex items-center justify-center text-lg shadow-[3px_3px_6px_rgba(0,0,0,0.4)]">
+              <i class="fa-solid fa-inbox"></i>
+            </div>
+            <div class="text-xs font-bold text-slate-300">ยังไม่มีคำขอเข้ากิลด์ในขณะนี้</div>
+            <div class="text-[11px] text-slate-500">เมื่อมีสมาชิกส่งคำขอเข้ามา จะปรากฏในหน้านี้ให้อนุมัติทันทีค่ะ</div>
           </div>
-          <div class="flex items-center gap-2 shrink-0 flex-wrap">
-            <button onclick="approveGuildJoinRequest('${req.id}')" class="apple-btn apple-btn-emerald px-3 py-1.5 rounded-xl text-xs font-bold"><i class="fa-solid fa-check"></i> ${escapeHtml(t('guild_join_approve'))}</button>
-            <button onclick="requestGuildJoinInfo('${req.id}')" class="apple-btn apple-btn-sapphire px-3 py-1.5 rounded-xl text-xs font-bold"><i class="fa-solid fa-circle-question"></i> ${escapeHtml(t('guild_join_need_info'))}</button>
-            <button onclick="rejectGuildJoinRequest('${req.id}')" class="apple-btn apple-btn-burgundy px-3 py-1.5 rounded-xl text-xs font-bold"><i class="fa-solid fa-xmark"></i> ${escapeHtml(t('guild_join_reject'))}</button>
+        `;
+      }
+
+      // 2. Render Processed List (Neumorphic Soft Rows)
+      if (processed.length > 0) {
+        processedEl.innerHTML = processed.map(req => {
+          const isApproved = req.status === 'approved';
+          const isNeedsInfo = req.status === 'needs_info';
+          const badgeText = isApproved ? 'อนุมัติแล้ว' : isNeedsInfo ? 'ขอข้อมูลเพิ่ม' : 'ปฏิเสธแล้ว';
+          const badgeClass = isApproved
+            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+            : isNeedsInfo
+            ? 'bg-sky-500/15 text-sky-300 border-sky-500/30'
+            : 'bg-rose-500/15 text-rose-300 border-rose-500/30';
+          const procDate = req.processedAt ? new Date(req.processedAt).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+
+          return `
+            <div class="p-3 rounded-2xl bg-slate-900/80 border border-slate-800/80 shadow-[4px_4px_10px_rgba(0,0,0,0.35),-2px_-2px_8px_rgba(255,255,255,0.02)] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition hover:border-slate-700">
+              <div class="min-w-0 flex-1 space-y-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-bold text-slate-100">${escapeHtml(req.characterName)}</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-lg bg-slate-950/80 text-slate-400 border border-slate-800 font-mono">
+                    ${escapeHtml(req.guild || '-')}
+                  </span>
+                  ${req.cp ? `<span class="text-[10px] text-amber-300/80 font-mono">CP ${Number(req.cp).toLocaleString()}</span>` : ''}
+                </div>
+                <div class="flex items-center gap-2 text-[10.5px] text-slate-400 flex-wrap">
+                  ${req.contact ? `<span><i class="fa-solid fa-id-badge mr-0.5 text-slate-500"></i> ${escapeHtml(req.contact)}</span><span>•</span>` : ''}
+                  <span class="font-mono text-slate-500"><i class="fa-regular fa-clock mr-0.5"></i> ${procDate} น.</span>
+                  ${req.processedBy ? `<span>•</span><span class="text-slate-400"><i class="fa-solid fa-user-shield mr-0.5 text-indigo-400"></i> ${escapeHtml(req.processedBy)}</span>` : ''}
+                </div>
+              </div>
+              <div class="shrink-0 flex items-center justify-end">
+                <span class="px-2.5 py-1 rounded-xl text-[10.5px] font-bold border shadow-[inset_1px_1px_3px_rgba(0,0,0,0.4)] ${badgeClass}">
+                  ${badgeText}
+                </span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        processedEl.innerHTML = `
+          <div class="py-4 text-center text-slate-500 text-[11px]">
+            ไม่มีประวัติคำขอที่ตรงกับการค้นหา
           </div>
-        </div>`).join('') : `<div class="p-6 text-center bg-slate-900/50 border border-slate-800/80 rounded-2xl text-slate-400">${escapeHtml(t('guild_join_no_data'))}</div>`;
-      processedEl.innerHTML = processed.length ? processed.map(req => `<div class="p-2 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-[11px] gap-2 opacity-80"><span class="text-white font-semibold">${escapeHtml(req.characterName)} <span class="text-slate-400">(${escapeHtml(req.guild || '-')})</span></span><span class="${req.status === 'approved' ? 'text-emerald-300' : 'text-rose-300'} font-bold">${escapeHtml(req.status === 'approved' ? t('approved_badge') : req.status === 'needs_info' ? t('guild_join_need_info') : t('rejected_badge'))}</span></div>`).join('') : `<p class="text-slate-500 text-center py-2 text-[11px]">${escapeHtml(t('guild_join_no_data'))}</p>`;
+        `;
+      }
+    }
+
+    function clearGuildJoinHistoryPrompt() {
+      if (!isGuildScoringAdmin()) return;
+      const processedCount = (guildJoinRequests || []).filter(r => r.status !== 'pending').length;
+      if (processedCount === 0) {
+        showToast('ℹ️ ไม่มีประวัติคำขอให้ล้างค่ะ', 'info');
+        return;
+      }
+
+      if (confirm(`คุณต้องการล้างประวัติคำขอที่ดำเนินการแล้วทั้งหมด (${processedCount} รายการ) ใช่หรือไม่?`)) {
+        guildJoinRequests = (guildJoinRequests || []).filter(r => r.status === 'pending');
+        saveGuildJoinRequests();
+        renderGuildJoinApprovalList();
+        showToast('🗑️ ล้างประวัติคำขอเข้ากิลด์เรียบร้อยแล้วค่ะ', 'success');
+      }
     }
 
     function approveGuildJoinRequest(requestId) {
@@ -23039,11 +23198,80 @@ Output strictly valid JSON with no markdown formatting.`;
     </div>
   </div>
 
+  <!-- ================= 🛡️ Modal: อนุมัติคำขอเข้ากิลด์ (Neumorphism Soft UI) ================= -->
   <div id="guild-join-approval-modal"
-    class="fixed inset-0 z-[70] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-slate-900 border border-emerald-500/30 rounded-3xl p-5 shadow-2xl apple-modal-box">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-800"><div><h3 class="text-base font-extrabold text-white" data-i18n="guild_join_approval_title">อนุมัติคำขอเข้ากิลด์</h3><p class="text-[11px] text-slate-400">ตรวจสอบข้อมูลก่อนเพิ่มสมาชิกเข้าสู่ Dashboard</p></div><button type="button" onclick="closeGuildJoinApprovalModal()" class="text-slate-400 hover:text-white p-2"><i class="fa-solid fa-xmark"></i></button></div>
-      <div class="pt-4 space-y-4"><div><h4 class="text-xs font-bold text-emerald-300 mb-2" data-i18n="guild_join_pending">คำขอรอตรวจสอบ</h4><div id="guild-join-approval-pending-list" class="space-y-2"></div></div><div><h4 class="text-xs font-bold text-slate-400 mb-2" data-i18n="guild_join_processed">ประวัติคำขอล่าสุด</h4><div id="guild-join-approval-processed-list" class="space-y-2"></div></div></div>
+    class="fixed inset-0 z-[70] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 hidden animate-fade-in">
+    <div
+      class="w-full max-w-4xl max-h-[90vh] bg-[#0f172a] border border-slate-700/60 rounded-3xl p-5 sm:p-6 shadow-[12px_12px_30px_rgba(0,0,0,0.6),-8px_-8px_24px_rgba(255,255,255,0.03)] flex flex-col font-sarabun text-slate-200">
+      
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800/80 shrink-0 gap-3">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-11 h-11 rounded-2xl bg-slate-900 border border-slate-700/60 text-emerald-400 flex items-center justify-center text-xl shadow-[4px_4px_10px_rgba(0,0,0,0.5),-3px_-3px_8px_rgba(255,255,255,0.04)]">
+            <i class="fa-solid fa-user-plus"></i>
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-extrabold text-white tracking-wide flex items-center gap-2">
+              <span>อนุมัติคำขอเข้ากิลด์</span>
+              <span id="guild-join-header-badge"
+                class="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-[inset_1px_1px_3px_rgba(0,0,0,0.4)]">0 คำขอใหม่</span>
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">ตรวจสอบข้อมูลตัวละครและอนุมัติสมาชิกเข้าสู่ Dashboard</p>
+          </div>
+        </div>
+
+        <button type="button" onclick="closeGuildJoinApprovalModal()"
+          class="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)]">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <!-- Search & Filter Bar (Neumorphic Inset) -->
+      <div class="pt-3 pb-2 shrink-0 flex items-center gap-2">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+          <input type="text" id="guild-join-search-input" oninput="renderGuildJoinApprovalList()"
+            placeholder="ค้นหาชื่อตัวละคร, Email, หรือ Discord..."
+            class="w-full bg-slate-950/80 border border-slate-800/80 rounded-2xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 shadow-[inset_2px_2px_6px_rgba(0,0,0,0.6),inset_-1px_-1px_4px_rgba(255,255,255,0.02)] focus:outline-none focus:border-emerald-500/50 transition" />
+        </div>
+        <button type="button" onclick="clearGuildJoinHistoryPrompt()" id="btn-clear-guild-join-history"
+          class="px-3 py-2 rounded-2xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-300 text-xs font-medium transition shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] flex items-center gap-1.5 shrink-0"
+          title="ล้างประวัติคำขอที่ดำเนินการแล้ว">
+          <i class="fa-solid fa-trash-can text-[11px]"></i>
+          <span class="hidden sm:inline">ล้างประวัติ</span>
+        </button>
+      </div>
+
+      <!-- Body Scrollable -->
+      <div class="flex-1 overflow-y-auto pt-2 pb-1 space-y-4 pr-1 text-xs">
+        <!-- Section 1: Pending Requests -->
+        <div>
+          <div class="flex items-center justify-between mb-2.5">
+            <h4 class="text-xs font-bold text-emerald-400 flex items-center gap-2">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+              <span id="guild-join-pending-heading">คำขอรอตรวจสอบ (0)</span>
+            </h4>
+          </div>
+          <div id="guild-join-approval-pending-list" class="space-y-2.5">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <!-- Section 2: Processed History -->
+        <div class="pt-2 border-t border-slate-800/70">
+          <div class="flex items-center justify-between mb-2.5">
+            <h4 class="text-xs font-bold text-slate-400 flex items-center gap-2">
+              <i class="fa-solid fa-clipboard-check text-slate-500"></i>
+              <span id="guild-join-processed-heading">ประวัติคำขอล่าสุด (0)</span>
+            </h4>
+          </div>
+          <div id="guild-join-approval-processed-list" class="space-y-2">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
