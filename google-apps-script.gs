@@ -208,7 +208,20 @@ function doPost(e) {
     validatePayload_(body);
     assertRequestNotReplayed_(body);
     if (body.action === 'write') {
+      // Smart MD5 Hash check: ถ้าข้อมูลไม่มีการเปลี่ยนแปลง ให้ข้ามการเขียนชีต 100% ป้องกันชีตกระพริบ
+      const currentSignature = Utilities.base64Encode(
+        Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, JSON.stringify({ m: body.members, a: body.activities }))
+      );
+      const props = PropertiesService.getScriptProperties();
+      const lastSignature = props.getProperty('last_synced_signature') || '';
+
+      if (currentSignature === lastSignature) {
+        return jsonOutput_({ ok: true, skipped: true, reason: 'unchanged' });
+      }
+
       writeAttendance_(body);
+      props.setProperty('last_synced_signature', currentSignature);
+
       appendAuditLog_(body, 'write', {
         memberCount: Array.isArray(body.members) ? body.members.length : 0,
         activityCount: Array.isArray(body.activities) ? body.activities.length : 0,
@@ -415,24 +428,35 @@ function writeAttendance_(payload) {
         const lastRow = sheet.getLastRow();
         const lastCol = sheet.getLastColumn();
 
-        // 1. เขียนข้อมูลทับตรงๆ (Smooth Overwrite - ไม่ใช้ clearContents เพื่อไม่ให้จอกระพริบ)
-        sheet.getRange(1, 1, rowCount, colCount).setValues(rows);
-
-        // 2. ถ้ามีแถวส่วนเกินที่เคยมีอยู่เดิม ให้ลบเฉพาะแถวส่วนเกินด้านล่าง
-        if (lastRow > rowCount) {
-          sheet.getRange(rowCount + 1, 1, lastRow - rowCount, Math.max(lastCol, colCount)).clearContent();
+        // ตรวจสอบว่าข้อมูลในแท็บนี้เปลี่ยนไปจากเดิมหรือไม่
+        let hasChanged = true;
+        if (lastRow === rowCount && lastCol >= colCount) {
+          const existingValues = sheet.getRange(1, 1, rowCount, colCount).getValues();
+          if (JSON.stringify(existingValues) === JSON.stringify(rows)) {
+            hasChanged = false;
+          }
         }
 
-        // 3. ใส่ Checkbox Validation โดยไม่สั่งซ้ำถ้ามีอยู่แล้ว
-        if (activities.length && rowCount > 1) {
-          applyCheckboxesSafely_(sheet.getRange(2, 6, rowCount - 1, activities.length));
-        }
+        if (hasChanged) {
+          // 1. เขียนข้อมูลทับตรงๆ (Smooth Overwrite)
+          sheet.getRange(1, 1, rowCount, colCount).setValues(rows);
 
-        sheet.setFrozenRows(1);
+          // 2. ถ้ามีแถวส่วนเกินที่เคยมีอยู่เดิม ให้ลบเฉพาะแถวส่วนเกินด้านล่าง
+          if (lastRow > rowCount) {
+            sheet.getRange(rowCount + 1, 1, lastRow - rowCount, Math.max(lastCol, colCount)).clearContent();
+          }
 
-        // 4. จัดขนาดคอลัมน์เฉพาะตอนสร้างตารางครั้งแรกเท่านั้น (ป้องกันตารางเด้งยืดหด)
-        if (lastRow === 0) {
-          sheet.autoResizeColumns(1, colCount);
+          // 3. ใส่ Checkbox Validation เฉพาะเมื่อจำเป็น (ไม่สั่งซ้ำ)
+          if (activities.length && rowCount > 1) {
+            applyCheckboxesSafely_(sheet.getRange(2, 6, rowCount - 1, activities.length));
+          }
+
+          sheet.setFrozenRows(1);
+
+          // 4. จัดขนาดคอลัมน์เฉพาะตอนสร้างตารางครั้งแรกเท่านั้น (ป้องกันตารางเด้งยืดหด)
+          if (lastRow === 0) {
+            sheet.autoResizeColumns(1, colCount);
+          }
         }
       }
     }
@@ -456,12 +480,22 @@ function writeActivitiesCatalog_(book, activities) {
   });
   if (rows.length && rows[0].length) {
     const lastRow = sheet.getLastRow();
-    sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
-    if (lastRow > rows.length) {
-      sheet.getRange(rows.length + 1, 1, lastRow - rows.length, rows[0].length).clearContent();
+    const lastCol = sheet.getLastColumn();
+    let hasChanged = true;
+    if (lastRow === rows.length && lastCol >= rows[0].length) {
+      const existing = sheet.getRange(1, 1, rows.length, rows[0].length).getValues();
+      if (JSON.stringify(existing) === JSON.stringify(rows)) {
+        hasChanged = false;
+      }
     }
-    sheet.setFrozenRows(1);
-    if (lastRow === 0) sheet.autoResizeColumns(1, rows[0].length);
+    if (hasChanged) {
+      sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+      if (lastRow > rows.length) {
+        sheet.getRange(rows.length + 1, 1, lastRow - rows.length, rows[0].length).clearContent();
+      }
+      sheet.setFrozenRows(1);
+      if (lastRow === 0) sheet.autoResizeColumns(1, rows[0].length);
+    }
   }
 }
 
@@ -490,13 +524,23 @@ function writeMembersRoster_(book, members) {
   ]));
   if (rows.length && rows[0].length) {
     const lastRow = sheet.getLastRow();
-    sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
-    if (lastRow > rows.length) {
-      sheet.getRange(rows.length + 1, 1, lastRow - rows.length, rows[0].length).clearContent();
+    const lastCol = sheet.getLastColumn();
+    let hasChanged = true;
+    if (lastRow === rows.length && lastCol >= rows[0].length) {
+      const existing = sheet.getRange(1, 1, rows.length, rows[0].length).getValues();
+      if (JSON.stringify(existing) === JSON.stringify(rows)) {
+        hasChanged = false;
+      }
     }
-    if (rows.length > 1) applyCheckboxesSafely_(sheet.getRange(2, 6, rows.length - 1, 1));
-    sheet.setFrozenRows(1);
-    if (lastRow === 0) sheet.autoResizeColumns(1, rows[0].length);
+    if (hasChanged) {
+      sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+      if (lastRow > rows.length) {
+        sheet.getRange(rows.length + 1, 1, lastRow - rows.length, rows[0].length).clearContent();
+      }
+      if (rows.length > 1) applyCheckboxesSafely_(sheet.getRange(2, 6, rows.length - 1, 1));
+      sheet.setFrozenRows(1);
+      if (lastRow === 0) sheet.autoResizeColumns(1, rows[0].length);
+    }
   }
 }
 
@@ -626,10 +670,18 @@ function assertToken_(token) {
 
 function applyCheckboxesSafely_(range) {
   try {
-    range.insertCheckboxes();
+    const validations = range.getDataValidations();
+    let hasValidCheckboxes = false;
+    if (validations && validations.length && validations[0] && validations[0].length && validations[0][0]) {
+      const rule = validations[0][0];
+      if (rule && rule.getCriteriaType && rule.getCriteriaType() === SpreadsheetApp.DataValidationCriteria.CHECKBOX) {
+        hasValidCheckboxes = true;
+      }
+    }
+    if (!hasValidCheckboxes) {
+      range.insertCheckboxes();
+    }
   } catch (error) {
-    // Some Google Sheets columns may be classified and reject validation
-    // changes. Keep the boolean values and let the sync continue.
     console.warn('Checkbox validation skipped: ' + error);
   }
 }

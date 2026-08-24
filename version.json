@@ -1,6 +1,6 @@
 {
-  "version": "1.6.3",
-  "buildTime": 1787127000000,
-  "releaseNotes": "Compact top KPI summary cards to slim height and expand attendance table viewport"
+  "version": "1.6.4",
+  "buildTime": 1787128000000,
+  "releaseNotes": "Fix Google Sheets flickering with MD5 signature check, safe checkbox validation, and delta updates"
 }
 

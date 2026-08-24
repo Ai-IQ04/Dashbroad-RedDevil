@@ -9697,6 +9697,7 @@
       return;
     }
 
+    let lastGoogleSheetsPushSignature = '';
     async function pushToGoogleSheets() {
       if (!googleSheetsIsConfigured()) return;
       if (googleSheetsRequestInFlight) {
@@ -9708,6 +9709,11 @@
         console.warn('[Google Sheets] Refusing to send an empty attendance payload.');
         return;
       }
+      // Smart signature check: ข้ามการส่ง Request ไปหา Apps Script ถ้าข้อมูลไม่มีการเปลี่ยนแปลง
+      const currentSignature = JSON.stringify({ m: payload.members, a: payload.activities });
+      if (currentSignature === lastGoogleSheetsPushSignature) {
+        return;
+      }
       googleSheetsRequestInFlight = true;
       try {
         await fetch(GOOGLE_SHEETS_SYNC_URL, {
@@ -9716,7 +9722,8 @@
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: 'write', requestId: googleSheetsRequestId('write'), token: GOOGLE_SHEETS_SYNC_TOKEN, ...payload })
         });
-        console.info('[Google Sheets] One-way 10-minute snapshot backup sent successfully.');
+        lastGoogleSheetsPushSignature = currentSignature;
+        console.info('[Google Sheets] Data snapshot backup sent successfully.');
       } catch (error) {
         console.warn('[Google Sheets] write failed:', error);
       } finally {
