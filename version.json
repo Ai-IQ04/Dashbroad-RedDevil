@@ -1,6 +1,6 @@
 {
-  "version": "1.6.2",
-  "buildTime": 1787126000000,
-  "releaseNotes": "Redesign Guild Reward Store modal with dedicated Light Neumorphism (Soft UI) styling"
+  "version": "1.6.3",
+  "buildTime": 1787127000000,
+  "releaseNotes": "Compact top KPI summary cards to slim height and expand attendance table viewport"
 }
 

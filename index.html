@@ -645,9 +645,9 @@
     .apple-kpi-emerald #kpi-eligible-members,
     .apple-kpi-rose #kpi-ineligible-members,
     .apple-kpi-amber #kpi-avg-score {
-      font-size: clamp(2.1rem, 5vw, 2.8rem) !important;
-      line-height: 1 !important;
-      letter-spacing: -0.08em !important;
+      font-size: clamp(1.35rem, 2.4vw, 1.75rem) !important;
+      line-height: 1.05 !important;
+      letter-spacing: -0.04em !important;
       font-weight: 900 !important;
     }
 
@@ -4329,36 +4329,36 @@
 
   <!-- ================= โมดูลที่ 1: กิจกรรมและคะแนนกิลด์ (Guild Scoring Module) ================= -->
   <div id="scoring-module-container" class="flex-1 flex flex-col min-h-0">
-    <!-- ================= แดชบอร์ดสรุปผลด้านบน (Top Summary Dashboard - Apple Glass Cards) ================= -->
-    <section class="bg-[#f5f3f0]/90 border-b border-black/5 px-3 sm:px-5 py-3 shrink-0 backdrop-blur-md">
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+    <!-- ================= แดชบอร์ดสรุปผลด้านบน (Top Summary Dashboard - Compact Slim Apple Glass Cards) ================= -->
+    <section class="bg-[#f5f3f0]/90 border-b border-black/5 px-3 sm:px-5 py-1.5 shrink-0 backdrop-blur-md">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
 
         <!-- การ์ด 1: สมาชิก & พลังรบเฉลี่ย -->
         <div
-          class="apple-kpi-card apple-kpi-blue p-3 sm:p-3.5 flex items-center justify-between animate-apple-kpi animate-delay-1">
-          <div class="min-w-0 pr-2">
+          class="apple-kpi-card apple-kpi-blue p-2 sm:p-2.5 flex items-center justify-between animate-apple-kpi animate-delay-1 rounded-2xl">
+          <div class="min-w-0 pr-1.5">
             <div class="flex items-center gap-1.5">
               <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
-              <span class="text-[10.5px] font-semibold text-slate-300 uppercase tracking-wider truncate"
+              <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider truncate"
                 data-i18n="kpi_both_guilds">สมาชิกทั้ง 2 กิลด์</span>
             </div>
-            <div class="flex items-baseline gap-2 mt-1">
+            <div class="flex items-baseline gap-1.5 mt-0.5">
               <span id="kpi-total-members"
-                class="text-2xl sm:text-3xl font-black font-mono tracking-tight bg-gradient-to-b from-white to-slate-200 bg-clip-text text-transparent">0</span>
-              <span class="text-[10px] font-medium text-slate-400" data-i18n="unit_people">คน</span>
+                class="text-xl sm:text-2xl font-black font-mono tracking-tight bg-gradient-to-b from-white to-slate-200 bg-clip-text text-transparent">0</span>
+              <span class="text-[10px] font-semibold text-slate-400" data-i18n="unit_people">คน</span>
               <span id="kpi-guild-split"
-                class="text-[10px] font-mono text-sky-300/90 font-medium px-1.5 py-0.5 rounded-md bg-sky-500/10 border border-sky-500/20"></span>
+                class="text-[9.5px] font-mono text-sky-300/90 font-bold px-1.5 py-0.2 rounded bg-sky-500/10 border border-sky-500/20"></span>
             </div>
-            <p class="text-[10.5px] text-slate-400 mt-1 flex items-center gap-1">
+            <p class="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
               <span data-i18n="kpi_avg_cp">CP เฉลี่ย</span>:
-              <strong class="text-amber-300 font-mono font-bold flex items-center gap-1">
-                <i class="fa-solid fa-bolt text-[9px] text-amber-400"></i>
+              <strong class="text-amber-300 font-mono font-bold flex items-center gap-0.5">
+                <i class="fa-solid fa-bolt text-[8px] text-amber-400"></i>
                 <span id="kpi-avg-cp">0</span>
               </strong>
             </p>
           </div>
           <div
-            class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-tr from-sky-500/20 to-blue-600/30 border border-sky-400/30 text-sky-300 flex items-center justify-center text-base sm:text-lg shrink-0 shadow-lg shadow-sky-500/10"
+            class="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-gradient-to-tr from-sky-500/20 to-blue-600/30 border border-sky-400/30 text-sky-300 flex items-center justify-center text-xs sm:text-sm shrink-0 shadow-md shadow-sky-500/10"
             style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);">
             <i class="fa-solid fa-users filter drop-shadow"></i>
           </div>
@@ -4366,27 +4366,27 @@
 
         <!-- การ์ด 2: ผ่านเกณฑ์ปันผล (>7 กิจกรรม) -->
         <div
-          class="apple-kpi-card apple-kpi-emerald p-3 sm:p-3.5 flex items-center justify-between animate-apple-kpi animate-delay-2">
-          <div class="min-w-0 pr-2">
+          class="apple-kpi-card apple-kpi-emerald p-2 sm:p-2.5 flex items-center justify-between animate-apple-kpi animate-delay-2 rounded-2xl">
+          <div class="min-w-0 pr-1.5">
             <div class="flex items-center gap-1.5">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span class="text-[10.5px] font-semibold text-emerald-300 uppercase tracking-wider truncate"
+              <span class="text-[10px] font-bold text-emerald-300 uppercase tracking-wider truncate"
                 data-i18n="kpi_eligible">ผ่านเกณฑ์ปันผล (>7)</span>
             </div>
-            <div class="flex items-baseline gap-2 mt-1">
+            <div class="flex items-baseline gap-1.5 mt-0.5">
               <span id="kpi-eligible-members"
-                class="text-2xl sm:text-3xl font-black font-mono tracking-tight bg-gradient-to-b from-emerald-300 to-teal-400 bg-clip-text text-transparent">0</span>
-              <span id="kpi-eligible-rate" class="text-xs font-bold text-emerald-400 font-mono">(0%)</span>
+                class="text-xl sm:text-2xl font-black font-mono tracking-tight bg-gradient-to-b from-emerald-300 to-teal-400 bg-clip-text text-transparent">0</span>
+              <span id="kpi-eligible-rate" class="text-[11px] font-bold text-emerald-400 font-mono">(0%)</span>
             </div>
             <div
-              class="w-24 sm:w-32 bg-slate-900/90 border border-slate-700/60 h-2 rounded-full overflow-hidden mt-1.5 p-0.5 shadow-inner">
+              class="w-20 sm:w-28 bg-slate-900/90 border border-slate-700/60 h-1.5 rounded-full overflow-hidden mt-1 p-0.5 shadow-inner">
               <div id="kpi-eligible-bar"
                 class="bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-300 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(52,211,153,0.6)]"
                 style="width: 0%"></div>
             </div>
           </div>
           <div
-            class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-600/30 border border-emerald-400/30 text-emerald-300 flex items-center justify-center text-base sm:text-lg shrink-0 shadow-lg shadow-emerald-500/10"
+            class="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-600/30 border border-emerald-400/30 text-emerald-300 flex items-center justify-center text-xs sm:text-sm shrink-0 shadow-md shadow-emerald-500/10"
             style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);">
             <i class="fa-solid fa-circle-check filter drop-shadow"></i>
           </div>
@@ -4394,25 +4394,25 @@
 
         <!-- การ์ด 3: ไม่ผ่านเกณฑ์ (<=7 กิจกรรม) -->
         <div
-          class="apple-kpi-card apple-kpi-rose p-3 sm:p-3.5 flex items-center justify-between animate-apple-kpi animate-delay-3">
-          <div class="min-w-0 pr-2">
+          class="apple-kpi-card apple-kpi-rose p-2 sm:p-2.5 flex items-center justify-between animate-apple-kpi animate-delay-3 rounded-2xl">
+          <div class="min-w-0 pr-1.5">
             <div class="flex items-center gap-1.5">
               <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-              <span class="text-[10.5px] font-semibold text-rose-300 uppercase tracking-wider truncate"
+              <span class="text-[10px] font-bold text-rose-300 uppercase tracking-wider truncate"
                 data-i18n="kpi_ineligible">ไม่ผ่านเกณฑ์ (โดนหักปรับ)</span>
             </div>
-            <div class="flex items-baseline gap-2 mt-1">
+            <div class="flex items-baseline gap-1.5 mt-0.5">
               <span id="kpi-ineligible-members"
-                class="text-2xl sm:text-3xl font-black font-mono tracking-tight bg-gradient-to-b from-rose-300 to-red-400 bg-clip-text text-transparent">0</span>
-              <span class="text-[10px] font-medium text-slate-400" data-i18n="unit_people">คน</span>
+                class="text-xl sm:text-2xl font-black font-mono tracking-tight bg-gradient-to-b from-rose-300 to-red-400 bg-clip-text text-transparent">0</span>
+              <span class="text-[10px] font-semibold text-slate-400" data-i18n="unit_people">คน</span>
             </div>
-            <p class="text-[10.5px] text-slate-400 mt-1">
+            <p class="text-[10px] text-slate-400 mt-0.5">
               <span data-i18n="kpi_avg_penalty">หักปรับเฉลี่ย</span>:
               <strong id="kpi-avg-penalty" class="text-rose-400 font-mono font-bold">0%</strong>
             </p>
           </div>
           <div
-            class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-tr from-rose-500/20 to-red-600/30 border border-rose-400/30 text-rose-300 flex items-center justify-center text-base sm:text-lg shrink-0 shadow-lg shadow-rose-500/10"
+            class="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-gradient-to-tr from-rose-500/20 to-red-600/30 border border-rose-400/30 text-rose-300 flex items-center justify-center text-xs sm:text-sm shrink-0 shadow-md shadow-rose-500/10"
             style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);">
             <i class="fa-solid fa-circle-exclamation filter drop-shadow"></i>
           </div>
@@ -4420,25 +4420,25 @@
 
         <!-- การ์ด 4: คะแนนเฉลี่ยกิลด์ & บอสยอดนิยม -->
         <div
-          class="apple-kpi-card apple-kpi-amber p-3 sm:p-3.5 flex items-center justify-between animate-apple-kpi animate-delay-4">
-          <div class="min-w-0 pr-2">
+          class="apple-kpi-card apple-kpi-amber p-2 sm:p-2.5 flex items-center justify-between animate-apple-kpi animate-delay-4 rounded-2xl">
+          <div class="min-w-0 pr-1.5">
             <div class="flex items-center gap-1.5">
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-              <span class="text-[10.5px] font-semibold text-amber-300 uppercase tracking-wider truncate"
+              <span class="text-[10px] font-bold text-amber-300 uppercase tracking-wider truncate"
                 data-i18n="kpi_avg_score">คะแนนเฉลี่ยทั้งกิลด์</span>
             </div>
-            <div class="flex items-baseline gap-2 mt-1">
+            <div class="flex items-baseline gap-1.5 mt-0.5">
               <span id="kpi-avg-score"
-                class="text-2xl sm:text-3xl font-black font-mono tracking-tight bg-gradient-to-b from-amber-200 via-amber-300 to-yellow-400 bg-clip-text text-transparent">0</span>
-              <span class="text-[10px] text-slate-400 font-mono" data-i18n="kpi_out_of_100">/ 100 แต้ม</span>
+                class="text-xl sm:text-2xl font-black font-mono tracking-tight bg-gradient-to-b from-amber-200 via-amber-300 to-yellow-400 bg-clip-text text-transparent">0</span>
+              <span class="text-[9.5px] text-slate-400 font-mono" data-i18n="kpi_out_of_100">/ 100 แต้ม</span>
             </div>
-            <p class="text-[10.5px] text-slate-400 mt-1 truncate max-w-[150px]">
+            <p class="text-[10px] text-slate-400 mt-0.5 truncate max-w-[140px]">
               <span data-i18n="kpi_top_boss">บอสยอดนิยม</span>:
               <strong id="kpi-top-boss" class="text-indigo-300 font-semibold">-</strong>
             </p>
           </div>
           <div
-            class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-tr from-amber-500/20 to-yellow-600/30 border border-amber-400/30 text-amber-300 flex items-center justify-center text-base sm:text-lg shrink-0 shadow-lg shadow-amber-500/10"
+            class="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-gradient-to-tr from-amber-500/20 to-yellow-600/30 border border-amber-400/30 text-amber-300 flex items-center justify-center text-xs sm:text-sm shrink-0 shadow-md shadow-amber-500/10"
             style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);">
             <i class="fa-solid fa-trophy filter drop-shadow"></i>
           </div>
@@ -4449,7 +4449,7 @@
 
     <!-- ================= แถบเครื่องมือ & การค้นหา (Toolbar) ================= -->
     <div
-      class="bg-slate-950/50 border-b border-slate-800/80 px-3 sm:px-5 py-2 shrink-0 flex flex-wrap items-center justify-between gap-2.5 text-xs animate-apple-content backdrop-blur-md">
+      class="bg-slate-950/50 border-b border-slate-800/80 px-3 sm:px-5 py-1.5 shrink-0 flex flex-wrap items-center justify-between gap-2 text-xs animate-apple-content backdrop-blur-md">
 
       <!-- ช่องค้นหา & สรุปจำนวน -->
       <div class="flex items-center gap-2 flex-1 min-w-[200px] max-w-xs sm:max-w-sm">
@@ -4465,36 +4465,36 @@
 
       <!-- 🐉 ช่องบอสที่กำลังจะเกิด (Upcoming Boss Live Tracker) - วางตรงกลาง -->
       <div id="upcoming-boss-toolbar-widget" onclick="switchAppModule('boss_timer')"
-        class="apple-btn cursor-pointer group inline-flex items-center gap-2.5 px-3.5 py-1.5 bg-gradient-to-r from-rose-950/90 via-slate-950/95 to-purple-950/90 hover:from-rose-900/90 hover:to-purple-900/90 border border-rose-400/50 hover:border-rose-300/80 rounded-2xl shadow-lg shadow-rose-950/40 transition-all duration-300 mx-auto">
+        class="apple-btn cursor-pointer group inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-rose-950/90 via-slate-950/95 to-purple-950/90 hover:from-rose-900/90 hover:to-purple-900/90 border border-rose-400/50 hover:border-rose-300/80 rounded-xl shadow-lg shadow-rose-950/40 transition-all duration-300 mx-auto">
         <div
-          class="w-6 h-6 rounded-xl bg-gradient-to-tr from-rose-500 via-red-500 to-amber-500 text-white shadow-md shadow-rose-500/30 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-rose-300/40">
-          <i class="fa-solid fa-dragon animate-pulse text-[11px] filter drop-shadow"></i>
+          class="w-5 h-5 rounded-lg bg-gradient-to-tr from-rose-500 via-red-500 to-amber-500 text-white shadow-md shadow-rose-500/30 flex items-center justify-center text-[10px] shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-rose-300/40">
+          <i class="fa-solid fa-dragon animate-pulse text-[10px] filter drop-shadow"></i>
         </div>
         <div class="flex items-center gap-2 flex-wrap text-xs">
           <div class="flex items-center gap-1.5">
-            <span class="text-[10px] text-rose-300 font-bold uppercase tracking-wider hidden sm:inline"
+            <span class="text-[9.5px] text-rose-300 font-bold uppercase tracking-wider hidden sm:inline"
               data-i18n="boss_next_spawn_label">บอสถัดไป:</span>
             <span id="widget-boss-name"
-              class="font-extrabold text-white tracking-wide truncate max-w-[130px] sm:max-w-[170px] drop-shadow-sm">กำลังโหลด...</span>
+              class="font-extrabold text-white tracking-wide truncate max-w-[130px] sm:max-w-[170px] drop-shadow-sm text-[11px]">กำลังโหลด...</span>
             <span id="widget-boss-loc"
-              class="text-[10.5px] text-rose-200/75 font-medium hidden md:inline truncate max-w-[120px]">-</span>
+              class="text-[10px] text-rose-200/75 font-medium hidden md:inline truncate max-w-[120px]">-</span>
           </div>
           <div
-            class="flex items-center gap-1.5 font-mono font-black text-amber-300 bg-slate-900/95 border border-amber-500/50 px-2.5 py-0.5 rounded-full text-xs shadow-inner shadow-amber-500/20"
+            class="flex items-center gap-1 font-mono font-black text-amber-300 bg-slate-900/95 border border-amber-500/50 px-2 py-0.2 rounded-full text-[11px] shadow-inner shadow-amber-500/20"
             id="widget-boss-timer">
-            <i class="fa-solid fa-clock text-[11px] text-amber-400"></i>
+            <i class="fa-solid fa-clock text-[10px] text-amber-400"></i>
             <span id="widget-boss-timer-text">--:--:--</span>
           </div>
         </div>
         <i
-          class="fa-solid fa-chevron-right text-[11px] text-rose-300 group-hover:translate-x-1 transition-transform ml-0.5"></i>
+          class="fa-solid fa-chevron-right text-[10px] text-rose-300 group-hover:translate-x-1 transition-transform ml-0.5"></i>
       </div>
 
       <!-- ตัวกรอง และ การเรียงลำดับ -->
       <div class="flex items-center gap-2">
         <!-- ตัวกรองกิลด์ / สถานะ -->
         <select id="filter-status" onchange="renderTable()"
-          class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 cursor-pointer">
+          class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-0.5 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 cursor-pointer">
           <option value="all" data-i18n="filter_all">แสดงทั้งหมด (BlueDevil + RedDevil)</option>
           <option value="RedDevil" data-i18n="filter_red">🔴 เฉพาะ RedDevil</option>
           <option value="BlueDevil" data-i18n="filter_blue">🔵 เฉพาะ BlueDevil</option>
@@ -4504,7 +4504,7 @@
 
         <!-- เรียงลำดับ (Sort) -->
         <select id="sort-by" onchange="renderTable()"
-          class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 cursor-pointer">
+          class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-0.5 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 cursor-pointer">
           <option value="cp-desc" selected data-i18n="sort_cp_desc">⚡ พลังรบ CP (มาก ➔ น้อย)</option>
           <option value="cp-asc" data-i18n="sort_cp_asc">พลังรบ CP (น้อย ➔ มาก)</option>
           <option value="score-desc" data-i18n="sort_score_desc">คะแนนรวม (มาก ➔ น้อย)</option>
@@ -4514,13 +4514,13 @@
 
         <!-- ปุ่มบันทึกปิดรอบสัปดาห์ / ปลดล็อกสัปดาห์ (เฉพาะ Admin) -->
         <button id="btn-archive-week" onclick="toggleLockCurrentWeek()"
-          class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm"
+          class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold shadow-sm"
           title="คลิกเพื่อปิดรอบสัปดาห์นี้">
           <i id="btn-archive-week-icon" class="fa-solid fa-lock-open text-[10px]"></i>
           <span id="btn-archive-week-text" data-i18n="btn_archive_week">ปิดรอบสัปดาห์</span>
         </button>
         <button id="btn-close-cycle" onclick="closeFourWeekCycle()"
-          class="apple-btn apple-btn-amber hidden items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm"
+          class="apple-btn apple-btn-amber hidden items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold shadow-sm"
           title="ปิดรอบครบ 4 สัปดาห์และเริ่มรอบใหม่">
           <i class="fa-solid fa-flag-checkered text-[10px]"></i>
           <span>ปิดรอบครบ 4 สัปดาห์</span>
@@ -4529,24 +4529,23 @@
     </div>
 
     <!-- ================= เนื้อหาหลัก: ตารางเช็คชื่อและคำนวณคะแนน ================= -->
-    <main class="flex-1 flex flex-col min-h-0 bg-transparent p-2 sm:p-3.5 overflow-hidden animate-apple-content">
+    <main class="flex-1 flex flex-col min-h-0 bg-transparent p-1.5 sm:p-2.5 overflow-hidden animate-apple-content">
       <!-- 🔒 ป้ายแจ้งเตือนสัปดาห์ปิดรอบแล้ว (Locked Week Alert Banner) -->
       <div id="locked-week-banner"
-        class="hidden mb-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-950/80 via-slate-950/90 to-amber-950/80 border border-amber-500/50 text-amber-200 text-xs flex items-center justify-between shadow-lg backdrop-blur shrink-0 animate-fade-in">
-        <div class="flex items-center gap-2.5">
+        class="hidden mb-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-950/80 via-slate-950/90 to-amber-950/80 border border-amber-500/50 text-amber-200 text-xs flex items-center justify-between shadow-md backdrop-blur shrink-0 animate-fade-in">
+        <div class="flex items-center gap-2">
           <span
-            class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-xs shrink-0 border border-amber-500/40">
-            <i class="fa-solid fa-lock animate-pulse"></i>
+            class="w-5 h-5 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-xs shrink-0 border border-amber-500/40">
+            <i class="fa-solid fa-lock animate-pulse text-[10px]"></i>
           </span>
           <div>
             <span class="font-bold text-amber-300" id="locked-banner-week-name">สัปดาห์ที่ 1</span>
-            <span class="text-slate-300 ml-1">ถูกปิดรอบแล้ว (โหมดอ่านอย่างเดียว • การแก้ไขย้อนหลังต้องยืนยันด้วย Email
-              Admin)</span>
+            <span class="text-slate-300 ml-1 text-[11px]">ถูกปิดรอบแล้ว (โหมดอ่านอย่างเดียว • การแก้ไขย้อนหลังต้องยืนยันด้วย Email Admin)</span>
           </div>
         </div>
         <button id="btn-banner-unlock" onclick="toggleLockCurrentWeek()"
-          class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl shadow-md border border-amber-400/50 hover:brightness-110 active:scale-95 transition shrink-0">
-          <i class="fa-solid fa-lock text-[11px]"></i>
+          class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-xl shadow border border-amber-400/50 hover:brightness-110 active:scale-95 transition shrink-0">
+          <i class="fa-solid fa-lock text-[10px]"></i>
           <span>ปลดล็อกสัปดาห์</span>
         </button>
         <button id="btn-banner-reset-week" onclick="openResetWeekModal()"
