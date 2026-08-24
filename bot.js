@@ -110,6 +110,26 @@ const client = new Client({
   partials: [Partials.Message, Partials.Channel]
 });
 
+// 📡 ตรวจจับสถานะการเชื่อมต่อ Discord ทุกขั้นตอน
+client.on('error', err => console.error('🔴 [Discord Client Error]:', err.message || err));
+client.on('warn', w => console.warn('🟡 [Discord Client Warn]:', w));
+client.on('shardReady', id => console.log(`🟢 [Discord Gateway] Shard ${id} เชื่อมต่อสำเร็จ!`));
+client.on('shardError', (err, id) => console.error(`🔴 [Discord Gateway] Shard ${id} Error:`, err.message || err));
+client.on('shardDisconnect', (event, id) => console.warn(`🔴 [Discord Gateway] Shard ${id} หลุดการเชื่อมต่อ:`, event.reason || event));
+client.on('shardReconnecting', id => console.log(`🔄 [Discord Gateway] Shard ${id} กำลังพยายามต่อใหม่...`));
+client.on('debug', info => {
+  if (typeof info === 'string' && (
+    info.includes('Session') ||
+    info.includes('Ready') ||
+    info.includes('Identif') ||
+    info.includes('429') ||
+    info.includes('Rate limit') ||
+    info.includes('Connect')
+  )) {
+    console.log('🔍 [Discord Debug]:', info);
+  }
+});
+
 
 
 
@@ -452,9 +472,9 @@ async function checkOutboundAlertsCommand() {
 }
 
 // 🟢 เมื่อบอทออนไลน์สำเร็จ
-client.once('ready', async () => {
+async function handleBotReady() {
   console.log('====================================================');
-  console.log(`🤖 บอทเชื่อมต่อ Discord สำเร็จในชื่อ: ${client.user.tag}`);
+  console.log(`🤖 บอทเชื่อมต่อ Discord สำเร็จในชื่อ: ${client.user ? client.user.tag : 'RedDevil Bot'}`);
   console.log(`🔥 ฐานข้อมูล Firebase: ${CONFIG.FIREBASE_DB_URL}`);
   console.log(`📋 สแกนห้องลงทะเบียน: ${CONFIG.REGISTRATION_CHANNEL_ID || 'ทั้งหมด'}`);
   console.log(`📢 ห้องแจ้งเตือนคำขอ Admin: ${CONFIG.ADMIN_REQUEST_CHANNEL_ID || '1541279270096212068'}`);
@@ -481,7 +501,10 @@ client.once('ready', async () => {
       console.warn('⚠️ Auto sync members loop error:', e.message);
     }
   }, 30000);
-});
+}
+
+client.once('ready', handleBotReady);
+client.once('clientReady', handleBotReady);
 
 // 👥 ดักฟังสมาชิกเข้าใหม่ / อัปเดตชื่อใน Discord
 client.on('guildMemberAdd', async (member) => {
