@@ -20804,6 +20804,26 @@ Output strictly valid JSON with no markdown formatting.`;
         requestedAt: new Date().toISOString(), status: 'pending', processedBy: '', processedAt: '', reviewNote: ''
       });
       saveGuildJoinRequests();
+
+      // 🚀 ส่งแจ้งเตือนคำขอเข้ากิลด์เข้าห้อง Discord แอดมิน (1541279270096212068)
+      try {
+        sendMemberRequestDiscordAlert({
+          title: `🛡️ มีคำขอเข้าร่วมกิลด์ใหม่: ${name}`,
+          color: guild === 'BlueDevil' ? 0x0EA5E9 : 0x10B981,
+          mentionAdmin: true,
+          fields: [
+            { name: '👤 ชื่อตัวละคร', value: `\`${name}\``, inline: true },
+            { name: '🛡️ สังกัดกิลด์', value: `\`${guild}\``, inline: true },
+            { name: '⚔️ พลังรบ (CP)', value: `\`${cp.toLocaleString()}\``, inline: true },
+            { name: '🏹 อาชีพ', value: `\`${className || '-'}\``, inline: true },
+            { name: '📧 ติดต่อ (Discord/Email)', value: `\`${contact || '-'}\``, inline: true },
+            { name: '💬 เหตุผล / ข้อมูลเพิ่มเติม', value: reason || '-', inline: false }
+          ]
+        });
+      } catch (err) {
+        console.warn('Could not send Discord alert for guild join request:', err);
+      }
+
       closeGuildJoinRequestModal();
       showToast(t('toast_guild_join_sent'), 'success');
     }
