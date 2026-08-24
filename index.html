@@ -12353,11 +12353,11 @@
       return Math.max(0, 1 - distance / maxLen);
     }
 
-    function findBestGuildMemberMatch(rawName, minThreshold = 0.62) {
+    function findBestGuildMemberMatch(rawName, minThreshold = 0.78) {
       if (!rawName || !Array.isArray(members) || members.length === 0) return null;
       const cleanRaw = String(rawName).trim();
       const rawNorm = normalizeMemberNameForMatch(cleanRaw);
-      if (!rawNorm) return null;
+      if (!rawNorm || rawNorm.length < 2) return null;
 
       // Tier 1: Exact / Normalized Match (100%)
       for (const m of members) {
@@ -12368,21 +12368,24 @@
         }
       }
 
-      // Tier 2: Substring prefix/suffix Match (90-95%)
-      for (const m of members) {
-        const cName = (m.characterName || m.name || '').trim();
-        const cNorm = normalizeMemberNameForMatch(cName);
-        if (cNorm && rawNorm) {
-          if (cNorm.length >= 3 && rawNorm.includes(cNorm)) {
-            return { member: m, similarity: 0.95, matchType: 'contained' };
-          }
-          if (rawNorm.length >= 3 && cNorm.includes(rawNorm)) {
-            return { member: m, similarity: 0.90, matchType: 'partial' };
+      // Tier 2: Strict Substring match (Only for long names >= 5 chars with close length diff <= 2)
+      // Guard: Skip substring match if it's a short prefix like "ไข่", "king", "devil" to prevent false positives
+      const isCommonPrefix = rawNorm.startsWith('ไข่') || rawNorm.length <= 4;
+      if (!isCommonPrefix && rawNorm.length >= 5) {
+        for (const m of members) {
+          const cName = (m.characterName || m.name || '').trim();
+          const cNorm = normalizeMemberNameForMatch(cName);
+          if (cNorm && cNorm.length >= 5 && Math.abs(rawNorm.length - cNorm.length) <= 2) {
+            if (rawNorm.includes(cNorm) || cNorm.includes(rawNorm)) {
+              return { member: m, similarity: 0.95, matchType: 'contained' };
+            }
           }
         }
       }
 
-      // Tier 3: Levenshtein Distance Similarity (62%+)
+      // Tier 3: High-Precision Levenshtein Similarity
+      // Dynamic Threshold: Short names or names starting with "ไข่" require >= 88% similarity, long names >= 78%
+      const effectiveThreshold = isCommonPrefix ? Math.max(minThreshold, 0.88) : minThreshold;
       let bestMember = null;
       let maxScore = 0;
 
@@ -12392,7 +12395,7 @@
         if (!cNorm) continue;
 
         const sim = calculateLevenshteinSimilarity(rawNorm, cNorm);
-        if (sim > maxScore && sim >= minThreshold) {
+        if (sim > maxScore && sim >= effectiveThreshold) {
           maxScore = sim;
           bestMember = m;
         }
@@ -12737,7 +12740,7 @@
               const cellText = (cellRes?.data?.text || '').trim();
               if (cellText) {
                 combinedOcrText += '\n' + cellText;
-                const match = findBestGuildMemberMatch(cellText, 0.58);
+                const match = findBestGuildMemberMatch(cellText, 0.75);
                 if (match && match.member) {
                   const mId = match.member.id;
                   const mName = match.member.characterName;
@@ -12752,61 +12755,11 @@
           }
         }
 
-        // 3. Fallback Pass: Full Page Scan to capture any missed text
-        if (statusEl) {
-          statusEl.innerHTML = `<i class="fa-solid fa-bolt text-amber-400 mr-1.5"></i> กำลังตรวจสอบรายชื่อและแมตช์ความคล้ายของตัวอักษร...`;
-        }
-
-        try {
-          const fullRes = await Tesseract.recognize(blob, 'tha+eng');
-          if (fullRes?.data?.text) {
-            combinedOcrText += '\n' + fullRes.data.text;
-          }
-        } catch (_) {}
-
-        // Tokenize and match any remaining guild members against full OCR text
-        const tokens = combinedOcrText
-          .split(/[\r\n]+/)
-          .map(l => l.trim())
-          .filter(Boolean);
-
-        tokens.forEach(tok => {
-          const parts = [tok, ...tok.split(/[\s,;:|/\\_.-]+/)].filter(p => p && p.length >= 2);
-          for (const p of parts) {
-            const match = findBestGuildMemberMatch(p, 0.60);
-            if (match && match.member) {
-              const mId = match.member.id;
-              const mName = match.member.characterName;
-              if (!seenMemberIds.has(mId)) {
-                seenMemberIds.add(mId);
-                // Assign to first squad that has space or squad 1
-                const targetSquad = squads.find(sq => sq.members.length < 5) || squads[0];
-                targetSquad.members.push(mName);
-                confidenceByName[mName] = Math.round(match.similarity * 100);
-              }
-            }
-          }
-        });
-
-        // Roster-guided search: Match all member names against full text
-        members.forEach(m => {
-          if (seenMemberIds.has(m.id)) return;
-          const cName = (m.characterName || m.name || '').trim();
-          const normC = normalizeMemberNameForMatch(cName);
-          const normFull = normalizeMemberNameForMatch(combinedOcrText);
-          if (normC && normFull && normFull.includes(normC)) {
-            seenMemberIds.add(m.id);
-            const targetSquad = squads.find(sq => sq.members.length < 5) || squads[0];
-            targetSquad.members.push(cName);
-            confidenceByName[cName] = 95;
-          }
-        });
-
         const totalDetected = squads.reduce((sum, sq) => sum + sq.members.length, 0);
 
         if (totalDetected === 0) {
           if (statusEl) {
-            statusEl.innerHTML = `<span class="text-amber-300 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Local OCR อ่านภาพแล้วแต่ไม่พบชื่อที่ตรงกับสมาชิกในกิลด์ กรุณาลองใช้ภาพที่คมชัดขึ้น หรือสลับเป็นโหมด Google AI</span>`;
+            statusEl.innerHTML = `<span class="text-amber-300 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Local OCR สแกนภาพแล้วแต่ไม่พบชื่อที่ตรงกับสมาชิกในกิลด์ กรุณาลองใช้ภาพที่คมชัดขึ้น หรือสลับไปใช้โหมด Google AI</span>`;
           }
           return;
         }
@@ -12815,7 +12768,7 @@
           squads,
           confidenceByName
         });
-        showToast(`⚡ Local OCR สแกนพบสมาชิกครบ ${totalDetected} คน! 🎉`, 'success');
+        showToast(`⚡ Local OCR สแกนพบสมาชิกตรงตามภาพ ${totalDetected} คน! 🎉`, 'success');
       } catch (tessErr) {
         console.error('Local Tesseract OCR Error:', tessErr);
         if (statusEl) {
@@ -12864,30 +12817,26 @@
         const prompt = `You are a high-precision OCR and character name extractor for the MMORPG 'LORD NINE' (LORDNINE / ลอร์ดไนน์).
 Examine this screenshot of the in-game squad / assembly management window titled 'จัดการชุมนุม' (Squad Management).
 
-Guild member roster for reference and fuzzy spelling matching:
+Guild member roster for reference and exact spelling matching:
 ${memberRoster}
 
-Tasks:
-1. Identify each squad unit (หน่วย 1, หน่วย 2, หน่วย 3, หน่วย 4, etc. shown with blue/cyan numbers on the left).
-2. Extract all character names placed in each squad slot (including Chinese, Japanese, and special characters like yn官, Hanchirisu改善, Birkenstockツ, Starix死, etc.).
-3. Match each detected character name against the guild roster if a matching member exists.
+CRITICAL ACCURACY INSTRUCTIONS:
+1. Extract ONLY the exact character names that appear visibly inside each of the 4 squad unit rows (หน่วย 1, หน่วย 2, หน่วย 3, หน่วย 4).
+2. DO NOT guess, hallucinate, or add any character names from the guild roster that are NOT visibly present in the screenshot.
+3. If a slot is empty or unreadable, leave it out. Never invent or borrow extra names.
+4. Support multilingual names precisely (Thai like ไข่ลวก, ไข่มอส, English like Hanumanz, Mindgame, Chinese like yn官, Japanese like 大和YAMATOOO, special chars like Hanchirisu改善, etc.).
+5. Match each detected character name against the guild roster if a matching member exists.
 
-Also provide confidenceByName with a numeric confidence from 0 to 100 for every detected name.
-
-Output strictly valid JSON with no markdown wrapping:
+Output strictly valid JSON with no markdown formatting or commentary:
 {
   "squads": [
     {
       "squadNumber": 1,
-      "members": ["ไข่นวย", "yn官", "Hanchirisu改善", "xCOACH", "Starix死"]
-    },
-    {
-      "squadNumber": 2,
-      "members": ["SenjuNo2", "ไข่ล่อ", "Mindgame", "Heuristics", "ไข่มอส"]
+      "members": ["ไข่ลวก", "大和YAMATOOO", "MIDNIGHT", "ไข่มอส", "ไข่บวม"]
     }
   ],
   "allMembers": ["name1", "name2"],
-  "confidenceByName": {"name1": 98, "name2": 72}
+  "confidenceByName": {"name1": 100, "name2": 100}
 }`;
 
         const parsedData = await callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiKey);
@@ -12925,7 +12874,7 @@ Output strictly valid JSON with no markdown wrapping:
           const cleanName = String(rawName).trim();
           if (!cleanName) return;
 
-          const matchResult = findBestGuildMemberMatch(cleanName, 0.62);
+          const matchResult = findBestGuildMemberMatch(cleanName, 0.78);
           const guildMember = matchResult ? matchResult.member : null;
 
           const alreadyChecked = guildMember ? checkMemberAlreadyCheckedForActivities(guildMember, selectedActivities) : false;
