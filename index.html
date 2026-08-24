@@ -12453,21 +12453,178 @@
     function populateSquadActivityOptions() {
       const container = document.getElementById('squad-activity-options');
       if (!container || !Array.isArray(ACTIVITIES)) return;
+      
       const selected = new Set(getSelectedSquadActivities());
-      // Default to selecting the first activity if none is selected
       if (selected.size === 0 && ACTIVITIES.length > 0) {
         selected.add(0);
       }
-      container.innerHTML = ACTIVITIES.map((act, idx) => {
-        const checked = selected.has(idx) ? 'checked' : '';
-        const label = `${act.shortName || act.name || 'Boss'} • ${act.day || '-'} • ${act.weight || 0}%`;
-        return `
-          <label class="flex items-center gap-2 p-2.5 bg-slate-900/80 border border-slate-700 rounded-xl cursor-pointer hover:border-indigo-500/60 transition">
-            <input type="checkbox" name="squad-activity-checkbox" value="${idx}" class="accent-indigo-500" ${checked} onchange="handleSquadActivityChange()">
-            <span class="font-bold text-slate-200 text-[11px]">${escapeHtml(label)}</span>
-          </label>
-        `;
-      }).join('');
+
+      // Collect available unique days
+      const days = [...new Set(ACTIVITIES.map(a => normalizeDay(a.day)))];
+
+      let quickFiltersHtml = `
+        <div class="flex items-center justify-between flex-wrap gap-1.5 pb-2 mb-2 border-b border-slate-800/80">
+          <div class="flex items-center gap-1 flex-wrap">
+            <span class="text-[10px] font-bold text-slate-400 mr-0.5">เลือกด่วน:</span>
+            <button type="button" onclick="selectAllSquadActivities(true)" 
+              class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 transition active:scale-95 shadow-sm">
+              <i class="fa-solid fa-check-double mr-1"></i>เลือกทั้งหมด
+            </button>
+            <button type="button" onclick="selectAllSquadActivities(false)" 
+              class="px-2 py-0.5 rounded-lg text-[10px] font-medium bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700/80 transition active:scale-95">
+              <i class="fa-solid fa-xmark mr-1"></i>ล้าง
+            </button>
+            ${days.map(d => `
+              <button type="button" onclick="selectSquadActivitiesByDay('${d}')" 
+                class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-900 hover:bg-indigo-950/60 text-slate-300 hover:text-indigo-300 border border-slate-800 hover:border-indigo-500/40 transition active:scale-95">
+                ${getDayDisplayName(d, currentLang)}
+              </button>
+            `).join('')}
+          </div>
+          <span id="squad-activity-selected-count" class="text-[10.5px] font-mono font-bold text-indigo-300">
+            เลือกแล้ว ${selected.size}/${ACTIVITIES.length} ตัว
+          </span>
+        </div>
+      `;
+
+      let cardsHtml = `
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+          ${ACTIVITIES.map((act, idx) => {
+            const isChecked = selected.has(idx);
+            const normDay = normalizeDay(act.day);
+            const dayLabel = getDayDisplayName(normDay, currentLang);
+            const colorInfo = getDayColorInfo(normDay);
+            const isLucus = (act.shortName || '').toLowerCase().includes('lucus') || act.weight >= 16;
+            
+            return `
+              <div id="squad-act-card-${idx}" onclick="toggleSquadActivityCard(${idx})"
+                class="squad-activity-card group relative p-2 rounded-xl border transition-all duration-150 cursor-pointer select-none flex flex-col justify-between ${isChecked ? 'bg-gradient-to-br from-indigo-950/70 via-slate-900 to-indigo-950/40 border-indigo-500/80 shadow-[0_0_12px_rgba(99,102,241,0.25)] ring-1 ring-indigo-400/50' : 'bg-slate-900/90 border-slate-800 hover:border-slate-700 hover:bg-slate-900'}">
+                
+                <input type="checkbox" name="squad-activity-checkbox" value="${idx}" class="hidden" ${isChecked ? 'checked' : ''} onchange="handleSquadActivityChange()">
+                
+                <!-- Top: Day Badge & Check Indicator -->
+                <div class="flex items-center justify-between gap-1 mb-1">
+                  <span class="boss-day-tag day-${normDay.toLowerCase()} inline-block px-1.5 py-0.5 rounded-full text-[7.5px] leading-none font-black ${colorInfo.badgeBg}">
+                    ${dayLabel}
+                  </span>
+                  <div class="w-3.5 h-3.5 rounded flex items-center justify-center transition ${isChecked ? 'bg-indigo-500 text-white shadow-sm shadow-indigo-500/50' : 'bg-slate-950 border border-slate-700 text-transparent'}">
+                    <i class="fa-solid fa-check text-[8px]"></i>
+                  </div>
+                </div>
+
+                <!-- Middle: Boss Name -->
+                <div class="font-black text-[11.5px] sm:text-[12px] truncate my-0.5 ${isLucus ? 'text-amber-300 font-black drop-shadow-[0_0_6px_rgba(245,158,11,0.5)]' : (isChecked ? 'text-white' : 'text-slate-200 group-hover:text-white')}" title="${escapeHtml(act.shortName || act.name)}">
+                  ${escapeHtml(act.shortName || act.name)}
+                </div>
+
+                <!-- Bottom: Weight Pill -->
+                <div class="flex items-center justify-between mt-0.5 pt-1 border-t border-slate-800/60">
+                  <span class="boss-weight-tag weight-${act.weight} ${isLucus ? 'weight-lucus' : ''} text-[8px] font-mono font-black px-1.5 py-0.2 rounded-md">
+                    ${act.weight}%
+                  </span>
+                  <span class="text-[8.5px] text-slate-500 font-mono">#${idx + 1}</span>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+
+      container.innerHTML = quickFiltersHtml + cardsHtml;
+    }
+
+    function toggleSquadActivityCard(idx) {
+      const card = document.getElementById(`squad-act-card-${idx}`);
+      if (!card) return;
+      const chk = card.querySelector('input[name="squad-activity-checkbox"]');
+      if (!chk) return;
+      chk.checked = !chk.checked;
+      
+      const checkIndicator = card.querySelector('.fa-check').parentElement;
+      const nameEl = card.querySelector('.font-black');
+      const isLucus = (ACTIVITIES[idx]?.shortName || '').toLowerCase().includes('lucus') || (ACTIVITIES[idx]?.weight || 0) >= 16;
+      
+      if (chk.checked) {
+        card.className = 'squad-activity-card group relative p-2 rounded-xl border transition-all duration-150 cursor-pointer select-none flex flex-col justify-between bg-gradient-to-br from-indigo-950/70 via-slate-900 to-indigo-950/40 border-indigo-500/80 shadow-[0_0_12px_rgba(99,102,241,0.25)] ring-1 ring-indigo-400/50';
+        checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center transition bg-indigo-500 text-white shadow-sm shadow-indigo-500/50';
+        if (!isLucus && nameEl) nameEl.className = 'font-black text-[11.5px] sm:text-[12px] truncate my-0.5 text-white';
+      } else {
+        card.className = 'squad-activity-card group relative p-2 rounded-xl border transition-all duration-150 cursor-pointer select-none flex flex-col justify-between bg-slate-900/90 border-slate-800 hover:border-slate-700 hover:bg-slate-900';
+        checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center transition bg-slate-950 border border-slate-700 text-transparent';
+        if (!isLucus && nameEl) nameEl.className = 'font-black text-[11.5px] sm:text-[12px] truncate my-0.5 text-slate-200 group-hover:text-white';
+      }
+
+      const selected = getSelectedSquadActivities();
+      const counterEl = document.getElementById('squad-activity-selected-count');
+      if (counterEl) counterEl.textContent = `เลือกแล้ว ${selected.length}/${ACTIVITIES.length} ตัว`;
+
+      handleSquadActivityChange();
+    }
+
+    function selectAllSquadActivities(selectAll) {
+      if (!Array.isArray(ACTIVITIES)) return;
+      ACTIVITIES.forEach((_, idx) => {
+        const card = document.getElementById(`squad-act-card-${idx}`);
+        if (card) {
+          const chk = card.querySelector('input[name="squad-activity-checkbox"]');
+          if (chk) chk.checked = selectAll;
+          
+          const checkIndicator = card.querySelector('.fa-check').parentElement;
+          const nameEl = card.querySelector('.font-black');
+          const isLucus = (ACTIVITIES[idx]?.shortName || '').toLowerCase().includes('lucus') || (ACTIVITIES[idx]?.weight || 0) >= 16;
+          
+          if (selectAll) {
+            card.className = 'squad-activity-card group relative p-2 rounded-xl border transition-all duration-150 cursor-pointer select-none flex flex-col justify-between bg-gradient-to-br from-indigo-950/70 via-slate-900 to-indigo-950/40 border-indigo-500/80 shadow-[0_0_12px_rgba(99,102,241,0.25)] ring-1 ring-indigo-400/50';
+            checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center transition bg-indigo-500 text-white shadow-sm shadow-indigo-500/50';
+            if (!isLucus && nameEl) nameEl.className = 'font-black text-[11.5px] sm:text-[12px] truncate my-0.5 text-white';
+          } else {
+            card.className = 'squad-activity-card group relative p-2 rounded-xl border transition-all duration-150 cursor-pointer select-none flex flex-col justify-between bg-slate-900/90 border-slate-800 hover:border-slate-700 hover:bg-slate-900';
+            checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center transition bg-slate-950 border border-slate-700 text-transparent';
+            if (!isLucus && nameEl) nameEl.className = 'font-black text-[11.5px] sm:text-[12px] truncate my-0.5 text-slate-200 group-hover:text-white';
+          }
+        }
+      });
+
+      const selected = getSelectedSquadActivities();
+      const counterEl = document.getElementById('squad-activity-selected-count');
+      if (counterEl) counterEl.textContent = `เลือกแล้ว ${selected.length}/${ACTIVITIES.length} ตัว`;
+
+      handleSquadActivityChange();
+    }
+
+    function selectSquadActivitiesByDay(targetDay) {
+      if (!Array.isArray(ACTIVITIES)) return;
+      const normTarget = normalizeDay(targetDay);
+      ACTIVITIES.forEach((act, idx) => {
+        const normDay = normalizeDay(act.day);
+        const shouldSelect = (normDay === normTarget);
+        
+        const card = document.getElementById(`squad-act-card-${idx}`);
+        if (card) {
+          const chk = card.querySelector('input[name="squad-activity-checkbox"]');
+          if (chk) chk.checked = shouldSelect;
+          
+          const checkIndicator = card.querySelector('.fa-check').parentElement;
+          const nameEl = card.querySelector('.font-black');
+          const isLucus = (ACTIVITIES[idx]?.shortName || '').toLowerCase().includes('lucus') || (ACTIVITIES[idx]?.weight || 0) >= 16;
+          
+          if (shouldSelect) {
+            card.className = 'squad-activity-card group relative p-2 rounded-xl border transition-all duration-150 cursor-pointer select-none flex flex-col justify-between bg-gradient-to-br from-indigo-950/70 via-slate-900 to-indigo-950/40 border-indigo-500/80 shadow-[0_0_12px_rgba(99,102,241,0.25)] ring-1 ring-indigo-400/50';
+            checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center transition bg-indigo-500 text-white shadow-sm shadow-indigo-500/50';
+            if (!isLucus && nameEl) nameEl.className = 'font-black text-[11.5px] sm:text-[12px] truncate my-0.5 text-white';
+          } else {
+            card.className = 'squad-activity-card group relative p-2 rounded-xl border transition-all duration-150 cursor-pointer select-none flex flex-col justify-between bg-slate-900/90 border-slate-800 hover:border-slate-700 hover:bg-slate-900';
+            checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center transition bg-slate-950 border border-slate-700 text-transparent';
+            if (!isLucus && nameEl) nameEl.className = 'font-black text-[11.5px] sm:text-[12px] truncate my-0.5 text-slate-200 group-hover:text-white';
+          }
+        }
+      });
+
+      const selected = getSelectedSquadActivities();
+      const counterEl = document.getElementById('squad-activity-selected-count');
+      if (counterEl) counterEl.textContent = `เลือกแล้ว ${selected.length}/${ACTIVITIES.length} ตัว`;
+
+      handleSquadActivityChange();
     }
 
     function openAiSquadCheckModal() {
