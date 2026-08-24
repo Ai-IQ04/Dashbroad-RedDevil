@@ -2927,34 +2927,39 @@
       background: #eef2f7 !important;
     }
 
+    /* ===== 🤖 Nong Devil Floating Action Assistant Button (Responsive & Soft UI) ===== */
     #nong-devil-floating-btn {
-      bottom: 0.85rem !important;
-      right: 0.75rem !important;
-      opacity: 0.92;
+      bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px)) !important;
+      right: calc(0.85rem + env(safe-area-inset-right, 0px)) !important;
+      opacity: 0.94;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 45 !important;
     }
 
     #nong-devil-floating-btn:hover {
       opacity: 1;
+      transform: scale(1.05);
+    }
+
+    #nong-devil-floating-btn:active {
+      transform: scale(0.92);
     }
 
     #nong-devil-floating-btn>div:last-child {
-      width: 3.75rem !important;
-      height: 3.75rem !important;
-    }
-
-    #nong-devil-floating-btn {
-      bottom: 0.85rem !important;
-      right: 0.75rem !important;
+      width: 3.5rem !important;
+      height: 3.5rem !important;
+      box-shadow: 6px 6px 14px rgba(15, 20, 27, 0.4), -4px -4px 10px rgba(255, 255, 255, 0.08) !important;
     }
 
     #nong-devil-floating-btn>div:first-child {
       box-shadow: 5px 5px 12px rgba(15, 20, 27, 0.42), -4px -4px 9px rgba(255, 255, 255, 0.06) !important;
+      border-radius: 1rem !important;
     }
 
     @media (max-width: 640px) {
       #nong-devil-floating-btn {
-        bottom: 0.5rem !important;
-        right: 0.5rem !important;
+        bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)) !important;
+        right: calc(0.5rem + env(safe-area-inset-right, 0px)) !important;
       }
 
       #nong-devil-floating-btn>div:first-child {
@@ -2967,19 +2972,24 @@
       }
 
       body:has(#nong-devil-floating-btn:not(.hidden)) #scoring-module-container {
-        padding-bottom: 4.5rem !important;
-      }
-
-      body:has(#nong-devil-floating-btn:not(.hidden)) #scoring-module-container>main>div {
-        margin-bottom: 4.5rem !important;
-      }
-
-      body:has(#nong-devil-floating-btn:not(.hidden)) #scoring-module-container {
         padding-bottom: 3.5rem !important;
       }
 
       body:has(#nong-devil-floating-btn:not(.hidden)) #scoring-module-container>main>div {
         margin-bottom: 3.5rem !important;
+      }
+    }
+
+    /* ===== 🖐️ Neumorphic Mobile Touch Feedback (Micro-interactions) ===== */
+    @media (hover: none) and (pointer: coarse) {
+      .apple-btn:active,
+      button:active:not(:disabled) {
+        transform: scale(0.95) !important;
+        transition: transform 0.1s ease !important;
+      }
+
+      input, select, textarea {
+        font-size: 16px !important; /* ป้องกัน iOS Auto-Zoom เมื่อแตะพิมพ์ */
       }
     }
 
@@ -3156,33 +3166,134 @@
       height: 2.85rem !important;
     }
 
+    @media (max-width: 768px) {
+      header {
+        padding: 0.6rem 0.75rem !important;
+      }
+
+      /* Modal Mobile Optimization */
+      .apple-modal-box,
+      [id$="-modal"]>div {
+        max-width: 96% !important;
+        width: 96% !important;
+        max-height: 92vh !important;
+        margin: auto !important;
+        border-radius: 1.5rem !important;
+        padding: 1rem !important;
+      }
+
+      #guild-reward-store-modal .apple-modal-box {
+        max-height: 94vh !important;
+        padding: 0.85rem !important;
+      }
+
+      /* Store Catalog Grid on Mobile */
+      #reward-catalog-grid {
+        grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+        gap: 0.85rem !important;
+      }
+
+      .reward-store-card {
+        padding: 0.85rem !important;
+        border-radius: 1.25rem !important;
+      }
+
+      .reward-store-card div[class*="aspect-video"] {
+        max-height: 160px !important;
+      }
+
+      /* 📱 Mobile Table Horizontal Scroll & Sticky Columns Freeze */
+      #scoring-module-container main>div>div.overflow-y-auto {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+
+      #scoring-module-container table {
+        min-width: 820px !important;
+      }
+
+      /* Freeze 3 First Columns (#, Guild, Name) on Mobile */
+      #main-table-head th:nth-child(1),
+      #member-table-body td:nth-child(1) {
+        position: sticky !important;
+        left: 0 !important;
+        z-index: 15 !important;
+      }
+
+      #main-table-head th:nth-child(2),
+      #member-table-body td:nth-child(2) {
+        position: sticky !important;
+        left: 36px !important;
+        z-index: 15 !important;
+      }
+
+      #main-table-head th:nth-child(3),
+      #member-table-body td:nth-child(3) {
+        position: sticky !important;
+        left: 82px !important;
+        z-index: 15 !important;
+        box-shadow: 4px 0 8px rgba(0, 0, 0, 0.25) !important;
+      }
+
+      #main-table-head th:nth-child(1),
+      #main-table-head th:nth-child(2),
+      #main-table-head th:nth-child(3) {
+        z-index: 25 !important;
+      }
+
+      /* 📱 Boss Timer Cards Mobile Optimization */
+      #boss-cards-grid {
+        grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+        gap: 0.75rem !important;
+      }
+
+      .boss-card {
+        padding: 0.85rem !important;
+        border-radius: 1.25rem !important;
+      }
+
+      .boss-card .apple-btn {
+        min-height: 2.3rem !important;
+        font-size: 0.72rem !important;
+      }
+
+      /* Attendance Checkbox Touch-Friendly */
+      #member-table-body td input[type="checkbox"],
+      #member-table-body td button {
+        min-width: 1.6rem !important;
+        min-height: 1.6rem !important;
+        cursor: pointer !important;
+      }
+    }
+
     @media (max-width: 640px) {
       header {
         padding: 0.5rem 0.625rem !important;
       }
 
       header>div:first-child {
-        gap: 0.5rem !important;
+        gap: 0.4rem !important;
+        flex-wrap: wrap !important;
       }
 
       header>div:first-child>div:first-child {
-        gap: 0.5rem !important;
+        gap: 0.45rem !important;
       }
 
       header>div:first-child>div:first-child>div:first-child {
-        width: 2rem !important;
-        height: 2rem !important;
+        width: 2.1rem !important;
+        height: 2.1rem !important;
         border-radius: 0.75rem !important;
       }
 
       header>div:first-child>div:first-child h1 {
-        font-size: 0.7rem !important;
+        font-size: 0.75rem !important;
         white-space: nowrap !important;
       }
 
       header>div:first-child>div:first-child p {
-        font-size: 0.55rem !important;
-        max-width: 11rem;
+        font-size: 0.58rem !important;
+        max-width: 10rem;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -3191,7 +3302,7 @@
       header>div:first-child>div:nth-child(2) {
         order: 3;
         flex-basis: 100%;
-        margin: 0 !important;
+        margin: 0.25rem 0 0 0 !important;
       }
 
       header>div:first-child>div:nth-child(2)>div {
@@ -3205,8 +3316,9 @@
         flex: 1 1 0;
         justify-content: center;
         white-space: nowrap !important;
-        font-size: 0.62rem !important;
-        padding: 0.45rem 0.6rem !important;
+        font-size: 0.7rem !important;
+        padding: 0.5rem 0.6rem !important;
+        border-radius: 0.85rem !important;
       }
 
       header>div:first-child>div:last-child {
@@ -3217,12 +3329,13 @@
       #admin-toggle-btn,
       #btn-lang-toggle,
       #btn-add-member-top,
-    #btn-export-csv-top,
-    #btn-import-csv-top,
-    #import-csv-input,
+      #btn-export-csv-top,
+      #btn-import-csv-top,
+      #import-csv-input,
       #btn-reset-top {
-        min-height: 2rem !important;
-        padding: 0.35rem 0.5rem !important;
+        min-height: 2.1rem !important;
+        padding: 0.4rem 0.55rem !important;
+        border-radius: 0.85rem !important;
         white-space: nowrap !important;
       }
 
@@ -3237,8 +3350,8 @@
       #scoring-sub-header {
         align-items: stretch !important;
         gap: 0.5rem !important;
-        margin-top: 0.5rem !important;
-        padding-top: 0.5rem !important;
+        margin-top: 0.4rem !important;
+        padding-top: 0.4rem !important;
       }
 
       #scoring-sub-header>div:first-child {
@@ -3254,6 +3367,7 @@
         justify-content: flex-start;
         scrollbar-width: none;
         white-space: nowrap;
+        padding: 0.2rem !important;
       }
 
       #week-tabs-bar::-webkit-scrollbar {
@@ -3269,10 +3383,10 @@
       #admin-hub-container {
         width: 100%;
         display: grid !important;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.35rem !important;
-        padding: 0.35rem !important;
-        border-radius: 1rem !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.4rem !important;
+        padding: 0.45rem !important;
+        border-radius: 1.15rem !important;
       }
 
       #member-hub-container button,
@@ -3282,8 +3396,9 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        padding: 0.45rem 0.25rem !important;
-        font-size: 0.58rem !important;
+        padding: 0.5rem 0.35rem !important;
+        font-size: 0.68rem !important;
+        border-radius: 0.75rem !important;
       }
 
       #member-hub-container button span,
@@ -3302,8 +3417,8 @@
 
       .apple-kpi-card {
         min-width: 0;
-        padding: 0.7rem !important;
-        border-radius: 1rem !important;
+        padding: 0.75rem !important;
+        border-radius: 1.15rem !important;
         position: relative;
       }
 
@@ -3318,8 +3433,8 @@
         border-radius: 0.7rem !important;
         font-size: 0.85rem !important;
         position: absolute;
-        top: 0.7rem;
-        right: 0.7rem;
+        top: 0.75rem;
+        right: 0.75rem;
       }
 
       .apple-kpi-card .truncate {
@@ -3339,13 +3454,14 @@
 
       .apple-kpi-card .text-\[10\.5px\],
       .apple-kpi-card .text-\[10px\] {
-        font-size: 0.55rem !important;
+        font-size: 0.58rem !important;
       }
 
       #scoring-module-container>main {
-        padding: 0.5rem !important;
+        padding: 0.4rem !important;
       }
     }
+
     /* ================= Dark theme consistency pass ================= */
     body.neo-dark {
       --neo-bg: #202832;

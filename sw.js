@@ -1,4 +1,4 @@
-const CACHE_NAME = 'reddevil-app-v58';
+const CACHE_NAME = 'reddevil-app-v61';
 const APP_SHELL = [
   './',
   './index.html',
