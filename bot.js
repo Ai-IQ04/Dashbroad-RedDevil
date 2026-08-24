@@ -48,6 +48,8 @@ let CONFIG = {
   DISCORD_BOT_TOKEN: '',
   REGISTRATION_CHANNEL_ID: '',
   BOSS_ALERT_CHANNEL_ID: '1538638951089180742',
+  ANNOUNCEMENT_CHANNEL_ID: '1539252263132860516',
+  ADMIN_REQUEST_CHANNEL_ID: '1541279270096212068',
   MENTION_TAG: '@Member',
   FIREBASE_DB_URL: 'https://reddevil-f229e-default-rtdb.asia-southeast1.firebasedatabase.app'
 };
@@ -68,6 +70,7 @@ CONFIG = {
   REGISTRATION_CHANNEL_ID: process.env.REGISTRATION_CHANNEL_ID || CONFIG.REGISTRATION_CHANNEL_ID,
   BOSS_ALERT_CHANNEL_ID: process.env.BOSS_ALERT_CHANNEL_ID || CONFIG.BOSS_ALERT_CHANNEL_ID,
   ANNOUNCEMENT_CHANNEL_ID: process.env.ANNOUNCEMENT_CHANNEL_ID || CONFIG.ANNOUNCEMENT_CHANNEL_ID,
+  ADMIN_REQUEST_CHANNEL_ID: process.env.ADMIN_REQUEST_CHANNEL_ID || CONFIG.ADMIN_REQUEST_CHANNEL_ID,
   MENTION_TAG: process.env.MENTION_TAG || CONFIG.MENTION_TAG,
   FIREBASE_DB_URL: process.env.FIREBASE_DB_URL || CONFIG.FIREBASE_DB_URL
 };
@@ -355,20 +358,69 @@ async function checkFirebaseSyncCommand() {
   }
 }
 
+let outboundAlertsInProgress = false;
+async function checkOutboundAlertsCommand() {
+  if (outboundAlertsInProgress) return;
+  try {
+    const endpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/outbound_alerts.json`;
+    const response = await fetch(endpoint);
+    if (!response.ok) return;
+
+    const data = await response.json();
+    if (!data || typeof data !== 'object') return;
+
+    outboundAlertsInProgress = true;
+    for (const [key, item] of Object.entries(data)) {
+      if (!item) continue;
+      const targetChannelId = item.channelId || CONFIG.ADMIN_REQUEST_CHANNEL_ID || '1541279270096212068';
+      const channel = await client.channels.fetch(targetChannelId).catch(() => null);
+      if (channel && channel.isTextBased()) {
+        const embed = new EmbedBuilder()
+          .setTitle(item.title || '🔔 มีคำขอใหม่จากสมาชิก')
+          .setColor(item.color || 0x3B82F6)
+          .setTimestamp(item.timestamp ? new Date(item.timestamp) : new Date())
+          .setFooter({ text: '🛡️ LORD NINE SYSTEM • Dashboard RedDevil' });
+
+        if (Array.isArray(item.fields)) {
+          item.fields.forEach(f => {
+            if (f.name && f.value) embed.addFields({ name: String(f.name), value: String(f.value), inline: Boolean(f.inline) });
+          });
+        }
+        if (item.description) embed.setDescription(item.description);
+
+        const content = item.content || item.mentionTag || '';
+        await channel.send({ content: content || undefined, embeds: [embed] });
+        console.log(`📤 [Bot Alert] ส่งแจ้งเตือนคำขอเข้าห้อง ${targetChannelId} เรียบร้อยแล้ว`);
+      }
+
+      await fetch(`${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/outbound_alerts/${key}.json`, {
+        method: 'DELETE'
+      }).catch(() => {});
+    }
+  } catch (err) {
+    console.warn('⚠️ [Outbound Alert] Error processing alert:', err.message);
+  } finally {
+    outboundAlertsInProgress = false;
+  }
+}
+
 // 🟢 เมื่อบอทออนไลน์สำเร็จ
 client.once('ready', async () => {
   console.log('====================================================');
   console.log(`🤖 บอทเชื่อมต่อ Discord สำเร็จในชื่อ: ${client.user.tag}`);
   console.log(`🔥 ฐานข้อมูล Firebase: ${CONFIG.FIREBASE_DB_URL}`);
   console.log(`📋 สแกนห้องลงทะเบียน: ${CONFIG.REGISTRATION_CHANNEL_ID || 'ทั้งหมด'}`);
+  console.log(`📢 ห้องแจ้งเตือนคำขอ Admin: ${CONFIG.ADMIN_REQUEST_CHANNEL_ID || '1541279270096212068'}`);
   console.log('====================================================');
 
   await scanRegistrationHistory();
   await syncDiscordServerMembers();
 
-  // หน้าเว็บส่งคำสั่งผ่าน guild_app/bot_commands/sync_trigger
+  // หน้าเว็บส่งคำสั่งผ่าน Firebase
   setInterval(checkFirebaseSyncCommand, SYNC_POLL_INTERVAL_MS);
+  setInterval(checkOutboundAlertsCommand, 3000);
   await checkFirebaseSyncCommand();
+  await checkOutboundAlertsCommand();
 
   // ซิงค์รายชื่อสมาชิก Discord และส่ง Heartbeat ทุกๆ 30 วินาที
   setInterval(async () => {

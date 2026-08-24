@@ -1,5 +1,5 @@
 {
-  "version": "1.5.8",
-  "buildTime": 1787118000000,
-  "releaseNotes": "Add Weekly CP Progression, CP Growth badges, sparklines, and Top 10 Most Improved CP leaderboard"
+  "version": "1.6.0",
+  "buildTime": 1787123000000,
+  "releaseNotes": "Enhanced Attendance Appeal Approval modal with evidence lightbox, score & dividend impact simulation, and quick reject reasons"
 }

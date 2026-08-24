@@ -741,6 +741,7 @@ function jsonOutput_(data) {
 const BOSS_ALERT_TIMEZONE = 'Asia/Bangkok';
 const BOSS_ALERT_LOG_SHEET_NAME = 'Boss Alert Log';
 const BOSS_ALERT_FIREBASE_URL = 'https://reddevil-f229e-default-rtdb.asia-southeast1.firebasedatabase.app';
+const BOSS_ALERT_DEFAULT_ROLE_ID = '1508495658162851970';
 const BOSS_ALERT_WARNING_MS = 5 * 60 * 1000;
 const BOSS_ALERT_SPAWN_GRACE_MS = 15 * 60 * 1000;
 
@@ -821,7 +822,7 @@ function checkBossAlerts() {
     if (!webhook) return;
     const timers = fetchBossAlertFirebase_('guild_app/boss_timers') || {};
     const custom = fetchBossAlertFirebase_('guild_app/boss_custom_configs') || {};
-    const roleId = String(props.getProperty('BOSS_ALERT_ROLE_ID') || fetchBossAlertFirebase_('guild_app/boss_discord_role_id') || '').trim();
+    const roleId = String(props.getProperty('BOSS_ALERT_ROLE_ID') || fetchBossAlertFirebase_('guild_app/boss_discord_role_id') || BOSS_ALERT_DEFAULT_ROLE_ID || '').trim();
     const logSheet = getBossAlertLogSheet_();
     const sent = readBossAlertKeys_(logSheet);
     const candidates = [];

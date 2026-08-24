@@ -3814,6 +3814,7 @@ function saveSheetWebhookUrl() {
   if (typeof fbDb !== 'undefined' && fbDb) {
     fbDb.ref('guild_app/boss_sheet_webhook').set(sheetUrl);
     fbDb.ref('guild_app/boss_discord_webhook').set(discordUrl);
+    fbDb.ref('guild_app/boss_discord_role_id').set(bossDiscordRoleId || '1508495658162851970');
     fbDb.ref('guild_app/boss_gemini_api_key').set(geminiKey);
   }
 
