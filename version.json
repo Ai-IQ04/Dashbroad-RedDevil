@@ -1,5 +1,6 @@
 {
-  "version": "1.6.1",
-  "buildTime": 1787124000000,
-  "releaseNotes": "Update Admin Request alerts to mention role 1508502265097621544 exclusively in channel 1541279270096212068"
+  "version": "1.6.2",
+  "buildTime": 1787126000000,
+  "releaseNotes": "Redesign Guild Reward Store modal with dedicated Light Neumorphism (Soft UI) styling"
 }
+

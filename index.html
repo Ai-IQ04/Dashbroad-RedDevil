@@ -2571,7 +2571,258 @@
       box-shadow: inset 2px 2px 4px rgba(15, 20, 27, 0.5) !important;
     }
 
-    /* ปรับหัวตารางและแถวข้อมูลให้เป็นสไตล์ Neumorphism (พื้นผิวนูน + เงา) ใน light mode */
+    /* ===== 🎁 Guild Reward Store (ร้านค้าของรางวัล) - Light Mode Neumorphic (Soft UI) Theme ===== */
+    
+    /* 1. Modal Frame & Backdrop */
+    body:not(.neo-dark) #guild-reward-store-modal .apple-modal-box,
+    body:not(.neo-dark) #reward-lightbox-modal>div,
+    body:not(.neo-dark) #reward-approval-modal>div,
+    body:not(.neo-dark) #reward-winner-modal>div {
+      background: linear-gradient(145deg, #ffffff 0%, #edf2f8 100%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.95) !important;
+      box-shadow: 20px 20px 45px rgba(166, 178, 198, 0.38), -16px -16px 36px #ffffff !important;
+      color: #1e293b !important;
+      border-radius: 26px !important;
+    }
+
+    /* Modal Header & Close Button */
+    body:not(.neo-dark) #guild-reward-store-modal h3 {
+      color: #0f172a !important;
+      font-weight: 900 !important;
+    }
+    body:not(.neo-dark) #guild-reward-store-modal button[onclick="closeRewardStoreModal()"] {
+      background: linear-gradient(145deg, #ffffff, #eef2f7) !important;
+      border: 1px solid rgba(255, 255, 255, 0.95) !important;
+      box-shadow: 4px 4px 10px rgba(166, 178, 198, 0.28), -3px -3px 8px #ffffff !important;
+      color: #64748b !important;
+      border-radius: 14px !important;
+    }
+    body:not(.neo-dark) #guild-reward-store-modal button[onclick="closeRewardStoreModal()"]:hover {
+      background: #fee2e2 !important;
+      color: #ef4444 !important;
+      border-color: rgba(239, 68, 68, 0.3) !important;
+      transform: scale(1.05);
+    }
+
+    /* 2. Monthly cycle notice banner */
+    body:not(.neo-dark) #guild-reward-store-modal div[class*="from-amber-950"] {
+      background: linear-gradient(145deg, #fffbeb, #fef3c7) !important;
+      border: 1px solid rgba(245, 158, 11, 0.4) !important;
+      color: #92400e !important;
+      box-shadow: 4px 4px 12px rgba(245, 158, 11, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+      border-radius: 16px !important;
+    }
+    body:not(.neo-dark) #guild-reward-store-modal div[class*="from-amber-950"] span,
+    body:not(.neo-dark) #guild-reward-store-modal div[class*="from-amber-950"] i {
+      color: #b45309 !important;
+    }
+
+    /* 3. Navigation Tabs & Points Selector Bar */
+    body:not(.neo-dark) #guild-reward-store-modal div[class*="bg-slate-950/60"] {
+      background: linear-gradient(145deg, #f1f5f9, #e9edf4) !important;
+      border: 1px solid rgba(255, 255, 255, 0.8) !important;
+      box-shadow: inset 2px 2px 5px rgba(166, 178, 198, 0.25), inset -2px -2px 5px #ffffff !important;
+      border-radius: 20px !important;
+    }
+    body:not(.neo-dark) #guild-reward-store-modal div[class*="bg-slate-900/90"] {
+      background: #e2e8f0 !important;
+      border: 1px solid rgba(203, 213, 225, 0.6) !important;
+      border-radius: 16px !important;
+      box-shadow: inset 2px 2px 4px rgba(166, 178, 198, 0.3), inset -2px -2px 4px #ffffff !important;
+    }
+
+    /* Inactive and Active Tab Buttons */
+    body:not(.neo-dark) #btn-store-tab-catalog,
+    body:not(.neo-dark) #btn-store-tab-history,
+    body:not(.neo-dark) #btn-store-tab-admin {
+      background: linear-gradient(145deg, #ffffff, #edf2f7) !important;
+      border: 1px solid rgba(255, 255, 255, 0.9) !important;
+      color: #475569 !important;
+      box-shadow: 3px 3px 7px rgba(166, 178, 198, 0.25), -2px -2px 5px #ffffff !important;
+      border-radius: 12px !important;
+      transition: all 0.2s ease !important;
+    }
+    body:not(.neo-dark) #btn-store-tab-catalog.apple-btn-gold,
+    body:not(.neo-dark) #btn-store-tab-history.apple-btn-gold,
+    body:not(.neo-dark) #btn-store-tab-admin.apple-btn-gold {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(253, 230, 138, 0.45) !important;
+      box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    }
+
+    /* User Points Badge */
+    body:not(.neo-dark) #store-user-points-badge {
+      background: linear-gradient(145deg, #ffffff, #fff7ed) !important;
+      border: 1px solid rgba(245, 158, 11, 0.35) !important;
+      box-shadow: 4px 4px 10px rgba(166, 178, 198, 0.22), -3px -3px 8px #ffffff !important;
+      border-radius: 16px !important;
+    }
+    body:not(.neo-dark) #store-user-points-badge span:first-child {
+      color: #9a3412 !important;
+      font-weight: 800 !important;
+    }
+    body:not(.neo-dark) #store-user-points-val {
+      color: #ea580c !important;
+      font-weight: 900 !important;
+    }
+
+    /* 4. Tab Admin: Box 1 — Admin Bonus Points Management (Soft Warm Neumorphic Card) */
+    body:not(.neo-dark) #store-tab-admin>div[class*="from-slate-900"],
+    body:not(.neo-dark) #store-tab-admin>div:first-child {
+      background: linear-gradient(145deg, #ffffff 0%, #fff8f0 100%) !important;
+      border: 1.5px solid rgba(249, 115, 22, 0.35) !important;
+      box-shadow: 8px 8px 20px rgba(234, 179, 120, 0.2), -6px -6px 16px #ffffff !important;
+      border-radius: 20px !important;
+    }
+    body:not(.neo-dark) #store-tab-admin>div:first-child h4 {
+      color: #c2410c !important;
+      font-weight: 900 !important;
+    }
+    body:not(.neo-dark) #store-tab-admin>div:first-child label {
+      color: #7c2d12 !important;
+      font-weight: 700 !important;
+    }
+    body:not(.neo-dark) #store-tab-admin button[onclick="cancelAllTestOrdersAndRefundAll()"] {
+      background: linear-gradient(145deg, #ffffff, #fee2e2) !important;
+      border: 1px solid rgba(244, 63, 94, 0.3) !important;
+      color: #be123c !important;
+      box-shadow: 3px 3px 8px rgba(244, 63, 94, 0.15), -2px -2px 6px #ffffff !important;
+    }
+    body:not(.neo-dark) #store-tab-admin span[class*="text-amber-300"][class*="bg-amber-500"] {
+      background: #ffedd5 !important;
+      color: #c2410c !important;
+      border: 1px solid rgba(249, 115, 22, 0.35) !important;
+    }
+
+    /* 5. Tab Admin: Box 2 — Add Item Form (Soft Raised Neumorphic Card) */
+    body:not(.neo-dark) #store-tab-admin>div[class*="bg-slate-950/90"],
+    body:not(.neo-dark) #store-tab-admin>div:nth-child(2) {
+      background: linear-gradient(145deg, #ffffff 0%, #f4f7fc 100%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.95) !important;
+      box-shadow: 8px 8px 20px rgba(166, 178, 198, 0.25), -6px -6px 16px #ffffff !important;
+      border-radius: 20px !important;
+    }
+    body:not(.neo-dark) #store-tab-admin>div:nth-child(2) h4 {
+      color: #0f172a !important;
+      font-weight: 800 !important;
+    }
+    body:not(.neo-dark) #store-tab-admin>div:nth-child(2) label {
+      color: #334155 !important;
+      font-weight: 700 !important;
+    }
+
+    /* 6. Inputs, Selects & Textareas inside #guild-reward-store-modal */
+    body:not(.neo-dark) #guild-reward-store-modal input,
+    body:not(.neo-dark) #guild-reward-store-modal select,
+    body:not(.neo-dark) #guild-reward-store-modal textarea {
+      background: #ffffff !important;
+      border: 1.5px solid rgba(203, 213, 225, 0.85) !important;
+      border-radius: 12px !important;
+      box-shadow: inset 2px 2px 5px rgba(166, 178, 198, 0.2), inset -2px -2px 5px #ffffff, 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+      color: #0f172a !important;
+      font-weight: 600 !important;
+    }
+    body:not(.neo-dark) #guild-reward-store-modal input:focus,
+    body:not(.neo-dark) #guild-reward-store-modal select:focus,
+    body:not(.neo-dark) #guild-reward-store-modal textarea:focus {
+      border-color: #f97316 !important;
+      box-shadow: inset 2px 2px 4px rgba(249, 115, 22, 0.08), 0 0 0 3px rgba(249, 115, 22, 0.15) !important;
+      outline: none !important;
+    }
+    body:not(.neo-dark) #guild-reward-store-modal input::placeholder,
+    body:not(.neo-dark) #guild-reward-store-modal textarea::placeholder {
+      color: #94a3b8 !important;
+      font-weight: 400 !important;
+    }
+
+    /* 7. Image Upload Dropzone inside Store Modal */
+    body:not(.neo-dark) #store-img-dropzone {
+      background: linear-gradient(145deg, #f8fafc, #f1f5f9) !important;
+      border: 2px dashed rgba(203, 213, 225, 0.95) !important;
+      border-radius: 16px !important;
+      box-shadow: inset 2px 2px 6px rgba(166, 178, 198, 0.15), inset -2px -2px 6px #ffffff !important;
+      transition: all 0.25s ease !important;
+    }
+    body:not(.neo-dark) #store-img-dropzone:hover {
+      background: #fff7ed !important;
+      border-color: #f97316 !important;
+      box-shadow: inset 2px 2px 6px rgba(249, 115, 22, 0.1), 0 0 12px rgba(249, 115, 22, 0.15) !important;
+    }
+    body:not(.neo-dark) #store-img-dropzone i {
+      color: #ea580c !important;
+    }
+    body:not(.neo-dark) #store-img-dropzone p:first-of-type {
+      color: #1e293b !important;
+      font-weight: 700 !important;
+    }
+    body:not(.neo-dark) #store-img-dropzone p:last-of-type {
+      color: #64748b !important;
+    }
+
+    /* 8. Add Item Submit Button */
+    body:not(.neo-dark) #guild-reward-store-modal button[onclick="saveNewStoreItem()"] {
+      background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%) !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(254, 215, 170, 0.4) !important;
+      box-shadow: 4px 4px 14px rgba(234, 88, 12, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+      border-radius: 14px !important;
+    }
+    body:not(.neo-dark) #guild-reward-store-modal button[onclick="saveNewStoreItem()"]:hover {
+      background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%) !important;
+      box-shadow: 6px 6px 18px rgba(234, 88, 12, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+      transform: translateY(-2px);
+    }
+
+    /* 9. Catalog Items Grid & Cards in Light Mode */
+    body:not(.neo-dark) #reward-catalog-grid>div,
+    body:not(.neo-dark) .reward-store-card {
+      background: linear-gradient(145deg, #ffffff 0%, #f4f7fc 100%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.95) !important;
+      border-radius: 18px !important;
+      box-shadow: 6px 6px 16px rgba(166, 178, 198, 0.28), -4px -4px 12px #ffffff !important;
+    }
+    body:not(.neo-dark) #reward-catalog-grid>div:hover,
+    body:not(.neo-dark) .reward-store-card:hover {
+      box-shadow: 8px 8px 22px rgba(166, 178, 198, 0.38), -6px -6px 16px #ffffff !important;
+      transform: translateY(-3px) !important;
+    }
+    body:not(.neo-dark) #reward-catalog-grid h4,
+    body:not(.neo-dark) .reward-store-card h4 {
+      color: #0f172a !important;
+      font-weight: 800 !important;
+    }
+    body:not(.neo-dark) #reward-catalog-grid p,
+    body:not(.neo-dark) .reward-store-card p {
+      color: #64748b !important;
+    }
+    body:not(.neo-dark) #reward-catalog-grid div[class*="aspect-video"],
+    body:not(.neo-dark) .reward-store-card div[class*="aspect-video"] {
+      background: #f1f5f9 !important;
+      border-radius: 14px !important;
+      border: 1px solid rgba(203, 213, 225, 0.6) !important;
+    }
+
+    /* 10. History Table in Light Mode */
+    body:not(.neo-dark) #store-tab-history table {
+      background: #ffffff !important;
+      border-radius: 18px !important;
+      overflow: hidden !important;
+      box-shadow: 6px 6px 16px rgba(166, 178, 198, 0.22), -4px -4px 12px #ffffff !important;
+    }
+    body:not(.neo-dark) #store-tab-history thead tr {
+      background: #f1f5f9 !important;
+      color: #475569 !important;
+      border-bottom: 1.5px solid #e2e8f0 !important;
+    }
+    body:not(.neo-dark) #store-tab-history tbody tr {
+      background: #ffffff !important;
+      color: #1e293b !important;
+      border-bottom: 1px solid #f1f5f9 !important;
+    }
+    body:not(.neo-dark) #store-tab-history tbody tr:hover {
+      background: #f8fafc !important;
+    }
     body:not(.neo-dark) #main-table-head th,
     body:not(.neo-dark) #member-table-body>tr:not(:last-child)>td {
       background: linear-gradient(145deg, #f4f7fb, #e8edf4) !important;
