@@ -1,6 +1,5 @@
 {
-  "version": "1.6.2",
-  "buildTime": 1787125000000,
-  "releaseNotes": "Revamp Light Mode UI with clean, modern Neumorphism / Soft UI design system"
+  "version": "1.6.1",
+  "buildTime": 1787124000000,
+  "releaseNotes": "Update Admin Request alerts to mention role 1508502265097621544 exclusively in channel 1541279270096212068"
 }
-
