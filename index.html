@@ -5585,46 +5585,48 @@
     </div>
   </div>
 
-  <!-- ================= หน้าต่างป๊อปอัป: ยืนยันปิดรอบสัปดาห์ (Archive Week Modal) ================= -->
+  <!-- ================= หน้าต่างป๊อปอัป: ยืนยันปิดรอบสัปดาห์ (Archive Week Modal - Neumorphism Soft UI) ================= -->
   <div id="archive-week-modal"
-    class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 hidden font-sarabun"
+    onclick="closeArchiveWeekModal()">
     <div
-      class="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-md p-5 shadow-2xl space-y-4 apple-modal-box">
+      class="bg-[#0f1520] border border-amber-500/30 rounded-3xl w-full max-w-md p-5 sm:p-6 shadow-[12px_12px_28px_rgba(0,0,0,0.65),-8px_-8px_20px_rgba(255,255,255,0.035)] space-y-4 apple-modal-box"
+      onclick="event.stopPropagation()">
+      
       <div class="text-center">
         <div
-          class="h-12 w-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-xl mx-auto mb-2">
+          class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-2xl mx-auto mb-2.5 shadow-[inset_2px_2px_4px_rgba(0,0,0,0.5),inset_-1px_-1px_3px_rgba(255,255,255,0.05)]">
           <i class="fa-solid fa-box-archive"></i>
         </div>
-        <h3 class="text-base font-bold text-white" data-i18n="modal_archive_title">บันทึกสรุปคะแนน & ปิดรอบสัปดาห์</h3>
-        <p class="text-xs text-slate-400 mt-1" data-i18n="modal_archive_desc">ระบบจะบันทึก Snapshot
-          สรุปคะแนนของสัปดาห์ปัจจุบันเข้าสู่ประวัติ และรีเซ็ตการเช็คชื่อเพื่อเริ่มสัปดาห์ใหม่</p>
+        <h3 class="text-base font-extrabold text-white tracking-wide" data-i18n="modal_archive_title">บันทึกสรุปคะแนน &amp; ปิดรอบสัปดาห์</h3>
+        <p class="text-xs text-slate-400 mt-1" data-i18n="modal_archive_desc">ระบบจะบันทึก Snapshot สำรองข้อมูลอัตโนมัติ สรุปคะแนนของสัปดาห์ปัจจุบัน และเริ่มสัปดาห์ใหม่</p>
       </div>
 
-      <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2 text-xs">
-        <div class="flex justify-between text-slate-300">
+      <div class="bg-slate-950/90 p-3.5 rounded-2xl border border-slate-800 shadow-[inset_2px_2px_6px_rgba(0,0,0,0.6),inset_-1px_-1px_4px_rgba(255,255,255,0.02)] space-y-2.5 text-xs">
+        <div class="flex justify-between items-center text-slate-300">
           <span data-i18n="archive_week_to_save">สัปดาห์ที่จะบันทึก:</span>
-          <strong id="archive-current-week-label" class="text-indigo-400 font-mono">สัปดาห์ที่ 1</strong>
+          <strong id="archive-current-week-label" class="text-amber-300 font-mono font-bold">สัปดาห์ที่ 1</strong>
         </div>
-        <div class="flex justify-between text-slate-300">
+        <div class="flex justify-between items-center text-slate-300">
           <span data-i18n="archive_total_members_lbl">สมาชิกทั้งหมด:</span>
-          <span id="archive-total-members" class="font-mono text-white">0 คน</span>
+          <span id="archive-total-members" class="font-mono text-white font-bold">0 คน</span>
         </div>
-        <div class="flex justify-between text-emerald-400">
+        <div class="flex justify-between items-center text-emerald-400">
           <span data-i18n="archive_eligible_lbl">ผ่านเกณฑ์ปันผล:</span>
-          <span id="archive-eligible-members" class="font-mono font-bold">0 คน</span>
+          <span id="archive-eligible-members" class="font-mono font-bold text-emerald-300">0 คน</span>
         </div>
       </div>
 
-      <div class="flex items-center gap-2 pt-1">
-        <button onclick="closeArchiveWeekModal()"
-          class="apple-btn apple-btn-slate flex-1 py-2 rounded-xl text-slate-300 text-xs font-semibold"
+      <div class="flex items-center gap-2 pt-2">
+        <button type="button" onclick="closeArchiveWeekModal()"
+          class="flex-1 py-2.5 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] transition"
           data-i18n="btn_cancel">
           ยกเลิก
         </button>
-        <button onclick="confirmArchiveWeek()"
-          class="apple-btn apple-btn-amber flex-1 py-2 rounded-xl text-white text-xs font-semibold shadow-md"
+        <button type="button" onclick="confirmArchiveWeek()"
+          class="flex-1 py-2.5 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] transition"
           data-i18n="btn_archive_confirm">
-          บันทึก & เริ่มสัปดาห์ใหม่
+          บันทึก &amp; เริ่มสัปดาห์ใหม่
         </button>
       </div>
     </div>
@@ -10645,6 +10647,10 @@
         fbDb.ref('guild_app/locked_weeks').set(lockedWeeks);
       }
       syncGoogleSheetsLocks();
+
+      if (typeof createAutoSnapshot === 'function') {
+        createAutoSnapshot(`ล็อกสัปดาห์ ${wName}`);
+      }
 
       addAuditLog(
         'week_locked',
@@ -16463,6 +16469,10 @@ Output strictly valid JSON with no markdown formatting.`;
         return;
       }
 
+      if (typeof createAutoSnapshot === 'function') {
+        createAutoSnapshot(`ปิดรอบครบ 4 สัปดาห์ (Cycle ${currentCycleNumber})`);
+      }
+
       cycleArchives.push({
         cycleNumber: currentCycleNumber,
         archivedAt: new Date().toISOString(),
@@ -16513,6 +16523,10 @@ Output strictly valid JSON with no markdown formatting.`;
     }
 
     function confirmArchiveWeek() {
+      if (typeof createAutoSnapshot === 'function') {
+        createAutoSnapshot(`ปิดรอบสัปดาห์ที่ ${currentWeekNumber} (${getWeekName(currentWeekNumber)})`);
+      }
+
       const total = members.length;
       const eligibleCount = members.filter(m => isEligible(m.checks)).length;
       const eligibleRate = total > 0 ? ((eligibleCount / total) * 100).toFixed(1) : "0.0";
@@ -18821,34 +18835,413 @@ Output strictly valid JSON with no markdown formatting.`;
     }
 
     // ================= ฟีเจอร์: สำรองและกู้คืนข้อมูล (Backup & Restore JSON) =================
+    // ================= 🩺 ระบบศูนย์ตรวจสุขภาพ วินิจฉัย และซ่อมแซมระบบอัตโนมัติ (System Health Hub) =================
+    let autoSnapshots = parseLocalStorageJson('guild_auto_snapshots', []);
+
+    function saveAutoSnapshots() {
+      // Limit to last 20 snapshots to prevent storage bloat
+      if (autoSnapshots.length > 20) {
+        autoSnapshots = autoSnapshots.slice(0, 20);
+      }
+      localStorage.setItem('guild_auto_snapshots', JSON.stringify(autoSnapshots));
+      if (fbDb) {
+        fbDb.ref('guild_app/auto_snapshots').set(autoSnapshots.slice(0, 10)).catch(() => {});
+      }
+    }
+
+    function createAutoSnapshot(reason = 'Manual Snapshot') {
+      try {
+        const snapshot = {
+          id: `snap_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+          timestamp: new Date().toISOString(),
+          reason: reason,
+          weekNumber: currentWeekNumber,
+          cycleNumber: typeof currentCycleNumber !== 'undefined' ? currentCycleNumber : 1,
+          totalMembers: (members || []).length,
+          totalGuilds: (guildsList || []).length,
+          members: JSON.parse(JSON.stringify(members || [])),
+          guildsList: JSON.parse(JSON.stringify(guildsList || [])),
+          weekNames: JSON.parse(JSON.stringify(weekNames || {})),
+          lockedWeeks: typeof lockedWeeks !== 'undefined' ? JSON.parse(JSON.stringify(lockedWeeks)) : {}
+        };
+        autoSnapshots.unshift(snapshot);
+        saveAutoSnapshots();
+        return snapshot;
+      } catch (err) {
+        console.warn('Auto Snapshot creation warning:', err);
+        return null;
+      }
+    }
+
+    function triggerManualSnapshot() {
+      const snap = createAutoSnapshot('บันทึกด้วยตนเอง (Manual Snapshot)');
+      if (snap) {
+        renderAutoSnapshotsList();
+        showToast('📸 บันทึก Auto-Snapshot สำเร็จเรียบร้อยแล้ว', 'success');
+      }
+    }
+
+    function renderAutoSnapshotsList() {
+      const container = document.getElementById('auto-snapshots-container');
+      if (!container) return;
+
+      if (!autoSnapshots || autoSnapshots.length === 0) {
+        container.innerHTML = `
+          <div class="py-4 text-center text-slate-500 text-xs">
+            <i class="fa-solid fa-camera-retro text-base mb-1 block text-slate-600"></i>
+            ยังไม่มีประวัติ Snapshot ระบบจะบันทึกให้อัตโนมัติเมื่อมีการล็อกสัปดาห์
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      autoSnapshots.forEach(snap => {
+        const dateObj = new Date(snap.timestamp);
+        const timeFormatted = `${dateObj.toLocaleDateString('th-TH')} ${dateObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}`;
+
+        html += `
+          <div class="p-2.5 rounded-xl bg-slate-950/90 border border-slate-800 flex items-center justify-between gap-2.5 text-xs transition hover:border-slate-700">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="font-bold text-white truncate">${escapeHtml(snap.reason || 'Snapshot')}</span>
+                <span class="px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 text-[10px] font-mono font-bold">W${snap.weekNumber || 1}</span>
+              </div>
+              <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2 font-mono">
+                <span>🕒 ${timeFormatted}</span>
+                <span>• สมาชิก ${snap.totalMembers || (snap.members ? snap.members.length : 0)} คน</span>
+              </div>
+            </div>
+            <button type="button" onclick="restoreFromAutoSnapshot('${snap.id}')"
+              class="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[11px] font-bold transition shrink-0 flex items-center gap-1">
+              <i class="fa-solid fa-rotate-left text-[10px]"></i> <span>ย้อนคืน</span>
+            </button>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function restoreFromAutoSnapshot(snapshotId) {
+      if (!isAdmin) {
+        showToast('เฉพาะ Admin เท่านั้นที่สามารถกู้คืน Snapshot ได้', 'warning');
+        openAdminEmailModal();
+        return;
+      }
+
+      const snap = autoSnapshots.find(s => s.id === snapshotId);
+      if (!snap || !Array.isArray(snap.members)) {
+        showToast('ไม่พบข้อมูล Snapshot ที่ต้องการกู้คืน', 'error');
+        return;
+      }
+
+      const dateStr = new Date(snap.timestamp).toLocaleString('th-TH');
+      if (!confirm(`ยืนยันการย้อนคืนข้อมูลไปยัง Snapshot เมื่อ:\n"${dateStr}" (${snap.reason})\n\nจำนวนสมาชิก: ${snap.members.length} คน\n\nต้องการดำเนินการใช่หรือไม่?`)) {
+        return;
+      }
+
+      // Create a safety snapshot of current state before rollback
+      createAutoSnapshot(`ก่อนย้อนคืน Snapshot (${dateStr})`);
+
+      members = JSON.parse(JSON.stringify(snap.members));
+      members.forEach(ensureMemberWeeklyData);
+      localStorage.setItem('guild_members_data', JSON.stringify(members));
+
+      if (Array.isArray(snap.guildsList) && snap.guildsList.length > 0) {
+        guildsList = JSON.parse(JSON.stringify(snap.guildsList));
+        saveGuildsList();
+        populateGuildSelects();
+      }
+
+      if (snap.weekNames) {
+        weekNames = JSON.parse(JSON.stringify(snap.weekNames));
+        saveWeekNames();
+      }
+
+      if (snap.weekNumber) {
+        currentWeekNumber = snap.weekNumber;
+        localStorage.setItem('guild_current_week', currentWeekNumber);
+      }
+
+      if (snap.lockedWeeks) {
+        lockedWeeks = JSON.parse(JSON.stringify(snap.lockedWeeks));
+        localStorage.setItem('guild_locked_weeks', JSON.stringify(lockedWeeks));
+        if (fbDb) fbDb.ref('guild_app/locked_weeks').set(lockedWeeks).catch(() => {});
+      }
+
+      saveData();
+      renderTableHeader();
+      renderWeekTabs();
+      renderLockBanner();
+      renderTable();
+      updateKPIs();
+      closeBackupRestoreModal();
+
+      addAuditLog(
+        'clear',
+        `ย้อนคืนข้อมูลจาก Auto-Snapshot`,
+        `กู้คืน Snapshot วันที่: ${dateStr} (เหตุผล: ${snap.reason})`
+      );
+
+      showToast(`✓ ย้อนคืนข้อมูลจาก Snapshot สำเร็จ (${members.length} คน)`, 'success');
+    }
+
     async function openSystemHealthModal() {
       if (!isAdmin) {
-        showToast('เฉพาะ Admin เท่านั้น', 'warning');
+        showToast('เฉพาะ Admin เท่านั้นที่สามารถเข้าถึงศูนย์ตรวจสุขภาพระบบได้', 'warning');
+        openAdminEmailModal();
         return;
       }
       const modal = document.getElementById('system-health-modal');
       const content = document.getElementById('system-health-content');
+      const badgeEl = document.getElementById('health-overall-badge');
       if (!modal || !content) return;
+
       modal.classList.remove('hidden');
-      content.innerHTML = '<div class="py-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังตรวจสอบระบบ...</div>';
+      content.innerHTML = `
+        <div class="py-12 text-center text-slate-400 space-y-3">
+          <div class="inline-block relative">
+            <i class="fa-solid fa-heart-pulse text-3xl text-sky-400 animate-bounce"></i>
+            <span class="w-3 h-3 rounded-full bg-sky-400 absolute top-0 right-0 animate-ping"></span>
+          </div>
+          <div class="text-xs font-semibold text-slate-300">กำลังตรวจสอบและวินิจฉัยโครงสร้างระบบทั้งหมด...</div>
+        </div>
+      `;
+
+      // Run Diagnostics
+      const startTime = performance.now();
+      let firebaseConnected = false;
+      let firebaseLatency = 0;
+
+      // 1. Check Firebase
       try {
-        const url = `${GOOGLE_SHEETS_SYNC_URL}?token=${encodeURIComponent(GOOGLE_SHEETS_SYNC_TOKEN)}&ts=${Date.now()}`;
-        const response = await fetch(url, { cache: 'no-store' });
-        const result = await response.json();
-        if (!result.ok || !result.health) throw new Error('ไม่พบข้อมูลสุขภาพระบบ');
-        const health = result.health;
-        const rows = Object.entries(health.sheets || {}).map(([name, count]) =>
-          `<div class="flex justify-between border-b border-slate-800 py-2"><span class="text-slate-300">${escapeHtml(name)}</span><span class="font-mono text-sky-300">${Number(count || 0).toLocaleString()} แถว</span></div>`
-        ).join('');
-        content.innerHTML = `<div class="grid grid-cols-2 gap-3 mb-4">
-          <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3"><div class="text-[10px] text-emerald-300">สถานะซิงค์</div><div class="text-lg font-bold text-emerald-400 mt-1">ปกติ</div></div>
-          <div class="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-3"><div class="text-[10px] text-indigo-300">ตรวจสอบล่าสุด</div><div class="text-xs font-mono text-white mt-2">${new Date(health.checkedAt).toLocaleString('th-TH')}</div></div>
-          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3"><div class="text-[10px] text-slate-500">Audit Log</div><div class="text-lg font-bold text-white mt-1">${Number(health.auditRows || 0).toLocaleString()} รายการ</div></div>
-          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3"><div class="text-[10px] text-slate-500">Backup</div><div class="text-lg font-bold text-white mt-1">${Number(health.backupRows || 0).toLocaleString()} รายการ</div></div>
-        </div><div class="bg-slate-950 rounded-xl border border-slate-800 px-3">${rows}</div>`;
-      } catch (error) {
-        content.innerHTML = `<div class="py-8 text-center text-rose-300"><i class="fa-solid fa-triangle-exclamation mr-2"></i>${escapeHtml(error.message || 'ตรวจสอบระบบไม่สำเร็จ')}</div>`;
+        if (fbDb) {
+          const testRef = fbDb.ref('.info/connected');
+          const snap = await new Promise((resolve) => {
+            const timeout = setTimeout(() => resolve(null), 1500);
+            testRef.once('value', s => {
+              clearTimeout(timeout);
+              resolve(s);
+            }, () => resolve(null));
+          });
+          firebaseConnected = snap ? Boolean(snap.val()) : false;
+          firebaseLatency = Math.round(performance.now() - startTime);
+        }
+      } catch (_) {
+        firebaseConnected = false;
       }
+
+      // 2. Check Storage usage
+      let lsBytes = 0;
+      try {
+        for (let key in localStorage) {
+          if (localStorage.hasOwnProperty(key)) {
+            lsBytes += (localStorage[key].length + key.length) * 2;
+          }
+        }
+      } catch (_) {}
+      const lsKb = (lsBytes / 1024).toFixed(1);
+      const maxStorageKb = 5120; // 5MB standard
+      const storagePct = Math.min(100, ((lsBytes / (maxStorageKb * 1024)) * 100)).toFixed(1);
+
+      // 3. Check Data Integrity
+      const integrityIssues = [];
+      const idSet = new Set();
+      let duplicateIdCount = 0;
+      let missingGuildCount = 0;
+      let malformedWeeklyChecks = 0;
+
+      (members || []).forEach(m => {
+        if (!m.id && m.id !== 0) {
+          integrityIssues.push(`พบตัวละครไม่มี ID: "${m.characterName || 'ไม่ระบุชื่อ'}"`);
+        } else if (idSet.has(m.id)) {
+          duplicateIdCount++;
+        } else {
+          idSet.add(m.id);
+        }
+
+        if (!m.guild || !guildsList.some(g => g.name === m.guild || g.id === m.guild)) {
+          missingGuildCount++;
+        }
+
+        if (!m.weeklyChecks || typeof m.weeklyChecks !== 'object') {
+          malformedWeeklyChecks++;
+        }
+      });
+
+      if (duplicateIdCount > 0) integrityIssues.push(`พบ ID ตัวละครซ้ำกัน ${duplicateIdCount} รายการ`);
+      if (missingGuildCount > 0) integrityIssues.push(`พบสมาชิกที่สังกัดกิลด์ไม่ตรงกับระบบ ${missingGuildCount} คน`);
+      if (malformedWeeklyChecks > 0) integrityIssues.push(`พบโครงสร้างคะแนนบอสไม่สมบูรณ์ ${malformedWeeklyChecks} รายการ`);
+
+      const isHealthy = integrityIssues.length === 0;
+
+      if (badgeEl) {
+        if (isHealthy) {
+          badgeEl.className = "px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold font-mono";
+          badgeEl.innerHTML = "🟢 ระบบสมบูรณ์ 100%";
+        } else {
+          badgeEl.className = "px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-bold font-mono";
+          badgeEl.innerHTML = `⚠️ พบข้อผิดพลาด ${integrityIssues.length} จุด`;
+        }
+      }
+
+      // Render Diagnostic Results UI
+      content.innerHTML = `
+        <!-- Status Top Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          
+          <!-- Cloud Connection -->
+          <div class="p-3.5 rounded-2xl bg-slate-950/90 border ${firebaseConnected ? 'border-emerald-500/30' : 'border-amber-500/30'} shadow-[inset_2px_2px_5px_rgba(0,0,0,0.5),inset_-1px_-1px_3px_rgba(255,255,255,0.02)]">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-semibold mb-1">
+              <span>Firebase Cloud</span>
+              <span class="w-2 h-2 rounded-full ${firebaseConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}"></span>
+            </div>
+            <div class="text-sm font-extrabold ${firebaseConnected ? 'text-emerald-400' : 'text-amber-300'} flex items-center gap-1.5 mt-1">
+              <i class="fa-solid ${firebaseConnected ? 'fa-cloud-bolt' : 'fa-triangle-exclamation'} text-xs"></i>
+              <span>${firebaseConnected ? 'เชื่อมต่อเรียลไทม์' : 'โหมด Local Cache'}</span>
+            </div>
+            <div class="text-[10.5px] text-slate-500 font-mono mt-1">Latency: ${firebaseLatency} ms</div>
+          </div>
+
+          <!-- Local Storage Memory -->
+          <div class="p-3.5 rounded-2xl bg-slate-950/90 border border-indigo-500/30 shadow-[inset_2px_2px_5px_rgba(0,0,0,0.5),inset_-1px_-1px_3px_rgba(255,255,255,0.02)]">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-semibold mb-1">
+              <span>LocalStorage Memory</span>
+              <span class="text-[10px] font-mono text-indigo-300 font-bold">${storagePct}%</span>
+            </div>
+            <div class="text-sm font-extrabold text-white mt-1 font-mono">${lsKb} KB <span class="text-[10px] text-slate-500">/ 5 MB</span></div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1.5">
+              <div class="bg-gradient-to-r from-indigo-500 to-sky-400 h-full rounded-full" style="width: ${storagePct}%"></div>
+            </div>
+          </div>
+
+          <!-- Database Integrity -->
+          <div class="p-3.5 rounded-2xl bg-slate-950/90 border ${isHealthy ? 'border-emerald-500/30' : 'border-rose-500/30'} shadow-[inset_2px_2px_5px_rgba(0,0,0,0.5),inset_-1px_-1px_3px_rgba(255,255,255,0.02)]">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-semibold mb-1">
+              <span>Data Integrity</span>
+              <i class="fa-solid ${isHealthy ? 'fa-circle-check text-emerald-400' : 'fa-circle-exclamation text-rose-400'} text-xs"></i>
+            </div>
+            <div class="text-sm font-extrabold ${isHealthy ? 'text-emerald-400' : 'text-rose-400'} mt-1">
+              ${isHealthy ? 'ข้อมูลถูกต้องสมบูรณ์' : `พบปัญหา ${integrityIssues.length} จุด`}
+            </div>
+            <div class="text-[10.5px] text-slate-500 font-mono mt-1">${(members || []).length} สมาชิก • ${(guildsList || []).length} กิลด์</div>
+          </div>
+
+        </div>
+
+        <!-- Issues or Clean Panel -->
+        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-2">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-stethoscope text-sky-400"></i>
+              <span>ผลการตรวจวิเคราะห์ความสมบูรณ์ของฐานข้อมูล</span>
+            </h4>
+            <span class="text-[10.5px] font-mono text-slate-500">ตรวจสอบเมื่อ ${new Date().toLocaleTimeString('th-TH')}</span>
+          </div>
+
+          ${isHealthy ? `
+            <div class="py-4 text-center text-emerald-400 space-y-1">
+              <i class="fa-solid fa-shield-check text-2xl text-emerald-400"></i>
+              <div class="text-xs font-bold">ไม่พบข้อผิดพลาดหรือข้อมูลขยะในระบบ</div>
+              <p class="text-[11px] text-slate-400">โครงสร้างสมาชิก คะแนนกิจกรรม และกิลด์ทั้งหมดทำงานประสานกันอย่างสมบูรณ์แบบ</p>
+            </div>
+          ` : `
+            <div class="space-y-1.5">
+              ${integrityIssues.map(issue => `
+                <div class="p-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                  <i class="fa-solid fa-triangle-exclamation text-xs text-rose-400 shrink-0"></i>
+                  <span>${escapeHtml(issue)}</span>
+                </div>
+              `).join('')}
+            </div>
+          `}
+        </div>
+
+        <!-- Live Database Records Summary Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center font-mono">
+          <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+            <div class="text-[10px] text-slate-400 font-sarabun">สมาชิกทั้งหมด</div>
+            <div class="text-sm font-bold text-white mt-0.5">${(members || []).length} คน</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+            <div class="text-[10px] text-slate-400 font-sarabun">กิลด์ในระบบ</div>
+            <div class="text-sm font-bold text-amber-300 mt-0.5">${(guildsList || []).length} กิลด์</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+            <div class="text-[10px] text-slate-400 font-sarabun">คำขอ CP คงค้าง</div>
+            <div class="text-sm font-bold text-sky-300 mt-0.5">${(typeof pendingCpRequests !== 'undefined' ? pendingCpRequests.filter(r => r.status === 'pending').length : 0)} รายการ</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+            <div class="text-[10px] text-slate-400 font-sarabun">บันทึก Audit Logs</div>
+            <div class="text-sm font-bold text-purple-300 mt-0.5">${(typeof auditLogs !== 'undefined' ? auditLogs.length : 0)} รายการ</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function runSystemAutoRepair() {
+      if (!isAdmin) {
+        showToast('เฉพาะ Admin เท่านั้นที่สามารถซ่อมแซมระบบได้', 'warning');
+        openAdminEmailModal();
+        return;
+      }
+
+      // 1. Create a Snapshot before repair for 100% Safety
+      createAutoSnapshot('ก่อนเริ่ม Auto-Repair');
+
+      let repairedMembers = 0;
+      let repairedGuilds = 0;
+      const seenIds = new Set();
+      let nextId = 1;
+
+      // Calculate safe nextId
+      members.forEach(m => {
+        const numId = parseInt(m.id);
+        if (!isNaN(numId) && numId >= nextId) {
+          nextId = numId + 1;
+        }
+      });
+
+      // Default guild fallback
+      const defaultGuildName = guildsList[0] ? guildsList[0].name : 'RedDevil';
+
+      // 2. Repair each member
+      members.forEach(m => {
+        // Fix ID
+        if (!m.id || seenIds.has(m.id)) {
+          m.id = nextId++;
+          repairedMembers++;
+        }
+        seenIds.add(m.id);
+
+        // Fix Guild
+        if (!m.guild || !guildsList.some(g => g.name === m.guild || g.id === m.guild)) {
+          m.guild = defaultGuildName;
+          repairedGuilds++;
+        }
+
+        // Fix Weekly Data Structure
+        ensureMemberWeeklyData(m);
+      });
+
+      // 3. Save & Sync
+      saveData();
+      saveGuildsList();
+      renderTableHeader();
+      renderWeekTabs();
+      renderTable();
+      updateKPIs();
+
+      addAuditLog(
+        'clear',
+        `ดำเนินการซ่อมแซมระบบอัตโนมัติ (1-Click Auto-Repair)`,
+        `ซ่อม ID/โครงสร้าง ${repairedMembers} คน | ซ่อมกิลด์ ${repairedGuilds} คน`
+      );
+
+      // Refresh Health UI
+      openSystemHealthModal();
+      showToast(`⚡ ซ่อมแซมระบบเรียบร้อย! (ซ่อมแซมสมาชิก ${repairedMembers + repairedGuilds} รายการ)`, 'success');
     }
 
     function closeSystemHealthModal() {
@@ -18857,6 +19250,7 @@ Output strictly valid JSON with no markdown formatting.`;
     }
 
     function openBackupRestoreModal() {
+      renderAutoSnapshotsList();
       const modal = document.getElementById('backup-restore-modal');
       if (modal) modal.classList.remove('hidden');
     }
@@ -21609,79 +22003,150 @@ Output strictly valid JSON with no markdown formatting.`;
     </div>
   </div>
 
-  <div id="system-health-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-5 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <div><h3 class="text-base font-bold text-white"><i class="fa-solid fa-heart-pulse text-sky-400 mr-2"></i>สุขภาพระบบ</h3><p class="text-[11px] text-slate-400 mt-1">ตรวจสอบ Google Sheets, Audit Log และ Backup</p></div>
-        <button onclick="closeSystemHealthModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+  <!-- ================= 🩺 Modal: ศูนย์ตรวจสุขภาพและวินิจฉัยระบบ (System Health & Diagnostic Hub - Neumorphism Soft UI) ================= -->
+  <div id="system-health-modal"
+    class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 font-sarabun"
+    onclick="closeSystemHealthModal()">
+    <div
+      class="bg-[#0f1520] border border-sky-500/30 rounded-3xl w-full max-w-2xl p-5 sm:p-6 shadow-[12px_12px_28px_rgba(0,0,0,0.65),-8px_-8px_20px_rgba(255,255,255,0.035)] space-y-4 apple-modal-box max-h-[92vh] flex flex-col"
+      onclick="event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-3.5 shrink-0">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-sky-500/20 to-blue-500/20 text-sky-400 border border-sky-500/30 flex items-center justify-center text-xl shadow-[inset_2px_2px_4px_rgba(0,0,0,0.5),inset_-1px_-1px_3px_rgba(255,255,255,0.05)] shrink-0">
+            <i class="fa-solid fa-heart-pulse text-sky-400 animate-pulse"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-extrabold text-white tracking-wide">สุขภาพและความสมบูรณ์ของระบบ</h3>
+              <span id="health-overall-badge"
+                class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold font-mono">
+                🟢 พร้อมใช้งาน
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">ตรวจสอบการเชื่อมต่อ Cloud, พื้นที่จัดเก็บ และความถูกต้องของฐานข้อมูล</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeSystemHealthModal()"
+          class="text-slate-400 hover:text-white p-2 rounded-2xl bg-slate-900 border border-slate-800 shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] transition">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
       </div>
-      <div id="system-health-content" class="pt-4"></div>
-      <div class="flex justify-end pt-4"><button onclick="closeSystemHealthModal()" class="apple-btn apple-btn-slate px-4 py-1.5 rounded-xl text-xs">ปิด</button></div>
+
+      <!-- Health Diagnostic Content Area -->
+      <div id="system-health-content" class="flex-1 overflow-y-auto space-y-3.5 pr-1 custom-scrollbar">
+        <!-- Rendered dynamically via JS -->
+      </div>
+
+      <!-- Action Footer -->
+      <div class="flex items-center justify-between border-t border-slate-800/80 pt-3 shrink-0 flex-wrap gap-2">
+        <button type="button" onclick="openSystemHealthModal()"
+          class="px-3.5 py-1.5 rounded-2xl bg-slate-900 border border-slate-700 text-slate-300 hover:text-white text-xs font-semibold shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] transition flex items-center gap-1.5">
+          <i class="fa-solid fa-arrows-rotate text-xs"></i> <span>ตรวจใหม่อีกครั้ง</span>
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="runSystemAutoRepair()"
+            class="px-4 py-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] transition flex items-center gap-1.5">
+            <i class="fa-solid fa-wand-magic-sparkles text-xs"></i> <span>⚡ ตรวจสอบและซ่อมแซมข้อมูลอัตโนมัติ</span>
+          </button>
+          <button type="button" onclick="closeSystemHealthModal()"
+            class="px-4 py-2 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] transition">
+            ปิด
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <!-- ================= Modal: สำรองและกู้คืนข้อมูล (Backup & Restore JSON) ================= -->
+  <!-- ================= 💾 Modal: สำรองและกู้คืนข้อมูล (Backup & Restore JSON - Neumorphism Soft UI) ================= -->
   <div id="backup-restore-modal"
-    class="hidden fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-3 sm:p-4 backdrop-blur-md overflow-y-auto">
+    class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 font-sarabun"
+    onclick="closeBackupRestoreModal()">
     <div
-      class="apple-modal-box relative w-full max-w-lg bg-[#090d18] border border-slate-700/80 rounded-2xl shadow-2xl p-4 sm:p-6 my-auto overflow-hidden">
+      class="bg-[#0f1520] border border-indigo-500/30 rounded-3xl w-full max-w-xl p-5 sm:p-6 shadow-[12px_12px_28px_rgba(0,0,0,0.65),-8px_-8px_20px_rgba(255,255,255,0.035)] space-y-4 apple-modal-box max-h-[92vh] flex flex-col"
+      onclick="event.stopPropagation()">
 
       <!-- Modal Header -->
-      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-        <div class="flex items-center gap-2.5">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-3.5 shrink-0">
+        <div class="flex items-center gap-3">
           <div
-            class="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-500/20 to-purple-600/30 border border-indigo-400/30 text-indigo-300 flex items-center justify-center text-sm">
-            <i class="fa-solid fa-floppy-disk"></i>
+            class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center text-xl shadow-[inset_2px_2px_4px_rgba(0,0,0,0.5),inset_-1px_-1px_3px_rgba(255,255,255,0.05)] shrink-0">
+            <i class="fa-solid fa-floppy-disk text-indigo-400"></i>
           </div>
           <div>
-            <h3 class="text-sm sm:text-base font-bold text-white" data-i18n="modal_backup_title">สำรอง & กู้คืนข้อมูล
-              (Backup & Restore)</h3>
-            <p class="text-[11px] text-slate-400" data-i18n="modal_backup_desc">ดาวน์โหลดไฟล์สำรองข้อมูล JSON
-              หรืออัปโหลดไฟล์เพื่อกู้คืนข้อมูลเดิมของกิลด์</p>
+            <h3 class="text-base font-extrabold text-white tracking-wide" data-i18n="modal_backup_title">สำรอง &amp; กู้คืนข้อมูล (Backup &amp; Restore)</h3>
+            <p class="text-xs text-slate-400 mt-0.5" data-i18n="modal_backup_desc">ดาวน์โหลดไฟล์สำรองข้อมูล JSON หรือกู้คืนจากประวัติ Auto-Snapshot</p>
           </div>
         </div>
-        <button onclick="closeBackupRestoreModal()"
-          class="text-slate-400 hover:text-white transition p-1.5 rounded-lg hover:bg-slate-800">
-          <i class="fa-solid fa-xmark text-lg"></i>
+        <button type="button" onclick="closeBackupRestoreModal()"
+          class="text-slate-400 hover:text-white p-2 rounded-2xl bg-slate-900 border border-slate-800 shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] transition">
+          <i class="fa-solid fa-xmark text-base"></i>
         </button>
       </div>
 
       <!-- Body Content -->
-      <div class="py-4 space-y-4">
+      <div class="flex-1 overflow-y-auto space-y-3.5 pr-1 custom-scrollbar">
 
         <!-- Box 1: Export JSON -->
-        <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 transition hover:border-slate-700">
-          <div class="flex items-center gap-2.5 mb-1.5">
-            <i class="fa-solid fa-file-export text-emerald-400 text-sm"></i>
-            <h4 class="text-xs sm:text-sm font-bold text-white" data-i18n="backup_box_title">1. สำรองข้อมูล (Backup
-              JSON)</h4>
+        <div class="p-4 rounded-2xl bg-slate-900/90 border border-emerald-500/30 shadow-[6px_6px_16px_rgba(0,0,0,0.45),-4px_-4px_12px_rgba(255,255,255,0.025)] flex items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <i class="fa-solid fa-file-export text-emerald-400 text-sm"></i>
+              <h4 class="text-xs sm:text-sm font-bold text-white">1. สำรองข้อมูลไฟล์เต็ม (.JSON)</h4>
+            </div>
+            <p class="text-xs text-slate-400">ดาวน์โหลดข้อมูลสมาชิก คะแนนบอส ประวัติสัปดาห์ และการตั้งค่าทั้งหมด</p>
           </div>
-          <p class="text-xs text-slate-400 mb-3" data-i18n="backup_box_desc">ดาวน์โหลดข้อมูลสมาชิก คะแนน
-            ประวัติรายสัปดาห์ และการตั้งค่าทั้งหมดเก็บไว้ในเครื่อง</p>
-          <button onclick="exportBackupJSON()"
-            class="apple-btn apple-btn-emerald inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold shadow-sm">
-            <i class="fa-solid fa-download text-xs"></i>
-            <span data-i18n="btn_export_json">ดาวน์โหลดไฟล์สำรอง (.JSON)</span>
+          <button type="button" onclick="exportBackupJSON()"
+            class="px-4 py-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] transition shrink-0 flex items-center gap-1.5">
+            <i class="fa-solid fa-download text-xs"></i> <span>ดาวน์โหลด</span>
           </button>
         </div>
 
         <!-- Box 2: Import JSON -->
-        <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 transition hover:border-slate-700">
-          <div class="flex items-center gap-2.5 mb-1.5">
-            <i class="fa-solid fa-file-import text-amber-400 text-sm"></i>
-            <h4 class="text-xs sm:text-sm font-bold text-white" data-i18n="restore_box_title">2. กู้คืนข้อมูล (Restore
-              JSON)</h4>
+        <div class="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/30 shadow-[6px_6px_16px_rgba(0,0,0,0.45),-4px_-4px_12px_rgba(255,255,255,0.025)] flex items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <i class="fa-solid fa-file-import text-amber-400 text-sm"></i>
+              <h4 class="text-xs sm:text-sm font-bold text-white">2. กู้คืนข้อมูลจากไฟล์ (.JSON)</h4>
+            </div>
+            <p class="text-xs text-slate-400">เลือกไฟล์ .json ที่เคยสำรองไว้เพื่อกู้คืนข้อมูลกลับเข้าสู่ระบบ (เฉพาะ Admin)</p>
           </div>
-          <p class="text-xs text-slate-400 mb-3" data-i18n="restore_box_desc">เลือกไฟล์ .json
-            ที่เคยสำรองไว้เพื่อกู้คืนข้อมูลกลับเข้าสู่ระบบ (เฉพาะ Admin)</p>
           <label
-            class="apple-btn apple-btn-amber inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold shadow-sm cursor-pointer">
-            <i class="fa-solid fa-upload text-xs"></i>
-            <span data-i18n="btn_import_json">เลือกไฟล์กู้คืน (.JSON)</span>
+            class="px-4 py-2 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] transition cursor-pointer shrink-0 flex items-center gap-1.5">
+            <i class="fa-solid fa-upload text-xs"></i> <span>เลือกไฟล์</span>
             <input type="file" id="import-json-input" accept=".json" onchange="handleImportJSON(event)" class="hidden">
           </label>
         </div>
 
+        <!-- Box 3: Auto-Snapshot History (Rollback System) -->
+        <div class="p-4 rounded-2xl bg-slate-900/90 border border-sky-500/30 shadow-[6px_6px_16px_rgba(0,0,0,0.45),-4px_-4px_12px_rgba(255,255,255,0.025)] space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-clock-rotate-left text-sky-400 text-sm"></i>
+              <h4 class="text-xs sm:text-sm font-bold text-white">3. ประวัติ Auto-Snapshot ย้อนหลัง</h4>
+            </div>
+            <button type="button" onclick="triggerManualSnapshot()"
+              class="px-2.5 py-1 rounded-xl bg-slate-950 border border-sky-500/30 text-sky-300 hover:text-white text-[11px] font-semibold transition">
+              + บันทึก Snapshot ตอนนี้
+            </button>
+          </div>
+          <p class="text-xs text-slate-400">ระบบจะทำการสำรองข้อมูลอัตโนมัติทุกครั้งที่มีการล็อกสัปดาห์ หรือตัดรอบคะแนน</p>
+          <div id="auto-snapshots-container" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Footer -->
+      <div class="flex items-center justify-end border-t border-slate-800/80 pt-3 shrink-0">
+        <button type="button" onclick="closeBackupRestoreModal()"
+          class="px-4 py-2 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] transition">
+          ปิดหน้าต่าง
+        </button>
       </div>
 
     </div>
