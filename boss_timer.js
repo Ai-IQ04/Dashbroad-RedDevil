@@ -3207,7 +3207,9 @@ async function callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiK
           }
         ],
         generationConfig: {
-          temperature: 0.1
+          temperature: 0.0,
+          maxOutputTokens: 2048,
+          responseMimeType: 'application/json'
         }
       };
 
