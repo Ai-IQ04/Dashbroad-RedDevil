@@ -15101,17 +15101,41 @@ Output strictly valid JSON with no markdown formatting.`;
       showToast(allChecked ? t('toast_checks_cleared') : t('toast_checks_all'), "success");
     }
 
-    // ================= ระบบจัดการกิจกรรมบอส (Boss Activity Manager) =================
+    // ================= ⚔️ ระบบจัดการกิจกรรมบอส (Boss Activity Manager - Neumorphism Soft UI) =================
     function getDayColorInfo(day) {
       const norm = normalizeDay(day);
-      if (norm === 'Sun') return { bg: 'bg-rose-950/25', badgeBg: 'bg-rose-500/20 text-rose-300' };
-      if (norm === 'Tue') return { bg: 'bg-pink-950/25', badgeBg: 'bg-pink-500/20 text-pink-300' };
-      if (norm === 'Wed') return { bg: 'bg-emerald-950/25', badgeBg: 'bg-emerald-500/20 text-emerald-300' };
-      if (norm === 'Fri') return { bg: 'bg-cyan-950/25', badgeBg: 'bg-cyan-500/20 text-cyan-300' };
-      if (norm === 'Sat') return { bg: 'bg-purple-950/25', badgeBg: 'bg-purple-500/20 text-purple-300' };
-      if (norm === 'Mon') return { bg: 'bg-amber-950/25', badgeBg: 'bg-amber-500/20 text-amber-300' };
-      if (norm === 'Thu') return { bg: 'bg-orange-950/25', badgeBg: 'bg-orange-500/20 text-orange-300' };
-      return { bg: 'bg-slate-900/40', badgeBg: 'bg-slate-700 text-slate-300' };
+      if (norm === 'Sun') return {
+        bg: 'bg-rose-950/15 hover:bg-rose-950/30',
+        badgeBg: 'bg-gradient-to-r from-rose-500/25 to-red-500/25 text-rose-300 border border-rose-500/35 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.12)]'
+      };
+      if (norm === 'Tue') return {
+        bg: 'bg-pink-950/15 hover:bg-pink-950/30',
+        badgeBg: 'bg-gradient-to-r from-pink-500/25 to-fuchsia-500/25 text-pink-300 border border-pink-500/35 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.12)]'
+      };
+      if (norm === 'Wed') return {
+        bg: 'bg-emerald-950/15 hover:bg-emerald-950/30',
+        badgeBg: 'bg-gradient-to-r from-emerald-500/25 to-teal-500/25 text-emerald-300 border border-emerald-500/35 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.12)]'
+      };
+      if (norm === 'Fri') return {
+        bg: 'bg-cyan-950/15 hover:bg-cyan-950/30',
+        badgeBg: 'bg-gradient-to-r from-sky-500/25 to-blue-500/25 text-sky-300 border border-sky-500/35 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.12)]'
+      };
+      if (norm === 'Sat') return {
+        bg: 'bg-purple-950/15 hover:bg-purple-950/30',
+        badgeBg: 'bg-gradient-to-r from-purple-500/25 to-indigo-500/25 text-purple-300 border border-purple-500/35 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.12)]'
+      };
+      if (norm === 'Mon') return {
+        bg: 'bg-amber-950/15 hover:bg-amber-950/30',
+        badgeBg: 'bg-gradient-to-r from-amber-500/25 to-yellow-500/25 text-amber-300 border border-amber-500/35 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.12)]'
+      };
+      if (norm === 'Thu') return {
+        bg: 'bg-orange-950/15 hover:bg-orange-950/30',
+        badgeBg: 'bg-gradient-to-r from-orange-500/25 to-amber-500/25 text-orange-300 border border-orange-500/35 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.12)]'
+      };
+      return {
+        bg: 'bg-slate-900/30 hover:bg-slate-900/50',
+        badgeBg: 'bg-slate-800 text-slate-300 border border-slate-700'
+      };
     }
 
     function renderTableHeader() {
@@ -15128,25 +15152,25 @@ Output strictly valid JSON with no markdown formatting.`;
         const colorInfo = getDayColorInfo(normDay);
         const dayLabel = getDayDisplayName(normDay, currentLang);
         const isLucus = (act.shortName || '').toLowerCase().includes('lucus') || act.weight >= 16;
-        const weightColor = act.weight >= 8 ? 'text-amber-300' : 'text-slate-100';
-        const weightSubColor = act.weight >= 8 ? 'text-amber-400/90 font-bold' : 'text-slate-300 font-semibold';
         const tooltipText = `${escapeHtml(act.name)} (${dayLabel}) - ${currentLang === 'th' ? 'หัก' : 'Penalty'} ${act.weight}% ${isScoringAdmin ? (currentLang === 'th' ? '• คลิกเพื่อแก้ไขบอสนี้' : '• Click to edit boss') : ''}`;
 
         return `
-          <th class="py-1 px-0 text-center w-7 sm:w-7.5 max-w-[30px] ${colorInfo.bg} ${isDayEnd ? 'border-r-2 border-slate-700/80' : 'border-r border-slate-800/60'} ${isLucus ? 'bg-rose-950/40 ring-1 ring-rose-500/40' : ''} group relative ${isScoringAdmin ? 'cursor-pointer hover:bg-slate-800/80 transition' : ''}"
+          <th class="py-1.5 px-0 text-center w-8 sm:w-9 max-w-[36px] ${colorInfo.bg} ${isDayEnd ? 'border-r-2 border-slate-700/90' : 'border-r border-slate-800/60'} ${isLucus ? 'bg-amber-950/30 ring-1 ring-amber-500/40 shadow-[inset_0_0_12px_rgba(245,158,11,0.1)]' : ''} group relative transition-all duration-200 ${isScoringAdmin ? 'cursor-pointer' : ''}"
             data-tooltip="${tooltipText}"
             onclick="${isScoringAdmin ? `openEditActivityModal(${index})` : ''}"
           >
-            <div class="relative overflow-hidden px-0.5">
-              <span class="inline-block px-0.5 py-0 rounded text-[7px] sm:text-[7.5px] font-black ${colorInfo.badgeBg} leading-none whitespace-nowrap">${dayLabel}</span>
-              <div class="text-[9px] sm:text-[9.5px] font-bold ${isLucus ? 'text-rose-300 font-black' : weightColor} leading-tight mt-0.5 truncate" title="${escapeHtml(act.shortName)}">
+            <div class="relative overflow-hidden px-0.5 flex flex-col items-center">
+              <span class="inline-block px-1.5 py-0.2 rounded-full text-[7.5px] sm:text-[8px] font-black ${colorInfo.badgeBg} leading-tight whitespace-nowrap">
+                ${dayLabel}
+              </span>
+              <div class="text-[10px] sm:text-[10.5px] font-extrabold ${isLucus ? 'text-amber-300 font-black drop-shadow-[0_0_6px_rgba(245,158,11,0.4)]' : 'text-slate-100'} leading-tight mt-1 truncate max-w-[34px]" title="${escapeHtml(act.shortName)}">
                 ${escapeHtml(act.shortName)}
               </div>
-              <div class="text-[7.5px] sm:text-[8px] font-mono ${isLucus ? 'text-rose-400 font-black' : weightSubColor}">
+              <span class="px-1 py-0.2 rounded-md bg-slate-950/80 border border-slate-800/80 text-[7.5px] sm:text-[8px] font-mono font-bold ${isLucus ? 'text-amber-400' : 'text-amber-300/90'} shadow-[inset_1px_1px_2px_rgba(0,0,0,0.5)] mt-0.5 inline-block">
                 ${act.weight}%
-              </div>
+              </span>
               ${isScoringAdmin ? `
-                <div class="absolute -top-1 -right-0.5 opacity-0 group-hover:opacity-100 transition text-[8px] bg-amber-500 text-slate-950 rounded px-0.5 font-bold shadow">
+                <div class="absolute -top-0.5 -right-0.5 opacity-0 group-hover:opacity-100 transition text-[8px] bg-amber-500 text-slate-950 rounded-md px-1 py-0.2 font-bold shadow-md">
                   <i class="fa-solid fa-pen"></i>
                 </div>
               ` : ''}
