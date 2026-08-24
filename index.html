@@ -1898,49 +1898,82 @@
     }
 
     /* ปรับป้ายชื่อวัน (Day Tag) ให้เป็นพื้นสีประจำวันโทนสว่าง + ตัวหนังสือดำ อ่านง่ายชัดเจน */
-    body.neo-dark #main-table-head th span[class*="bg-rose-"],
-    body.neo-dark #main-table-head th span[class*="bg-pink-"],
-    body.neo-dark #main-table-head th span[class*="bg-emerald-"],
-    body.neo-dark #main-table-head th span[class*="bg-cyan-"],
-    body.neo-dark #main-table-head th span[class*="bg-purple-"],
-    body.neo-dark #main-table-head th span[class*="bg-amber-"],
-    body.neo-dark #main-table-head th span[class*="bg-orange-"] {
-      color: #111827 !important;
-      -webkit-text-fill-color: #111827 !important;
-      border: 1px solid rgba(0, 0, 0, 0.15) !important;
-      padding: 1px 3px !important;
-      border-radius: 3px !important;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35) !important;
+    body.neo-dark #main-table-head .boss-day-tag {
+      color: #000000 !important;
+      -webkit-text-fill-color: #000000 !important;
+      border: 1px solid rgba(0, 0, 0, 0.25) !important;
+      padding: 1px 4px !important;
+      border-radius: 9999px !important;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) !important;
       font-weight: 900 !important;
       letter-spacing: 0.02em !important;
     }
 
-    body.neo-dark #main-table-head th span[class*="bg-rose-"] {
-      background: #fda4af !important;
+    body.neo-dark #main-table-head .boss-day-tag.day-sun {
+      background: #f43f5e !important;
     }
 
-    body.neo-dark #main-table-head th span[class*="bg-pink-"] {
-      background: #f9a8d4 !important;
+    body.neo-dark #main-table-head .boss-day-tag.day-pink,
+    body.neo-dark #main-table-head .boss-day-tag.day-tue {
+      background: #ec4899 !important;
     }
 
-    body.neo-dark #main-table-head th span[class*="bg-emerald-"] {
-      background: #6ee7b7 !important;
+    body.neo-dark #main-table-head .boss-day-tag.day-wed {
+      background: #10b981 !important;
     }
 
-    body.neo-dark #main-table-head th span[class*="bg-cyan-"] {
-      background: #67e8f9 !important;
+    body.neo-dark #main-table-head .boss-day-tag.day-fri {
+      background: #0ea5e9 !important;
     }
 
-    body.neo-dark #main-table-head th span[class*="bg-purple-"] {
-      background: #d8b4fe !important;
+    body.neo-dark #main-table-head .boss-day-tag.day-sat {
+      background: #a855f7 !important;
     }
 
-    body.neo-dark #main-table-head th span[class*="bg-amber-"] {
-      background: #fcd34d !important;
+    body.neo-dark #main-table-head .boss-day-tag.day-mon {
+      background: #f59e0b !important;
     }
 
-    body.neo-dark #main-table-head th span[class*="bg-orange-"] {
-      background: #fdba74 !important;
+    body.neo-dark #main-table-head .boss-day-tag.day-thu {
+      background: #f97316 !important;
+    }
+
+    /* ปรับป้ายเปอร์เซ็นต์คะแนน (%) ให้เป็นสไตล์ Dark Inset + ตัวเลขสีสดใส คอนทราสต์ 100% */
+    body.neo-dark #main-table-head .boss-weight-tag {
+      background: #0d121d !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      padding: 1px 4px !important;
+      border-radius: 6px !important;
+      box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.6) !important;
+      font-weight: 800 !important;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+      display: inline-block !important;
+    }
+
+    body.neo-dark #main-table-head .boss-weight-tag.weight-16,
+    body.neo-dark #main-table-head .boss-weight-tag.weight-lucus {
+      color: #fbbf24 !important;
+      -webkit-text-fill-color: #fbbf24 !important;
+      border-color: rgba(245, 158, 11, 0.6) !important;
+      text-shadow: 0 0 6px rgba(245, 158, 11, 0.4) !important;
+    }
+
+    body.neo-dark #main-table-head .boss-weight-tag.weight-8 {
+      color: #38bdf8 !important;
+      -webkit-text-fill-color: #38bdf8 !important;
+      border-color: rgba(14, 165, 233, 0.5) !important;
+    }
+
+    body.neo-dark #main-table-head .boss-weight-tag.weight-4 {
+      color: #e2e8f0 !important;
+      -webkit-text-fill-color: #e2e8f0 !important;
+      border-color: rgba(148, 163, 184, 0.35) !important;
+    }
+
+    body.neo-dark #main-table-head .boss-weight-tag.weight-0 {
+      color: #64748b !important;
+      -webkit-text-fill-color: #64748b !important;
+      border-color: rgba(71, 85, 105, 0.3) !important;
     }
 
     /* ปรับแถวรวมคะแนนให้เป็นสไตล์ Neumorphism (พื้นผิวนูน + เงา) ใน dark mode */
@@ -15155,11 +15188,13 @@ Output strictly valid JSON with no markdown formatting.`;
         const tooltipText = `${escapeHtml(act.name)} (${dayLabel}) - ${currentLang === 'th' ? 'หัก' : 'Penalty'} ${act.weight}% ${isScoringAdmin ? (currentLang === 'th' ? '• คลิกเพื่อแก้ไขบอสนี้' : '• Click to edit boss') : ''}`;
 
         // Weight pill style with maximum contrast
-        let weightPillClass = 'bg-slate-800 text-slate-300 border border-slate-700';
+        let weightClass = 'weight-4';
         if (act.weight >= 16 || isLucus) {
-          weightPillClass = 'bg-amber-400 text-slate-950 font-black shadow-sm';
+          weightClass = 'weight-16';
         } else if (act.weight >= 8) {
-          weightPillClass = 'bg-sky-400 text-slate-950 font-black shadow-sm';
+          weightClass = 'weight-8';
+        } else if (act.weight === 0) {
+          weightClass = 'weight-0';
         }
 
         return `
@@ -15168,13 +15203,13 @@ Output strictly valid JSON with no markdown formatting.`;
             onclick="${isScoringAdmin ? `openEditActivityModal(${index})` : ''}"
           >
             <div class="relative overflow-hidden px-0.5 flex flex-col items-center">
-              <span class="inline-block px-1.5 py-0.5 rounded-full text-[7.5px] sm:text-[8px] leading-none whitespace-nowrap ${colorInfo.badgeBg}">
+              <span class="boss-day-tag day-${normDay.toLowerCase()} inline-block px-1.5 py-0.5 rounded-full text-[7.5px] sm:text-[8px] leading-none whitespace-nowrap ${colorInfo.badgeBg}">
                 ${dayLabel}
               </span>
-              <div class="text-[10.5px] sm:text-[11px] font-extrabold ${isLucus ? 'text-amber-300 font-black drop-shadow-[0_0_6px_rgba(245,158,11,0.5)]' : 'text-white'} leading-tight mt-1 truncate max-w-[36px]" title="${escapeHtml(act.shortName)}">
+              <div class="boss-name-tag text-[10.5px] sm:text-[11px] font-extrabold ${isLucus ? 'text-amber-300 font-black drop-shadow-[0_0_6px_rgba(245,158,11,0.5)]' : 'text-white'} leading-tight mt-1 truncate max-w-[36px]" title="${escapeHtml(act.shortName)}">
                 ${escapeHtml(act.shortName)}
               </div>
-              <span class="px-1.5 py-0.2 rounded-md ${weightPillClass} text-[8px] sm:text-[8.5px] font-mono mt-0.5 inline-block">
+              <span class="boss-weight-tag ${weightClass} px-1.5 py-0.2 rounded-md text-[8px] sm:text-[8.5px] font-mono mt-0.5 inline-block font-extrabold">
                 ${act.weight}%
               </span>
               ${isScoringAdmin ? `
