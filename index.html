@@ -15101,40 +15101,40 @@ Output strictly valid JSON with no markdown formatting.`;
       showToast(allChecked ? t('toast_checks_cleared') : t('toast_checks_all'), "success");
     }
 
-    // ================= ⚔️ ระบบจัดการกิจกรรมบอส (Boss Activity Manager - High Contrast Neumorphism) =================
+    // ================= ⚔️ ระบบจัดการกิจกรรมบอส (Boss Activity Manager - Ultra Clear Contrast) =================
     function getDayColorInfo(day) {
       const norm = normalizeDay(day);
       if (norm === 'Sun') return {
         bg: 'bg-rose-950/20 hover:bg-rose-950/40',
-        badgeBg: 'bg-rose-500/25 text-rose-300 border border-rose-500/50 font-black shadow-[0_0_8px_rgba(244,63,94,0.15)]'
+        badgeBg: 'bg-rose-400 text-slate-950 font-black shadow-sm'
       };
       if (norm === 'Tue') return {
-        bg: 'bg-fuchsia-950/20 hover:bg-fuchsia-950/40',
-        badgeBg: 'bg-fuchsia-500/25 text-fuchsia-300 border border-fuchsia-500/50 font-black shadow-[0_0_8px_rgba(217,70,239,0.15)]'
+        bg: 'bg-pink-950/20 hover:bg-pink-950/40',
+        badgeBg: 'bg-pink-400 text-slate-950 font-black shadow-sm'
       };
       if (norm === 'Wed') return {
         bg: 'bg-emerald-950/20 hover:bg-emerald-950/40',
-        badgeBg: 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/50 font-black shadow-[0_0_8px_rgba(16,185,129,0.15)]'
+        badgeBg: 'bg-emerald-400 text-slate-950 font-black shadow-sm'
       };
       if (norm === 'Fri') return {
         bg: 'bg-sky-950/20 hover:bg-sky-950/40',
-        badgeBg: 'bg-sky-500/25 text-sky-300 border border-sky-500/50 font-black shadow-[0_0_8px_rgba(14,165,233,0.15)]'
+        badgeBg: 'bg-sky-400 text-slate-950 font-black shadow-sm'
       };
       if (norm === 'Sat') return {
         bg: 'bg-purple-950/20 hover:bg-purple-950/40',
-        badgeBg: 'bg-purple-500/25 text-purple-300 border border-purple-500/50 font-black shadow-[0_0_8px_rgba(168,85,247,0.15)]'
+        badgeBg: 'bg-purple-300 text-slate-950 font-black shadow-sm'
       };
       if (norm === 'Mon') return {
         bg: 'bg-amber-950/20 hover:bg-amber-950/40',
-        badgeBg: 'bg-amber-500/25 text-amber-300 border border-amber-500/50 font-black shadow-[0_0_8px_rgba(245,158,11,0.15)]'
+        badgeBg: 'bg-amber-300 text-slate-950 font-black shadow-sm'
       };
       if (norm === 'Thu') return {
         bg: 'bg-orange-950/20 hover:bg-orange-950/40',
-        badgeBg: 'bg-orange-500/25 text-orange-300 border border-orange-500/50 font-black shadow-[0_0_8px_rgba(249,115,22,0.15)]'
+        badgeBg: 'bg-orange-400 text-slate-950 font-black shadow-sm'
       };
       return {
         bg: 'bg-slate-900/40 hover:bg-slate-900/60',
-        badgeBg: 'bg-slate-800 text-slate-200 border border-slate-700 font-bold'
+        badgeBg: 'bg-slate-300 text-slate-950 font-black shadow-sm'
       };
     }
 
@@ -15154,12 +15154,12 @@ Output strictly valid JSON with no markdown formatting.`;
         const isLucus = (act.shortName || '').toLowerCase().includes('lucus') || act.weight >= 16;
         const tooltipText = `${escapeHtml(act.name)} (${dayLabel}) - ${currentLang === 'th' ? 'หัก' : 'Penalty'} ${act.weight}% ${isScoringAdmin ? (currentLang === 'th' ? '• คลิกเพื่อแก้ไขบอสนี้' : '• Click to edit boss') : ''}`;
 
-        // Weight pill style
-        let weightPillClass = 'bg-slate-800/90 text-slate-300 border border-slate-700/80';
+        // Weight pill style with maximum contrast
+        let weightPillClass = 'bg-slate-800 text-slate-300 border border-slate-700';
         if (act.weight >= 16 || isLucus) {
-          weightPillClass = 'bg-amber-500/25 text-amber-300 border border-amber-500/50 font-black';
+          weightPillClass = 'bg-amber-400 text-slate-950 font-black shadow-sm';
         } else if (act.weight >= 8) {
-          weightPillClass = 'bg-sky-500/20 text-sky-300 border border-sky-500/40 font-bold';
+          weightPillClass = 'bg-sky-400 text-slate-950 font-black shadow-sm';
         }
 
         return `
@@ -15174,7 +15174,7 @@ Output strictly valid JSON with no markdown formatting.`;
               <div class="text-[10.5px] sm:text-[11px] font-extrabold ${isLucus ? 'text-amber-300 font-black drop-shadow-[0_0_6px_rgba(245,158,11,0.5)]' : 'text-white'} leading-tight mt-1 truncate max-w-[36px]" title="${escapeHtml(act.shortName)}">
                 ${escapeHtml(act.shortName)}
               </div>
-              <span class="px-1.5 py-0.2 rounded-md ${weightPillClass} text-[8px] sm:text-[8.5px] font-mono shadow-[inset_1px_1px_2px_rgba(0,0,0,0.4)] mt-0.5 inline-block">
+              <span class="px-1.5 py-0.2 rounded-md ${weightPillClass} text-[8px] sm:text-[8.5px] font-mono mt-0.5 inline-block">
                 ${act.weight}%
               </span>
               ${isScoringAdmin ? `
