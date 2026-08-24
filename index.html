@@ -20592,7 +20592,56 @@ Output strictly valid JSON with no markdown formatting.`;
         return;
       }
 
-      if (!confirm(`คุณต้องการส่งคำขอรีเซ็ตรหัส PIN ของตัวละคร "${charName}" ไปยัง Admin ใช่หรือไม่?\n\n(เมื่อ Admin อนุมัติ คุณจะสามารถตั้งรหัส PIN ใหม่ได้ทันที)`)) {
+      openPinResetRequestModal(m);
+    }
+
+    let activePinResetMember = null;
+
+    function openPinResetRequestModal(member) {
+      activePinResetMember = member;
+      closePinModal();
+
+      const modal = document.getElementById('pin-reset-request-modal');
+      const charNameEl = document.getElementById('pin-reset-char-name');
+      const emailInput = document.getElementById('pin-reset-email-input');
+      const discordInput = document.getElementById('pin-reset-discord-input');
+
+      if (!modal) return;
+
+      const charName = member.characterName || member.name;
+      if (charNameEl) charNameEl.textContent = `${charName} (${member.guild || 'Guild'})`;
+      if (emailInput) emailInput.value = '';
+      if (discordInput) discordInput.value = '';
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => { if (emailInput) emailInput.focus(); }, 150);
+    }
+
+    function closePinResetRequestModal() {
+      const modal = document.getElementById('pin-reset-request-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+      activePinResetMember = null;
+    }
+
+    function submitPinResetRequest(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (!activePinResetMember) return;
+
+      const m = activePinResetMember;
+      const charName = m.characterName || m.name;
+      const emailInput = document.getElementById('pin-reset-email-input');
+      const discordInput = document.getElementById('pin-reset-discord-input');
+
+      const email = emailInput ? emailInput.value.trim() : '';
+      const discordTag = discordInput ? discordInput.value.trim() : '';
+
+      if (!email || !email.includes('@') || !email.includes('.')) {
+        showToast('กรุณากรอกอีเมลที่ถูกต้องเพื่อยืนยันตัวตน', 'warning');
+        if (emailInput) emailInput.focus();
         return;
       }
 
@@ -20600,6 +20649,8 @@ Output strictly valid JSON with no markdown formatting.`;
         id: 'PIN-REQ-' + Date.now(),
         memberName: charName,
         guild: m.guild || 'Guild',
+        email: email,
+        discordTag: discordTag || '-',
         timestamp: Date.now(),
         dateStr: new Date().toLocaleString('th-TH'),
         status: 'pending'
@@ -20612,22 +20663,23 @@ Output strictly valid JSON with no markdown formatting.`;
       if (typeof addAuditLog === 'function') {
         addAuditLog(
           'store',
-          `ยื่นคำขอรีเซ็ตรหัส PIN ประจำตัวละคร`,
-          `สมาชิกตัวละคร "${charName}" (${m.guild || 'Guild'}) แจ้งลืมรหัส PIN`,
+          `ยื่นคำขอรีเซ็ตรหัส PIN ประจำตัวละคร (Email: ${email})`,
+          `สมาชิกตัวละคร "${charName}" (${m.guild || 'Guild'}) แจ้งลืมรหัส PIN | Discord: ${discordTag || '-'}`,
           charName
         );
       }
 
-      showToast(`ส่งคำขอรีเซ็ตรหัส PIN ของ "${charName}" ไปยัง Admin เรียบร้อยแล้ว!`, 'success');
-      closePinModal();
+      showToast(`ส่งคำขอรีเซ็ต PIN พร้อมยืนยันอีเมล (${email}) ไปยัง Admin เรียบร้อยแล้ว!`, 'success');
+      closePinResetRequestModal();
       updateRewardPendingBadge();
 
       sendMemberRequestDiscordAlert({
-        title: '🔑 มีคำขอรีเซ็ตรหัส PIN ประจำตัวละคร!',
+        title: '🔑 มีคำขอยืนยันรีเซ็ตรหัส PIN ประจำตัวละคร!',
         color: 0xF59E0B,
         fields: [
           { name: '👤 ตัวละคร', value: `**${charName}** (${m.guild || 'Guild'})`, inline: true },
-          { name: '📝 รายละเอียด', value: `แจ้งลืมรหัส PIN และขอให้ Admin รีเซ็ตเพื่อตั้งใหม่`, inline: true },
+          { name: '📧 อีเมลยืนยัน', value: `\`${email}\``, inline: true },
+          { name: '💬 Discord / หมายเหตุ', value: `${discordTag || '-'}`, inline: true },
           { name: '🕒 เวลาที่ส่ง', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
         ]
       });
@@ -20875,23 +20927,35 @@ Output strictly valid JSON with no markdown formatting.`;
           pinContainer.innerHTML = activePinReqs.map(req => {
             return `
               <div class="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-950 border border-amber-500/50 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-400/40 flex items-center justify-center text-lg shrink-0">
+                <div class="flex items-start sm:items-center gap-3">
+                  <div class="w-11 h-11 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-400/40 flex items-center justify-center text-lg shrink-0 mt-0.5 sm:mt-0">
                     <i class="fa-solid fa-key"></i>
                   </div>
                   <div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
                       <span class="text-sm font-bold text-white">${escapeHtml(req.memberName)}</span>
                       <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">${escapeHtml(req.guild || 'Guild')}</span>
                       <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">ขอยื่นรีเซ็ตรหัส PIN</span>
                     </div>
-                    <p class="text-xs text-slate-400 mt-0.5 font-mono">
-                      เวลาที่ยื่นคำขอ: <span class="text-slate-300">${escapeHtml(req.dateStr || '')}</span>
-                    </p>
+                    <div class="flex items-center gap-2.5 mt-1 flex-wrap text-xs">
+                      <span class="text-slate-300 flex items-center gap-1 font-mono">
+                        <i class="fa-solid fa-envelope text-amber-400 text-[11px]"></i>
+                        <strong class="text-amber-300">${escapeHtml(req.email || '-')}</strong>
+                      </span>
+                      ${req.discordTag && req.discordTag !== '-' ? `
+                        <span class="text-slate-400 flex items-center gap-1">
+                          <i class="fa-brands fa-discord text-indigo-400 text-[11px]"></i>
+                          <span>${escapeHtml(req.discordTag)}</span>
+                        </span>
+                      ` : ''}
+                      <span class="text-[11px] text-slate-500 font-mono">
+                        🕒 ${escapeHtml(req.dateStr || '')}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <div class="flex items-center gap-2 self-end sm:self-center">
+                <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
                   <button type="button" onclick="approvePinResetRequest('${req.id}')"
                     class="apple-btn px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1.5 shadow-md transition active:scale-95">
                     <i class="fa-solid fa-check"></i> <span>อนุมัติรีเซ็ต PIN</span>
@@ -23899,6 +23963,79 @@ Output strictly valid JSON with no markdown formatting.`;
             class="text-[11.5px] text-amber-400/90 hover:text-amber-300 hover:underline flex items-center justify-center gap-1.5 w-full transition py-1 font-medium">
             <i class="fa-solid fa-circle-question text-amber-400"></i>
             <span>ลืมรหัส PIN? ส่งคำขอให้ Admin ช่วยรีเซ็ต</span>
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ================= 📧 Modal: ยื่นคำขอรีเซ็ตรหัส PIN พร้อมยืนยันตัวตนด้วย Email ================= -->
+  <div id="pin-reset-request-modal"
+    class="hidden fixed inset-0 z-[75] bg-black/85 flex items-center justify-center p-3 sm:p-4 backdrop-blur-md overflow-y-auto"
+    onclick="closePinResetRequestModal()">
+    <div
+      class="apple-modal-box relative w-full max-w-md bg-gradient-to-b from-[#090d18] via-[#0c1222] to-[#090d18] border border-amber-500/40 rounded-3xl shadow-2xl p-5 sm:p-6 my-auto overflow-hidden text-center flex flex-col items-center"
+      onclick="event.stopPropagation()">
+
+      <!-- Close Button -->
+      <button type="button" onclick="closePinResetRequestModal()"
+        class="absolute top-4 right-4 text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <!-- Icon -->
+      <div
+        class="h-14 w-14 rounded-2xl bg-gradient-to-tr from-amber-500/20 via-orange-500/20 to-amber-600/30 border border-amber-400/40 text-amber-300 flex items-center justify-center text-2xl mb-3 shadow-inner">
+        <i class="fa-solid fa-envelope-circle-check"></i>
+      </div>
+
+      <!-- Title & Subtitle -->
+      <h3 class="text-base sm:text-lg font-bold text-white tracking-wide">
+        🔑 ยื่นคำขอรีเซ็ตรหัส PIN
+      </h3>
+      <p class="text-xs text-slate-400 mt-1 max-w-xs leading-relaxed">
+        กรุณากรอกอีเมลของคุณเพื่อยืนยันตัวตน ป้องกันการแอบอ้างหรือกดเล่น
+      </p>
+
+      <!-- Character Info Card -->
+      <div class="mt-3.5 px-3.5 py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-2xl w-full flex items-center justify-between shadow-inner">
+        <span class="text-xs text-slate-400 font-semibold">ตัวละคร:</span>
+        <span id="pin-reset-char-name" class="text-xs font-bold text-amber-300 font-mono">Character</span>
+      </div>
+
+      <!-- Notice Alert -->
+      <div class="mt-3 px-3 py-2 bg-amber-500/10 border border-amber-500/25 rounded-xl text-left w-full text-xs text-amber-300 flex items-start gap-2">
+        <i class="fa-solid fa-shield-halved text-amber-400 text-sm mt-0.5 shrink-0"></i>
+        <span>Admin จะตรวจสอบความถูกต้องของอีเมลก่อนทำการอนุมัติรีเซ็ตรหัส PIN ให้</span>
+      </div>
+
+      <!-- Form -->
+      <form onsubmit="submitPinResetRequest(event)" class="w-full mt-4 space-y-3.5 text-left">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+            <span><i class="fa-solid fa-envelope text-amber-400 mr-1"></i> อีเมลยืนยันตัวตน (Email) <span class="text-rose-400">*</span></span>
+          </label>
+          <input type="email" id="pin-reset-email-input" required placeholder="your.email@example.com"
+            class="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 text-white text-xs rounded-xl py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition shadow-inner font-mono" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+            <span><i class="fa-brands fa-discord text-indigo-400 mr-1"></i> Discord Tag หรือ ช่องทางติดต่อ <span class="text-slate-500 font-normal">(ไม่บังคับ)</span></span>
+          </label>
+          <input type="text" id="pin-reset-discord-input" placeholder="เช่น your_discord#1234 หรือ เบอร์โทร"
+            class="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 text-white text-xs rounded-xl py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition shadow-inner" />
+        </div>
+
+        <div class="flex items-center gap-2 pt-2">
+          <button type="button" onclick="closePinResetRequestModal()"
+            class="w-1/3 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">
+            ยกเลิก
+          </button>
+          <button type="submit"
+            class="flex-1 py-2.5 px-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-500/20 active:scale-95 transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-paper-plane"></i> <span>ส่งคำขอยืนยันรีเซ็ต</span>
           </button>
         </div>
       </form>
