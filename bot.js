@@ -1,24 +1,27 @@
 /**
  * ==============================================================================
- * 🤖 Discord Sync & 24/7 Boss Alert Bot for BlueDevil & RedDevil Guild
+ * 🤖 Dedicated Discord Alert & 24/7 Notifier Engine (Render Cloud Edition)
  * ==============================================================================
- * หน้าที่ของบอท:
- * 1. สแกนประวัติการลงทะเบียนของสมาชิกทั้งหมดในห้อง Discord ที่กำหนด
- * 2. ดักฟังการลงทะเบียนใหม่แบบ Real-Time และซิงค์ขึ้น Firebase
- * 3. แจ้งเตือนบอสเกิดอัตโนมัติ (Alert 24/7):
- *    - แจ้งเตือนก่อนบอสเกิด 5 นาที (🟡 Amber Warning)
- *    - แจ้งเตือนเมื่อบอสเกิดแล้ว (🔴 Red Spawn Alert)
- *    - แสดงเวลาจริงที่จะเกิด (Real Spawn Time) + Discord Dynamic Countdown (<t:timestamp:R>)
+ * ระบบแจ้งเตือนคำขอและกิจกรรมกิลด์ 24 ชั่วโมง สำหรับ BlueDevil & RedDevil
+ * - ⚡ Direct Discord REST API Engine (ไม่ติด Cloudflare WebSocket Block บน Render)
+ * - ⏱️ Instant Real-Time Outbound Poller (ตรวจสอบคำขอทุก 3 วินาที)
+ * - 💓 Continuous Heartbeat 24/7 Monitor
+ * - 🌐 Lightweight HTTP Health Check Server (Port Binding 200 OK)
  * ==============================================================================
  */
 
-const { Client, GatewayIntentBits, Partials, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
 
-const SYNC_POLL_INTERVAL_MS = 5000;
-let lastProcessedSyncTrigger = 0;
-let syncCommandInProgress = false;
+// 🛡️ ป้องกันโปรเซสหยุดทำงานจาก Unhandled Rejection และ Exception
+process.on('unhandledRejection', (reason) => {
+  console.warn('⚠️ [Process Rejection Handled]:', reason && reason.message ? reason.message : reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.warn('⚠️ [Process Exception Handled]:', err && err.message ? err.message : err);
+});
 
 function loadDotEnvFile() {
   const envPath = path.join(__dirname, '.env');
@@ -45,7 +48,7 @@ loadDotEnvFile();
 
 const FALLBACK_TOKEN = Buffer.from('TVRVd09EYzVORGd4TkRNME5UVXhNRGs1TWcuR19Pd3NFLnFnUHRHNDYwdDlVVUZHSUptTWZkR1JYZDFmTElHa0tuSGUwZ1RZ', 'base64').toString('utf8');
 
-// ⚙️ โหลดการตั้งค่าจาก bot_config.json และ environment variables
+// ⚙️ โหลดการตั้งค่าจาก bot_config.json และ Environment Variables
 let CONFIG = {
   DISCORD_BOT_TOKEN: FALLBACK_TOKEN,
   REGISTRATION_CHANNEL_ID: '1508499750859575476',
@@ -79,341 +82,28 @@ CONFIG = {
 };
 
 console.log('====================================================');
-console.log('🚀 [RedDevil Bot] Script Initializing...');
-console.log(`🔑 [Config Check] Token Status: ${CONFIG.DISCORD_BOT_TOKEN ? 'LOADED (' + CONFIG.DISCORD_BOT_TOKEN.slice(0, 10) + '...)' : 'MISSING ❌'}`);
-console.log(`🔥 [Config Check] Firebase DB: ${CONFIG.FIREBASE_DB_URL || 'MISSING ❌'}`);
+console.log('🤖 [RedDevil Dedicated Alert Engine] เริ่มต้นทำงาน...');
+console.log(`🔑 [Token Status]: ${CONFIG.DISCORD_BOT_TOKEN ? 'LOADED ✅' : 'MISSING ❌'}`);
+console.log(`🔥 [Firebase DB]: ${CONFIG.FIREBASE_DB_URL}`);
+console.log(`📢 [Admin Request Target]: ${CONFIG.ADMIN_REQUEST_CHANNEL_ID}`);
 console.log('====================================================');
 
-const ADMIN_EMAILS = String(process.env.DISCORD_SYNC_ADMIN_EMAILS || CONFIG.DISCORD_SYNC_ADMIN_EMAILS || '')
-  .split(',')
-  .map(value => value.trim().toLowerCase())
-  .filter(Boolean);
-
-// 🌐 Lightweight HTTP Health Check Server (จำเป็นสำหรับ Render.com / Cloud Web Service)
-const http = require('http');
+// 🌐 Lightweight HTTP Health Check Server (จำเป็นสำหรับ Render.com Web Service & Uptime Monitor)
 const PORT = process.env.PORT || 3000;
 http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-  res.end('🤖 RedDevil Discord Bot is Running 24/7!');
+  res.end('🤖 RedDevil Dedicated Alert Bot is Running 24/7 Online!');
 }).listen(PORT, () => {
   console.log(`🌐 Health check server listening on port ${PORT}`);
 });
 
-// 🤖 สร้าง Client บอท
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers
-  ],
-  partials: [Partials.Message, Partials.Channel]
-});
-
-// 📡 ตรวจจับสถานะการเชื่อมต่อ Discord ทุกขั้นตอน
-client.on('error', err => console.error('🔴 [Discord Client Error]:', err.message || err));
-client.on('warn', w => console.warn('🟡 [Discord Client Warn]:', w));
-client.on('shardReady', id => console.log(`🟢 [Discord Gateway] Shard ${id} เชื่อมต่อสำเร็จ!`));
-client.on('shardError', (err, id) => console.error(`🔴 [Discord Gateway] Shard ${id} Error:`, err.message || err));
-client.on('shardDisconnect', (event, id) => console.warn(`🔴 [Discord Gateway] Shard ${id} หลุดการเชื่อมต่อ:`, event.reason || event));
-client.on('shardReconnecting', id => console.log(`🔄 [Discord Gateway] Shard ${id} กำลังพยายามต่อใหม่...`));
-client.on('debug', info => {
-  if (typeof info === 'string' && (
-    info.includes('Session') ||
-    info.includes('Ready') ||
-    info.includes('Identif') ||
-    info.includes('429') ||
-    info.includes('Rate limit') ||
-    info.includes('Connect')
-  )) {
-    console.log('🔍 [Discord Debug]:', info);
-  }
-});
-
-
-
-
 /**
- * 📦 ฟังก์ชันส่งข้อมูลขึ้น Firebase Realtime Database
- */
-async function syncToFirebase(verifiedData) {
-  try {
-    const safeKey = (verifiedData.email || verifiedData.characterName || verifiedData.discordId)
-      .replace(/[.#$[\]]/g, '_')
-      .toLowerCase();
-
-    const endpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/registered_members/${safeKey}.json`;
-
-    const response = await fetch(endpoint, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(verifiedData)
-    });
-
-    if (response.ok) {
-      console.log(`✅ [Sync สำเร็จ] ตัวละคร: ${verifiedData.characterName || '-'} | อีเมล: ${verifiedData.email || '-'}`);
-    }
-  } catch (err) {
-    console.error('❌ Error syncing to Firebase:', err.message);
-  }
-}
-
-/**
- * 🔍 ฟังก์ชันแกะข้อมูลจากข้อความ Embed หรือ Text การลงทะเบียน
- */
-function parseRegistrationMessage(message) {
-  let content = '';
-
-  if (message.embeds && message.embeds.length > 0) {
-    const embed = message.embeds[0];
-    const embedTexts = [];
-    if (embed.title) embedTexts.push(embed.title);
-    if (embed.description) embedTexts.push(embed.description);
-    if (embed.fields) {
-      embed.fields.forEach(f => embedTexts.push(`${f.name}\n${f.value}`));
-    }
-    if (embed.footer && embed.footer.text) embedTexts.push(embed.footer.text);
-    content = embedTexts.join('\n');
-  } else {
-    content = message.content || '';
-  }
-
-  if (!content) return null;
-
-  const cleanLine = (str) => {
-    if (!str) return '';
-    return str
-      .replace(/^[\s\u2500-\u257F\u200B└L\-\|/:`*]+/, '')
-      .replace(/^CharacterName[*:\s/]+/i, '')
-      .replace(/^ชื่อตัวละคร[*:\s/]+/i, '')
-      .replace(/[`*]/g, '')
-      .trim();
-  };
-
-  const extractVal = (keywords) => {
-    for (const kw of keywords) {
-      const reg = new RegExp('(?:' + kw + ')[^\\n\\r]*[\\n\\r]+([^\\n\\r]+)', 'i');
-      const m = content.match(reg);
-      if (m && m[1]) {
-        const cleaned = cleanLine(m[1]);
-        if (cleaned && !keywords.some(k => cleaned.toLowerCase() === k.toLowerCase())) {
-          return cleaned;
-        }
-      }
-      const sameLineReg = new RegExp('(?:' + kw + ')[*\\s:/]+([^\\n\\r]+)', 'i');
-      const m2 = content.match(sameLineReg);
-      if (m2 && m2[1]) {
-        const cleaned2 = cleanLine(m2[1]);
-        if (cleaned2 && !keywords.some(k => cleaned2.toLowerCase() === k.toLowerCase())) {
-          return cleaned2;
-        }
-      }
-    }
-    return '';
-  };
-
-  const emailMatch = content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
-  const email = emailMatch ? emailMatch[1].replace(/[`*_\s]/g, '').trim() : '';
-
-  const characterName = extractVal(['ชื่อตัวละคร', 'CharacterName', 'Character Name']);
-  const guild = extractVal(['กิลด์', 'Guild']);
-  const uid = extractVal(['UID สมาชิก', 'InGameMemberNo', 'UID', 'MemberNo']);
-  const wallet = extractVal(['WalletUSDT', 'Wallet', 'กระเป๋า']);
-
-  const discordUser = message.author;
-
-  if (!email && !characterName) {
-    return null;
-  }
-
-  return {
-    email: email,
-    characterName: characterName,
-    guild: guild,
-    uid: uid,
-    wallet: wallet,
-    discordId: discordUser ? discordUser.id : '',
-    discordTag: discordUser ? `${discordUser.username}#${discordUser.discriminator || '0'}` : '',
-    discordName: discordUser ? (discordUser.globalName || discordUser.username) : '',
-    messageId: message.id,
-    registeredAt: new Date(message.createdTimestamp).toISOString(),
-    verified: true,
-    active: true,
-    lastSyncedAt: new Date().toISOString()
-  };
-}
-
-/**
- * 📥 ฟังก์ชันสแกนประวัติการลงทะเบียนย้อนหลังทั้งหมด
- */
-async function scanRegistrationHistory() {
-  if (!CONFIG.REGISTRATION_CHANNEL_ID) return;
-
-  console.log('====================================================');
-  console.log(`📥 เริ่มการสแกนประวัติการลงทะเบียนในห้อง: ${CONFIG.REGISTRATION_CHANNEL_ID}...`);
-
-  let count = 0;
-  try {
-    const channel = await client.channels.fetch(CONFIG.REGISTRATION_CHANNEL_ID);
-    if (!channel || !channel.isTextBased()) {
-      throw new Error('ไม่พบห้องแชท หรือบอทไม่มีสิทธิ์เข้าถึงห้องนี้');
-    }
-
-    const messages = await channel.messages.fetch({ limit: 100 });
-    for (const msg of messages.values()) {
-      const parsed = parseRegistrationMessage(msg);
-      if (parsed) {
-        await syncToFirebase(parsed);
-        count++;
-      }
-    }
-
-    console.log(`🎉 สแกนและซิงค์ข้อมูลสำเร็จทั้งหมด ${count} รายการ!`);
-    console.log('🟢 ขณะนี้บอทกำลังออนไลน์และคอยดักฟังการลงทะเบียนใหม่แบบ Real-Time...');
-    console.log('====================================================');
-  } catch (err) {
-    console.error('❌ ไม่สามารถสแกนประวัติการลงทะเบียนได้:', err.message);
-  }
-}
-
-/**
- * 👥 ฟังก์ชันดึงรายชื่อสมาชิกทุกคนใน Discord Server (Guild Members) ซิงค์ขึ้น Firebase
- */
-async function syncDiscordServerMembers() {
-  try {
-    const guild = client.guilds.cache.first();
-    if (!guild) throw new Error('ไม่พบบอทอยู่ใน Discord server');
-
-    const members = await guild.members.fetch();
-    const serverMembersData = {};
-
-    members.forEach(m => {
-      if (m.user.bot) return; // ไม่รวมบอท
-      serverMembersData[m.user.id] = {
-        discordId: m.user.id,
-        username: m.user.username,
-        displayName: m.displayName || m.user.username,
-        nickname: m.nickname || '',
-        roles: m.roles.cache.map(r => r.name).filter(r => r !== '@everyone'),
-        joinedTimestamp: m.joinedTimestamp,
-        joinedAt: m.joinedAt ? m.joinedAt.toISOString() : null,
-        active: true,
-        lastSeen: new Date().toISOString()
-      };
-    });
-
-    const endpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/discord_server_members.json`;
-    const response = await fetch(endpoint, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(serverMembersData)
-    });
-    if (!response.ok) throw new Error(`Firebase HTTP ${response.status}`);
-
-    const count = Object.keys(serverMembersData).length;
-    console.log(`👥 [Discord Sync] ซิงค์รายชื่อสมาชิกในเซิร์ฟเวอร์ Discord สำเร็จ: ${count} คน`);
-    await sendHeartbeat(count);
-    return count;
-  } catch (err) {
-    console.error('❌ Error syncing Discord server members:', err.message);
-    throw err;
-  }
-}
-
-// 💓 ส่งสถานะ Heartbeat ขึ้น Firebase
-async function sendHeartbeat(memberCount = 0) {
-  try {
-    const endpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/bot_status.json`;
-    await fetch(endpoint, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        isOnline: true,
-        tag: client.user ? client.user.tag : 'RedDevil Bot',
-        memberCount: memberCount,
-        lastHeartbeat: new Date().toISOString()
-      })
-    });
-  } catch (e) {
-    console.warn('⚠️ [Heartbeat] ส่งสถานะขึ้น Firebase ไม่สำเร็จ:', e.message);
-  }
-}
-
-async function writeBotStatus(fields) {
-  const endpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/bot_status.json`;
-  const response = await fetch(endpoint, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(fields)
-  });
-  if (!response.ok) throw new Error(`Firebase status HTTP ${response.status}`);
-}
-
-async function checkFirebaseSyncCommand() {
-  if (syncCommandInProgress) return;
-
-  try {
-    const endpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/sync_trigger.json`;
-    const response = await fetch(endpoint);
-    if (!response.ok) throw new Error(`Firebase command HTTP ${response.status}`);
-
-    const triggerValue = await response.json();
-    const command = triggerValue && typeof triggerValue === 'object'
-      ? triggerValue
-      : { requestedAt: triggerValue };
-    const triggerAt = Number(command.requestedAt);
-    if (!Number.isFinite(triggerAt) || triggerAt <= lastProcessedSyncTrigger) return;
-    // Mark every new trigger as seen, including rejected commands, so a bad
-    // request cannot make the bot retry the same error forever.
-    lastProcessedSyncTrigger = triggerAt;
-    const requestedBy = String(command.requestedBy || '').trim().toLowerCase();
-    if (!requestedBy) throw new Error('คำสั่งซิงค์ไม่มีผู้สั่ง');
-    if (ADMIN_EMAILS.length > 0 && !ADMIN_EMAILS.includes(requestedBy)) {
-      throw new Error('ผู้สั่งไม่มีสิทธิ์ซิงค์ Discord');
-    }
-
-    syncCommandInProgress = true;
-    const count = await syncDiscordServerMembers();
-    await writeBotStatus({
-      lastSyncAt: new Date().toISOString(),
-      lastSyncCount: count,
-      lastSyncTrigger: triggerAt,
-      lastSyncRequestId: String(command.requestId || ''),
-      lastSyncRequestedBy: requestedBy,
-      lastSyncError: null
-    });
-    console.log(`✅ [Manual Sync] ซิงค์ตามคำสั่งหน้าเว็บสำเร็จ ${count} คน`);
-  } catch (err) {
-    console.error('❌ [Manual Sync] ทำตามคำสั่งซิงค์ไม่สำเร็จ:', err.message);
-    try {
-      await writeBotStatus({
-        lastSyncAt: new Date().toISOString(),
-        lastSyncError: String(err.message || err).slice(0, 500)
-      });
-    } catch (statusError) {
-      console.warn('⚠️ ไม่สามารถบันทึกสถานะ Manual Sync:', statusError.message);
-    }
-  } finally {
-    syncCommandInProgress = false;
-  }
-}
-
-// 🛡️ ป้องกันบอทแครชจาก Unhandled Promise Rejection และ Uncaught Exception
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('⚠️ [Unhandled Rejection]:', reason);
-});
-
-process.on('uncaughtException', (err) => {
-  console.error('⚠️ [Uncaught Exception]:', err);
-});
-
-/**
- * ⚡ ฟังก์ชันส่งข้อความเข้าห้อง Discord โดยตรงผ่าน Discord REST API (Direct HTTP POST)
- * มี User-Agent ตามมาตรฐาน Discord และ AbortSignal กันค้าง
+ * ⚡ ฟังก์ชันส่งข้อความตรงเข้า Discord Channel หรือ Thread ผ่าน Discord REST API (Direct HTTP POST)
+ * ข้อดี: ส่งทันที ไม่ต้องรอ WebSocket Gateway และไม่ติดขัดปัญหา Cloudflare 5xx
  */
 async function sendDiscordMessageDirect({ channelId, content, embeds }) {
   const token = CONFIG.DISCORD_BOT_TOKEN;
-  if (!token) throw new Error('ไม่มี Discord Token');
+  if (!token) throw new Error('ไม่มี Discord Bot Token');
 
   const url = `https://discord.com/api/v10/channels/${channelId}/messages`;
   const response = await fetch(url, {
@@ -438,6 +128,26 @@ async function sendDiscordMessageDirect({ channelId, content, embeds }) {
   return await response.json();
 }
 
+// 💓 ส่งสถานะ Heartbeat ขึ้น Firebase RTDB
+async function sendHeartbeat() {
+  try {
+    const endpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/bot_status.json`;
+    await fetch(endpoint, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(5000),
+      body: JSON.stringify({
+        isOnline: true,
+        tag: 'Dev#6946 (Render Engine)',
+        lastHeartbeat: new Date().toISOString()
+      })
+    });
+  } catch (e) {
+    console.warn('⚠️ [Heartbeat Error]:', e.message);
+  }
+}
+
+// 📨 ระบบตรวจจับคำขอใหม่จาก Firebase และส่งเข้า Discord
 let outboundAlertsInProgress = false;
 async function checkOutboundAlertsCommand() {
   if (outboundAlertsInProgress) return;
@@ -456,7 +166,7 @@ async function checkOutboundAlertsCommand() {
 
       const fallbackRole = CONFIG.ADMIN_ROLE_ID ? `<@&${CONFIG.ADMIN_ROLE_ID}>` : '<@&1508502265097621544>';
       let content = (item.content !== undefined && item.content !== null && item.content !== '') ? item.content : (item.mentionTag || fallbackRole);
-      // แก้ไขกรณี tag มี typo เช่น <a& เป็น <@&
+      // แก้ไขกรณี Tag มี typo เช่น <a& เป็น <@&
       if (typeof content === 'string' && content.startsWith('<a&')) {
         content = content.replace(/^<a&/, '<@&');
       }
@@ -474,134 +184,36 @@ async function checkOutboundAlertsCommand() {
         })) : []
       };
 
-      let sent = false;
-      // พยายามส่งผ่าน Direct REST API ก่อนเพื่อความรวดเร็วสูงสุด
       try {
-        await sendDiscordMessageDirect({
+        const resJson = await sendDiscordMessageDirect({
           channelId: targetChannelId,
           content: content || undefined,
           embeds: [embedObj]
         });
-        console.log(`📤 [Direct REST Alert] ส่งแจ้งเตือนคำขอเข้าห้อง ${targetChannelId} เรียบร้อยแล้ว (Mention: ${content})`);
-        sent = true;
-      } catch (restErr) {
-        console.warn(`⚠️ [Direct REST Alert] ส่งผ่าน REST ไม่สำเร็จ (${restErr.message})`);
-      }
+        console.log(`📤 [Alert Sent] ส่งแจ้งเตือนคำขอเข้าห้อง ${targetChannelId} เรียบร้อยแล้ว (Message ID: ${resJson.id || 'OK'})`);
 
-      // Fallback: หาก REST มีปัญหา และ Client พร้อม ให้ลองส่งผ่าน Client
-      if (!sent && client && client.isReady()) {
-        try {
-          const channel = await client.channels.fetch(targetChannelId).catch(() => null);
-          if (channel && channel.isTextBased()) {
-            const embed = new EmbedBuilder()
-              .setTitle(embedObj.title)
-              .setColor(embedObj.color)
-              .setTimestamp(new Date(embedObj.timestamp))
-              .setFooter(embedObj.footer);
-            if (embedObj.description) embed.setDescription(embedObj.description);
-            embedObj.fields.forEach(f => embed.addFields(f));
-
-            await channel.send({ content: content || undefined, embeds: [embed] });
-            console.log(`📤 [Client Alert] ส่งแจ้งเตือนคำขอเข้าห้อง ${targetChannelId} เรียบร้อยแล้ว`);
-            sent = true;
-          }
-        } catch (clientErr) {
-          console.error(`❌ [Client Alert] ไม่สามารถส่งผ่าน Client:`, clientErr.message);
-        }
-      }
-
-      // ลบคำขอออกจากคิวเมื่อส่งแล้ว หรือเพื่อไม่ให้ค้าง
-      if (sent) {
+        // ลบคำขอออกจากคิวใน Firebase เมื่อส่งสำเร็จ
         await fetch(`${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/outbound_alerts/${key}.json`, {
           method: 'DELETE',
           signal: AbortSignal.timeout(5000)
         }).catch(() => {});
+      } catch (err) {
+        console.error(`❌ [Alert Failed] ส่งเข้าห้อง ${targetChannelId} ไม่สำเร็จ:`, err.message);
       }
     }
   } catch (err) {
-    console.warn('⚠️ [Outbound Alert] Error processing alert:', err.message);
+    console.warn('⚠️ [Outbound Alert Poller Error]:', err.message);
   } finally {
     outboundAlertsInProgress = false;
   }
 }
 
-// 🟢 เมื่อบอทออนไลน์สำเร็จ
-async function handleBotReady() {
-  console.log('====================================================');
-  console.log(`🤖 บอทเชื่อมต่อ Discord สำเร็จในชื่อ: ${client.user ? client.user.tag : 'RedDevil Bot'}`);
-  console.log(`🔥 ฐานข้อมูล Firebase: ${CONFIG.FIREBASE_DB_URL}`);
-  console.log(`📋 สแกนห้องลงทะเบียน: ${CONFIG.REGISTRATION_CHANNEL_ID || 'ทั้งหมด'}`);
-  console.log(`📢 ห้องแจ้งเตือนคำขอ Admin: ${CONFIG.ADMIN_REQUEST_CHANNEL_ID || '1541279270096212068'}`);
-  console.log('====================================================');
+// 🚀 เริ่มต้นลูปการทำงาน 24/7 ทันที
+console.log('⚡ [24/7 Engine] เริ่มต้น Poller ตรวจจับคำขอ (ทุก 3 วินาที) และ Heartbeat (ทุก 15 วินาที)...');
 
-  // รันงานพื้นหลัง: สแกนประวัติการลงทะเบียน และซิงค์สมาชิกในเซิร์ฟเวอร์
-  scanRegistrationHistory().catch(e => console.warn('⚠️ Scan registration error:', e.message));
-  syncDiscordServerMembers().catch(e => console.warn('⚠️ Sync members error:', e.message));
-
-  // ซิงค์รายชื่อสมาชิก Discord ทุกๆ 30 วินาที
-  setInterval(async () => {
-    try {
-      await syncDiscordServerMembers();
-    } catch (e) {
-      console.warn('⚠️ Auto sync members loop error:', e.message);
-    }
-  }, 30000);
-}
-
-client.once('ready', handleBotReady);
-client.once('clientReady', handleBotReady);
-
-// 🚀 เริ่มต้นระบบตรวจจับคำขอ ซิงค์คำสั่ง และส่ง Heartbeat ทันทีตั้งแต่วินาทีแรก (Instant 24/7 Engine)
-console.log('⚡ [Instant Engine] เริ่มต้นระบบตรวจจับคำขอ Real-time Poller และ Heartbeat ทันที...');
 setInterval(checkOutboundAlertsCommand, 3000);
-setInterval(checkFirebaseSyncCommand, SYNC_POLL_INTERVAL_MS);
-setInterval(() => sendHeartbeat().catch(() => {}), 15000);
+setInterval(sendHeartbeat, 15000);
 
-sendHeartbeat().catch(() => {});
-checkOutboundAlertsCommand().catch(() => {});
-checkFirebaseSyncCommand().catch(() => {});
-
-// 👥 ดักฟังสมาชิกเข้าใหม่ / อัปเดตชื่อใน Discord
-client.on('guildMemberAdd', async (member) => {
-  console.log(`👋 มีสมาชิกใหม่เข้า Discord: ${member.user.tag}`);
-  await syncDiscordServerMembers().catch(() => {});
-});
-
-client.on('guildMemberUpdate', async (oldMember, newMember) => {
-  if (oldMember.nickname !== newMember.nickname || oldMember.displayName !== newMember.displayName) {
-    console.log(`✏️ สมาชิกเปลี่ยนชื่อใน Discord: ${newMember.displayName}`);
-    await syncDiscordServerMembers().catch(() => {});
-  }
-});
-
-// 📩 ดักฟังข้อความใหม่แบบ Real-Time
-client.on('messageCreate', async (message) => {
-  if (message.author?.bot || message.webhookId) return;
-  if (CONFIG.REGISTRATION_CHANNEL_ID && message.channelId !== CONFIG.REGISTRATION_CHANNEL_ID) return;
-
-  const parsed = parseRegistrationMessage(message);
-  if (parsed) {
-    console.log(`📩 พบสมาชิกใหม่ลงทะเบียน: ${parsed.characterName || parsed.email}`);
-    await syncToFirebase(parsed);
-    await syncDiscordServerMembers().catch(() => {});
-    try {
-      await message.react('🟢');
-    } catch (e) {
-      console.warn(`⚠️ ไม่สามารถ react ข้อความลงทะเบียน ${message.id} ได้:`, e.message);
-    }
-  }
-});
-
-// 🚀 เริ่มต้นล็อกอิน Discord Gateway (Background Process)
-if (CONFIG.DISCORD_BOT_TOKEN && !CONFIG.DISCORD_BOT_TOKEN.startsWith('วาง_')) {
-  console.log('🔄 กำลังเชื่อมต่อ Discord Gateway...');
-  client.login(CONFIG.DISCORD_BOT_TOKEN)
-    .then(() => {
-      console.log('🔑 Discord Gateway Login Authenticated สำเร็จ!');
-    })
-    .catch(err => {
-      console.error('❌ ไม่สามารถล็อกอิน Discord ได้:', err.message || err);
-    });
-} else {
-  console.error('⚠️ กรุณาตั้งค่า DISCORD_BOT_TOKEN ใน Environment Variables บน Render ให้ถูกต้อง');
-}
+// รันรอบแรกทันที
+sendHeartbeat();
+checkOutboundAlertsCommand();
