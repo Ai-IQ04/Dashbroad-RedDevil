@@ -888,6 +888,70 @@
       }
     }
 
+    /* 🎁 Reward Store Promote — Neumorphism Gold Pulse Glow */
+    @keyframes storeGoldPulse {
+      0% {
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.42),
+          0 4px 14px -2px rgba(217,139,90,0.32),
+          0 0 0 0 rgba(245, 180, 90, 0.75);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.52),
+          0 6px 20px -2px rgba(217,139,90,0.55),
+          0 0 0 8px rgba(245, 180, 90, 0);
+        transform: scale(1.04);
+      }
+      100% {
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.42),
+          0 4px 14px -2px rgba(217,139,90,0.32),
+          0 0 0 0 rgba(245, 180, 90, 0);
+        transform: scale(1);
+      }
+    }
+
+    @keyframes storeIconBounce {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      30%       { transform: translateY(-3px) rotate(-8deg); }
+      60%       { transform: translateY(1px) rotate(4deg); }
+    }
+
+    /* คลาสที่ใส่ลงบนปุ่มเมื่ออยู่ในโหมด Promote */
+    .store-promoting {
+      animation: storeGoldPulse 2s ease-in-out infinite !important;
+      position: relative;
+      overflow: visible !important;
+    }
+    .store-promoting .fa-gift {
+      animation: storeIconBounce 2s ease-in-out infinite !important;
+      display: inline-block;
+    }
+    /* เพิ่มจุดแดงกระพริบ (badge) บ่งบอกว่ากำลัง Promote */
+    .store-promoting::after {
+      content: 'LIVE';
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+      font-size: 8px;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      padding: 1px 4px;
+      border-radius: 99px;
+      box-shadow: 0 0 6px rgba(239,68,68,0.7);
+      animation: storeLiveBadgePulse 1.2s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 10;
+    }
+    @keyframes storeLiveBadgePulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.6; transform: scale(0.9); }
+    }
+
     header p,
     header span,
     header button,
@@ -4250,8 +4314,8 @@
         <div id="member-hub-container"
           class="flex items-center gap-1.5 p-1 bg-slate-50/80 border border-slate-200/90 rounded-2xl backdrop-blur-md shadow-sm flex-wrap">
           <!-- 🎁 ปุ่มเปิดร้านค้าของรางวัล & Showcase -->
-          <button type="button" onclick="openRewardStoreModal()"
-            class="apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm">
+          <button id="btn-reward-store" type="button" onclick="openRewardStoreModal()"
+            class="apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm" style="position:relative;">
             <i class="fa-solid fa-gift text-xs"></i>
             <span data-i18n="btn_shop">ร้านค้าของรางวัล (Shop)</span>
           </button>
@@ -10349,6 +10413,16 @@
           localStorage.setItem('guild_store_week_config', JSON.stringify(storeWeekConfig));
           renderStoreWeekConfigUI();
           onRewardMemberSelected();
+        }
+      });
+
+      // 13c. ดักฟังสถานะ Promote ร้านค้า (Store Promoting State)
+      fbDb.ref('guild_app/store_promoting').on('value', snapshot => {
+        const val = snapshot.val();
+        if (typeof val === 'boolean') {
+          storeIsPromoting = val;
+          localStorage.setItem('guild_store_promoting', String(storeIsPromoting));
+          applyStorePromotionState();
         }
       });
 
@@ -19907,7 +19981,60 @@ Output strictly valid JSON with no markdown formatting.`;
       }
     }
 
+    // ===================================================================
+    // 🔥 Promote Store Button — Toggle animation บนปุ่มร้านค้าหลัก
+    // ===================================================================
+
+    let storeIsPromoting = (localStorage.getItem('guild_store_promoting') === 'true');
+
+    function applyStorePromotionState() {
+      const btn = document.getElementById('btn-reward-store');
+      const toggleBtn = document.getElementById('btn-toggle-store-promote');
+      const label = document.getElementById('store-promote-btn-label');
+
+      if (btn) {
+        if (storeIsPromoting) {
+          btn.classList.add('store-promoting');
+        } else {
+          btn.classList.remove('store-promoting');
+        }
+      }
+      if (label) {
+        label.textContent = storeIsPromoting ? 'ปิดโปรโมท' : 'เปิดโปรโมท';
+      }
+      if (toggleBtn) {
+        if (storeIsPromoting) {
+          toggleBtn.classList.remove('apple-btn-ruby');
+          toggleBtn.classList.add('apple-btn-emerald');
+        } else {
+          toggleBtn.classList.remove('apple-btn-emerald');
+          toggleBtn.classList.add('apple-btn-ruby');
+        }
+      }
+    }
+
+    function toggleStorePromotion() {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_edit'), 'warning');
+        return;
+      }
+      storeIsPromoting = !storeIsPromoting;
+      localStorage.setItem('guild_store_promoting', String(storeIsPromoting));
+      if (fbDb) {
+        fbDb.ref('guild_app/store_promoting').set(storeIsPromoting);
+      }
+      applyStorePromotionState();
+      showToast(storeIsPromoting ? '🔥 เปิดโปรโมทร้านค้าแล้ว! สมาชิกจะเห็น animation' : '⏹️ ปิดโปรโมทร้านค้าแล้ว', storeIsPromoting ? 'success' : 'info');
+    }
+
+    // Restore state — ใช้ setTimeout แทน DOMContentLoaded
+    // (เพราะ code อยู่ใน body, DOMContentLoaded fire ก่อน listener จะถูก register)
+    setTimeout(() => {
+      applyStorePromotionState();
+    }, 0);
+
     function saveStoreWeekConfig() {
+
       if (!isAdmin) {
         showToast(t('toast_need_admin_edit'), 'warning');
         return;
@@ -20235,8 +20362,50 @@ Output strictly valid JSON with no markdown formatting.`;
         const itemRequests = (storeRewardLogs || []).filter(l => l.itemId === item.id && l.status === 'pending');
         const pendingCount = itemRequests.length;
         const isOutOfStock = item.stock <= 0;
-        const canRedeem = m && availablePoints >= item.cost && !isOutOfStock;
-        const alreadyRequested = m && itemRequests.some(l => l.memberName === charName);
+        const hasTiers = Array.isArray(item.tiers) && item.tiers.length > 0;
+
+        let tierButtonsHtml = '';
+        if (hasTiers) {
+          tierButtonsHtml = `
+            <div class="mt-3.5 pt-3 border-t border-slate-800/80 space-y-2">
+              <span class="text-[10px] text-amber-300/80 font-bold uppercase tracking-wider flex items-center gap-1">
+                <i class="fa-solid fa-layer-group text-[10px]"></i> เลือกระดับราคาที่ต้องการแลก (ใช้คลังร่วมกัน):
+              </span>
+              <div class="grid grid-cols-1 gap-1.5">
+                ${item.tiers.map(t => {
+                  const tCost = Number(t.cost) || 0;
+                  const tQty = Number(t.qty) || getItemTierQty(item, t.tierId);
+                  const canRedeemThisTier = m && availablePoints >= tCost && item.stock >= tQty;
+                  return `
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950/70 border border-slate-800/90 hover:border-amber-500/40 transition-all">
+                      <div class="flex flex-col min-w-0 pr-2">
+                        <span class="text-xs font-bold text-slate-200 truncate flex items-center gap-1.5">
+                          <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                          ${escapeHtml(t.label)}
+                        </span>
+                        <span class="text-[11px] font-mono font-black text-amber-400 mt-0.5">
+                          ${tCost.toLocaleString()} PTS
+                        </span>
+                      </div>
+                      <button type="button" onclick="requestRedeemRewardItem(${item.id}, '${escapeHtml(t.tierId)}')"
+                        ${!canRedeemThisTier ? 'disabled' : ''}
+                        class="apple-btn px-3 py-1.5 rounded-xl text-[11px] font-black transition-all shadow-sm shrink-0 flex items-center gap-1 ${
+                          canRedeemThisTier
+                            ? 'apple-btn-gold text-slate-950 hover:scale-105 active:scale-95'
+                            : 'bg-slate-900 text-slate-500 cursor-not-allowed border border-slate-800 opacity-60'
+                        }">
+                        <i class="fa-solid fa-gift text-[10px]"></i>
+                        <span>${!m ? 'เลือกตัวละคร' : item.stock < tQty ? 'ของไม่พอ' : availablePoints < tCost ? 'แต้มไม่พอ' : 'แลกแพ็คนี้'}</span>
+                      </button>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        const canRedeemSingle = m && availablePoints >= (item.cost || 0) && !isOutOfStock;
 
         return `
           <div class="reward-store-card bg-gradient-to-b from-slate-900/90 via-[#0b101e]/90 to-slate-950 border border-slate-800/90 hover:border-amber-500/50 rounded-3xl p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-amber-500/10 group shadow-lg">
@@ -20258,14 +20427,17 @@ Output strictly valid JSON with no markdown formatting.`;
                   </div>
                 ` : `
                   <div class="absolute top-2.5 right-2.5 px-3 py-1 rounded-full bg-slate-900/95 backdrop-blur-md border border-amber-400/50 text-amber-300 text-[10.5px] font-mono font-bold flex items-center gap-1.5 shadow-md">
-                    <span>สต็อก: <strong class="text-white">${item.stock}</strong></span>
+                    <span>สต็อกคลัง: <strong class="text-white">${item.stock}</strong> ชิ้น</span>
                     ${pendingCount > 0 ? `<span class="text-rose-400 font-bold">• รอสุ่ม ${pendingCount} คน</span>` : ''}
                   </div>
                 `}
               </div>
 
               <div class="mt-3.5">
-                <h4 class="text-sm font-extrabold text-white group-hover:text-amber-300 transition-colors line-clamp-1">${escapeHtml(item.name)}</h4>
+                <div class="flex items-center justify-between gap-2">
+                  <h4 class="text-sm font-extrabold text-white group-hover:text-amber-300 transition-colors line-clamp-1">${escapeHtml(item.name)}</h4>
+                  ${hasTiers ? `<span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9.5px] font-bold shrink-0">${item.tiers.length} Packs</span>` : ''}
+                </div>
                 <p class="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed font-normal">${escapeHtml(item.desc || 'ไม่มีคำอธิบาย')}</p>
                 ${pendingCount > item.stock ? `
                   <div class="mt-2.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-[11px] text-amber-300 font-medium flex items-center gap-1.5 shadow-inner">
@@ -20275,30 +20447,32 @@ Output strictly valid JSON with no markdown formatting.`;
               </div>
             </div>
 
-            <div class="mt-4 pt-3.5 border-t border-slate-800/80 flex items-center justify-between gap-2">
-              <div class="flex flex-col">
-                <span class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">ราคาแต้มรอบเดือน</span>
-                <span class="text-sm sm:text-base font-black text-amber-400 font-mono flex items-center gap-1.5 drop-shadow">
-                  <i class="fa-solid fa-coins text-xs text-amber-400"></i> ${item.cost.toLocaleString()} PTS
-                </span>
-              </div>
+            ${hasTiers ? tierButtonsHtml : `
+              <div class="mt-4 pt-3.5 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">ราคาแต้ม</span>
+                  <span class="text-sm sm:text-base font-black text-amber-400 font-mono flex items-center gap-1.5 drop-shadow">
+                    <i class="fa-solid fa-coins text-xs text-amber-400"></i> ${(item.cost || 0).toLocaleString()} PTS
+                  </span>
+                </div>
 
-              <button onclick="requestRedeemRewardItem(${item.id})" 
-                      ${!canRedeem ? 'disabled' : ''}
-                      class="apple-btn px-4 py-2 rounded-xl text-xs font-black transition-all shadow-md flex items-center gap-1.5 ${canRedeem
-            ? 'apple-btn-gold text-slate-950'
-            : 'bg-slate-900 text-slate-500 cursor-not-allowed border border-slate-800 opacity-60'
-          }">
-                <i class="fa-solid fa-gift text-[11px]"></i>
-                <span>${!m ? 'เลือกตัวละคร' : isOutOfStock ? 'หมด' : alreadyRequested ? 'ส่งคำขอแล้ว' : availablePoints < item.cost ? 'แต้มไม่พอ' : 'ส่งคำขอแลก'}</span>
-              </button>
-            </div>
+                <button onclick="requestRedeemRewardItem(${item.id})" 
+                        ${!canRedeemSingle ? 'disabled' : ''}
+                        class="apple-btn px-4 py-2 rounded-xl text-xs font-black transition-all shadow-md flex items-center gap-1.5 ${canRedeemSingle
+                          ? 'apple-btn-gold text-slate-950 hover:scale-105 active:scale-95'
+                          : 'bg-slate-900 text-slate-500 cursor-not-allowed border border-slate-800 opacity-60'
+                        }">
+                  <i class="fa-solid fa-gift text-[11px]"></i>
+                  <span>${!m ? 'เลือกตัวละคร' : isOutOfStock ? 'หมด' : availablePoints < item.cost ? 'แต้มไม่พอ' : 'ส่งคำขอแลก'}</span>
+                </button>
+              </div>
+            `}
           </div>
         `;
       }).join('');
     }
 
-    function requestRedeemRewardItem(itemId) {
+    function requestRedeemRewardItem(itemId, tierId = null) {
       const item = storeRewards.find(x => x.id === itemId);
       if (!item) return;
 
@@ -20312,23 +20486,26 @@ Output strictly valid JSON with no markdown formatting.`;
       const m = members.find(x => (x.characterName || x.name) === memberName);
       if (!m) return;
 
+      const cost = getItemCost(item, tierId);
+      const qty = getItemTierQty(item, tierId);
       const available = getMemberAvailablePoints(m);
-      if (available < item.cost) {
-        showToast(`แต้มของคุณไม่เพียงพอ (ต้องการ ${item.cost} PTS แต่มี ${available} PTS ในรอบเดือนนี้)`, 'warning');
+
+      if (available < cost) {
+        showToast(`แต้มของคุณไม่เพียงพอ (ต้องการ ${cost} PTS แต่มีแต้มพร้อมใช้ ${available} PTS)`, 'warning');
         return;
       }
 
-      if (item.stock <= 0) {
-        showToast('ขออภัย ไอเทมนี้หมดสต็อกแล้ว', 'warning');
+      if (item.stock < qty) {
+        showToast(`ขออภัย ของรางวัลในคลังมีไม่เพียงพอ (ต้องการ ${qty} ชิ้น แต่มีในคลัง ${item.stock} ชิ้น)`, 'warning');
         return;
       }
 
       const charName = m.characterName || m.name;
       // ตรวจสอบระบบ PIN ป้องกันแอบอ้างตัวละคร
       if (!memberPins[charName]) {
-        openPinModal('set', itemId, m);
+        openPinModal('set', itemId, m, tierId);
       } else {
-        openPinModal('verify', itemId, m);
+        openPinModal('verify', itemId, m, tierId);
       }
     }
 
@@ -20336,8 +20513,8 @@ Output strictly valid JSON with no markdown formatting.`;
     // 🔒 ระบบ Modal รหัส PIN 4 หลัก ป้องกันการแอบอ้างแลกของรางวัล
     // =================================================================
 
-    function openPinModal(mode, itemId, member) {
-      activePinContext = { mode, itemId, member };
+    function openPinModal(mode, itemId, member, tierId = null) {
+      activePinContext = { mode, itemId, member, tierId };
       const modal = document.getElementById('member-pin-modal');
       const titleEl = document.getElementById('member-pin-modal-title');
       const subtitleEl = document.getElementById('member-pin-modal-subtitle');
@@ -20388,7 +20565,7 @@ Output strictly valid JSON with no markdown formatting.`;
     function submitPinForm(e) {
       if (e && e.preventDefault) e.preventDefault();
       if (!activePinContext) return;
-      const { mode, itemId, member } = activePinContext;
+      const { mode, itemId, member, tierId } = activePinContext;
       const pinInput = document.getElementById('member-pin-input');
       const confirmInput = document.getElementById('member-pin-confirm-input');
       const pin = pinInput ? pinInput.value.trim() : '';
@@ -20424,19 +20601,43 @@ Output strictly valid JSON with no markdown formatting.`;
 
       const itemToRedeem = itemId;
       const memberToRedeem = member;
+      const tierToRedeem = tierId;
       closePinModal();
-      proceedWithRedemption(itemToRedeem, memberToRedeem);
+      proceedWithRedemption(itemToRedeem, memberToRedeem, tierToRedeem);
     }
 
-    function proceedWithRedemption(itemId, m) {
+    function proceedWithRedemption(itemId, m, tierId = null) {
       const item = storeRewards.find(x => x.id === itemId);
       if (!item || !m) return;
 
       const charName = m.characterName || m.name;
+      const cost = getItemCost(item, tierId);
+      const qty = getItemTierQty(item, tierId);
+      const available = getMemberAvailablePoints(m);
+
+      if (available < cost) {
+        showToast(`แต้มของคุณไม่เพียงพอ (ต้องการ ${cost} PTS แต่มีแต้มพร้อมใช้ ${available} PTS)`, 'warning');
+        return;
+      }
+
+      if (item.stock < qty) {
+        showToast(`ขออภัย ของรางวัลในคลังมีไม่เพียงพอ (ต้องการ ${qty} ชิ้น แต่มีในคลัง ${item.stock} ชิ้น)`, 'warning');
+        return;
+      }
+
+      let tierObj = null;
+      let displayItemName = item.name;
+      if (item.tiers && item.tiers.length > 0 && tierId) {
+        tierObj = item.tiers.find(t => t.tierId === tierId);
+        if (tierObj) {
+          displayItemName = `${item.name} [${tierObj.label}]`;
+        }
+      }
+
       const pendingForThis = (storeRewardLogs || []).filter(l => l.itemId === item.id && l.status === 'pending').length;
-      let confirmMsg = `ยืนยันการส่งคำขอแลก "${item.name}"\nโดยใช้แต้มของ "${charName}" จำนวน ${item.cost} PTS หรือไม่?`;
+      let confirmMsg = `ยืนยันการส่งคำขอแลก "${displayItemName}"\nโดยใช้แต้มของ "${charName}" จำนวน ${cost} PTS หรือไม่?`;
       if (pendingForThis >= item.stock) {
-        confirmMsg += `\n\n⚠️ มีผู้ขอแลกแล้ว ${pendingForThis} คน (เกินสต็อก ${item.stock} ชิ้น)\nระบบจะสุ่มผู้โชคดีและคืนแต้มให้อัตโนมัติหากไม่ได้รับเลือก`;
+        confirmMsg += `\n\n⚠️ มีผู้ขอแลกแล้ว ${pendingForThis} คน (เกินสต็อกคลัง ${item.stock} ชิ้น)\nระบบจะสุ่มผู้โชคดีและคืนแต้มให้อัตโนมัติหากไม่ได้รับเลือก`;
       }
 
       if (!confirm(confirmMsg)) return;
@@ -20444,8 +20645,11 @@ Output strictly valid JSON with no markdown formatting.`;
       const logEntry = {
         id: 'REQ-' + Date.now(),
         itemId: item.id,
-        itemName: item.name,
-        cost: item.cost,
+        tierId: tierId || null,
+        tierLabel: tierObj ? tierObj.label : null,
+        qty: qty,
+        itemName: displayItemName,
+        cost: cost,
         memberName: charName,
         guild: m.guild || 'Guild',
         timestamp: Date.now(),
@@ -20460,13 +20664,13 @@ Output strictly valid JSON with no markdown formatting.`;
       if (typeof addAuditLog === 'function') {
         addAuditLog(
           'store',
-          `ส่งคำขอแลกของรางวัล "${item.name}" (ใช้ ${item.cost} PTS)`,
+          `ส่งคำขอแลกของรางวัล "${displayItemName}" (ใช้ ${cost} PTS, ตัดคลัง ${qty} ชิ้น)`,
           `สำหรับตัวละคร "${charName}" (ยืนยัน PIN ถูกต้อง)`,
           charName
         );
       }
 
-      showToast(`ส่งคำขอแลก "${item.name}" เรียบร้อยแล้ว! รอดำเนินการสุ่ม/อนุมัติจาก Admin`, 'success');
+      showToast(`ส่งคำขอแลก "${displayItemName}" เรียบร้อยแล้ว! รอดำเนินการสุ่ม/อนุมัติจาก Admin`, 'success');
       onRewardMemberSelected();
       renderRewardApprovalList();
 
@@ -20475,9 +20679,9 @@ Output strictly valid JSON with no markdown formatting.`;
         color: 0x10B981,
         fields: [
           { name: '👤 สมาชิก', value: `**${charName}** (${m.guild || 'Guild'})`, inline: true },
-          { name: '🎁 ของรางวัล', value: `**${item.name}**`, inline: true },
-          { name: '💰 แต้มที่ใช้แลก', value: `**${item.cost.toLocaleString()} PTS** (คงเหลือ ${available - item.cost} PTS)`, inline: false },
-          { name: '📦 สต็อกคงเหลือ', value: `${item.stock} ชิ้น (รอพิจารณา ${pendingForThis + 1} คำขอ)`, inline: false },
+          { name: '🎁 ของรางวัล', value: `**${displayItemName}** (จำนวน ${qty} ชิ้น)`, inline: true },
+          { name: '💰 แต้มที่ใช้แลก', value: `**${cost.toLocaleString()} PTS** (คงเหลือ ${available - cost} PTS)`, inline: false },
+          { name: '📦 สต็อกคลังคงเหลือ', value: `${item.stock} ชิ้น (รอพิจารณา ${pendingForThis + 1} คำขอ)`, inline: false },
           { name: '🕒 เวลาที่ส่ง', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
         ]
       });
@@ -20761,18 +20965,19 @@ Output strictly valid JSON with no markdown formatting.`;
         l.processedAt = Date.now();
       });
 
-      item.stock = Math.max(0, item.stock - drawCount);
+      const totalDeduct = winners.reduce((sum, w) => sum + (Number(w.qty) || getItemTierQty(item, w.tierId) || 1), 0);
+      item.stock = Math.max(0, item.stock - totalDeduct);
       saveStoreData();
 
       if (typeof addAuditLog === 'function') {
         addAuditLog(
           'store',
-          `สุ่มผู้โชคดีรับของรางวัล "${item.name}" (${drawCount} ท่าน)`,
+          `สุ่มผู้โชคดีรับของรางวัล "${item.name}" (${drawCount} ท่าน, หักสต็อกรวม ${totalDeduct} ชิ้น)`,
           `ผู้ได้รับ: ${winners.map(w => w.memberName).join(', ')} | โดย Admin: ${currentAdminEmail || 'Admin'}`
         );
       }
 
-      showToast(`สุ่มผู้โชคดีสำหรับ "${item.name}" สำเร็จ (${drawCount} ท่าน) ส่งต่อไปยังแผงรอส่งของในเกมเรียบร้อย!`, 'success');
+      showToast(`สุ่มผู้โชคดีสำหรับ "${item.name}" สำเร็จ (${drawCount} ท่าน, ตัดคลัง ${totalDeduct} ชิ้น) ส่งต่อไปยังแผงรอส่งของในเกมเรียบร้อย!`, 'success');
       renderRewardApprovalList();
       renderRewardStoreCatalog();
       renderAdminStoreInventory();
@@ -20786,10 +20991,9 @@ Output strictly valid JSON with no markdown formatting.`;
       if (!req) return;
 
       const item = storeRewards.find(x => x.id === req.itemId);
+      const deductQty = Number(req.qty) || (item ? getItemTierQty(item, req.tierId) : 1);
       if (item) {
-        if (item.stock > 0) {
-          item.stock -= 1;
-        }
+        item.stock = Math.max(0, item.stock - deductQty);
       }
 
       req.status = 'won_pending_delivery';
@@ -20801,7 +21005,7 @@ Output strictly valid JSON with no markdown formatting.`;
       if (typeof addAuditLog === 'function') {
         addAuditLog(
           'store',
-          `อนุมัติคำขอแลกของรางวัล "${req.itemName}"`,
+          `อนุมัติคำขอแลกของรางวัล "${req.itemName}" (ตัดสต็อกคลัง ${deductQty} ชิ้น)`,
           `ให้แก่ "${req.memberName}" (รอส่งของในเกม) | โดย Admin: ${currentAdminEmail || 'Admin'}`,
           req.memberName
         );
@@ -20955,6 +21159,20 @@ Output strictly valid JSON with no markdown formatting.`;
       }
 
       container.innerHTML = storeRewards.map(item => {
+        const hasTiers = Array.isArray(item.tiers) && item.tiers.length > 0;
+        let priceDisplay = `<span>ราคา: <strong class="text-amber-400 font-bold">${(item.cost || 0).toLocaleString()} PTS</strong></span>`;
+        if (hasTiers) {
+          priceDisplay = `
+            <span class="text-amber-300 font-semibold flex items-center gap-1 flex-wrap">
+              <i class="fa-solid fa-layer-group text-[10px]"></i>
+              ${item.tiers.map(t => {
+                const tQty = t.qty || getItemTierQty(item, t.tierId);
+                return `<span class="bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded text-[10px]">${escapeHtml(t.label)} (ตัด ${tQty}): <strong class="text-amber-400">${Number(t.cost).toLocaleString()} PTS</strong></span>`;
+              }).join(' ')}
+            </span>
+          `;
+        }
+
         return `
           <div class="bg-gradient-to-r from-slate-900/90 via-slate-950/90 to-slate-900/90 border border-slate-800 hover:border-amber-500/40 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-md transition-all">
             <div class="flex items-center gap-3 min-w-0 flex-1">
@@ -20962,12 +21180,15 @@ Output strictly valid JSON with no markdown formatting.`;
                 <img src="${escapeHtml(item.image || '')}" alt="${escapeHtml(item.name)}" class="w-full h-full object-contain p-1" />
               </div>
               <div class="min-w-0 flex-1">
-                <h5 class="text-xs font-bold text-white truncate">${escapeHtml(item.name)}</h5>
-                <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap font-mono">
-                  <span>ราคา: <strong class="text-amber-400 font-bold">${item.cost.toLocaleString()} PTS</strong></span>
+                <div class="flex items-center gap-2">
+                  <h5 class="text-xs font-bold text-white truncate">${escapeHtml(item.name)}</h5>
+                  ${hasTiers ? `<span class="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-bold border border-amber-500/40">${item.tiers.length} Packs</span>` : ''}
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1 flex items-center gap-2 flex-wrap font-mono">
+                  ${priceDisplay}
                   <span class="text-slate-600">•</span>
-                  <span>สต็อก: <strong class="text-emerald-400 font-bold">${item.stock}</strong></span>
-                </p>
+                  <span>สต็อกคลัง: <strong class="text-emerald-400 font-bold">${item.stock}</strong> ชิ้น</span>
+                </div>
               </div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
@@ -21101,16 +21322,248 @@ Output strictly valid JSON with no markdown formatting.`;
       });
     }
 
+    // ===================================================================
+    // 🏷️ Tier System — Helper & UI Functions (Preset Pack System)
+    // ===================================================================
+
+    /** คืนค่า cost สำหรับ item (tier-aware) */
+    function getItemCost(item, tierId) {
+      if (item.tiers && item.tiers.length > 0 && tierId) {
+        const t = item.tiers.find(t => t.tierId === tierId);
+        return t ? t.cost : (item.tiers[0].cost);
+      }
+      return item.cost || 0;
+    }
+
+    /** คืนค่าจำนวนชิ้นจริงที่ต้องตัดสต็อก (qty) สำหรับ tier หรือ item */
+    function getItemTierQty(item, tierId) {
+      if (item.tiers && item.tiers.length > 0 && tierId) {
+        const t = item.tiers.find(t => t.tierId === tierId);
+        if (t) {
+          if (typeof t.qty === 'number' && t.qty > 0) return t.qty;
+          // Auto-detect ตัวเลขจาก label เช่น "10 pcs" -> 10
+          const match = String(t.label || '').match(/(\d+)/);
+          if (match) return parseInt(match[1]);
+        }
+      }
+      // Fallback: ดึงตัวเลขจากชื่อไอเทม เช่น "Box x10" -> 10 หรือ 1
+      const itemMatch = String(item.name || '').match(/(\d+)\s*(?:pcs|pc|ชิ้น|กล่อง|box|ชุด|set|ea)\b|x\s*(\d+)/i);
+      if (itemMatch) {
+        return parseInt(itemMatch[1] || itemMatch[2]);
+      }
+      return 1;
+    }
+
+    /** toggle โหมด Tier ใน add-item form */
+    function toggleStoreTierMode() {
+      const cb = document.getElementById('store-item-use-tiers');
+      const builder = document.getElementById('store-tier-builder');
+      const costWrap = document.getElementById('store-item-cost-wrap');
+      const rows = document.getElementById('store-tier-rows');
+      if (!cb || !builder) return;
+
+      if (cb.checked) {
+        builder.classList.remove('hidden');
+        if (costWrap) costWrap.classList.add('hidden');
+        // เพิ่ม 2 tier เริ่มต้นถ้ายังไม่มี
+        if (rows && rows.children.length === 0) {
+          addStoreTierRow('10 pcs', 10, 75);
+          addStoreTierRow('20 pcs', 20, 200);
+        }
+      } else {
+        builder.classList.add('hidden');
+        if (costWrap) costWrap.classList.remove('hidden');
+      }
+    }
+
+    let _tierCounter = 0;
+    /** เพิ่มแถว Tier row ใน builder พร้อมช่องระบุจำนวนชิ้นตัดสต็อก (qty) */
+    function addStoreTierRow(defaultLabel = '', defaultQty = '', defaultCost = '') {
+      const rows = document.getElementById('store-tier-rows');
+      if (!rows) return;
+      const uid = 'tier-row-' + (++_tierCounter);
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-2 flex-wrap sm:flex-nowrap';
+      row.id = uid;
+      row.innerHTML = `
+        <input type="text" placeholder="ชื่อแพ็คเกจ เช่น 10 pcs, 20 pcs"
+          class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-white text-xs focus:outline-none focus:border-amber-500 tier-label-input" 
+          value="${escapeHtml(String(defaultLabel))}" 
+          oninput="onTierLabelChange('${uid}', this.value)" />
+        <div class="flex items-center gap-1 shrink-0">
+          <span class="text-[10.5px] text-slate-400">ตัดคลัง:</span>
+          <input type="number" placeholder="ชิ้น" min="1"
+            class="w-16 bg-slate-900 border border-slate-700 rounded-xl px-2 py-1.5 text-emerald-400 font-mono font-bold text-xs focus:outline-none focus:border-emerald-500 tier-qty-input" 
+            value="${defaultQty || 1}" title="จำนวนชิ้นวัตถุดิบจริงที่จะหักลบออกจากสต็อกคลังเมื่อแลกชุดนี้" />
+        </div>
+        <div class="flex items-center gap-1 shrink-0">
+          <span class="text-[10.5px] text-slate-400">ราคา:</span>
+          <input type="number" placeholder="PTS" min="1"
+            class="w-20 bg-slate-900 border border-slate-700 rounded-xl px-2 py-1.5 text-amber-300 font-mono font-bold text-xs focus:outline-none focus:border-amber-500 tier-cost-input" 
+            value="${defaultCost}" />
+        </div>
+        <button type="button" onclick="document.getElementById('${uid}').remove()"
+          class="text-rose-400 hover:text-rose-300 p-1 rounded-lg transition-colors shrink-0">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      `;
+      rows.appendChild(row);
+    }
+
+    /** Auto-fill qty เมื่อพิมพ์ตัวเลขใน label */
+    function onTierLabelChange(rowId, text) {
+      const row = document.getElementById(rowId);
+      if (!row) return;
+      const qtyInput = row.querySelector('.tier-qty-input');
+      if (qtyInput) {
+        const match = String(text || '').match(/(\d+)/);
+        if (match) {
+          qtyInput.value = match[1];
+        }
+      }
+    }
+
+    /** อ่านค่า tiers จาก DOM */
+    function readTierRows() {
+      const rows = document.getElementById('store-tier-rows');
+      if (!rows) return [];
+      const result = [];
+      rows.querySelectorAll('.flex.items-center').forEach((row, i) => {
+        const label = (row.querySelector('.tier-label-input')?.value || '').trim();
+        let qty = parseInt(row.querySelector('.tier-qty-input')?.value || '1');
+        const cost = parseInt(row.querySelector('.tier-cost-input')?.value || '0');
+        if (isNaN(qty) || qty <= 0) {
+          const match = label.match(/(\d+)/);
+          qty = match ? parseInt(match[1]) : 1;
+        }
+        if (label && cost > 0) {
+          result.push({ tierId: 't' + (i + 1), label, qty, cost });
+        }
+      });
+      return result;
+    }
+
+    /** 🪄 รวมสินค้าที่ชื่อซ้ำ/แยกจำนวน ให้กลายเป็นระบบ Tier อัตโนมัติในคลิกเดียว */
+    function autoMergeStoreItemTiers() {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_edit'), 'warning');
+        return;
+      }
+      if (!storeRewards || storeRewards.length === 0) {
+        showToast('ไม่มีรายการสินค้าในระบบ', 'warning');
+        return;
+      }
+
+      // ฟังก์ชันแยก Base Name และ Tier Label & Qty
+      function extractBaseAndLabel(rawName) {
+        const name = (rawName || '').trim();
+        // จับ pattern เช่น 10 pcs, 20 pcs, x10, 50 ชิ้น, (Basic)
+        const match = name.match(/^(.*?)(?:\s*[-–—:]\s*|\s+)(\d+\s*(?:pcs|pc|ชิ้น|กล่อง|box|ชุด|set|ea)\b.*|x\s*\d+\b.*|\([^\)]+\)|tier\s*\d+.*)$/i);
+        if (match && match[1].trim()) {
+          const lbl = match[2].trim().replace(/^\(|\)$/g, '');
+          const numMatch = lbl.match(/(\d+)/);
+          return {
+            baseName: match[1].trim(),
+            tierLabel: lbl,
+            qty: numMatch ? parseInt(numMatch[1]) : 1
+          };
+        }
+        const fallbackNum = name.match(/(\d+)/);
+        return {
+          baseName: name,
+          tierLabel: `${name}`,
+          qty: fallbackNum ? parseInt(fallbackNum[1]) : 1
+        };
+      }
+
+      // จัดกลุ่มตาม baseName
+      const groups = {};
+      storeRewards.forEach(item => {
+        // หากมี tiers อยู่แล้ว ข้าม
+        if (item.tiers && item.tiers.length > 1) return;
+
+        const info = extractBaseAndLabel(item.name);
+        if (!groups[info.baseName]) {
+          groups[info.baseName] = [];
+        }
+        groups[info.baseName].push({
+          item: item,
+          tierLabel: info.tierLabel,
+          qty: info.qty,
+          cost: item.cost || 0
+        });
+      });
+
+      const mergeableGroups = Object.keys(groups).filter(k => groups[k].length >= 2);
+
+      if (mergeableGroups.length === 0) {
+        showToast('ไม่พบรายการสินค้าที่ชื่อคล้ายกันที่สามารถรวมเป็น Tier ได้ในขณะนี้', 'info');
+        return;
+      }
+
+      let confirmMsg = `🪄 พบสินค้า ${mergeableGroups.length} กลุ่มที่สามารถรวมเป็นระบบ Preset Pack ได้:\n\n`;
+      mergeableGroups.forEach((baseName, idx) => {
+        const items = groups[baseName];
+        confirmMsg += `${idx + 1}. "${baseName}" (${items.length} รายการ)\n`;
+        items.forEach(it => {
+          confirmMsg += `   • ${it.tierLabel} (ตัดคลัง ${it.qty} ชิ้น): ${it.cost.toLocaleString()} PTS (สต็อก: ${it.item.stock})\n`;
+        });
+        confirmMsg += '\n';
+      });
+      confirmMsg += 'ระบบจะรวมเป็น 1 การ์ด โดยใช้คลังสต็อกร่วมกัน และตัดสต็อกตามจำนวนชิ้นจริงเมื่อส่งมอบ\n\nต้องการดำเนินการรวมทันทีหรือไม่?';
+
+      if (!confirm(confirmMsg)) return;
+
+      const itemsToRemoveIds = new Set();
+
+      mergeableGroups.forEach(baseName => {
+        const groupList = groups[baseName];
+        const primaryItem = groupList[0].item;
+
+        // สร้าง Tiers
+        const newTiers = [];
+        groupList.forEach((entry, i) => {
+          newTiers.push({
+            tierId: 't' + (i + 1),
+            label: entry.tierLabel || `ระดับ ${i + 1}`,
+            qty: entry.qty || 1,
+            cost: entry.cost
+          });
+          if (i > 0) {
+            itemsToRemoveIds.add(entry.item.id);
+          }
+        });
+
+        // เรียง Tier จากราคาต่ำไปสูง
+        newTiers.sort((a, b) => a.cost - b.cost);
+
+        primaryItem.name = baseName;
+        primaryItem.tiers = newTiers;
+        primaryItem.cost = Math.min(...newTiers.map(t => t.cost));
+        // สต็อกคลังใช้ค่ามากสุดในกลุ่ม
+        primaryItem.stock = Math.max(...groupList.map(g => g.item.stock || 0));
+      });
+
+      storeRewards = storeRewards.filter(item => !itemsToRemoveIds.has(item.id));
+      saveStoreData();
+
+      showToast(`🪄 รวมสินค้าเป็นระบบ Preset Pack สำเร็จ ${mergeableGroups.length} กลุ่มเรียบร้อยแล้ว!`, 'success');
+      renderAdminStoreInventory();
+      renderRewardStoreCatalog();
+    }
+
     function saveNewStoreItem() {
+
       if (!isAdmin) return;
       const nameInput = document.getElementById('store-item-name');
       const costInput = document.getElementById('store-item-cost');
       const stockInput = document.getElementById('store-item-stock');
       const descInput = document.getElementById('store-item-desc');
       const urlInput = document.getElementById('store-item-image-url');
+      const useTiersCb = document.getElementById('store-item-use-tiers');
+      const useTiers = useTiersCb && useTiersCb.checked;
 
       const name = nameInput ? nameInput.value.trim() : '';
-      const cost = costInput ? parseInt(costInput.value) : 0;
       const stock = stockInput ? parseInt(stockInput.value) : 1;
       const desc = descInput ? descInput.value.trim() : '';
       const urlVal = urlInput ? urlInput.value.trim() : '';
@@ -21120,15 +21573,30 @@ Output strictly valid JSON with no markdown formatting.`;
         showToast('กรุณาระบุชื่อสินค้า', 'warning');
         return;
       }
-      if (isNaN(cost) || cost <= 0) {
-        showToast('กรุณาระบุราคาแต้มที่ถูกต้อง', 'warning');
-        return;
+
+      let cost = 0;
+      let tiers = [];
+
+      if (useTiers) {
+        tiers = readTierRows();
+        if (tiers.length < 1) {
+          showToast('กรุณาเพิ่ม Tier อย่างน้อย 1 ระดับ', 'warning');
+          return;
+        }
+        cost = Math.min(...tiers.map(t => t.cost)); // ราคาต่ำสุดเป็น cost หลัก (backward compat)
+      } else {
+        cost = costInput ? parseInt(costInput.value) : 0;
+        if (isNaN(cost) || cost <= 0) {
+          showToast('กรุณาระบุราคาแต้มที่ถูกต้อง', 'warning');
+          return;
+        }
       }
 
       const newItem = {
         id: Date.now(),
         name: name,
         cost: cost,
+        tiers: useTiers ? tiers : [],
         stock: isNaN(stock) ? 1 : stock,
         desc: desc,
         image: image
@@ -21142,9 +21610,16 @@ Output strictly valid JSON with no markdown formatting.`;
       if (costInput) costInput.value = '100';
       if (stockInput) stockInput.value = '5';
       if (descInput) descInput.value = '';
+      if (useTiersCb) useTiersCb.checked = false;
+      const tierRows = document.getElementById('store-tier-rows');
+      if (tierRows) tierRows.innerHTML = '';
+      const tierBuilder = document.getElementById('store-tier-builder');
+      if (tierBuilder) tierBuilder.classList.add('hidden');
+      const costWrap = document.getElementById('store-item-cost-wrap');
+      if (costWrap) costWrap.classList.remove('hidden');
       removeStoreUploadedImage();
 
-      showToast(`เพิ่มสินค้า "${name}" ลงในร้านค้าเรียบร้อยแล้ว`, 'success');
+      showToast(`เพิ่มสินค้า "${name}" ลงในร้านค้าเรียบร้อยแล้ว${useTiers ? ` (${tiers.length} Tiers)` : ''}`, 'success');
       renderAdminStoreInventory();
       renderRewardStoreCatalog();
     }
@@ -21154,22 +21629,90 @@ Output strictly valid JSON with no markdown formatting.`;
       const item = storeRewards.find(x => x.id === itemId);
       if (!item) return;
 
-      const newName = prompt('แก้ไขชื่อสินค้า:', item.name);
+      const newName = prompt('แก้ไขชื่อของรางวัล/สินค้า:', item.name);
       if (newName === null) return;
       if (!newName.trim()) {
         showToast('ชื่อสินค้าต้องไม่ว่างเปล่า', 'warning');
         return;
       }
 
-      const newCostStr = prompt('แก้ไขราคาแต้ม (PTS):', item.cost);
-      if (newCostStr === null) return;
-      const newCost = parseInt(newCostStr);
-      if (isNaN(newCost) || newCost <= 0) {
-        showToast('ราคาแต้มไม่ถูกต้อง', 'warning');
-        return;
+      const hasTiers = Array.isArray(item.tiers) && item.tiers.length > 0;
+      let newTiers = item.tiers || [];
+      let newCost = item.cost || 100;
+
+      if (hasTiers) {
+        const tierDefaultStr = item.tiers.map(t => `${t.label}:${t.cost}`).join(', ');
+        const newTierStr = prompt('แก้ไขระดับราคา Preset Packs (รูปแบบ "ชื่อแพ็ค:แต้ม" หรือ "ชื่อ:ตัดคลัง:แต้ม" คั่นด้วยจุลภาค เช่น 10 pcs:75, 20 pcs:200):', tierDefaultStr);
+        if (newTierStr === null) return;
+        
+        const parsedTiers = [];
+        newTierStr.split(',').forEach((part, idx) => {
+          const segs = part.split(':').map(s => s.trim());
+          if (segs.length >= 3) {
+            const lbl = segs[0];
+            const qty = parseInt(segs[1]) || 1;
+            const cst = parseInt(segs[2]);
+            if (lbl && !isNaN(cst) && cst > 0) {
+              parsedTiers.push({ tierId: 't' + (idx + 1), label: lbl, qty: qty, cost: cst });
+            }
+          } else if (segs.length === 2) {
+            const lbl = segs[0];
+            const cst = parseInt(segs[1]);
+            const numMatch = lbl.match(/(\d+)/);
+            const qty = numMatch ? parseInt(numMatch[1]) : 1;
+            if (lbl && !isNaN(cst) && cst > 0) {
+              parsedTiers.push({ tierId: 't' + (idx + 1), label: lbl, qty: qty, cost: cst });
+            }
+          }
+        });
+
+        if (parsedTiers.length > 0) {
+          newTiers = parsedTiers;
+          newCost = Math.min(...newTiers.map(t => t.cost));
+        } else {
+          showToast('รูปแบบ Tier ไม่ถูกต้อง คงค่าเดิมไว้', 'warning');
+        }
+      } else {
+        const newCostStr = prompt('แก้ไขราคาแต้ม (PTS) (หรือใส่แบบ 10 pcs:75, 20 pcs:200 เพื่อเปลี่ยนเป็นระบบ Preset Pack):', item.cost);
+        if (newCostStr === null) return;
+        
+        if (newCostStr.includes(':')) {
+          const parsedTiers = [];
+          newCostStr.split(',').forEach((part, idx) => {
+            const segs = part.split(':').map(s => s.trim());
+            if (segs.length >= 3) {
+              const lbl = segs[0];
+              const qty = parseInt(segs[1]) || 1;
+              const cst = parseInt(segs[2]);
+              if (lbl && !isNaN(cst) && cst > 0) {
+                parsedTiers.push({ tierId: 't' + (idx + 1), label: lbl, qty: qty, cost: cst });
+              }
+            } else if (segs.length === 2) {
+              const lbl = segs[0];
+              const cst = parseInt(segs[1]);
+              const numMatch = lbl.match(/(\d+)/);
+              const qty = numMatch ? parseInt(numMatch[1]) : 1;
+              if (lbl && !isNaN(cst) && cst > 0) {
+                parsedTiers.push({ tierId: 't' + (idx + 1), label: lbl, qty: qty, cost: cst });
+              }
+            }
+          });
+          if (parsedTiers.length > 0) {
+            newTiers = parsedTiers;
+            newCost = Math.min(...newTiers.map(t => t.cost));
+          }
+        } else {
+          const parsedCost = parseInt(newCostStr);
+          if (isNaN(parsedCost) || parsedCost <= 0) {
+            showToast('ราคาแต้มไม่ถูกต้อง', 'warning');
+            return;
+          }
+          newCost = parsedCost;
+          newTiers = [];
+        }
       }
 
-      const newStockStr = prompt('แก้ไขจำนวนสต็อกคงเหลือ:', item.stock);
+      const newStockStr = prompt('แก้ไขจำนวนสต็อกคลังคงเหลือ (แชร์ร่วมกันทุก Tier):', item.stock);
       if (newStockStr === null) return;
       const newStock = parseInt(newStockStr);
 
@@ -21177,6 +21720,7 @@ Output strictly valid JSON with no markdown formatting.`;
 
       item.name = newName.trim();
       item.cost = newCost;
+      item.tiers = newTiers;
       item.stock = isNaN(newStock) ? item.stock : newStock;
       if (newDesc !== null) item.desc = newDesc.trim();
 
@@ -22724,6 +23268,22 @@ Output strictly valid JSON with no markdown formatting.`;
               <span>บันทึกการตั้งค่า</span>
             </button>
           </div>
+
+          <!-- 🔥 ปุ่ม Promote — เปิด/ปิด Animation บนปุ่มร้านค้า -->
+          <div class="mt-3 pt-3 border-t border-slate-800/60 flex items-center justify-between flex-wrap gap-2">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-xs text-slate-300 font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-bullhorn text-rose-400 text-xs"></i>
+                โปรโมทร้านค้า (Promote)
+              </span>
+              <span class="text-[10.5px] text-slate-500">เปิดใช้เพื่อให้ปุ่มร้านค้าเล่น animation ดึงดูดสายตาสมาชิก</span>
+            </div>
+            <button id="btn-toggle-store-promote" type="button" onclick="toggleStorePromotion()"
+              class="apple-btn apple-btn-ruby px-4 py-1.5 rounded-xl text-xs font-black flex items-center gap-2 shadow-md transition-all">
+              <i class="fa-solid fa-fire text-xs"></i>
+              <span id="store-promote-btn-label">เปิดโปรโมท</span>
+            </button>
+          </div>
         </div>
 
         <!-- ⚡ Bonus & Test Points Management Box -->
@@ -22810,7 +23370,7 @@ Output strictly valid JSON with no markdown formatting.`;
               <input type="text" id="store-item-name" placeholder="เช่น กล่องบอส x10, เงินรางวัล"
                 class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500" />
             </div>
-            <div>
+            <div id="store-item-cost-wrap">
               <label class="block text-slate-400 font-medium mb-1">ราคาแต้มที่ต้องใช้ (PTS) *</label>
               <input type="number" id="store-item-cost" value="100" min="1"
                 class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500" />
@@ -22826,6 +23386,35 @@ Output strictly valid JSON with no markdown formatting.`;
             <label class="block text-slate-400 font-medium mb-1">คำอธิบายรายละเอียดของรางวัล</label>
             <input type="text" id="store-item-desc" placeholder="เช่น กล่องสุ่มอุปกรณ์ระดับสูง หรือรายละเอียดการแจก"
               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500" />
+          </div>
+
+          <!-- 🏷️ Tier System Toggle -->
+          <div class="mt-3 text-xs">
+            <label class="flex items-center gap-2 cursor-pointer select-none group w-fit">
+              <input type="checkbox" id="store-item-use-tiers" onchange="toggleStoreTierMode()"
+                class="w-4 h-4 accent-amber-500 rounded" />
+              <span class="text-slate-300 font-semibold group-hover:text-amber-300 transition-colors flex items-center gap-1.5">
+                <i class="fa-solid fa-layer-group text-amber-400 text-[11px]"></i>
+                ต้องการแยกหลายระดับราคา (Tier) แต่ใช้คลังสต็อกร่วมกัน
+              </span>
+            </label>
+            <p class="text-slate-500 text-[10.5px] ml-6 mt-0.5">เช่น Ring 100 PTS (Basic) / Ring 200 PTS (Premium) — สต็อกลดร่วมกัน</p>
+          </div>
+
+          <!-- Tier Builder (ซ่อนอยู่ จะแสดงเมื่อ tick Tier) -->
+          <div id="store-tier-builder" class="hidden mt-3 text-xs border border-amber-500/30 rounded-2xl p-3 bg-amber-500/5 space-y-2">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-amber-300 font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-layer-group text-xs"></i> ระดับราคา (Tiers)
+              </span>
+              <button type="button" onclick="addStoreTierRow()"
+                class="apple-btn apple-btn-amber px-3 py-1 rounded-xl text-[10.5px] font-bold flex items-center gap-1 shadow-sm">
+                <i class="fa-solid fa-plus text-[9px]"></i> เพิ่ม Tier
+              </button>
+            </div>
+            <div id="store-tier-rows" class="space-y-2">
+              <!-- Tier rows injected by JS -->
+            </div>
           </div>
 
           <!-- Image Upload / Dropzone & URL Input -->
@@ -22882,7 +23471,15 @@ Output strictly valid JSON with no markdown formatting.`;
 
         <!-- Inventory List -->
         <div>
-          <h4 class="text-sm font-bold text-slate-300 mb-2">รายการสินค้าในระบบปัจจุบัน</h4>
+          <div class="flex items-center justify-between pb-2 mb-2 flex-wrap gap-2">
+            <h4 class="text-sm font-bold text-slate-300">รายการสินค้าในระบบปัจจุบัน</h4>
+            <button type="button" onclick="autoMergeStoreItemTiers()"
+              class="apple-btn bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 hover:from-amber-500/30 hover:to-orange-500/30 border border-amber-500/40 text-amber-300 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+              title="สแกนตรวจจับสินค้าที่ชื่อเหมือนกันเพื่อรวมเป็น 1 ไอเทมแบบมีหลายระดับราคา">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-400 text-xs"></i>
+              <span>รวมสินค้าซ้ำเป็นระบบ Tier (Auto-Merge)</span>
+            </button>
+          </div>
           <div id="admin-store-items-list" class="space-y-2">
             <!-- Rendered by JS -->
           </div>
