@@ -1643,11 +1643,14 @@
       box-shadow: var(--neo-shadow-pressed) !important;
     }
 
-    /* ===== 🛡️ ป้ายแท็กบนการ์ดบอส (Anti-Glare Dark Inset Neumorphism) =====
-       ปรับให้พื้นหลังมืดลึก สบายตา ไม่สว่างจ้าแยงตา และตัวหนังสือนุ่มนวล คมชัด */
+    /* ===== 🛡️ ป้ายแท็กบนการ์ดบอสและมุมมองตาราง (Anti-Glare Dark Inset Neumorphism) =====
+       ปรับให้พื้นหลังมืดลึก สบายตา ไม่สว่างจ้าแยงตา ทั้งมุมมองการ์ดและมุมมองตาราง */
     body.neo-dark .boss-card span[class*="rounded-full"],
     body.neo-dark .boss-card span[class*="rounded-md"],
-    body.neo-dark .boss-card span[class*="rounded-lg"] {
+    body.neo-dark .boss-card span[class*="rounded-lg"],
+    body.neo-dark #boss-cards-grid tr span[class*="rounded-"],
+    body.neo-dark #boss-cards-grid tr span[class*="border"],
+    body.neo-dark .boss-table span[class*="rounded-"] {
       background: #0d131d !important;
       background-image: none !important;
       box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.6) !important;
@@ -1656,49 +1659,60 @@
 
     /* ป้ายประเภทบอส: กิจกรรมกิลด์ (เหลืองอำพันนุ่มตา) */
     body.neo-dark .boss-card span[class*="bg-amber-500/20"],
-    body.neo-dark .boss-card span[class*="bg-amber-950"] {
+    body.neo-dark .boss-card span[class*="bg-amber-950"],
+    body.neo-dark #boss-cards-grid tr span[class*="bg-amber-"] {
       background: #1f170a !important;
       border-color: rgba(245, 158, 11, 0.4) !important;
     }
 
     body.neo-dark .boss-card span[class*="bg-amber-500/20"] i,
     body.neo-dark .boss-card span[class*="bg-amber-500/20"],
-    body.neo-dark .boss-card span[class*="bg-amber-950"] {
+    body.neo-dark .boss-card span[class*="bg-amber-950"],
+    body.neo-dark #boss-cards-grid tr span[class*="bg-amber-"],
+    body.neo-dark #boss-cards-grid tr span[class*="bg-amber-"] i {
       color: #fcd34d !important;
       -webkit-text-fill-color: #fcd34d !important;
     }
 
     /* ป้ายประเภทบอส: บอสระดับสูง (แดงกุหลาบนุ่มตา) */
     body.neo-dark .boss-card span[class*="bg-rose-500/20"],
-    body.neo-dark .boss-card span[class*="bg-rose-950"] {
+    body.neo-dark .boss-card span[class*="bg-rose-950"],
+    body.neo-dark #boss-cards-grid tr span[class*="bg-rose-"] {
       background: #240d17 !important;
       border-color: rgba(244, 63, 94, 0.4) !important;
     }
 
     body.neo-dark .boss-card span[class*="bg-rose-500/20"] i,
     body.neo-dark .boss-card span[class*="bg-rose-500/20"],
-    body.neo-dark .boss-card span[class*="bg-rose-950"] {
+    body.neo-dark .boss-card span[class*="bg-rose-950"],
+    body.neo-dark #boss-cards-grid tr span[class*="bg-rose-"],
+    body.neo-dark #boss-cards-grid tr span[class*="bg-rose-"] i {
       color: #fda4af !important;
       -webkit-text-fill-color: #fda4af !important;
     }
 
     /* ป้ายประเภทบอส: บอสทั่วไป (เขียวมรกตนุ่มตา) */
     body.neo-dark .boss-card span[class*="bg-emerald-500/20"],
-    body.neo-dark .boss-card span[class*="bg-emerald-950"] {
+    body.neo-dark .boss-card span[class*="bg-emerald-950"],
+    body.neo-dark #boss-cards-grid tr span[class*="bg-emerald-"] {
       background: #0a1c15 !important;
       border-color: rgba(16, 185, 129, 0.35) !important;
     }
 
     body.neo-dark .boss-card span[class*="bg-emerald-500/20"] i,
     body.neo-dark .boss-card span[class*="bg-emerald-500/20"],
-    body.neo-dark .boss-card span[class*="bg-emerald-950"] {
+    body.neo-dark .boss-card span[class*="bg-emerald-950"],
+    body.neo-dark #boss-cards-grid tr span[class*="bg-emerald-"],
+    body.neo-dark #boss-cards-grid tr span[class*="bg-emerald-"] i {
       color: #6ee7b7 !important;
       -webkit-text-fill-color: #6ee7b7 !important;
     }
 
     /* ป้ายสถานะ: เกิดแล้ว ALIVE (แดงทึบ + ตัวหนังสือขาว) */
     body.neo-dark .boss-card span[class*="bg-rose-600"],
-    body.neo-dark .boss-card span[class*="from-rose-600"] {
+    body.neo-dark .boss-card span[class*="from-rose-600"],
+    body.neo-dark #boss-cards-grid tr span[class*="bg-rose-600"],
+    body.neo-dark #boss-cards-grid tr span[class*="from-rose-600"] {
       background: linear-gradient(145deg, #881337, #4c0519) !important;
       border-color: rgba(251, 113, 133, 0.6) !important;
       box-shadow: 0 0 10px rgba(244, 63, 94, 0.3) !important;
@@ -1708,7 +1722,9 @@
 
     /* ป้ายสถานะ: ใกล้เกิด (เหลืองทองนุ่มตา) */
     body.neo-dark .boss-card span[class*="bg-amber-500/30"],
-    body.neo-dark .boss-card span[class*="from-amber-400"] {
+    body.neo-dark .boss-card span[class*="from-amber-400"],
+    body.neo-dark #boss-cards-grid tr span[class*="bg-amber-500/30"],
+    body.neo-dark #boss-cards-grid tr span[class*="from-amber-400"] {
       background: linear-gradient(145deg, #78350f, #451a03) !important;
       border-color: rgba(251, 191, 36, 0.55) !important;
       box-shadow: 0 0 8px rgba(245, 158, 11, 0.25) !important;
@@ -1718,7 +1734,8 @@
 
     /* ป้ายสถานะ: รอเกิด (ฟ้าเข้มลึก สบายตา) */
     body.neo-dark .boss-card span[class*="bg-sky-500/20"],
-    body.neo-dark .boss-card span[class*="bg-sky-950"] {
+    body.neo-dark .boss-card span[class*="bg-sky-950"],
+    body.neo-dark #boss-cards-grid tr span[class*="bg-sky-"] {
       background: #091a2b !important;
       border-color: rgba(56, 189, 248, 0.35) !important;
     }
@@ -1726,7 +1743,9 @@
     body.neo-dark .boss-card span[class*="bg-sky-500/20"] i,
     body.neo-dark .boss-card span[class*="bg-sky-500/20"],
     body.neo-dark .boss-card span[class*="bg-sky-950"],
-    body.neo-dark .boss-card span[class*="bg-sky-950"] i {
+    body.neo-dark .boss-card span[class*="bg-sky-950"] i,
+    body.neo-dark #boss-cards-grid tr span[class*="bg-sky-"],
+    body.neo-dark #boss-cards-grid tr span[class*="bg-sky-"] i {
       color: #7dd3fc !important;
       -webkit-text-fill-color: #7dd3fc !important;
     }

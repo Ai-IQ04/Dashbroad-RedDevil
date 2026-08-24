@@ -1030,35 +1030,35 @@ function renderBossTimerCards() {
 
         if (isGuildActivity) {
           nameColorClass = 'text-amber-400 font-black drop-shadow-[0_2px_8px_rgba(251,191,36,0.45)]';
-          levelBadgeClass = 'bg-amber-950/90 text-amber-300 border-amber-500/60 shadow-amber-950/60';
+          levelBadgeClass = 'bg-[#1f170a] text-amber-300 border-amber-500/40 shadow-sm';
           avatarRing = 'border-amber-500/60 ring-1 ring-amber-500/30';
-          typeIcon = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-sm flex items-center gap-1"><i class="fa-solid fa-star text-[8px] text-amber-400"></i>กิลด์</span>`;
+          typeIcon = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#1f170a] text-amber-300 border border-amber-500/40 shadow-sm flex items-center gap-1"><i class="fa-solid fa-star text-[8px] text-amber-400"></i>กิลด์</span>`;
         } else if (isHighTier) {
           nameColorClass = 'text-rose-400 font-black drop-shadow-[0_2px_10px_rgba(244,63,94,0.6)]';
-          levelBadgeClass = 'bg-rose-950/90 text-rose-300 border-rose-500/60 shadow-rose-950/60';
+          levelBadgeClass = 'bg-[#240d17] text-rose-300 border-rose-500/40 shadow-sm';
           avatarRing = 'border-rose-500/60 ring-1 ring-rose-500/30';
-          typeIcon = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/50 shadow-sm flex items-center gap-1"><i class="fa-solid fa-skull-crossbones text-[8px] text-rose-400"></i>บอสสูง</span>`;
+          typeIcon = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#240d17] text-rose-300 border border-rose-500/40 shadow-sm flex items-center gap-1"><i class="fa-solid fa-skull-crossbones text-[8px] text-rose-400"></i>บอสสูง</span>`;
         } else {
           nameColorClass = 'text-emerald-300 font-black drop-shadow-[0_2px_10px_rgba(52,211,153,0.5)]';
-          levelBadgeClass = 'bg-emerald-950/90 text-emerald-300 border-emerald-500/60 shadow-emerald-950/60';
+          levelBadgeClass = 'bg-[#0a1c15] text-emerald-300 border-emerald-500/35 shadow-sm';
           avatarRing = 'border-emerald-500/60 ring-1 ring-emerald-500/30';
-          typeIcon = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm flex items-center gap-1"><i class="fa-solid fa-shield-halved text-[8px] text-emerald-400"></i>ทั่วไป</span>`;
+          typeIcon = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#0a1c15] text-emerald-300 border border-emerald-500/35 shadow-sm flex items-center gap-1"><i class="fa-solid fa-shield-halved text-[8px] text-emerald-400"></i>ทั่วไป</span>`;
         }
 
         let statusBadge = '';
         let rowBg = '';
         if (b.status === 'alive') {
           rowBg = 'bg-rose-950/20';
-          statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-gradient-to-r from-rose-600 to-red-600 text-white border border-rose-400 flex items-center justify-center gap-1.5 shadow-md shadow-rose-600/40"><i class="fa-solid fa-circle text-[6px] text-rose-200 animate-ping"></i><span class="animate-pulse">เกิดแล้ว</span></span>`;
+          statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-gradient-to-r from-rose-700 to-red-700 text-white border border-rose-500/60 flex items-center justify-center gap-1.5 shadow-md shadow-rose-950/40"><i class="fa-solid fa-circle text-[6px] text-rose-200 animate-ping"></i><span class="animate-pulse">เกิดแล้ว</span></span>`;
         } else if (b.status === 'soon') {
           rowBg = 'bg-amber-950/15';
-          statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 border border-amber-300 flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/40"><i class="fa-solid fa-clock text-[9px] text-slate-950 animate-spin" style="animation-duration: 4s;"></i><span class="animate-pulse font-extrabold">ใกล้เกิด</span></span>`;
+          statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-600 to-yellow-600 text-slate-950 border border-amber-400 flex items-center justify-center gap-1.5 shadow-md shadow-amber-950/40"><i class="fa-solid fa-clock text-[9px] text-slate-950 animate-spin" style="animation-duration: 4s;"></i><span class="animate-pulse font-extrabold">ใกล้เกิด</span></span>`;
         } else if (b.status === 'cooldown') {
           rowBg = 'bg-slate-900/20';
-          statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-950/80 text-sky-300 border border-sky-500/50 flex items-center justify-center gap-1.5"><i class="fa-solid fa-hourglass-half text-[8px] text-sky-400"></i> รอเกิด</span>`;
+          statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#091a2b] text-sky-300 border border-sky-500/40 flex items-center justify-center gap-1.5 shadow-inner"><i class="fa-solid fa-hourglass-half text-[8px] text-sky-400"></i> รอเกิด</span>`;
         } else {
           rowBg = '';
-          statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-800/90 text-slate-300 border border-slate-700 flex items-center justify-center gap-1.5">⚪ ยังไม่ลงเวลา</span>`;
+          statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-[#0f172a] text-slate-400 border border-slate-700/60 flex items-center justify-center gap-1.5">⚪ ยังไม่ลงเวลา</span>`;
         }
 
         const countdownText = formatCountdown(b.diffMs, b.status);
@@ -1223,14 +1223,14 @@ function renderBossTimerCards() {
         const isHighTier = isHighLevelBoss(b.level, b.id, b.name);
 
         let nameColorClass = 'text-emerald-400 font-black drop-shadow-[0_1px_4px_rgba(52,211,153,0.35)]';
-        let tagBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0"><i class="fa-solid fa-shield-halved text-[8px] mr-1"></i>ทั่วไป</span>`;
+        let tagBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#0a1c15] text-emerald-300 border border-emerald-500/35 shrink-0"><i class="fa-solid fa-shield-halved text-[8px] mr-1"></i>ทั่วไป</span>`;
 
         if (isGuildActivity) {
           nameColorClass = 'text-amber-400 font-black drop-shadow-[0_1px_4px_rgba(251,191,36,0.4)]';
-          tagBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/50 shrink-0"><i class="fa-solid fa-star text-[8px] text-amber-400 mr-1"></i>กิลด์</span>`;
+          tagBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#1f170a] text-amber-300 border border-amber-500/40 shrink-0"><i class="fa-solid fa-star text-[8px] text-amber-400 mr-1"></i>กิลด์</span>`;
         } else if (isHighTier) {
           nameColorClass = 'text-rose-400 font-black drop-shadow-[0_1px_4px_rgba(244,63,94,0.4)]';
-          tagBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/50 shrink-0"><i class="fa-solid fa-skull-crossbones text-[8px] text-rose-400 mr-1"></i>ระดับสูง</span>`;
+          tagBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#240d17] text-rose-300 border border-rose-500/40 shrink-0"><i class="fa-solid fa-skull-crossbones text-[8px] text-rose-400 mr-1"></i>ระดับสูง</span>`;
         }
 
         let statusBadge = '';
@@ -1239,19 +1239,19 @@ function renderBossTimerCards() {
 
         if (b.status === 'alive') {
           rowBg = 'bg-rose-950/25 hover:bg-rose-950/40';
-          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white flex items-center gap-1 animate-pulse shadow-sm"><i class="fa-solid fa-circle text-[6px]"></i> เกิดแล้ว</span>`;
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-rose-700 to-red-700 text-white flex items-center gap-1 animate-pulse shadow-sm"><i class="fa-solid fa-circle text-[6px]"></i> เกิดแล้ว</span>`;
           cdColor = 'text-rose-300 font-black animate-pulse';
         } else if (b.status === 'soon') {
           rowBg = 'bg-amber-950/20 hover:bg-amber-950/35';
-          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-950 flex items-center gap-1 animate-pulse shadow-sm"><i class="fa-solid fa-clock text-[8px]"></i> ใกล้เกิด</span>`;
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-600 to-yellow-600 text-slate-950 flex items-center gap-1 animate-pulse shadow-sm"><i class="fa-solid fa-clock text-[8px]"></i> ใกล้เกิด</span>`;
           cdColor = 'text-amber-300 font-black animate-pulse';
         } else if (b.status === 'cooldown') {
           rowBg = 'hover:bg-slate-900/40';
-          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-950 text-sky-300 border border-sky-800/80 flex items-center gap-1"><i class="fa-solid fa-hourglass-half text-[7px]"></i> รอเกิด</span>`;
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#091a2b] text-sky-300 border border-sky-500/40 flex items-center gap-1"><i class="fa-solid fa-hourglass-half text-[7px]"></i> รอเกิด</span>`;
           cdColor = 'text-sky-300 font-bold';
         } else {
           rowBg = 'hover:bg-slate-900/30';
-          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-900 text-slate-400 border border-slate-800">⚪ ยังไม่ลงเวลา</span>`;
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#0f172a] text-slate-400 border border-slate-700/60">⚪ ยังไม่ลงเวลา</span>`;
           cdColor = 'text-slate-500';
         }
 
