@@ -12818,7 +12818,54 @@ Output strictly valid JSON with no markdown wrapping:
         });
       });
 
+      // Cache snapshot locally for Instant (0.01s) Preset Recall
+      if (squads.length > 0) {
+        saveSquadSnapshot(data);
+      }
+
       renderSquadItemsListUI();
+    }
+
+    function saveSquadSnapshot(data) {
+      try {
+        if (!data || !Array.isArray(data.squads) || data.squads.length === 0) return;
+        localStorage.setItem('guild_last_squad_snapshot', JSON.stringify({
+          data,
+          savedAt: new Date().toISOString()
+        }));
+      } catch (e) {
+        console.warn('Could not save squad snapshot to localStorage:', e);
+      }
+    }
+
+    function useLastSquadSnapshot() {
+      const raw = localStorage.getItem('guild_last_squad_snapshot');
+      if (!raw) {
+        showToast('ℹ️ ยังไม่มีประวัติผังชุมนุมที่เคยสแกนไว้ กรุณาวางรูปสแกนอย่างน้อย 1 ครั้งค่ะ', 'info');
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(raw);
+        if (!parsed || !parsed.data || !Array.isArray(parsed.data.squads) || parsed.data.squads.length === 0) {
+          showToast('⚠️ ข้อมูลผังชุมนุมเดิมว่างเปล่า กรุณาวางรูปสแกนใหม่อีกครั้งค่ะ', 'warning');
+          return;
+        }
+
+        const dropzonePrompt = document.getElementById('squad-dropzone-prompt');
+        const previewBox = document.getElementById('squad-image-preview-box');
+        const statusEl = document.getElementById('squad-ai-status');
+        if (statusEl) statusEl.classList.add('hidden');
+        if (previewBox) previewBox.classList.add('hidden');
+        if (dropzonePrompt) dropzonePrompt.classList.remove('hidden');
+
+        renderSquadScanResults(parsed.data);
+        const total = (parsed.data.squads || []).reduce((acc, sq) => acc + (Array.isArray(sq.members) ? sq.members.length : 0), 0);
+        showToast(`⚡ โหลดผังชุมนุมล่าสุด (${total} คน) สำเร็จทันทีใน 0.01s! 🎉`, 'success');
+      } catch (e) {
+        console.error('Failed to load squad snapshot:', e);
+        showToast('❌ ไม่สามารถอ่านผังชุมนุมเดิมได้ กรุณาวางรูปสแกนใหม่ค่ะ', 'error');
+      }
     }
 
     function renderSquadItemsListUI() {
@@ -22645,19 +22692,24 @@ Output strictly valid JSON with no markdown formatting.`;
       </div>
 
       <!-- OCR Engine Mode Selector Bar -->
-      <div class="flex items-center justify-between gap-2 p-2 bg-slate-950/90 border border-slate-800 rounded-2xl mt-2 shrink-0">
+      <div class="flex items-center justify-between flex-wrap gap-2 p-2 bg-slate-950/90 border border-slate-800 rounded-2xl mt-2 shrink-0">
         <span class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5 pl-1">
           <i class="fa-solid fa-microchip text-indigo-400"></i>
           <span>เครื่องยนต์สแกน:</span>
         </span>
-        <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+        <div class="flex items-center flex-wrap gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
           <button type="button" id="btn-squad-engine-gemini" onclick="setSquadOcrEngine('gemini')"
             class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition bg-purple-600 text-white shadow">
-            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Google AI (แนะนำ)
+            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Google AI 3.6
           </button>
           <button type="button" id="btn-squad-engine-tesseract" onclick="setSquadOcrEngine('tesseract')"
             class="px-2.5 py-1 rounded-lg text-[10.5px] font-medium transition text-slate-400 hover:text-white">
-            <i class="fa-solid fa-bolt mr-1"></i>Local OCR (ไม่ต้องใช้ Key)
+            <i class="fa-solid fa-bolt mr-1"></i>Local OCR
+          </button>
+          <button type="button" onclick="useLastSquadSnapshot()"
+            class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition bg-emerald-600/80 hover:bg-emerald-600 text-white shadow flex items-center gap-1"
+            title="ใช้รายชื่อผังชุมนุมที่เคยสแกนไว้ล่าสุดใน 0.01 วินาที">
+            <i class="fa-solid fa-bolt text-amber-300"></i>ผังล่าสุด (0s)
           </button>
         </div>
       </div>
