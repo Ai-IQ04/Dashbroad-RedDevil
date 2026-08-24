@@ -20428,7 +20428,6 @@ Output strictly valid JSON with no markdown formatting.`;
                 ` : `
                   <div class="absolute top-2.5 right-2.5 px-3 py-1 rounded-full bg-slate-900/95 backdrop-blur-md border border-amber-400/50 text-amber-300 text-[10.5px] font-mono font-bold flex items-center gap-1.5 shadow-md">
                     <span>สต็อกคลัง: <strong class="text-white">${item.stock}</strong> ชิ้น</span>
-                    ${pendingCount > 0 ? `<span class="text-rose-400 font-bold">• รอสุ่ม ${pendingCount} คน</span>` : ''}
                   </div>
                 `}
               </div>
@@ -20439,11 +20438,6 @@ Output strictly valid JSON with no markdown formatting.`;
                   ${hasTiers ? `<span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9.5px] font-bold shrink-0">${item.tiers.length} Packs</span>` : ''}
                 </div>
                 <p class="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed font-normal">${escapeHtml(item.desc || 'ไม่มีคำอธิบาย')}</p>
-                ${pendingCount > item.stock ? `
-                  <div class="mt-2.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-[11px] text-amber-300 font-medium flex items-center gap-1.5 shadow-inner">
-                    <i class="fa-solid fa-dice text-amber-400"></i> มีคนขอแลกเกินสต็อก (ระบบจะสุ่มเมื่อปิดรอบ)
-                  </div>
-                ` : ''}
               </div>
             </div>
 
@@ -20463,7 +20457,7 @@ Output strictly valid JSON with no markdown formatting.`;
                           : 'bg-slate-900 text-slate-500 cursor-not-allowed border border-slate-800 opacity-60'
                         }">
                   <i class="fa-solid fa-gift text-[11px]"></i>
-                  <span>${!m ? 'เลือกตัวละคร' : isOutOfStock ? 'หมด' : availablePoints < item.cost ? 'แต้มไม่พอ' : 'ส่งคำขอแลก'}</span>
+                  <span>${!m ? 'เลือกตัวละคร' : isOutOfStock ? 'หมด' : availablePoints < item.cost ? 'แต้มไม่พอ' : 'แลกรับทันที'}</span>
                 </button>
               </div>
             `}
@@ -20634,13 +20628,12 @@ Output strictly valid JSON with no markdown formatting.`;
         }
       }
 
-      const pendingForThis = (storeRewardLogs || []).filter(l => l.itemId === item.id && l.status === 'pending').length;
-      let confirmMsg = `ยืนยันการส่งคำขอแลก "${displayItemName}"\nโดยใช้แต้มของ "${charName}" จำนวน ${cost} PTS หรือไม่?`;
-      if (pendingForThis >= item.stock) {
-        confirmMsg += `\n\n⚠️ มีผู้ขอแลกแล้ว ${pendingForThis} คน (เกินสต็อกคลัง ${item.stock} ชิ้น)\nระบบจะสุ่มผู้โชคดีและคืนแต้มให้อัตโนมัติหากไม่ได้รับเลือก`;
-      }
+      let confirmMsg = `ยืนยันการแลกรับ "${displayItemName}" ทันที\nโดยใช้แต้มของ "${charName}" จำนวน ${cost} PTS หรือไม่?\n\n(ระบบจะตัดแต้มและตัดสต็อกคลังทันที)`;
 
       if (!confirm(confirmMsg)) return;
+
+      // ⚡ ตัดสต็อกคลังทันที (First-Come First-Served)
+      item.stock = Math.max(0, item.stock - qty);
 
       const logEntry = {
         id: 'REQ-' + Date.now(),
@@ -20654,8 +20647,9 @@ Output strictly valid JSON with no markdown formatting.`;
         guild: m.guild || 'Guild',
         timestamp: Date.now(),
         dateStr: new Date().toLocaleString('th-TH'),
-        status: 'pending',
-        approvedBy: null
+        status: 'won_pending_delivery', // ได้รับสิทธิ์ทันที รอส่งของในเกม
+        approvedBy: 'Auto-Instant',
+        processedAt: Date.now()
       };
 
       storeRewardLogs.unshift(logEntry);
@@ -20664,25 +20658,28 @@ Output strictly valid JSON with no markdown formatting.`;
       if (typeof addAuditLog === 'function') {
         addAuditLog(
           'store',
-          `ส่งคำขอแลกของรางวัล "${displayItemName}" (ใช้ ${cost} PTS, ตัดคลัง ${qty} ชิ้น)`,
-          `สำหรับตัวละคร "${charName}" (ยืนยัน PIN ถูกต้อง)`,
+          `แลกรับของรางวัล "${displayItemName}" สำเร็จทันที (ใช้ ${cost} PTS, ตัดคลัง ${qty} ชิ้น)`,
+          `สำหรับตัวละคร "${charName}" | คงเหลือในคลัง ${item.stock} ชิ้น`,
           charName
         );
       }
 
-      showToast(`ส่งคำขอแลก "${displayItemName}" เรียบร้อยแล้ว! รอดำเนินการสุ่ม/อนุมัติจาก Admin`, 'success');
+      showToast(`🎉 แลกรับ "${displayItemName}" สำเร็จเรียบร้อย! กรุณารอรับของส่งมอบในเกม`, 'success');
       onRewardMemberSelected();
+      renderRewardStoreCatalog();
       renderRewardApprovalList();
+      renderAdminStoreInventory();
+      renderStoreHistoryTable();
 
       sendMemberRequestDiscordAlert({
-        title: '🎁 มีคำขอแลกของรางวัลร้านค้ากิลด์!',
+        title: '🎉 มีสมาชิกแลกรับของรางวัลสำเร็จทันที!',
         color: 0x10B981,
         fields: [
           { name: '👤 สมาชิก', value: `**${charName}** (${m.guild || 'Guild'})`, inline: true },
           { name: '🎁 ของรางวัล', value: `**${displayItemName}** (จำนวน ${qty} ชิ้น)`, inline: true },
           { name: '💰 แต้มที่ใช้แลก', value: `**${cost.toLocaleString()} PTS** (คงเหลือ ${available - cost} PTS)`, inline: false },
-          { name: '📦 สต็อกคลังคงเหลือ', value: `${item.stock} ชิ้น (รอพิจารณา ${pendingForThis + 1} คำขอ)`, inline: false },
-          { name: '🕒 เวลาที่ส่ง', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
+          { name: '📦 สต็อกคลังคงเหลือล่าสุด', value: `**${item.stock} ชิ้น**`, inline: false },
+          { name: '🕒 เวลาที่แลก', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
         ]
       });
     }
@@ -21024,6 +21021,12 @@ Output strictly valid JSON with no markdown formatting.`;
       const req = storeRewardLogs.find(x => x.id === reqId);
       if (!req) return;
 
+      const item = storeRewards.find(x => x.id === req.itemId);
+      const refundQty = Number(req.qty) || (item ? getItemTierQty(item, req.tierId) : 1);
+      if (item && req.status !== 'rejected') {
+        item.stock = (Number(item.stock) || 0) + refundQty;
+      }
+
       req.status = 'rejected';
       req.approvedBy = currentAdminEmail || 'Admin';
       req.processedAt = Date.now();
@@ -21033,15 +21036,16 @@ Output strictly valid JSON with no markdown formatting.`;
       if (typeof addAuditLog === 'function') {
         addAuditLog(
           'store',
-          `ปฏิเสธคำขอแลกของรางวัล "${req.itemName}"`,
+          `ปฏิเสธ/ยกเลิกคำขอแลกของรางวัล "${req.itemName}" (คืนสต็อก ${refundQty} ชิ้น)`,
           `ของ "${req.memberName}" | โดย Admin: ${currentAdminEmail || 'Admin'}`,
           req.memberName
         );
       }
 
-      showToast(`ปฏิเสธคำขอของ "${req.memberName}" แล้ว (แต้มถูกคืนเข้าบัญชี)`, 'info');
+      showToast(`ปฏิเสธคำขอของ "${req.memberName}" แล้ว (แต้มและสต็อกถูกคืนเข้าคลังเรียบร้อย)`, 'info');
       renderRewardApprovalList();
       renderRewardStoreCatalog();
+      renderAdminStoreInventory();
       renderStoreHistoryTable();
       updateRewardPendingBadge();
     }
