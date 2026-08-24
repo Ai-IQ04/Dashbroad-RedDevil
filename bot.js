@@ -370,6 +370,15 @@ async function checkFirebaseSyncCommand() {
   }
 }
 
+// 🛡️ ป้องกันบอทแครชจาก Unhandled Promise Rejection และ Uncaught Exception
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('⚠️ [Unhandled Rejection]:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('⚠️ [Uncaught Exception]:', err);
+});
+
 let outboundAlertsInProgress = false;
 async function checkOutboundAlertsCommand() {
   if (outboundAlertsInProgress) return;
@@ -385,7 +394,13 @@ async function checkOutboundAlertsCommand() {
     for (const [key, item] of Object.entries(data)) {
       if (!item) continue;
       const targetChannelId = item.channelId || CONFIG.ADMIN_REQUEST_CHANNEL_ID || '1541279270096212068';
-      const channel = await client.channels.fetch(targetChannelId).catch(() => null);
+      let channel = null;
+      try {
+        channel = await client.channels.fetch(targetChannelId).catch(() => null);
+      } catch (chErr) {
+        console.warn(`⚠️ ไม่สามารถเข้าถึงห้องแจ้งเตือน ID ${targetChannelId}:`, chErr.message);
+      }
+
       if (channel && channel.isTextBased()) {
         const embed = new EmbedBuilder()
           .setTitle(item.title || '🔔 มีคำขอใหม่จากสมาชิก')
@@ -401,9 +416,20 @@ async function checkOutboundAlertsCommand() {
         if (item.description) embed.setDescription(item.description);
 
         const fallbackRole = CONFIG.ADMIN_ROLE_ID ? `<@&${CONFIG.ADMIN_ROLE_ID}>` : '<@&1508502265097621544>';
-        const content = (item.content !== undefined && item.content !== null && item.content !== '') ? item.content : (item.mentionTag || fallbackRole);
-        await channel.send({ content: content || undefined, embeds: [embed] });
-        console.log(`📤 [Bot Alert] ส่งแจ้งเตือนคำขอเข้าห้อง ${targetChannelId} เรียบร้อยแล้ว (Mention: ${content})`);
+        let content = (item.content !== undefined && item.content !== null && item.content !== '') ? item.content : (item.mentionTag || fallbackRole);
+        // แก้ไขกรณี tag มี typo เช่น <a& เป็น <@&
+        if (typeof content === 'string' && content.startsWith('<a&')) {
+          content = content.replace(/^<a&/, '<@&');
+        }
+
+        try {
+          await channel.send({ content: content || undefined, embeds: [embed] });
+          console.log(`📤 [Bot Alert] ส่งแจ้งเตือนคำขอเข้าห้อง ${targetChannelId} เรียบร้อยแล้ว (Mention: ${content})`);
+        } catch (sendErr) {
+          console.error(`❌ ไม่สามารถส่งข้อความเข้าห้อง ${targetChannelId} ได้:`, sendErr.message);
+        }
+      } else {
+        console.warn(`⚠️ [Bot Alert] ไม่พบห้องข้อความ ID: ${targetChannelId} (อาจไม่มีสิทธิ์เข้าห้องหรือ ID ผิด)`);
       }
 
       await fetch(`${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/outbound_alerts/${key}.json`, {
@@ -426,31 +452,39 @@ client.once('ready', async () => {
   console.log(`📢 ห้องแจ้งเตือนคำขอ Admin: ${CONFIG.ADMIN_REQUEST_CHANNEL_ID || '1541279270096212068'}`);
   console.log('====================================================');
 
-  await scanRegistrationHistory();
-  await syncDiscordServerMembers();
+  // ส่ง Heartbeat ทันที
+  await sendHeartbeat().catch(() => {});
 
-  // หน้าเว็บส่งคำสั่งผ่าน Firebase
-  setInterval(checkFirebaseSyncCommand, SYNC_POLL_INTERVAL_MS);
+  // เริ่มต้นระบบตรวจจับคำขอและการซิงค์แบบ Real-time ทันที (Non-blocking)
   setInterval(checkOutboundAlertsCommand, 3000);
-  await checkFirebaseSyncCommand();
-  await checkOutboundAlertsCommand();
+  setInterval(checkFirebaseSyncCommand, SYNC_POLL_INTERVAL_MS);
+  checkOutboundAlertsCommand().catch(e => console.warn('⚠️ Init alert poll error:', e.message));
+  checkFirebaseSyncCommand().catch(e => console.warn('⚠️ Init sync poll error:', e.message));
+
+  // รันงานพื้นหลัง: สแกนประวัติการลงทะเบียน และซิงค์สมาชิกในเซิร์ฟเวอร์
+  scanRegistrationHistory().catch(e => console.warn('⚠️ Scan registration error:', e.message));
+  syncDiscordServerMembers().catch(e => console.warn('⚠️ Sync members error:', e.message));
 
   // ซิงค์รายชื่อสมาชิก Discord และส่ง Heartbeat ทุกๆ 30 วินาที
   setInterval(async () => {
-    await syncDiscordServerMembers();
+    try {
+      await syncDiscordServerMembers();
+    } catch (e) {
+      console.warn('⚠️ Auto sync members loop error:', e.message);
+    }
   }, 30000);
 });
 
 // 👥 ดักฟังสมาชิกเข้าใหม่ / อัปเดตชื่อใน Discord
 client.on('guildMemberAdd', async (member) => {
   console.log(`👋 มีสมาชิกใหม่เข้า Discord: ${member.user.tag}`);
-  await syncDiscordServerMembers();
+  await syncDiscordServerMembers().catch(() => {});
 });
 
 client.on('guildMemberUpdate', async (oldMember, newMember) => {
   if (oldMember.nickname !== newMember.nickname || oldMember.displayName !== newMember.displayName) {
     console.log(`✏️ สมาชิกเปลี่ยนชื่อใน Discord: ${newMember.displayName}`);
-    await syncDiscordServerMembers();
+    await syncDiscordServerMembers().catch(() => {});
   }
 });
 
@@ -463,7 +497,7 @@ client.on('messageCreate', async (message) => {
   if (parsed) {
     console.log(`📩 พบสมาชิกใหม่ลงทะเบียน: ${parsed.characterName || parsed.email}`);
     await syncToFirebase(parsed);
-    await syncDiscordServerMembers();
+    await syncDiscordServerMembers().catch(() => {});
     try {
       await message.react('🟢');
     } catch (e) {
@@ -472,9 +506,16 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-// 🚀 เริ่มต้นล็อกอิน
+// 🚀 เริ่มต้นล็อกอิน Discord
 if (CONFIG.DISCORD_BOT_TOKEN && !CONFIG.DISCORD_BOT_TOKEN.startsWith('วาง_')) {
-  client.login(CONFIG.DISCORD_BOT_TOKEN);
+  console.log('🔄 กำลังเชื่อมต่อ Discord Gateway...');
+  client.login(CONFIG.DISCORD_BOT_TOKEN)
+    .then(() => {
+      console.log('🔑 Discord Gateway Login Authenticated สำเร็จ!');
+    })
+    .catch(err => {
+      console.error('❌ ไม่สามารถล็อกอิน Discord ได้:', err.message || err);
+    });
 } else {
-  console.error('⚠️ กรุณาตั้งค่า DISCORD_BOT_TOKEN ในไฟล์ .env, environment variable หรือ bot_config.json ให้ถูกต้อง');
+  console.error('⚠️ กรุณาตั้งค่า DISCORD_BOT_TOKEN ใน Environment Variables บน Render ให้ถูกต้อง');
 }
