@@ -10341,6 +10341,17 @@
         }
       });
 
+      // 13b. ดักฟังการตั้งค่าสัปดาห์ที่นับแต้ม (Store Week Config)
+      fbDb.ref('guild_app/store_week_config').on('value', snapshot => {
+        const val = snapshot.val();
+        if (val && typeof val === 'object') {
+          storeWeekConfig = val;
+          localStorage.setItem('guild_store_week_config', JSON.stringify(storeWeekConfig));
+          renderStoreWeekConfigUI();
+          onRewardMemberSelected();
+        }
+      });
+
       // 14. ระบบ Real-Time Online Presence (ตรวจจับและนับจำนวนคนออนไลน์สด)
       try {
         const userSessionId = 'user_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
@@ -19843,17 +19854,21 @@ Output strictly valid JSON with no markdown formatting.`;
     let storeRewards = parseLocalStorageJson('guild_reward_store_items', DEFAULT_STORE_REWARDS);
     let storeRewardLogs = parseLocalStorageJson('guild_reward_store_logs', []);
     let memberPins = parseLocalStorageJson('guild_member_pins', {});
+    // ✅ กำหนดสัปดาห์ที่นับแต้มสำหรับแลกไอเทม (Admin ตั้งค่าได้)
+    let storeWeekConfig = parseLocalStorageJson('guild_store_week_config', { 1: true, 2: true, 3: true, 4: true });
     let uploadedStoreImageBase64 = null;
     let activePinContext = null;
 
     function saveStoreData() {
       localStorage.setItem('guild_reward_store_items', JSON.stringify(storeRewards));
       localStorage.setItem('guild_reward_store_logs', JSON.stringify(storeRewardLogs));
+      localStorage.setItem('guild_store_week_config', JSON.stringify(storeWeekConfig));
       updateRewardPendingBadge();
       if (typeof saveData === 'function') saveData();
       if (fbDb) {
         fbDb.ref('guild_app/reward_store_items').set(storeRewards);
         fbDb.ref('guild_app/reward_store_logs').set(storeRewardLogs);
+        fbDb.ref('guild_app/store_week_config').set(storeWeekConfig);
       }
     }
 
@@ -19864,7 +19879,60 @@ Output strictly valid JSON with no markdown formatting.`;
       }
     }
 
+    // ===================================================================
+    // 🗓️ ระบบ Admin เลือกสัปดาห์ที่นับแต้มสำหรับแลกไอเทม
+    // ===================================================================
+
+    function renderStoreWeekConfigUI() {
+      for (let w = 1; w <= 4; w++) {
+        const cb = document.getElementById(`store-week-cb-${w}`);
+        if (cb) cb.checked = (storeWeekConfig[w] !== false);
+      }
+      updateStoreWeekConfigSummary();
+    }
+
+    function updateStoreWeekConfigSummary() {
+      const el = document.getElementById('store-week-config-summary');
+      if (!el) return;
+      const activeWeeks = [1, 2, 3, 4].filter(w => storeWeekConfig[w] !== false);
+      if (activeWeeks.length === 0) {
+        el.textContent = '⚠️ ไม่มีสัปดาห์ที่เปิด — สมาชิกจะมี 0 PTS';
+        el.className = 'text-xs text-rose-400 font-semibold mt-2';
+      } else if (activeWeeks.length === 4) {
+        el.textContent = '✅ นับแต้มทุกสัปดาห์ (W1 + W2 + W3 + W4)';
+        el.className = 'text-xs text-emerald-400 font-semibold mt-2';
+      } else {
+        el.textContent = `📅 นับแต้มสัปดาห์: ${activeWeeks.map(w => 'W' + w).join(' + ')} เท่านั้น`;
+        el.className = 'text-xs text-amber-300 font-semibold mt-2';
+      }
+    }
+
+    function saveStoreWeekConfig() {
+      if (!isAdmin) {
+        showToast(t('toast_need_admin_edit'), 'warning');
+        return;
+      }
+      const newConfig = {};
+      for (let w = 1; w <= 4; w++) {
+        const cb = document.getElementById(`store-week-cb-${w}`);
+        newConfig[w] = cb ? cb.checked : true;
+      }
+      storeWeekConfig = newConfig;
+      localStorage.setItem('guild_store_week_config', JSON.stringify(storeWeekConfig));
+      if (fbDb) {
+        fbDb.ref('guild_app/store_week_config').set(storeWeekConfig);
+      }
+      updateStoreWeekConfigSummary();
+      onRewardMemberSelected();
+      if (typeof addAuditLog === 'function') {
+        const activeWeeks = [1, 2, 3, 4].filter(w => storeWeekConfig[w] !== false);
+        addAuditLog('store', `ตั้งค่าสัปดาห์แต้มแลกไอเทม: ${activeWeeks.map(w => 'W' + w).join(', ')}`, '', currentAdminEmail || 'Admin');
+      }
+      showToast(`บันทึกสัปดาห์ที่นับแต้มเรียบร้อยแล้ว 🗓️`, 'success');
+    }
+
     function openRewardStoreAdminModal() {
+
       if (!isAdmin) {
         showToast(t('toast_need_admin_edit'), 'warning');
         return;
@@ -19914,7 +19982,10 @@ Output strictly valid JSON with no markdown formatting.`;
         if (Array.isArray(checksArr)) {
           const s = calculateTotalScore(checksArr);
           wScores[w - 1] = s;
-          baseTotal += s;
+          // ✅ นับเฉพาะสัปดาห์ที่ Admin เปิดไว้
+          if (storeWeekConfig[w] !== false) {
+            baseTotal += s;
+          }
         }
       }
 
@@ -20114,8 +20185,13 @@ Output strictly valid JSON with no markdown formatting.`;
 
         pointEl.textContent = `${available.toLocaleString()} PTS`;
         if (infoEl) {
-          const breakdownText = `W1:${breakdown.wScores[0]} | W2:${breakdown.wScores[1]} | W3:${breakdown.wScores[2]} | W4:${breakdown.wScores[3]}`;
-          infoEl.textContent = `(${breakdownText} ➔ รวมเดือนนี้: ${monthlyTotal} PTS${pendingCount > 0 ? ` • รอสุ่ม/ส่งของ ${pendingCount} รายการ` : ''})`;
+          const wParts = [1, 2, 3, 4].map(w => {
+            const score = breakdown.wScores[w - 1];
+            const enabled = storeWeekConfig[w] !== false;
+            return `W${w}:${enabled ? score : `<span class="text-rose-400/70 line-through">${score}(ปิด)</span>`}`;
+          });
+          const breakdownText = wParts.join(' | ');
+          infoEl.innerHTML = `(${breakdownText} ➔ รวมเดือนนี้: ${monthlyTotal} PTS${pendingCount > 0 ? ` • รอสุ่ม/ส่งของ ${pendingCount} รายการ` : ''})`;
         }
         if (badge) {
           badge.classList.remove('opacity-50');
@@ -22582,9 +22658,78 @@ Output strictly valid JSON with no markdown formatting.`;
 
       <!-- Tab 3: Admin Inventory & Add Reward -->
       <div id="store-tab-admin" class="hidden flex-1 overflow-y-auto pr-1 py-2 space-y-4">
+
+        <!-- 🗓️ กล่องตั้งค่าสัปดาห์ที่นับแต้มแลกไอเทม (Admin Only) -->
+        <div class="bg-gradient-to-br from-slate-900/95 via-indigo-950/20 to-slate-900/95 border border-indigo-500/40 rounded-2xl p-4 shadow-lg">
+          <div class="flex items-center justify-between pb-2 mb-3 border-b border-slate-800/80 flex-wrap gap-2">
+            <h4 class="text-sm font-extrabold text-white flex items-center gap-2">
+              <i class="fa-solid fa-calendar-check text-indigo-400 text-base"></i>
+              กำหนดสัปดาห์ที่นับแต้มสำหรับแลกไอเทม
+            </h4>
+            <span class="text-[10.5px] text-indigo-300/80 bg-indigo-500/15 border border-indigo-500/30 px-2.5 py-0.5 rounded-full font-mono font-bold">
+              Week Pool Config
+            </span>
+          </div>
+
+          <p class="text-[11px] text-slate-400 mb-3">
+            เลือกสัปดาห์ที่ต้องการให้รวมแต้มเข้า Pool สำหรับแลกไอเทม สัปดาห์ที่ปิดจะไม่ถูกนับในการคำนวณแต้มคงเหลือ
+          </p>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <!-- W1 -->
+            <label id="store-week-label-1"
+              class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border cursor-pointer transition-all select-none
+                     bg-slate-900/80 border-slate-700 hover:border-indigo-500/60 hover:bg-indigo-950/30"
+              onclick="setTimeout(updateStoreWeekConfigSummary,0)">
+              <input type="checkbox" id="store-week-cb-1" checked
+                class="w-4 h-4 rounded accent-indigo-400 cursor-pointer" />
+              <span class="font-bold text-slate-200">📅 สัปดาห์ที่ 1</span>
+            </label>
+            <!-- W2 -->
+            <label id="store-week-label-2"
+              class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border cursor-pointer transition-all select-none
+                     bg-slate-900/80 border-slate-700 hover:border-indigo-500/60 hover:bg-indigo-950/30"
+              onclick="setTimeout(updateStoreWeekConfigSummary,0)">
+              <input type="checkbox" id="store-week-cb-2" checked
+                class="w-4 h-4 rounded accent-indigo-400 cursor-pointer" />
+              <span class="font-bold text-slate-200">📅 สัปดาห์ที่ 2</span>
+            </label>
+            <!-- W3 -->
+            <label id="store-week-label-3"
+              class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border cursor-pointer transition-all select-none
+                     bg-slate-900/80 border-slate-700 hover:border-indigo-500/60 hover:bg-indigo-950/30"
+              onclick="setTimeout(updateStoreWeekConfigSummary,0)">
+              <input type="checkbox" id="store-week-cb-3" checked
+                class="w-4 h-4 rounded accent-indigo-400 cursor-pointer" />
+              <span class="font-bold text-slate-200">📅 สัปดาห์ที่ 3</span>
+            </label>
+            <!-- W4 -->
+            <label id="store-week-label-4"
+              class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border cursor-pointer transition-all select-none
+                     bg-slate-900/80 border-slate-700 hover:border-indigo-500/60 hover:bg-indigo-950/30"
+              onclick="setTimeout(updateStoreWeekConfigSummary,0)">
+              <input type="checkbox" id="store-week-cb-4" checked
+                class="w-4 h-4 rounded accent-indigo-400 cursor-pointer" />
+              <span class="font-bold text-slate-200">📅 สัปดาห์ที่ 4</span>
+            </label>
+          </div>
+
+          <div class="mt-3 flex items-center justify-between flex-wrap gap-2">
+            <div id="store-week-config-summary" class="text-xs text-emerald-400 font-semibold">
+              ✅ นับแต้มทุกสัปดาห์ (W1 + W2 + W3 + W4)
+            </div>
+            <button type="button" onclick="saveStoreWeekConfig()"
+              class="apple-btn apple-btn-gold px-4 py-1.5 rounded-xl text-xs font-black flex items-center gap-2 shadow-md">
+              <i class="fa-solid fa-floppy-disk text-xs"></i>
+              <span>บันทึกการตั้งค่า</span>
+            </button>
+          </div>
+        </div>
+
         <!-- ⚡ Bonus & Test Points Management Box -->
         <div
           class="bg-gradient-to-r from-slate-900/95 via-amber-950/20 to-slate-900/95 border border-amber-500/40 rounded-2xl p-4 shadow-lg">
+
           <div class="flex items-center justify-between pb-2 mb-3 border-b border-slate-800/80 flex-wrap gap-2">
             <h4 class="text-sm font-extrabold text-white flex items-center gap-2">
               <i class="fa-solid fa-bolt-lightning text-amber-400 text-base"></i> จัดการแต้มพิเศษ / เติมแต้มทดสอบ (Admin

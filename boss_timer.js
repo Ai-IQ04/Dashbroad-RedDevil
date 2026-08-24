@@ -393,14 +393,14 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
   const defDate = defeatedDateStr ? new Date(defeatedDateStr) : null;
   const defTimestamp = (defDate && !isNaN(defDate.getTime())) ? defDate.getTime() : 0;
 
-  // 1. Interval bosses: คงสถานะ 'เกิดแล้ว' ค้างไว้จนกว่า Admin จะมากดลงเวลาตายจริง
+  // 1. Interval bosses: คำนวณจากเวลาตาย + interval
   if (boss.respawnType === 'interval') {
     if (!defeatedDateStr || isNaN(defTimestamp) || defTimestamp === 0) return null;
     const nextSpawn = new Date(defTimestamp + (boss.intervalHours * 3600 * 1000));
     return nextSpawn;
   }
 
-  // 2. Fixed schedule bosses: คำนวณเวลารอบถัดไปตามตารางเวลาในโซนเวลาไทย (+7)
+  // 2. Fixed schedule bosses: คำนวณตามตารางเวลาไทย (+7)
   let fixedTimes = Array.isArray(boss.fixedTimes) && boss.fixedTimes.length > 0 ? boss.fixedTimes : null;
   if (!fixedTimes && boss.scheduleText) {
     const parsed = parseScheduleTextToFixedTimes(boss.scheduleText);
@@ -410,8 +410,52 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
   if (fixedTimes && fixedTimes.length > 0) {
     const nowBangkok = getBangkokDateParts(now);
 
+    // 2.1 ตรวจสอบรอบเกิดล่าสุดในอดีต (ภายใน 2 ชม. ที่ผ่านมา)
+    // ถ้ารอบเกิดนั้นเกิดขึ้นแล้ว และยังไม่มีการบันทึกเวลาตายของรอบนี้ (defTimestamp < candidate)
+    // ให้ถือว่าบอสตัวนี้ยังอยู่ในสถานะ "เกิดแล้ว (ALIVE!)" ในรอบนั้น
+    let activeCurrentSpawn = null;
+    const gracePeriodMs = 2 * 60 * 60 * 1000; // 2 ชั่วโมง
+
+    for (let offset = -1; offset <= 0; offset++) {
+      const checkDate = new Date(Date.UTC(nowBangkok.year, nowBangkok.month - 1, nowBangkok.day + offset));
+      const checkBangkok = getBangkokDateParts(checkDate);
+      const dayOfWeek = new Date(Date.UTC(checkBangkok.year, checkBangkok.month - 1, checkBangkok.day)).getUTCDay();
+
+      for (const ft of fixedTimes) {
+        if (ft.days && ft.days.includes(dayOfWeek) && ft.time) {
+          const [h, m] = String(ft.time).replace('.', ':').split(':').map(Number);
+          if (!isNaN(h) && !isNaN(m)) {
+            const candidate = createDateFromBangkokParts({
+              year: checkBangkok.year,
+              month: checkBangkok.month,
+              day: checkBangkok.day,
+              hour: h,
+              minute: m,
+              second: 0
+            });
+
+            const candTime = candidate.getTime();
+            if (candTime <= now.getTime() && (now.getTime() - candTime) <= gracePeriodMs) {
+              if (!defTimestamp || defTimestamp < candTime) {
+                if (!activeCurrentSpawn || candTime > activeCurrentSpawn.getTime()) {
+                  activeCurrentSpawn = candidate;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (activeCurrentSpawn) {
+      return activeCurrentSpawn;
+    }
+
+    // 2.2 ค้นหารอบเกิดถัดไปในอนาคต (Upcoming Next Spawn)
+    // ต้องเกิดขึ้นหลังเวลาปัจจุบัน (now) และหลังเวลาตายล่าสุด (defTimestamp)
+    const thresholdTime = Math.max(now.getTime(), defTimestamp);
     let nearest = null;
-    // ค้นหารอบเกิดล่วงหน้า 14 วัน (offset 0 ถึง 14) เพื่อให้ครอบคลุมบอสสัปดาห์ละ 1 ครั้งได้อย่างแม่นยำ
+
     for (let offset = 0; offset <= 14; offset++) {
       const checkDate = new Date(Date.UTC(nowBangkok.year, nowBangkok.month - 1, nowBangkok.day + offset));
       const checkBangkok = getBangkokDateParts(checkDate);
@@ -430,7 +474,7 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
               second: 0
             });
 
-            if (candidate.getTime() > now.getTime()) {
+            if (candidate.getTime() > thresholdTime) {
               if (!nearest || candidate.getTime() < nearest.getTime()) {
                 nearest = candidate;
               }
@@ -446,14 +490,18 @@ function calculateNextSpawnDate(boss, defeatedDateStr) {
 }
 
 // Helper: คำนวณเวลาที่บอสจะเกิดรอบถัดไป
-// - ถ้ามี customNextSpawn ที่กำหนดเอง ให้ใช้ค่านั้นก่อน
+// - ถ้ามี customNextSpawn ที่ยังไม่หมดอายุ ให้ใช้ค่านั้นก่อน
 // - ถ้าเป็นบอสตามตาราง (Fixed Schedule) ให้คำนวณตามตารางเวลาไทย
 // - ถ้าเป็นบอสตามรอบเวลา (Interval) ให้คำนวณจากเวลาตาย
 function getBossNextSpawn(boss) {
   const timer = bossTimerData[boss.id] || {};
   if (timer.customNextSpawn) {
     const custom = new Date(timer.customNextSpawn);
-    if (!isNaN(custom.getTime()) && custom.getTime() > 0) return custom;
+    const defTime = timer.defeatedTime ? new Date(timer.defeatedTime).getTime() : 0;
+    // ถ้า customNextSpawn ไม่เป็นโมฆะ และใหม่กว่าเวลาตาย
+    if (!isNaN(custom.getTime()) && custom.getTime() > defTime) {
+      return custom;
+    }
   }
   return calculateNextSpawnDate(boss, timer.defeatedTime);
 }
@@ -1903,6 +1951,10 @@ function saveBossKillTime(bossId, killTimeISO, killerEmail, dropItemsList) {
   }
 
   // 1. Update Boss Active Status
+  // ลบ customNextSpawn เก่าออกเสมอ เพื่อให้ระบบเริ่มนับรอบเกิดถัดไปอย่างถูกต้อง
+  if (bossTimerData[bossId]) {
+    delete bossTimerData[bossId].customNextSpawn;
+  }
   bossTimerData[bossId] = {
     defeatedTime: killTimeISO,
     nextSpawnTime: nextSpawn ? nextSpawn.toISOString() : null,
@@ -1912,9 +1964,8 @@ function saveBossKillTime(bossId, killTimeISO, killerEmail, dropItemsList) {
 
   localStorage.setItem('guild_boss_timers', JSON.stringify(bossTimerData));
   if (typeof fbDb !== 'undefined' && fbDb) {
-    // ใช้ .update() เฉพาะ key ของบอสตัวนี้ แทน .set() ทั้ง object
-    // เพื่อลด race condition เมื่อ Admin หลายคนลงเวลาตายพร้อมกัน
-    // (การ .set() ทั้ง object จะเขียนทับข้อมูลของบอสตัวอื่นที่เพิ่งถูกแก้ไข)
+    // ลบ customNextSpawn จาก Firebase
+    fbDb.ref('guild_app/boss_timers/' + bossId + '/customNextSpawn').remove().catch(() => {});
     fbDb.ref('guild_app/boss_timers/' + bossId).update(bossTimerData[bossId]);
   }
 
