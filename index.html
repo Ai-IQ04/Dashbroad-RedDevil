@@ -5773,58 +5773,87 @@
     </div>
   </div>
 
-  <!-- ================= หน้าต่างป๊อปอัป: Admin อนุมัติ CP (CP Approval Modal) ================= -->
+  <!-- ================= หน้าต่างป๊อปอัป: Admin อนุมัติ CP (CP Approval Modal - Neumorphism Soft UI) ================= -->
   <div id="cp-approval-modal"
-    class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 hidden">
+    class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 hidden animate-fade-in font-sarabun">
     <div
-      class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden apple-modal-box">
+      class="apple-modal-box relative w-full max-w-2xl max-h-[88vh] flex flex-col bg-[#0f1520] border border-amber-500/30 rounded-3xl shadow-[12px_12px_28px_rgba(0,0,0,0.65),-8px_-8px_20px_rgba(255,255,255,0.035)] overflow-hidden">
 
-      <div class="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
-        <div class="flex items-center gap-2.5">
+      <!-- Header -->
+      <div class="p-4 sm:p-5 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/40 shrink-0">
+        <div class="flex items-center gap-3">
           <div
-            class="h-9 w-9 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center justify-center text-base">
-            <i class="fa-solid fa-clipboard-check"></i>
+            class="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center text-lg shadow-[inset_2px_2px_4px_rgba(0,0,0,0.5),inset_-1px_-1px_3px_rgba(255,255,255,0.05)] shrink-0">
+            <i class="fa-solid fa-bolt-lightning text-amber-400"></i>
           </div>
           <div>
-            <h3 class="text-base font-bold text-white" data-i18n="modal_cp_appr_title">อนุมัติคำขออัพเดท CP</h3>
-            <p class="text-xs text-slate-400" data-i18n="modal_cp_appr_desc">
-              ตรวจสอบและอนุมัติ/ปฏิเสธคำขอเปลี่ยนค่าพลังรบจากสมาชิก</p>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm sm:text-base font-bold text-white tracking-wide" data-i18n="modal_cp_appr_title">
+                อนุมัติคำขออัพเดท CP</h3>
+              <span id="cp-approval-count-badge"
+                class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black font-mono shadow-sm">
+                0 คำขอ
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5" data-i18n="modal_cp_appr_desc">
+              ตรวจสอบรูปภาพหลักฐานและอนุมัติ/ปฏิเสธคำขอเปลี่ยนค่าพลังรบจากสมาชิก</p>
           </div>
         </div>
-        <button onclick="closeCpApprovalModal()" class="text-slate-400 hover:text-white transition">
+        <button onclick="closeCpApprovalModal()"
+          class="text-slate-400 hover:text-white p-2 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] transition">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
-      <div class="flex-1 overflow-y-auto p-4 sm:p-5">
+      <!-- Search & Filter Bar (Neumorphic Inset) -->
+      <div class="px-4 sm:px-5 pt-3 pb-1 shrink-0 flex items-center gap-2 bg-slate-950/20">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+          <input type="text" id="cp-approval-search-input" oninput="renderCpApprovalList()"
+            placeholder="ค้นหาชื่อตัวละคร, กิลด์, หรือค่า CP..."
+            class="w-full bg-slate-950/80 border border-slate-800/80 rounded-2xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 shadow-[inset_2px_2px_6px_rgba(0,0,0,0.6),inset_-1px_-1px_4px_rgba(255,255,255,0.02)] focus:outline-none focus:border-amber-500/50 transition" />
+        </div>
+        <button type="button" onclick="configureCpRequestWindow()"
+          class="px-3 py-2 rounded-2xl bg-slate-900 border border-slate-800 text-amber-300 hover:text-amber-200 text-xs font-semibold transition shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] flex items-center gap-1.5 shrink-0"
+          title="ตั้งค่าช่วงเวลาเปิดรับคำขอ CP">
+          <i class="fa-solid fa-business-time text-xs"></i>
+          <span class="hidden sm:inline">เวลารับคำขอ</span>
+        </button>
+      </div>
+
+      <!-- Content Scrollable -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
         <div id="cp-approval-list" class="space-y-3">
-          <!-- Dynamic content -->
+          <!-- Dynamic content via JS -->
         </div>
       </div>
 
-      <div class="p-3 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between">
+      <!-- Footer Actions -->
+      <div class="p-3.5 sm:px-5 border-t border-slate-800/80 bg-slate-950/60 flex items-center justify-between shrink-0">
         <button onclick="clearCpHistory()" data-i18n="btn_clear_history"
-          class="apple-btn apple-btn-slate px-3 py-1.5 rounded-xl text-slate-400 text-[10px]">ล้างประวัติ</button>
-        <button onclick="configureCpRequestWindow()"
-          class="apple-btn apple-btn-amber px-3 py-1.5 rounded-xl text-[10px]">ตั้งเวลารับคำขอ</button>
+          class="px-3 py-1.5 rounded-2xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-300 text-xs font-medium transition shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] flex items-center gap-1.5"
+          title="ล้างประวัติคำขอที่ดำเนินการแล้ว">
+          <i class="fa-solid fa-trash-can text-[11px]"></i>
+          <span>ล้างประวัติ</span>
+        </button>
         <button onclick="closeCpApprovalModal()"
-          class="apple-btn apple-btn-slate px-4 py-1.5 rounded-xl text-slate-300 text-xs"
+          class="px-4 py-1.5 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)]"
           data-i18n="btn_close">ปิดหน้าต่าง</button>
       </div>
     </div>
   </div>
 
-  <!-- ================= หน้าต่างป๊อปอัป: Admin ระบุเหตุผลที่ปฏิเสธคำขอ CP (CP Reject Reason Modal) ================= -->
+  <!-- ================= หน้าต่างป๊อปอัป: Admin ระบุเหตุผลที่ปฏิเสธคำขอ CP (CP Reject Reason Modal - Neumorphism Soft UI) ================= -->
   <div id="cp-reject-reason-modal"
-    class="fixed inset-0 z-[60] bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 hidden font-sarabun"
+    class="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 hidden font-sarabun animate-fade-in"
     onclick="closeRejectCpModal()">
     <div
-      class="bg-slate-900 border border-rose-500/40 rounded-2xl w-full max-w-md p-4 sm:p-5 shadow-2xl space-y-3.5 apple-modal-box"
+      class="bg-[#0f1520] border border-rose-500/40 rounded-3xl w-full max-w-md p-4 sm:p-5 shadow-[12px_12px_28px_rgba(0,0,0,0.65),-8px_-8px_20px_rgba(255,255,255,0.035)] space-y-3.5 apple-modal-box"
       onclick="event.stopPropagation()">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <div class="flex items-center gap-2">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+        <div class="flex items-center gap-2.5">
           <div
-            class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center text-sm">
+            class="w-9 h-9 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center text-sm shadow-[inset_2px_2px_4px_rgba(0,0,0,0.5)] shrink-0">
             <i class="fa-solid fa-comment-slash"></i>
           </div>
           <div>
@@ -5832,8 +5861,9 @@
             <p id="cp-reject-modal-char-info" class="text-[11px] text-slate-400 font-mono">-</p>
           </div>
         </div>
-        <button type="button" onclick="closeRejectCpModal()" class="text-slate-400 hover:text-white transition p-1">
-          <i class="fa-solid fa-xmark text-lg"></i>
+        <button type="button" onclick="closeRejectCpModal()"
+          class="text-slate-400 hover:text-white p-1.5 rounded-2xl bg-slate-900 border border-slate-800 shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] transition">
+          <i class="fa-solid fa-xmark text-base"></i>
         </button>
       </div>
 
@@ -5841,20 +5871,20 @@
         <label class="block text-xs font-semibold text-slate-300 mb-1.5">เลือกเหตุผลด่วน (Quick Reasons):</label>
         <div class="flex flex-wrap gap-1.5">
           <button type="button" onclick="setQuickCpRejectReason('รูปภาพไม่ชัดเจน / มัว')"
-            class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-[11px] font-medium transition">
+            class="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition shadow-[3px_3px_6px_rgba(0,0,0,0.4),-2px_-2px_5px_rgba(255,255,255,0.02)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)]">
             📷 รูปภาพไม่ชัดเจน
           </button>
           <button type="button" onclick="setQuickCpRejectReason('ค่า CP ในรูปไม่ตรงกับที่กรอก')"
-            class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-[11px] font-medium transition">
+            class="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition shadow-[3px_3px_6px_rgba(0,0,0,0.4),-2px_-2px_5px_rgba(255,255,255,0.02)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)]">
             🔢 CP ในรูปไม่ตรงที่กรอก
           </button>
           <button type="button"
             onclick="setQuickCpRejectReason('รูปไม่ได้ถ่ายแบบเต็มจอ (Full Screen) / ไม่เห็นชื่อตัวละคร')"
-            class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-[11px] font-medium transition">
+            class="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition shadow-[3px_3px_6px_rgba(0,0,0,0.4),-2px_-2px_5px_rgba(255,255,255,0.02)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)]">
             👤 ไม่เห็นชื่อตัวละคร / ไม่เต็มจอ
           </button>
           <button type="button" onclick="setQuickCpRejectReason('รูปภาพเก่าไม่ได้อัปเดต / วันที่หรือสัปดาห์ไม่ถูกต้อง')"
-            class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-[11px] font-medium transition">
+            class="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition shadow-[3px_3px_6px_rgba(0,0,0,0.4),-2px_-2px_5px_rgba(255,255,255,0.02)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)]">
             📅 รูปเก่า / สัปดาห์ไม่ตรง
           </button>
         </div>
@@ -5864,20 +5894,20 @@
         <label class="block text-xs font-semibold text-slate-300 mb-1">รายละเอียด / ข้อความตอบกลับสมาชิก *</label>
         <textarea id="cp-reject-reason-text" rows="3" maxlength="250"
           placeholder="เช่น รูปภาพไม่ชัดเจน รบกวนถ่ายรูปหน้าจอแบบเต็มใหม่อีกครั้งครับ"
-          class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-rose-500 transition"></textarea>
+          class="w-full bg-slate-950/80 border border-slate-800/80 rounded-2xl px-3.5 py-2 text-xs text-slate-200 placeholder-slate-500 shadow-[inset_2px_2px_6px_rgba(0,0,0,0.6),inset_-1px_-1px_4px_rgba(255,255,255,0.02)] focus:outline-none focus:border-rose-500/50 transition"></textarea>
       </div>
 
       <input type="hidden" id="cp-reject-request-id" value="">
 
-      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800/80">
         <button type="button" onclick="closeRejectCpModal()"
-          class="apple-btn apple-btn-slate px-3.5 py-1.5 rounded-xl text-slate-300 text-xs">
+          class="px-3.5 py-1.5 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 text-xs font-semibold transition shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)]">
           ยกเลิก
         </button>
         <button type="button" onclick="confirmRejectCpRequest()"
-          class="apple-btn bg-rose-600 hover:bg-rose-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 transition">
+          class="px-4 py-1.5 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-bold shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] flex items-center gap-1.5 transition">
           <i class="fa-solid fa-xmark"></i>
-          ยืนยันปฏิเสธคำขอ
+          <span>ยืนยันปฏิเสธคำขอ</span>
         </button>
       </div>
     </div>
@@ -17357,15 +17387,46 @@ Output strictly valid JSON with no markdown formatting.`;
 
     function renderCpApprovalList() {
       const container = document.getElementById('cp-approval-list');
-      const pending = pendingCpRequests.filter(r => r.status === 'pending');
-      const processed = pendingCpRequests.filter(r => r.status !== 'pending').slice(0, 20);
+      const searchInput = document.getElementById('cp-approval-search-input');
+      const badgeCountEl = document.getElementById('cp-approval-count-badge');
+      if (!container) return;
+
+      const q = (searchInput ? searchInput.value : '').trim().toLowerCase();
+
+      // All items
+      const allPending = (pendingCpRequests || []).filter(r => r.status === 'pending');
+      const allProcessed = (pendingCpRequests || []).filter(r => r.status !== 'pending');
+
+      if (badgeCountEl) {
+        badgeCountEl.textContent = `${allPending.length} คำขอ`;
+      }
+
+      // Filtered items
+      const pending = allPending.filter(r => {
+        if (!q) return true;
+        const name = String(r.characterName || '').toLowerCase();
+        const guild = String(r.guild || '').toLowerCase();
+        const cp = String(r.newCp || '');
+        return name.includes(q) || guild.includes(q) || cp.includes(q);
+      });
+
+      const processed = allProcessed.filter(r => {
+        if (!q) return true;
+        const name = String(r.characterName || '').toLowerCase();
+        const guild = String(r.guild || '').toLowerCase();
+        const cp = String(r.newCp || '');
+        const by = String(r.processedBy || '').toLowerCase();
+        return name.includes(q) || guild.includes(q) || cp.includes(q) || by.includes(q);
+      }).slice(0, 30);
 
       if (pending.length === 0 && processed.length === 0) {
         container.innerHTML = `
-          <div class="py-12 text-center text-slate-500">
-            <i class="fa-solid fa-inbox text-3xl mb-3 block text-slate-600"></i>
-            <p class="font-medium">${t('no_cp_requests')}</p>
-            <p class="text-xs mt-1">${t('no_cp_requests_desc')}</p>
+          <div class="py-10 px-4 text-center rounded-2xl bg-slate-950/50 border border-slate-800/70 shadow-[inset_3px_3px_8px_rgba(0,0,0,0.5),inset_-2px_-2px_6px_rgba(255,255,255,0.02)] space-y-2">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-900 border border-slate-800 text-slate-500 flex items-center justify-center text-xl shadow-[3px_3px_6px_rgba(0,0,0,0.4)]">
+              <i class="fa-solid fa-inbox"></i>
+            </div>
+            <div class="text-xs font-bold text-slate-300">${q ? 'ไม่พบคำขอที่ตรงกับคำค้นหา' : 'ยังไม่มีคำขออัปเดต CP ในขณะนี้'}</div>
+            <div class="text-[11px] text-slate-500">${q ? 'ลองค้นหาด้วยชื่อตัวละคร หรือสังกัดกิลด์อื่นดูนะคะ' : 'เมื่อสมาชิกส่งคำขอเปลี่ยน CP พร้อมรูปหลักฐาน จะปรากฏที่นี่ทันทีค่ะ'}</div>
           </div>
         `;
         return;
@@ -17373,100 +17434,166 @@ Output strictly valid JSON with no markdown formatting.`;
 
       let html = '';
 
-      if (pending.length > 0) {
-        html += `<h4 class="text-xs font-bold text-amber-300 uppercase tracking-wider mb-2 flex items-center gap-2">
-          <i class="fa-solid fa-hourglass-half"></i> ${t('pending_cp_title', { count: pending.length })}
-        </h4>`;
+      // 1. Pending Requests Section
+      html += `
+        <div>
+          <div class="flex items-center justify-between mb-2.5">
+            <h4 class="text-xs font-bold text-amber-400 flex items-center gap-2">
+              <i class="fa-solid fa-hourglass-half"></i>
+              <span>คำขอรอตรวจสอบ (${pending.length})</span>
+            </h4>
+          </div>
+      `;
 
+      if (pending.length > 0) {
+        html += `<div class="space-y-2.5">`;
         pending.forEach(req => {
-          const dateStr = new Date(req.requestedAt).toLocaleString(currentLang === 'th' ? 'th-TH' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+          const dateStr = new Date(req.requestedAt).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
           const cpDiff = req.newCp - req.oldCp;
           const cpDiffStr = cpDiff > 0 ? `+${cpDiff.toLocaleString()}` : cpDiff.toLocaleString();
-          const cpDiffColor = cpDiff > 0 ? 'text-emerald-400' : cpDiff < 0 ? 'text-rose-400' : 'text-slate-400';
+          const cpDiffBadge = cpDiff > 0
+            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+            : cpDiff < 0
+            ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+            : 'bg-slate-800 text-slate-400 border-slate-700';
           const isRed = req.guild === 'RedDevil';
-          const reqWeek = req.weekNumber ? ` (${getWeekName(req.weekNumber)})` : '';
+          const reqWeek = req.weekNumber ? `สัปดาห์ที่ ${req.weekNumber}` : '';
 
           html += `
-            <div class="bg-slate-950 border border-amber-500/30 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2 font-sarabun">
+            <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-amber-500/30 shadow-[6px_6px_16px_rgba(0,0,0,0.45),-4px_-4px_12px_rgba(255,255,255,0.025)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition hover:border-amber-500/60">
               <div class="flex items-start gap-3 flex-1 min-w-0">
                 ${req.screenshot ? `
                   <button type="button" onclick="openImageLightbox('${req.screenshot}', '${escapeHtml(req.characterName)}')"
-                    class="relative group shrink-0 rounded-xl overflow-hidden border border-amber-500/40 hover:border-amber-400 shadow-md transition"
+                    class="relative group shrink-0 w-14 h-14 rounded-2xl overflow-hidden border border-amber-500/40 hover:border-amber-400 shadow-[3px_3px_8px_rgba(0,0,0,0.5)] transition"
                     title="${t('lightbox_title', 'คลิกดูรูปเต็มจอ')}">
-                    <img src="${req.screenshot}" alt="Screenshot" class="w-14 h-14 object-cover">
+                    <img src="${req.screenshot}" alt="Screenshot" class="w-full h-full object-cover">
                     <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs transition">
                       <i class="fa-solid fa-magnifying-glass-plus"></i>
                     </div>
                   </button>
                 ` : `
-                  <div class="w-14 h-14 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600 text-xs shrink-0" title="ไม่มีรูปภาพ">
-                    <i class="fa-regular fa-image"></i>
+                  <div class="w-14 h-14 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center text-slate-600 text-xs shrink-0 shadow-inner" title="ไม่มีรูปภาพ">
+                    <i class="fa-regular fa-image text-base"></i>
                   </div>
                 `}
 
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2 mb-1 flex-wrap">
-                    <span class="font-bold text-white text-sm truncate">${escapeHtml(req.characterName)}</span>
-                    <span class="text-[9px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${isRed ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
-            }">${isRed ? '🔴 Red' : '🔵 Blue'}</span>
-                    <span class="text-[9px] px-1.5 py-0.5 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">${escapeHtml(reqWeek)}</span>
+                <div class="flex-1 min-w-0 space-y-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-bold text-white">${escapeHtml(req.characterName)}</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-lg font-semibold border ${
+                      isRed ? 'bg-rose-500/15 text-rose-300 border-rose-500/30' : 'bg-sky-500/15 text-sky-300 border-sky-500/30'
+                    }">${escapeHtml(req.guild || 'Guild')}</span>
+                    ${reqWeek ? `<span class="text-[10px] px-2 py-0.5 rounded-lg font-mono bg-slate-950 text-amber-300 border border-slate-800">${escapeHtml(reqWeek)}</span>` : ''}
                   </div>
-                  <div class="flex items-center gap-2 text-xs font-mono">
-                    <span class="text-slate-400">${t('old_cp_label')} <strong class="text-white">${Number(req.oldCp).toLocaleString()}</strong></span>
-                    <i class="fa-solid fa-arrow-right text-[10px] text-slate-600"></i>
-                    <span class="text-amber-300">${t('new_cp_label')} <strong>${Number(req.newCp).toLocaleString()}</strong></span>
-                    <span class="${cpDiffColor} text-[10px] font-bold">(${cpDiffStr})</span>
+
+                  <div class="flex items-center gap-2 text-xs font-mono flex-wrap">
+                    <span class="text-slate-400">เดิม <strong class="text-slate-300">${Number(req.oldCp).toLocaleString()}</strong></span>
+                    <i class="fa-solid fa-arrow-right text-[10px] text-amber-400"></i>
+                    <span class="text-amber-300 font-bold">ใหม่ ${Number(req.newCp).toLocaleString()}</span>
+                    <span class="text-[10px] font-bold px-1.5 py-0.2 rounded-md border ${cpDiffBadge}">(${cpDiffStr})</span>
                   </div>
-                  <div class="text-[10px] text-slate-500 mt-1"><i class="fa-regular fa-clock mr-1"></i>${t('submitted_at_label')} ${dateStr}</div>
+
+                  <div class="text-[10px] text-slate-500 flex items-center gap-1 font-mono">
+                    <i class="fa-regular fa-clock text-slate-500"></i>
+                    <span>ส่งเมื่อ ${dateStr} น.</span>
+                  </div>
                 </div>
               </div>
-              <div class="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
-                <button onclick="approveCpRequest(${req.id})" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow-sm flex items-center gap-1" title="${t('btn_approve')}">
-                  <i class="fa-solid fa-check"></i>${t('btn_approve')}
+
+              <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                <button type="button" onclick="approveCpRequest(${req.id})"
+                  class="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] transition flex items-center gap-1.5">
+                  <i class="fa-solid fa-check"></i> <span>อนุมัติ</span>
                 </button>
-                <button onclick="openRejectCpModal(${req.id})" class="px-3.5 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 text-xs font-semibold transition flex items-center gap-1" title="${t('btn_reject')}">
-                  <i class="fa-solid fa-xmark"></i>${t('btn_reject')}
+                <button type="button" onclick="openRejectCpModal(${req.id})"
+                  class="px-3 py-2 rounded-2xl bg-slate-900 border border-rose-500/40 hover:border-rose-500 text-rose-300 hover:text-white text-xs font-bold shadow-[3px_3px_8px_rgba(0,0,0,0.4),-2px_-2px_6px_rgba(255,255,255,0.03)] active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.6)] transition flex items-center gap-1.5">
+                  <i class="fa-solid fa-xmark"></i> <span>ปฏิเสธ</span>
                 </button>
               </div>
             </div>
           `;
         });
+        html += `</div>`;
+      } else {
+        html += `
+          <div class="py-4 px-3 text-center rounded-2xl bg-slate-950/40 border border-slate-800/60 text-slate-500 text-[11px]">
+            ไม่มีคำขอรอตรวจสอบในขณะนี้
+          </div>
+        `;
       }
+      html += `</div>`;
+
+      // 2. Processed History Section
+      html += `
+        <div class="pt-3 border-t border-slate-800/70">
+          <div class="flex items-center justify-between mb-2.5">
+            <h4 class="text-xs font-bold text-slate-400 flex items-center gap-2">
+              <i class="fa-solid fa-clipboard-check text-slate-500"></i>
+              <span>ประวัติคำขอล่าสุด (${processed.length})</span>
+            </h4>
+          </div>
+      `;
 
       if (processed.length > 0) {
-        html += `<h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-4 mb-2 flex items-center gap-2">
-          <i class="fa-solid fa-clock-rotate-left"></i> ${t('processed_cp_title', { count: processed.length })}
-        </h4>`;
-
+        html += `<div class="space-y-2">`;
         processed.forEach(req => {
-          const dateStr = new Date(req.processedAt || req.requestedAt).toLocaleString(currentLang === 'th' ? 'th-TH' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+          const dateStr = new Date(req.processedAt || req.requestedAt).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
           const isApproved = req.status === 'approved';
           const reasonText = req.rejectedReason || req.rejectReason;
+          const badgeClass = isApproved
+            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+            : 'bg-rose-500/15 text-rose-300 border-rose-500/30';
+          const badgeText = isApproved ? 'อนุมัติแล้ว' : 'ปฏิเสธแล้ว';
 
           html += `
-            <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-2.5 flex flex-col gap-1.5 mb-2 transition hover:border-slate-700">
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2">
-                    <span class="font-semibold text-slate-200 text-xs truncate">${escapeHtml(req.characterName)}</span>
-                    <span class="font-mono text-[10.5px] text-slate-400">${Number(req.oldCp).toLocaleString()} → <strong class="text-amber-300">${Number(req.newCp).toLocaleString()}</strong></span>
+            <div class="p-3 rounded-2xl bg-slate-900/80 border border-slate-800/80 shadow-[4px_4px_10px_rgba(0,0,0,0.35),-2px_-2px_8px_rgba(255,255,255,0.02)] flex flex-col gap-2 transition hover:border-slate-700">
+              <div class="flex items-center justify-between gap-2.5 flex-wrap">
+                <div class="min-w-0 flex-1 space-y-0.5">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-bold text-slate-100">${escapeHtml(req.characterName)}</span>
+                    <span class="font-mono text-[11px] text-slate-400">
+                      ${Number(req.oldCp).toLocaleString()} ➔ <strong class="text-amber-300">${Number(req.newCp).toLocaleString()}</strong>
+                    </span>
+                    ${req.guild ? `<span class="text-[10px] text-slate-500 font-mono">(${escapeHtml(req.guild)})</span>` : ''}
                   </div>
-                  <div class="text-[10px] text-slate-500 mt-0.5 font-mono"><i class="fa-regular fa-clock mr-1"></i>${dateStr}${req.processedBy ? ` • โดย ${escapeHtml(req.processedBy)}` : ''}</div>
+                  <div class="flex items-center gap-2 text-[10px] text-slate-500 font-mono flex-wrap">
+                    <span><i class="fa-regular fa-clock mr-0.5"></i> ${dateStr} น.</span>
+                    ${req.processedBy ? `<span>•</span><span><i class="fa-solid fa-user-shield mr-0.5 text-indigo-400"></i> ${escapeHtml(req.processedBy)}</span>` : ''}
+                  </div>
                 </div>
-                <span class="text-[10px] px-2 py-0.5 rounded font-semibold shrink-0 ${isApproved ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'}">
-                  ${isApproved ? t('approved_badge') : t('rejected_badge')}
-                </span>
+
+                <div class="shrink-0 flex items-center gap-2">
+                  ${req.screenshot ? `
+                    <button type="button" onclick="openImageLightbox('${req.screenshot}', '${escapeHtml(req.characterName)}')"
+                      class="px-2 py-1 rounded-xl bg-slate-950 text-slate-400 hover:text-amber-300 border border-slate-800 text-[10.5px] transition flex items-center gap-1 shadow-inner"
+                      title="ดูรูปหลักฐาน">
+                      <i class="fa-regular fa-image text-xs"></i> <span>รูป</span>
+                    </button>
+                  ` : ''}
+                  <span class="px-2.5 py-1 rounded-xl text-[10.5px] font-bold border shadow-[inset_1px_1px_3px_rgba(0,0,0,0.4)] ${badgeClass}">
+                    ${badgeText}
+                  </span>
+                </div>
               </div>
+
               ${!isApproved && reasonText ? `
-                <div class="text-[11px] text-rose-300/90 bg-rose-950/30 border border-rose-500/20 px-2.5 py-1 rounded-lg flex items-start gap-1.5">
-                  <i class="fa-solid fa-comment-dots text-rose-400 mt-0.5 text-[10px] shrink-0"></i>
+                <div class="text-[11px] text-rose-300/90 bg-rose-950/30 border border-rose-500/20 px-3 py-1.5 rounded-xl flex items-start gap-1.5 shadow-inner">
+                  <i class="fa-solid fa-comment-dots text-rose-400 mt-0.5 text-[11px] shrink-0"></i>
                   <span><strong>เหตุผล:</strong> ${escapeHtml(reasonText)}</span>
                 </div>
               ` : ''}
             </div>
           `;
         });
+        html += `</div>`;
+      } else {
+        html += `
+          <div class="py-4 text-center text-slate-500 text-[11px]">
+            ไม่มีประวัติคำขอที่ตรงกับการค้นหา
+          </div>
+        `;
       }
+      html += `</div>`;
 
       container.innerHTML = html;
     }
