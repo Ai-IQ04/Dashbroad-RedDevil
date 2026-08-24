@@ -409,7 +409,7 @@ process.on('uncaughtException', (err) => {
 
 /**
  * ⚡ ฟังก์ชันส่งข้อความเข้าห้อง Discord โดยตรงผ่าน Discord REST API (Direct HTTP POST)
- * ข้อดี: ทำงานได้ทันที ไม่ต้องรอ WebSocket Gateway และไม่ติดขัดปัญหา Network บน Cloud
+ * มี User-Agent ตามมาตรฐาน Discord และ AbortSignal กันค้าง
  */
 async function sendDiscordMessageDirect({ channelId, content, embeds }) {
   const token = CONFIG.DISCORD_BOT_TOKEN;
@@ -420,8 +420,10 @@ async function sendDiscordMessageDirect({ channelId, content, embeds }) {
     method: 'POST',
     headers: {
       'Authorization': `Bot ${token}`,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'User-Agent': 'DiscordBot (https://github.com/Ai-IQ04/Dashbroad-RedDevil, 1.0.0)'
     },
+    signal: AbortSignal.timeout(8000),
     body: JSON.stringify({
       content: content || undefined,
       embeds: embeds || []
@@ -441,7 +443,7 @@ async function checkOutboundAlertsCommand() {
   if (outboundAlertsInProgress) return;
   try {
     const endpoint = `${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/outbound_alerts.json`;
-    const response = await fetch(endpoint);
+    const response = await fetch(endpoint, { signal: AbortSignal.timeout(5000) });
     if (!response.ok) return;
 
     const data = await response.json();
@@ -483,11 +485,11 @@ async function checkOutboundAlertsCommand() {
         console.log(`📤 [Direct REST Alert] ส่งแจ้งเตือนคำขอเข้าห้อง ${targetChannelId} เรียบร้อยแล้ว (Mention: ${content})`);
         sent = true;
       } catch (restErr) {
-        console.warn(`⚠️ [Direct REST Alert] ส่งผ่าน REST ไม่สำเร็จ (${restErr.message}) กำลังลองผ่าน Discord Client...`);
+        console.warn(`⚠️ [Direct REST Alert] ส่งผ่าน REST ไม่สำเร็จ (${restErr.message})`);
       }
 
-      // Fallback: หาก REST มีปัญหา ลองส่งผ่าน Client ปกติ
-      if (!sent) {
+      // Fallback: หาก REST มีปัญหา และ Client พร้อม ให้ลองส่งผ่าน Client
+      if (!sent && client && client.isReady()) {
         try {
           const channel = await client.channels.fetch(targetChannelId).catch(() => null);
           if (channel && channel.isTextBased()) {
@@ -504,14 +506,17 @@ async function checkOutboundAlertsCommand() {
             sent = true;
           }
         } catch (clientErr) {
-          console.error(`❌ [Client Alert] ไม่สามารถส่งผ่าน Client ได้เช่นกัน:`, clientErr.message);
+          console.error(`❌ [Client Alert] ไม่สามารถส่งผ่าน Client:`, clientErr.message);
         }
       }
 
-      // ลบคำขอออกจากคิวเมื่อดำเนินการแล้ว
-      await fetch(`${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/outbound_alerts/${key}.json`, {
-        method: 'DELETE'
-      }).catch(() => {});
+      // ลบคำขอออกจากคิวเมื่อส่งแล้ว หรือเพื่อไม่ให้ค้าง
+      if (sent) {
+        await fetch(`${CONFIG.FIREBASE_DB_URL}/guild_app/bot_commands/outbound_alerts/${key}.json`, {
+          method: 'DELETE',
+          signal: AbortSignal.timeout(5000)
+        }).catch(() => {});
+      }
     }
   } catch (err) {
     console.warn('⚠️ [Outbound Alert] Error processing alert:', err.message);
