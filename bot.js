@@ -81,6 +81,16 @@ const ADMIN_EMAILS = String(process.env.DISCORD_SYNC_ADMIN_EMAILS || CONFIG.DISC
   .map(value => value.trim().toLowerCase())
   .filter(Boolean);
 
+// 🌐 Lightweight HTTP Health Check Server (จำเป็นสำหรับ Render.com / Cloud Web Service)
+const http = require('http');
+const PORT = process.env.PORT || 3000;
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+  res.end('🤖 RedDevil Discord Bot is Running 24/7!');
+}).listen(PORT, () => {
+  console.log(`🌐 Health check server listening on port ${PORT}`);
+});
+
 // 🤖 สร้าง Client บอท
 const client = new Client({
   intents: [
@@ -91,6 +101,7 @@ const client = new Client({
   ],
   partials: [Partials.Message, Partials.Channel]
 });
+
 
 
 
