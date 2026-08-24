@@ -745,6 +745,31 @@ const BOSS_ALERT_DEFAULT_ROLE_ID = '1508495658162851970';
 const BOSS_ALERT_WARNING_MS = 5 * 60 * 1000;
 const BOSS_ALERT_SPAWN_GRACE_MS = 15 * 60 * 1000;
 
+const BOSS_ALERT_INTERVAL_CONFIGS = {
+  'vioren': { name: 'Vioren', map: 'ทะเลสาบจันทร์เสี้ยว', intervalHours: 10 },
+  'venatus': { name: 'Venatus', map: 'แอ่งน้ำปนเปื้อน', intervalHours: 10 },
+  'lady_dalia': { name: 'Lady Dalia', map: 'เนินเขาอัสดง', intervalHours: 18 },
+  'ego': { name: 'Ego', map: 'หุบเขาอูลาน', intervalHours: 21 },
+  'livera': { name: 'Livera', map: 'โบราณสถานผู้พิทักษ์', intervalHours: 24 },
+  'undomiel': { name: 'Undomiel', map: 'ห้องทดลองลับ', intervalHours: 24 },
+  'araneo': { name: 'Araneo', map: 'สุสานใต้ดิน ชั้น 1', intervalHours: 24 },
+  'general_aquleus': { name: 'General Aquleus', map: 'สุสานใต้ดิน ชั้น 2', intervalHours: 29 },
+  'amentis': { name: 'Amentis', map: 'เนินเขาอัสดง', intervalHours: 29 },
+  'gareth': { name: 'Gareth', map: 'ดินแดนมรณะ ชั้น 1', intervalHours: 32 },
+  'baron_braudmore': { name: 'Baron Braudmore', map: 'สมรภูมิศักดิ์สิทธิ์', intervalHours: 32 },
+  'catena': { name: 'Catena', map: 'ดินแดนมรณะ ชั้น 3', intervalHours: 35 },
+  'shuliar': { name: 'Shuliar', map: 'ซากของสงคราม', intervalHours: 35 },
+  'larba': { name: 'Larba', map: 'ซากของสงคราม', intervalHours: 35 },
+  'titore': { name: 'Titore', map: 'ดินแดนมรณะ ชั้น 2', intervalHours: 37 },
+  'wannitas': { name: 'Wannitas', map: 'ดอนแห่งการปฏิวัติ', intervalHours: 48 },
+  'metus': { name: 'Metus', map: 'ดอนแห่งการปฏิวัติ', intervalHours: 48 },
+  'duplican': { name: 'Duplican', map: 'ดอนแห่งการปฏิวัติ', intervalHours: 48 },
+  'asta': { name: 'Asta', map: 'ทุ่งหญ้าแดง', intervalHours: 62 },
+  'ordo': { name: 'Ordo', map: 'ทุ่งหญ้าแดง', intervalHours: 62 },
+  'secreta': { name: 'Secreta', map: 'ทุ่งหญ้าแดง', intervalHours: 62 },
+  'supore': { name: 'Supore', map: 'ทุ่งหญ้าแดง', intervalHours: 62 }
+};
+
 const BOSS_ALERT_FIXED_SCHEDULES = [
   { id: 'world_boss', name: 'World Boss', map: 'World Boss', times: [{ days: [0,1,2,3,4,5,6], time: '10:00' }, { days: [0,1,2,3,4,5,6], time: '19:00' }] },
   { id: 'clemantis', name: 'Clemantis', map: 'แอ่งน้ำปนเปื้อน', times: [{ days: [1], time: '10:30' }, { days: [4], time: '18:00' }] },
@@ -813,9 +838,6 @@ function checkBossAlerts() {
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(5000)) return;
   try {
-    // Keep Apps Script on exactly the same clock as the web page. The page
-    // uses Firebase .info/serverTimeOffset, so do the same here instead of
-    // relying on the Apps Script machine clock.
     const now = getBossAlertWebNow_();
     const props = PropertiesService.getScriptProperties();
     const webhook = String(props.getProperty('BOSS_ALERT_WEBHOOK_URL') || fetchBossAlertFirebase_('guild_app/boss_discord_webhook') || '').trim();
@@ -829,32 +851,89 @@ function checkBossAlerts() {
     const fixedIds = {};
     BOSS_ALERT_FIXED_SCHEDULES.forEach(function(item) { fixedIds[item.id] = true; });
 
+    // 1. ตรวจสอบบอสตามรอบเวลา (Interval Bosses)
     Object.keys(timers).forEach(function(id) {
       if (fixedIds[id]) return;
       const timer = timers[id] || {};
-      const next = timer.customNextSpawn || timer.nextSpawnTime;
-      const date = next ? new Date(next) : null;
-      if (date && !isNaN(date.getTime())) candidates.push({ id: id, spawn: date, timer: timer, custom: custom[id] || {} });
+      let nextStr = timer.customNextSpawn || timer.nextSpawnTime;
+      // Fallback: ถ้าไม่มี nextSpawnTime แต่มี defeatedTime ให้คำนวณจาก interval
+      if (!nextStr && timer.defeatedTime && BOSS_ALERT_INTERVAL_CONFIGS[id]) {
+        const defDate = new Date(timer.defeatedTime);
+        if (!isNaN(defDate.getTime())) {
+          nextStr = new Date(defDate.getTime() + BOSS_ALERT_INTERVAL_CONFIGS[id].intervalHours * 3600 * 1000).toISOString();
+        }
+      }
+      const date = nextStr ? new Date(nextStr) : null;
+      const fallbackInfo = BOSS_ALERT_INTERVAL_CONFIGS[id] || {};
+      if (date && !isNaN(date.getTime())) {
+        candidates.push({
+          id: id,
+          spawn: date,
+          timer: timer,
+          custom: custom[id] || {},
+          fallback: fallbackInfo
+        });
+      }
     });
 
+    // 2. ตรวจสอบบอสตามตารางเวลาตายตัว (Fixed Schedule Bosses)
     BOSS_ALERT_FIXED_SCHEDULES.forEach(function(item) {
       const timer = timers[item.id] || {};
-      const spawn = nextFixedBossSpawn_(item.times, now, timer.defeatedTime);
-      if (spawn) candidates.push({ id: item.id, spawn: spawn, timer: timer, custom: custom[item.id] || {}, fallback: item });
+      // ค้นหาทั้งรอบที่เพิ่งเกิด (ใน grace period) และรอบที่จะเกิด (ใน warning period)
+      const spawnList = getFixedBossSpawnCandidates_(item.times, now);
+      spawnList.forEach(function(spawnDate) {
+        candidates.push({
+          id: item.id,
+          spawn: spawnDate,
+          timer: timer,
+          custom: custom[item.id] || {},
+          fallback: item
+        });
+      });
     });
 
+    // 3. ส่งการแจ้งเตือนตามเงื่อนไข (5 นาทีก่อนเกิด และ ตอนบอสเกิดแล้ว)
     candidates.forEach(function(item) {
       const diff = item.spawn.getTime() - now.getTime();
       const spawnUnix = Math.floor(item.spawn.getTime() / 1000);
       const name = String(item.custom.name || (item.fallback && item.fallback.name) || item.id);
       const map = String(item.custom.map || (item.fallback && item.fallback.map) || '-');
       const common = { id: item.id, name: name, map: map, spawn: item.spawn, spawnUnix: spawnUnix, roleId: roleId };
-      if (diff > 0 && diff <= BOSS_ALERT_WARNING_MS) sendBossAlertOnce_(logSheet, sent, webhook, common, 'warning');
-      if (diff <= 0 && diff >= -BOSS_ALERT_SPAWN_GRACE_MS) sendBossAlertOnce_(logSheet, sent, webhook, common, 'spawned');
+
+      // แจ้งเตือนล่วงหน้า 5 นาที (ก่อนเกิด 0 ถึง 5 นาที)
+      if (diff > 0 && diff <= BOSS_ALERT_WARNING_MS) {
+        sendBossAlertOnce_(logSheet, sent, webhook, common, 'warning');
+      }
+
+      // แจ้งเตือนตอนบอสเกิดแล้ว (ตั้งแต่เวลาเกิดจนถึงไม่เกิน 15 นาทีหลังเกิด)
+      if (diff <= 0 && diff >= -BOSS_ALERT_SPAWN_GRACE_MS) {
+        sendBossAlertOnce_(logSheet, sent, webhook, common, 'spawned');
+      }
     });
   } finally {
     lock.releaseLock();
   }
+}
+
+function getFixedBossSpawnCandidates_(times, now) {
+  const result = [];
+  const base = getBangkokParts_(now);
+  // ตรวจสอบย้อนหลัง 1 วัน จนถึงล่วงหน้า 2 วัน เพื่อให้ครอบคลุมรอบเกิดที่เพิ่งผ่านและกำลังจะมาถึง
+  for (let dayOffset = -1; dayOffset <= 2; dayOffset++) {
+    const dayDate = new Date(Date.UTC(base.year, base.month - 1, base.day + dayOffset));
+    const dayOfWeek = dayDate.getUTCDay();
+    for (let i = 0; i < times.length; i++) {
+      if (times[i].days.indexOf(dayOfWeek) < 0) continue;
+      const hm = times[i].time.split(':').map(Number);
+      const candidate = new Date(Date.UTC(base.year, base.month - 1, base.day + dayOffset, hm[0], hm[1], 0) - 7 * 60 * 60 * 1000);
+      const diff = candidate.getTime() - now.getTime();
+      // เก็บเฉพาะรอบที่อยู่ในช่วงแจ้งเตือน (Grace period หลังเกิด 15 นาที หรือ Warning period ก่อนเกิด 5 นาที)
+      if ((diff <= 0 && diff >= -BOSS_ALERT_SPAWN_GRACE_MS) || (diff > 0 && diff <= BOSS_ALERT_WARNING_MS)) {
+        result.push(candidate);
+      }
+    }
+  }
+  return result;
 }
 
 function getBossAlertWebNow_() {
@@ -876,22 +955,6 @@ function fetchBossAlertFirebase_(path) {
     console.warn('Boss alert Firebase read failed: ' + error);
     return null;
   }
-}
-
-function nextFixedBossSpawn_(times, now, defeatedTime) {
-  // Fixed schedules are independent of defeat history.
-  const base = getBangkokParts_(now);
-  for (let dayOffset = 0; dayOffset <= 8; dayOffset++) {
-    const dayDate = new Date(Date.UTC(base.year, base.month - 1, base.day + dayOffset));
-    const dayOfWeek = dayDate.getUTCDay();
-    for (let i = 0; i < times.length; i++) {
-      if (times[i].days.indexOf(dayOfWeek) < 0) continue;
-      const hm = times[i].time.split(':').map(Number);
-      const candidate = new Date(Date.UTC(base.year, base.month - 1, base.day + dayOffset, hm[0], hm[1], 0) - 7 * 60 * 60 * 1000);
-      if (candidate.getTime() > now.getTime()) return candidate;
-    }
-  }
-  return null;
 }
 
 function getBangkokParts_(date) {
@@ -919,11 +982,18 @@ function readBossAlertKeys_(sheet) {
 function sendBossAlertOnce_(sheet, sent, webhook, item, type) {
   const key = item.id + '_' + type + '_' + item.spawnUnix;
   if (sent[key]) return;
-  const title = type === 'warning' ? '⏳ บอสจะเกิดใน 5 นาที' : '🔴 บอสเกิดแล้ว';
+  const isWarning = type === 'warning';
+  const title = isWarning ? '⏳ บอสจะเกิดใน 5 นาที' : '🔴 บอสเกิดแล้ว (ALIVE!)';
   const timeText = Utilities.formatDate(item.spawn, BOSS_ALERT_TIMEZONE, 'dd/MM HH:mm') + ' น.';
   const payload = {
     content: item.roleId ? '<@&' + item.roleId + '>' : '',
-    embeds: [{ color: type === 'warning' ? 0xFFD700 : 0xEF4444, title: title + ' • ' + item.name, description: '🕒 เวลาไทย: **' + timeText + '**\n🗺️ Map: `' + item.map + '`\n<t:' + item.spawnUnix + ':R>', footer: { text: 'LORD NINE SYSTEM • Dashboard RedDevil' }, timestamp: item.spawn.toISOString() }]
+    embeds: [{
+      color: isWarning ? 0xFFD700 : 0xEF4444,
+      title: title + ' • ' + item.name,
+      description: '🕒 เวลาไทย: **' + timeText + '**\n🗺️ Map: `' + item.map + '`\n' + (isWarning ? '<t:' + item.spawnUnix + ':R>' : '⚔️ บอสเกิดแล้วในแผนที่! รีบไปดักตีกันได้เลยครับ'),
+      footer: { text: 'LORD NINE SYSTEM • Dashboard RedDevil' },
+      timestamp: item.spawn.toISOString()
+    }]
   };
   try {
     const response = UrlFetchApp.fetch(webhook, { method: 'post', contentType: 'application/json', payload: JSON.stringify(payload), muteHttpExceptions: true });
@@ -934,3 +1004,4 @@ function sendBossAlertOnce_(sheet, sent, webhook, item, type) {
     console.warn('Boss alert send failed: ' + error);
   }
 }
+
