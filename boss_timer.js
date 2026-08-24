@@ -3144,12 +3144,13 @@ async function discoverActiveGeminiModel(apiKey) {
         .map(m => m.name.replace(/^models\//, ''));
 
       if (available.length > 0) {
-        // Priority: 1.5-flash-latest > 1.5-flash > 2.0-flash > any flash > first available
+        // Priority: 3.6-flash > 3.7-flash > flash-latest > 3.5-flash > 3.1-flash > first available
         const preferred =
-          available.find(m => /gemini-1\.5-flash-latest/i.test(m)) ||
-          available.find(m => /gemini-1\.5-flash$/i.test(m)) ||
-          available.find(m => /gemini-1\.5-flash/i.test(m)) ||
-          available.find(m => /gemini-2\.0-flash/i.test(m)) ||
+          available.find(m => /gemini-3\.6-flash$/i.test(m)) ||
+          available.find(m => /gemini-3\.7-flash$/i.test(m)) ||
+          available.find(m => /gemini-flash-latest$/i.test(m)) ||
+          available.find(m => /gemini-3\.5-flash$/i.test(m)) ||
+          available.find(m => /gemini-3\.1-flash-lite$/i.test(m)) ||
           available.find(m => /flash/i.test(m)) ||
           available[0];
 
@@ -3164,8 +3165,8 @@ async function discoverActiveGeminiModel(apiKey) {
     console.warn('[Gemini Discovery] Failed to list models on v1beta:', err);
   }
 
-  // Fallback defaults
-  return { apiVer: 'v1beta', model: 'gemini-1.5-flash' };
+  // Fallback defaults (Modern Gemini 3.6 Flash)
+  return { apiVer: 'v1beta', model: 'gemini-3.6-flash' };
 }
 
 // Universal Gemini Vision Caller with Model Discovery & Auto-Fallback
@@ -3173,12 +3174,12 @@ async function callGeminiVisionApiWithFallback(prompt, base64Str, mimeType, apiK
   const discovered = await discoverActiveGeminiModel(apiKey);
 
   const candidateList = [
-    { apiVer: 'v1beta', model: discovered.model || 'gemini-1.5-flash' },
-    { apiVer: 'v1beta', model: 'gemini-1.5-flash' },
-    { apiVer: 'v1beta', model: 'gemini-1.5-flash-latest' },
-    { apiVer: 'v1beta', model: 'gemini-2.0-flash' },
-    { apiVer: 'v1beta', model: 'gemini-2.0-flash-exp' },
-    { apiVer: 'v1beta', model: 'gemini-1.5-flash-8b' }
+    { apiVer: 'v1beta', model: discovered.model || 'gemini-3.6-flash' },
+    { apiVer: 'v1beta', model: 'gemini-3.6-flash' },
+    { apiVer: 'v1beta', model: 'gemini-3.7-flash' },
+    { apiVer: 'v1beta', model: 'gemini-flash-latest' },
+    { apiVer: 'v1beta', model: 'gemini-3.5-flash' },
+    { apiVer: 'v1beta', model: 'gemini-3.1-flash-lite' }
   ];
 
   let firstDetailedError = null;
