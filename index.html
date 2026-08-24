@@ -12488,7 +12488,7 @@
       `;
 
       let cardsHtml = `
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+        <div class="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto pr-1 py-0.5">
           ${ACTIVITIES.map((act, idx) => {
             const isChecked = selected.has(idx);
             const normDay = normalizeDay(act.day);
@@ -12498,32 +12498,29 @@
             
             return `
               <div id="squad-act-card-${idx}" onclick="toggleSquadActivityCard(${idx})"
-                class="squad-activity-card group relative p-2 rounded-xl border transition-all duration-150 cursor-pointer select-none flex flex-col justify-between ${isChecked ? 'bg-gradient-to-br from-indigo-950/70 via-slate-900 to-indigo-950/40 border-indigo-500/80 shadow-[0_0_12px_rgba(99,102,241,0.25)] ring-1 ring-indigo-400/50' : 'bg-slate-900/90 border-slate-800 hover:border-slate-700 hover:bg-slate-900'}">
+                class="squad-activity-card inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border transition-all duration-150 cursor-pointer select-none ${isChecked ? 'bg-indigo-950/80 border-indigo-400 text-white ring-1 ring-indigo-400/50 shadow-sm shadow-indigo-500/20' : 'bg-slate-900/90 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900'}">
                 
                 <input type="checkbox" name="squad-activity-checkbox" value="${idx}" class="hidden" ${isChecked ? 'checked' : ''} onchange="handleSquadActivityChange()">
                 
-                <!-- Top: Day Badge & Check Indicator -->
-                <div class="flex items-center justify-between gap-1 mb-1">
-                  <span class="boss-day-tag day-${normDay.toLowerCase()} inline-block px-1.5 py-0.5 rounded-full text-[7.5px] leading-none font-black ${colorInfo.badgeBg}">
-                    ${dayLabel}
-                  </span>
-                  <div class="w-3.5 h-3.5 rounded flex items-center justify-center transition ${isChecked ? 'bg-indigo-500 text-white shadow-sm shadow-indigo-500/50' : 'bg-slate-950 border border-slate-700 text-transparent'}">
-                    <i class="fa-solid fa-check text-[8px]"></i>
-                  </div>
-                </div>
+                <!-- Checkbox Icon Indicator -->
+                <span class="w-3.5 h-3.5 rounded flex items-center justify-center text-[8px] transition ${isChecked ? 'bg-indigo-500 text-white' : 'bg-slate-950 border border-slate-700 text-transparent'}">
+                  <i class="fa-solid fa-check"></i>
+                </span>
+                
+                <!-- Day Badge -->
+                <span class="boss-day-tag day-${normDay.toLowerCase()} inline-block px-1.5 py-0.2 rounded-full text-[7.5px] leading-none font-black ${colorInfo.badgeBg}">
+                  ${dayLabel}
+                </span>
 
-                <!-- Middle: Boss Name -->
-                <div class="font-black text-[11.5px] sm:text-[12px] truncate my-0.5 ${isLucus ? 'text-amber-300 font-black drop-shadow-[0_0_6px_rgba(245,158,11,0.5)]' : (isChecked ? 'text-white' : 'text-slate-200 group-hover:text-white')}" title="${escapeHtml(act.shortName || act.name)}">
+                <!-- Boss Name -->
+                <span class="font-bold text-[11px] whitespace-nowrap ${isLucus ? 'text-amber-300 font-black drop-shadow-[0_0_4px_rgba(245,158,11,0.5)]' : (isChecked ? 'text-white font-extrabold' : 'text-slate-200')}">
                   ${escapeHtml(act.shortName || act.name)}
-                </div>
+                </span>
 
-                <!-- Bottom: Weight Pill -->
-                <div class="flex items-center justify-between mt-0.5 pt-1 border-t border-slate-800/60">
-                  <span class="boss-weight-tag weight-${act.weight} ${isLucus ? 'weight-lucus' : ''} text-[8px] font-mono font-black px-1.5 py-0.2 rounded-md">
-                    ${act.weight}%
-                  </span>
-                  <span class="text-[8.5px] text-slate-500 font-mono">#${idx + 1}</span>
-                </div>
+                <!-- Weight Pill -->
+                <span class="boss-weight-tag weight-${act.weight} ${isLucus ? 'weight-lucus' : ''} text-[8px] font-mono font-black px-1.5 py-0.2 rounded-md">
+                  ${act.weight}%
+                </span>
               </div>
             `;
           }).join('')}
@@ -12541,17 +12538,17 @@
       chk.checked = !chk.checked;
       
       const checkIndicator = card.querySelector('.fa-check').parentElement;
-      const nameEl = card.querySelector('.font-black');
+      const nameEl = card.querySelector('.font-bold, .font-extrabold');
       const isLucus = (ACTIVITIES[idx]?.shortName || '').toLowerCase().includes('lucus') || (ACTIVITIES[idx]?.weight || 0) >= 16;
       
       if (chk.checked) {
-        card.className = 'squad-activity-card group relative p-2 rounded-xl border transition-all duration-150 cursor-pointer select-none flex flex-col justify-between bg-gradient-to-br from-indigo-950/70 via-slate-900 to-indigo-950/40 border-indigo-500/80 shadow-[0_0_12px_rgba(99,102,241,0.25)] ring-1 ring-indigo-400/50';
-        checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center transition bg-indigo-500 text-white shadow-sm shadow-indigo-500/50';
-        if (!isLucus && nameEl) nameEl.className = 'font-black text-[11.5px] sm:text-[12px] truncate my-0.5 text-white';
+        card.className = 'squad-activity-card inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border transition-all duration-150 cursor-pointer select-none bg-indigo-950/80 border-indigo-400 text-white ring-1 ring-indigo-400/50 shadow-sm shadow-indigo-500/20';
+        checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center text-[8px] transition bg-indigo-500 text-white';
+        if (!isLucus && nameEl) nameEl.className = 'font-extrabold text-[11px] whitespace-nowrap text-white';
       } else {
-        card.className = 'squad-activity-card group relative p-2 rounded-xl border transition-all duration-150 cursor-pointer select-none flex flex-col justify-between bg-slate-900/90 border-slate-800 hover:border-slate-700 hover:bg-slate-900';
-        checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center transition bg-slate-950 border border-slate-700 text-transparent';
-        if (!isLucus && nameEl) nameEl.className = 'font-black text-[11.5px] sm:text-[12px] truncate my-0.5 text-slate-200 group-hover:text-white';
+        card.className = 'squad-activity-card inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border transition-all duration-150 cursor-pointer select-none bg-slate-900/90 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900';
+        checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center text-[8px] transition bg-slate-950 border border-slate-700 text-transparent';
+        if (!isLucus && nameEl) nameEl.className = 'font-bold text-[11px] whitespace-nowrap text-slate-200';
       }
 
       const selected = getSelectedSquadActivities();
@@ -12570,17 +12567,17 @@
           if (chk) chk.checked = selectAll;
           
           const checkIndicator = card.querySelector('.fa-check').parentElement;
-          const nameEl = card.querySelector('.font-black');
+          const nameEl = card.querySelector('.font-bold, .font-extrabold');
           const isLucus = (ACTIVITIES[idx]?.shortName || '').toLowerCase().includes('lucus') || (ACTIVITIES[idx]?.weight || 0) >= 16;
           
           if (selectAll) {
-            card.className = 'squad-activity-card group relative p-2 rounded-xl border transition-all duration-150 cursor-pointer select-none flex flex-col justify-between bg-gradient-to-br from-indigo-950/70 via-slate-900 to-indigo-950/40 border-indigo-500/80 shadow-[0_0_12px_rgba(99,102,241,0.25)] ring-1 ring-indigo-400/50';
-            checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center transition bg-indigo-500 text-white shadow-sm shadow-indigo-500/50';
-            if (!isLucus && nameEl) nameEl.className = 'font-black text-[11.5px] sm:text-[12px] truncate my-0.5 text-white';
+            card.className = 'squad-activity-card inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border transition-all duration-150 cursor-pointer select-none bg-indigo-950/80 border-indigo-400 text-white ring-1 ring-indigo-400/50 shadow-sm shadow-indigo-500/20';
+            checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center text-[8px] transition bg-indigo-500 text-white';
+            if (!isLucus && nameEl) nameEl.className = 'font-extrabold text-[11px] whitespace-nowrap text-white';
           } else {
-            card.className = 'squad-activity-card group relative p-2 rounded-xl border transition-all duration-150 cursor-pointer select-none flex flex-col justify-between bg-slate-900/90 border-slate-800 hover:border-slate-700 hover:bg-slate-900';
-            checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center transition bg-slate-950 border border-slate-700 text-transparent';
-            if (!isLucus && nameEl) nameEl.className = 'font-black text-[11.5px] sm:text-[12px] truncate my-0.5 text-slate-200 group-hover:text-white';
+            card.className = 'squad-activity-card inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border transition-all duration-150 cursor-pointer select-none bg-slate-900/90 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900';
+            checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center text-[8px] transition bg-slate-950 border border-slate-700 text-transparent';
+            if (!isLucus && nameEl) nameEl.className = 'font-bold text-[11px] whitespace-nowrap text-slate-200';
           }
         }
       });
@@ -12605,17 +12602,17 @@
           if (chk) chk.checked = shouldSelect;
           
           const checkIndicator = card.querySelector('.fa-check').parentElement;
-          const nameEl = card.querySelector('.font-black');
+          const nameEl = card.querySelector('.font-bold, .font-extrabold');
           const isLucus = (ACTIVITIES[idx]?.shortName || '').toLowerCase().includes('lucus') || (ACTIVITIES[idx]?.weight || 0) >= 16;
           
           if (shouldSelect) {
-            card.className = 'squad-activity-card group relative p-2 rounded-xl border transition-all duration-150 cursor-pointer select-none flex flex-col justify-between bg-gradient-to-br from-indigo-950/70 via-slate-900 to-indigo-950/40 border-indigo-500/80 shadow-[0_0_12px_rgba(99,102,241,0.25)] ring-1 ring-indigo-400/50';
-            checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center transition bg-indigo-500 text-white shadow-sm shadow-indigo-500/50';
-            if (!isLucus && nameEl) nameEl.className = 'font-black text-[11.5px] sm:text-[12px] truncate my-0.5 text-white';
+            card.className = 'squad-activity-card inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border transition-all duration-150 cursor-pointer select-none bg-indigo-950/80 border-indigo-400 text-white ring-1 ring-indigo-400/50 shadow-sm shadow-indigo-500/20';
+            checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center text-[8px] transition bg-indigo-500 text-white';
+            if (!isLucus && nameEl) nameEl.className = 'font-extrabold text-[11px] whitespace-nowrap text-white';
           } else {
-            card.className = 'squad-activity-card group relative p-2 rounded-xl border transition-all duration-150 cursor-pointer select-none flex flex-col justify-between bg-slate-900/90 border-slate-800 hover:border-slate-700 hover:bg-slate-900';
-            checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center transition bg-slate-950 border border-slate-700 text-transparent';
-            if (!isLucus && nameEl) nameEl.className = 'font-black text-[11.5px] sm:text-[12px] truncate my-0.5 text-slate-200 group-hover:text-white';
+            card.className = 'squad-activity-card inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border transition-all duration-150 cursor-pointer select-none bg-slate-900/90 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900';
+            checkIndicator.className = 'w-3.5 h-3.5 rounded flex items-center justify-center text-[8px] transition bg-slate-950 border border-slate-700 text-transparent';
+            if (!isLucus && nameEl) nameEl.className = 'font-bold text-[11px] whitespace-nowrap text-slate-200';
           }
         }
       });
