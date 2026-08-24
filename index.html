@@ -3585,6 +3585,64 @@
       filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.7)) !important;
     }
 
+    /* ===== 👑 Enhanced Pending Approval Notification Badges & Icons ===== */
+    @keyframes pendingApprovalBeacon {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.8), 0 0 10px rgba(245, 158, 11, 0.9);
+      }
+      50% {
+        transform: scale(1.18);
+        box-shadow: 0 0 0 6px rgba(245, 158, 11, 0), 0 0 18px rgba(245, 158, 11, 1);
+      }
+    }
+
+    @keyframes approvalIconBounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-2px);
+      }
+    }
+
+    /* ป้ายแจ้งเตือนคำขออนุมัติทั้งหมด (All Approval Pending Badges) — ทั้ง Dark & Light Mode */
+    #appeal-pending-badge,
+    #char-edit-pending-badge,
+    #reward-pending-badge,
+    #guild-join-pending-badge,
+    #admin-pending-badge,
+    #cp-pending-badge,
+    #appeal-count-badge,
+    #reward-approval-count-badge,
+    span[id$="-pending-badge"],
+    span[id*="pending-badge"] {
+      background: linear-gradient(135deg, #f59e0b, #ef4444) !important;
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+      border: 1.5px solid #fef08a !important;
+      animation: pendingApprovalBeacon 1.4s infinite ease-in-out !important;
+      font-weight: 900 !important;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+      padding: 2px 6px !important;
+      min-width: 18px !important;
+      height: 18px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 9999px !important;
+      font-size: 10.5px !important;
+      line-height: 1 !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+    }
+
+    /* ไอคอนบนปุ่มที่มีคำขออนุมัติค้างอยู่ (Highlight Icons with Gold/Amber Aura) */
+    button:has(span[id*="pending-badge"]:not(.hidden):not(:empty)) i,
+    button:has(span[id$="-pending-badge"]:not(.hidden):not(:empty)) i {
+      filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.95)) !important;
+      animation: approvalIconBounce 1.8s infinite ease-in-out !important;
+    }
+
     /* ===== Dark Mode Week Tabs Bar (แถบสลับรอบสัปดาห์) ===== */
     /* แคปซูลด้านนอก (Outer Well) */
     body.neo-dark #week-tabs-bar {
