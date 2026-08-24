@@ -15762,9 +15762,12 @@ Output strictly valid JSON with no markdown formatting.`;
                 </span>
                 ${renderGuildBadgeHtml(member.guild)}
               </div>
-              <div class="text-[10px] text-zinc-500 truncate max-w-[220px] leading-tight mt-0.5 font-mono" title="${safeEmail}">
-                ${safeEmail || '-'}
-              </div>
+              ${isScoringAdmin && member.email ? `
+                <div class="text-[10px] text-zinc-400 truncate max-w-[220px] leading-tight mt-0.5 font-mono flex items-center gap-1" title="Email สมาชิก (Admin Only: ${escapeHtml(member.email)})">
+                  <i class="fa-solid fa-lock text-[8px] text-amber-500/70"></i>
+                  <span>${escapeHtml(member.email)}</span>
+                </div>
+              ` : ''}
             </td>
 
             <!-- สถานะ Discord -->
