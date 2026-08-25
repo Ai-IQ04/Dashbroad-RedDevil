@@ -1,8 +1,8 @@
-const CACHE_NAME = 'reddevil-app-v64';
+const CACHE_NAME = 'reddevil-app-v65';
 const APP_SHELL = [
   './',
   './index.html',
-  './styles.css?v=1.2',
+  './styles.css?v=1.3',
   './boss_timer.js?v=10.2',
   './assets/lordnine_logo.png',
   './assets/nong_devil.png',
