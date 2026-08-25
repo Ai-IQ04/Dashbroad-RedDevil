@@ -8031,88 +8031,88 @@
     }
 
     async function handleAdminLogin(e) {
-      e.preventDefault();
-      const now = Date.now();
+      if (e && e.preventDefault) e.preventDefault();
       const errorBox = document.getElementById('admin-login-error-box');
       const errorEl = document.getElementById('admin-login-error');
+      const submitBtn = document.getElementById('admin-email-submit-btn');
 
-      // Rate limit check
-      if (adminLoginLockUntil > now) {
-        const remainingSec = Math.ceil((adminLoginLockUntil - now) / 1000);
-        if (errorBox && errorEl) {
-          errorEl.textContent = `ระบบถูกระงับชั่วคราวเนื่องจากใส่รหัสผ่านผิดหลายครั้ง กรุณารออีก ${remainingSec} วินาที`;
-          errorBox.classList.remove('hidden');
-        }
-        return;
-      }
+      if (errorBox) errorBox.classList.add('hidden');
 
-      const email = document.getElementById('admin-email-input').value.trim().toLowerCase();
-      const password = document.getElementById('admin-password-input').value;
-      const rememberMe = document.getElementById('admin-remember-me')?.checked ?? true;
+      try {
+        const emailInput = document.getElementById('admin-email-input');
+        const passInput = document.getElementById('admin-password-input');
+        const rememberMeInput = document.getElementById('admin-remember-me');
 
-      if (!email || !password) return;
+        const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+        const password = passInput ? passInput.value.trim() : '';
+        const rememberMe = rememberMeInput ? rememberMeInput.checked : true;
 
-      const account = adminAccounts.find(a => a.email.toLowerCase() === email);
-      if (!account) {
-        adminLoginFailCount++;
-        if (adminLoginFailCount >= 5) {
-          adminLoginLockUntil = Date.now() + 45000;
-        }
-        if (errorBox && errorEl) {
-          errorEl.textContent = 'ไม่พบอีเมลนี้ในระบบ Admin (หากต้องการเป็น Admin ให้กดปุ่มขอสมัครด้านล่าง)';
-          errorBox.classList.remove('hidden');
-        }
-        return;
-      }
-
-      // ตรวจสอบรหัสผ่านโดยใช้ verifyPassword
-      const isPasswordValid = await verifyPassword(password, account.password);
-      if (!isPasswordValid) {
-        adminLoginFailCount++;
-        if (adminLoginFailCount >= 5) {
-          adminLoginLockUntil = Date.now() + 45000;
+        if (!email || !password) {
           if (errorBox && errorEl) {
-            errorEl.textContent = 'ระบุรหัสผ่านผิดเกิน 5 ครั้ง บัญชีถูกระงับชั่วคราว 45 วินาที';
+            errorEl.textContent = 'กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน';
             errorBox.classList.remove('hidden');
           }
           return;
         }
+
+        // ตรวจสอบในรายการแอดมินทั้งหมด
+        let account = (adminAccounts || []).find(a => (a.email || '').toLowerCase() === email);
+
+        // กรณีเป็น Super Admin เริ่มต้น
+        if (!account && email === SUPER_ADMIN_EMAIL.toLowerCase()) {
+          account = { ...DEFAULT_SUPER_ADMIN };
+          adminAccounts.unshift(account);
+        }
+
+        if (!account) {
+          if (errorBox && errorEl) {
+            errorEl.textContent = 'ไม่พบอีเมลนี้ในระบบ Admin (หากต้องการเป็น Admin ให้กดปุ่มขอสมัครด้านล่าง)';
+            errorBox.classList.remove('hidden');
+          }
+          return;
+        }
+
+        // ตรวจสอบรหัสผ่าน
+        const isPasswordValid = await verifyPassword(password, account.password);
+        if (!isPasswordValid) {
+          if (errorBox && errorEl) {
+            errorEl.textContent = 'รหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง';
+            errorBox.classList.remove('hidden');
+          }
+          return;
+        }
+
+        // เข้าสู่ระบบสำเร็จ 100%
+        currentAdminEmail = account.email;
+        isAdmin = true;
+        isViewerPreviewMode = false; // รีเซ็ตมุมมองสมาชิกเมื่อล็อกอินใหม่
+        isSuperAdmin = account.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() || account.role === 'superadmin';
+        const isBossAdmin = account.role === 'boss_admin';
+
+        // บันทึกลง Storage
+        localStorage.setItem('guild_current_admin_email', account.email);
+        sessionStorage.setItem('guild_current_admin_email', account.email);
+
+        closeAdminEmailModal();
+        updateAdminUI();
+        renderTable();
+
+        if (isSuperAdmin) {
+          showToast('เข้าสู่ระบบในฐานะ Super Admin สำเร็จ 👑', 'success');
+        } else if (isBossAdmin) {
+          showToast(`เข้าสู่ระบบในฐานะ Admin บอสไทม์เมอร์ (${account.name || account.email}) สำเร็จ 🐉`, 'success');
+          if (typeof switchAppModule === 'function') {
+            switchAppModule('boss_timer');
+          }
+        } else {
+          showToast(`เข้าสู่ระบบในฐานะ Admin (${account.name || account.email}) สำเร็จ 🛡️`, 'success');
+        }
+      } catch (err) {
+        console.error('Login process error:', err);
         if (errorBox && errorEl) {
-          errorEl.textContent = `รหัสผ่านไม่ถูกต้อง (ผิดครั้งที่ ${adminLoginFailCount}/5)`;
+          errorEl.textContent = 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ: ' + err.message;
           errorBox.classList.remove('hidden');
         }
-        return;
-      }
-
-      // Reset failure counter on success
-      adminLoginFailCount = 0;
-      adminLoginLockUntil = 0;
-
-      // เข้าสู่ระบบสำเร็จ
-      currentAdminEmail = account.email;
-      isAdmin = true;
-      isSuperAdmin = account.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() || account.role === 'superadmin';
-      const isBossAdmin = account.role === 'boss_admin';
-
-      if (rememberMe) {
-        localStorage.setItem('guild_current_admin_email', account.email);
-      } else {
-        sessionStorage.setItem('guild_current_admin_email', account.email);
-        localStorage.removeItem('guild_current_admin_email');
-      }
-
-      closeAdminEmailModal();
-      updateAdminUI();
-
-      if (isSuperAdmin) {
-        showToast('เข้าสู่ระบบในฐานะ Super Admin สำเร็จ 👑', 'success');
-      } else if (isBossAdmin) {
-        showToast(`เข้าสู่ระบบในฐานะ Admin บอสไทม์เมอร์ (${account.name || account.email}) สำเร็จ 🐉`, 'success');
-        if (typeof switchAppModule === 'function') {
-          switchAppModule('boss_timer');
-        }
-      } else {
-        showToast(`เข้าสู่ระบบในฐานะ Admin (${account.name || account.email}) สำเร็จ 🛡️`, 'success');
       }
     }
 
