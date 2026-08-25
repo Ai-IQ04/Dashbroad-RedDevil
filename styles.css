@@ -173,150 +173,89 @@ body,
       transform: scale(1.18);
     }
 
-    /* ================= Neumorphism Soft UI Theme (Orange / White / Black) ================= */
-    /* 1. Hero Orange (ปุ่มเด่น / คำขอด่วน / แอคชั่นสำคัญ) */
-    .apple-btn-gold,
-    .apple-btn-orange,
-    .apple-btn-amber,
-    .apple-btn-coral,
-    .apple-btn-ruby {
-      background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #c2410c 100%) !important;
-      color: #ffffff !important;
-      font-weight: 800 !important;
-      border: 1px solid rgba(255, 255, 255, 0.35) !important;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 4px 4px 10px rgba(234, 88, 12, 0.32), -2px -2px 6px rgba(255, 255, 255, 0.8) !important;
-    }
-    .apple-btn-gold:hover,
-    .apple-btn-orange:hover,
-    .apple-btn-amber:hover,
-    .apple-btn-coral:hover,
-    .apple-btn-ruby:hover {
-      background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%) !important;
-      color: #ffffff !important;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 6px 6px 14px rgba(234, 88, 12, 0.45), -3px -3px 8px rgba(255, 255, 255, 0.9) !important;
-    }
-
-    /* 2. Neumorphic White with Black Text & Orange Icon (ปุ่มเครื่องมือ & ข้อมูลทั่วไป) */
-    .apple-btn-emerald,
-    .apple-btn-sapphire,
-    .apple-btn-sky,
-    .apple-btn-magenta,
-    .apple-btn-violet,
-    .apple-btn-teal,
-    .apple-btn-forest,
-    .apple-btn-ocean,
-    .apple-btn-cyan {
-      background: linear-gradient(145deg, #ffffff, #e6ecf5) !important;
+    /* ================= 100% Unified Minimal Executive Neumorphism (Orange / White / Black) ================= */
+    /* ทุกปุ่มในระบบเป็น Soft Neumorphic ทรงเดียวกัน สีเดียวกัน 100% */
+    .apple-btn,
+    button:not(.dark-mode-toggle):not(#theme-toggle-btn) {
+      background: linear-gradient(145deg, #ffffff, #f1f5f9) !important;
       color: #0f172a !important;
       font-weight: 700 !important;
-      border: 1px solid rgba(203, 213, 225, 0.9) !important;
-      box-shadow: 3px 3px 8px #cdd6e4, -3px -3px 8px #ffffff !important;
+      border-radius: 0.85rem !important;
+      border: 1px solid rgba(203, 213, 225, 0.85) !important;
+      box-shadow: 3px 3px 7px #d2d9e4, -3px -3px 7px #ffffff !important;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
-    .apple-btn-emerald i,
-    .apple-btn-sapphire i,
-    .apple-btn-sky i,
-    .apple-btn-magenta i,
-    .apple-btn-violet i,
-    .apple-btn-teal i,
-    .apple-btn-forest i,
-    .apple-btn-ocean i,
-    .apple-btn-cyan i {
+
+    /* ไอคอนทุกตัวในปุ่มเป็นสีส้มสดใส */
+    .apple-btn i,
+    button:not(.dark-mode-toggle):not(#theme-toggle-btn) i {
       color: #ea580c !important;
+      transition: transform 0.2s ease, color 0.2s ease !important;
     }
-    .apple-btn-emerald:hover,
-    .apple-btn-sapphire:hover,
-    .apple-btn-sky:hover,
-    .apple-btn-magenta:hover,
-    .apple-btn-violet:hover,
-    .apple-btn-teal:hover,
-    .apple-btn-forest:hover,
-    .apple-btn-ocean:hover,
-    .apple-btn-cyan:hover {
+
+    /* เอฟเฟกต์เมื่อ Hover */
+    .apple-btn:hover,
+    button:not(.dark-mode-toggle):not(#theme-toggle-btn):hover {
       background: #ffffff !important;
       color: #ea580c !important;
-      border-color: #f97316 !important;
-      box-shadow: 4px 4px 12px #bcc6d6, -4px -4px 12px #ffffff !important;
+      border-color: rgba(249, 115, 22, 0.45) !important;
+      box-shadow: 4px 4px 12px #c2ccd9, -4px -4px 12px #ffffff, 0 0 10px rgba(249, 115, 22, 0.15) !important;
+    }
+    .apple-btn:hover i,
+    button:not(.dark-mode-toggle):not(#theme-toggle-btn):hover i {
+      transform: scale(1.15);
+      color: #f97316 !important;
     }
 
-    /* 3. Deep Black & Obsidian (ปุ่มงานจัดการ & Admin) */
-    .apple-btn-steel,
-    .apple-btn-slate,
-    .apple-btn-burgundy,
-    .apple-btn-darkpurple,
-    .apple-btn-indigo,
-    .apple-btn-purple,
-    .apple-btn-rose {
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
-      color: #fb923c !important;
-      font-weight: 700 !important;
-      border: 1px solid rgba(249, 115, 22, 0.35) !important;
-      box-shadow: 3px 3px 8px #cdd6e4, -2px -2px 6px #ffffff !important;
+    /* เอฟเฟกต์เมื่อคลิก (Pressed) */
+    .apple-btn:active,
+    button:not(.dark-mode-toggle):not(#theme-toggle-btn):active {
+      box-shadow: inset 2px 2px 5px #d2d9e4, inset -2px -2px 5px #ffffff !important;
+      transform: scale(0.97) !important;
     }
-    .apple-btn-steel:hover,
-    .apple-btn-slate:hover,
-    .apple-btn-burgundy:hover,
-    .apple-btn-darkpurple:hover,
-    .apple-btn-indigo:hover,
-    .apple-btn-purple:hover,
-    .apple-btn-rose:hover {
-      background: linear-gradient(135deg, #334155 0%, #1e293b 100%) !important;
+
+    /* เฉพาะแท็บหรือปุ่ม Active เท่านั้นที่เป็นสีส้มเรืองแสง */
+    #nav-tab-scoring.bg-gradient-to-r,
+    #nav-tab-boss-timer.bg-gradient-to-r,
+    .apple-btn-active-hero {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
       color: #ffffff !important;
-      border-color: #f97316 !important;
-      box-shadow: 0 0 14px rgba(249, 115, 22, 0.35) !important;
+      font-weight: 800 !important;
+      border: 1px solid rgba(255, 255, 255, 0.4) !important;
+      box-shadow: 4px 4px 12px rgba(234, 88, 12, 0.35), -2px -2px 6px #ffffff !important;
     }
-
-    /* Dark Mode Theme Overrides */
-    body.neo-dark .apple-btn-gold,
-    body.neo-dark .apple-btn-orange,
-    body.neo-dark .apple-btn-amber,
-    body.neo-dark .apple-btn-coral,
-    body.neo-dark .apple-btn-ruby {
-      background: linear-gradient(135deg, #f97316 0%, #c2410c 100%) !important;
+    #nav-tab-scoring.bg-gradient-to-r i,
+    #nav-tab-boss-timer.bg-gradient-to-r i,
+    .apple-btn-active-hero i {
       color: #ffffff !important;
-      border: 1px solid rgba(255, 255, 255, 0.25) !important;
-      box-shadow: 4px 4px 14px rgba(234, 88, 12, 0.5), -2px -2px 6px rgba(255, 255, 255, 0.05) !important;
     }
 
-    body.neo-dark .apple-btn-emerald,
-    body.neo-dark .apple-btn-sapphire,
-    body.neo-dark .apple-btn-sky,
-    body.neo-dark .apple-btn-magenta,
-    body.neo-dark .apple-btn-violet,
-    body.neo-dark .apple-btn-teal,
-    body.neo-dark .apple-btn-forest,
-    body.neo-dark .apple-btn-ocean,
-    body.neo-dark .apple-btn-cyan {
+    /* ================= Dark Mode Overrides (100% Unified) ================= */
+    body.neo-dark .apple-btn,
+    body.neo-dark button:not(.dark-mode-toggle):not(#theme-toggle-btn) {
       background: linear-gradient(145deg, #1e293b, #0f172a) !important;
       color: #f8fafc !important;
       border: 1px solid rgba(255, 255, 255, 0.1) !important;
       box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.6), -1px -1px 4px rgba(255, 255, 255, 0.04) !important;
     }
-    body.neo-dark .apple-btn-emerald:hover,
-    body.neo-dark .apple-btn-sapphire:hover,
-    body.neo-dark .apple-btn-sky:hover,
-    body.neo-dark .apple-btn-magenta:hover,
-    body.neo-dark .apple-btn-violet:hover,
-    body.neo-dark .apple-btn-teal:hover,
-    body.neo-dark .apple-btn-forest:hover,
-    body.neo-dark .apple-btn-ocean:hover,
-    body.neo-dark .apple-btn-cyan:hover {
+    body.neo-dark .apple-btn i,
+    body.neo-dark button:not(.dark-mode-toggle):not(#theme-toggle-btn) i {
+      color: #fb923c !important;
+    }
+    body.neo-dark .apple-btn:hover,
+    body.neo-dark button:not(.dark-mode-toggle):not(#theme-toggle-btn):hover {
       background: linear-gradient(145deg, #334155, #1e293b) !important;
       color: #fb923c !important;
       border-color: rgba(249, 115, 22, 0.6) !important;
-      box-shadow: 4px 4px 14px rgba(0, 0, 0, 0.8), -1px -1px 5px rgba(255, 255, 255, 0.08) !important;
+      box-shadow: 4px 4px 14px rgba(0, 0, 0, 0.8), -1px -1px 5px rgba(255, 255, 255, 0.08), 0 0 12px rgba(249, 115, 22, 0.25) !important;
     }
 
-    body.neo-dark .apple-btn-steel,
-    body.neo-dark .apple-btn-slate,
-    body.neo-dark .apple-btn-burgundy,
-    body.neo-dark .apple-btn-darkpurple,
-    body.neo-dark .apple-btn-indigo,
-    body.neo-dark .apple-btn-purple,
-    body.neo-dark .apple-btn-rose {
-      background: linear-gradient(135deg, #111827 0%, #030712 100%) !important;
-      color: #fb923c !important;
-      border: 1px solid rgba(249, 115, 22, 0.35) !important;
-      box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.7), -1px -1px 4px rgba(255, 255, 255, 0.03) !important;
+    body.neo-dark #nav-tab-scoring.bg-gradient-to-r,
+    body.neo-dark #nav-tab-boss-timer.bg-gradient-to-r,
+    body.neo-dark .apple-btn-active-hero {
+      background: linear-gradient(135deg, #f97316 0%, #c2410c 100%) !important;
+      color: #ffffff !important;
+      box-shadow: 4px 4px 14px rgba(234, 88, 12, 0.5), -2px -2px 6px rgba(255, 255, 255, 0.05) !important;
     }
     
     /* ================= Page & Component Animations ================= */
