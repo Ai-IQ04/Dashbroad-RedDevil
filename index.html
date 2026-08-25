@@ -135,12 +135,55 @@
           <span id="theme-toggle-label">Dark</span>
         </button>
 
-        <!-- สลับโหมด Admin -->
-        <div id="admin-mode-container" class="flex items-center">
-          <button id="admin-toggle-btn" onclick="toggleAdminMode()"
-            class="apple-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm font-semibold">
+        <!-- สลับโหมด Admin / User Profile Container -->
+        <div id="admin-mode-container" class="relative inline-flex items-center gap-1">
+          <button id="admin-toggle-btn" onclick="toggleAdminMode(event)"
+            class="apple-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm font-semibold rounded-xl transition cursor-pointer">
             <!-- Render via JS -->
           </button>
+
+          <!-- 🔴 ปุ่ม Logout ด่วน (Quick Logout Icon) -->
+          <button id="admin-quick-logout-btn" onclick="performAdminLogout(event)"
+            class="hidden w-8 h-8 rounded-xl bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 items-center justify-center text-xs transition cursor-pointer shadow-sm active:scale-90"
+            title="ออกจากระบบ (Logout)">
+            <i class="fa-solid fa-right-from-bracket text-xs"></i>
+          </button>
+
+          <!-- 👤 แผงเมนูโปรไฟล์ Admin (Admin Profile Dropdown) -->
+          <div id="admin-profile-dropdown"
+            class="hidden absolute right-0 top-full mt-2 w-64 p-3.5 bg-slate-950/98 backdrop-blur-2xl border border-slate-700/80 rounded-2xl shadow-2xl z-[9999] text-xs animate-scale-up space-y-3">
+            <div class="flex items-center gap-2.5 pb-2.5 border-b border-slate-800">
+              <div id="dropdown-admin-avatar"
+                class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/30 border border-amber-400/40 text-amber-300 flex items-center justify-center text-base font-black shadow-md shrink-0">
+                👑
+              </div>
+              <div class="min-w-0 flex-1">
+                <p id="dropdown-admin-name" class="font-extrabold text-white text-xs truncate">Admin</p>
+                <p id="dropdown-admin-role" class="text-[10.5px] font-mono text-emerald-400 truncate">Super Admin</p>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <button type="button" onclick="openAdminManagementFromDropdown()" id="dropdown-btn-manage-admins"
+                class="w-full px-2.5 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 flex items-center gap-2.5 text-left transition cursor-pointer">
+                <i class="fa-solid fa-users-gear text-indigo-400 text-xs w-4 text-center"></i>
+                <span class="font-medium">จัดการบัญชี Admin</span>
+              </button>
+              <button type="button" onclick="openAuditLogsFromDropdown()"
+                class="w-full px-2.5 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 flex items-center gap-2.5 text-left transition cursor-pointer">
+                <i class="fa-solid fa-clock-rotate-left text-amber-400 text-xs w-4 text-center"></i>
+                <span class="font-medium">ประวัติการทำงาน (Audit Logs)</span>
+              </button>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800">
+              <button type="button" onclick="performAdminLogout(event)"
+                class="w-full py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 hover:text-white border border-rose-500/40 flex items-center justify-center gap-2 font-bold transition cursor-pointer active:scale-95">
+                <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                <span>ออกจากระบบ (Logout)</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- ปุ่มเปิด/ปิด เลขา AI น้องเดวิล (Admin Only) -->
@@ -7858,26 +7901,44 @@
       }
     }
 
-    function performAdminLogout() {
+    function performAdminLogout(e) {
+      if (e && e.stopPropagation) e.stopPropagation();
+      if (!confirm('คุณต้องการออกจากระบบ Admin หรือไม่?')) return;
       const dropdown = document.getElementById('admin-profile-dropdown');
-      if (dropdown) dropdown.classList.add('hidden');
+        if (dropdown) dropdown.classList.add('hidden');
+        const quickLogoutBtn = document.getElementById('admin-quick-logout-btn');
+        if (quickLogoutBtn) {
+          quickLogoutBtn.classList.add('hidden');
+          quickLogoutBtn.classList.remove('inline-flex');
+        }
       isAdmin = false;
       isSuperAdmin = false;
       currentAdminEmail = '';
       localStorage.removeItem('guild_current_admin_email');
-      showToast(t('toast_logged_out'), "info");
+      sessionStorage.removeItem('guild_current_admin_email');
+      showToast(t('toast_logged_out') || 'ออกจากระบบเรียบร้อยแล้ว', "info");
       updateAdminUI();
     }
 
     function openAdminManagementFromDropdown() {
       const dropdown = document.getElementById('admin-profile-dropdown');
-      if (dropdown) dropdown.classList.add('hidden');
+        if (dropdown) dropdown.classList.add('hidden');
+        const quickLogoutBtn = document.getElementById('admin-quick-logout-btn');
+        if (quickLogoutBtn) {
+          quickLogoutBtn.classList.add('hidden');
+          quickLogoutBtn.classList.remove('inline-flex');
+        }
       openAdminManagementModal();
     }
 
     function openAuditLogsFromDropdown() {
       const dropdown = document.getElementById('admin-profile-dropdown');
-      if (dropdown) dropdown.classList.add('hidden');
+        if (dropdown) dropdown.classList.add('hidden');
+        const quickLogoutBtn = document.getElementById('admin-quick-logout-btn');
+        if (quickLogoutBtn) {
+          quickLogoutBtn.classList.add('hidden');
+          quickLogoutBtn.classList.remove('inline-flex');
+        }
       openAuditLogsModal();
     }
 
