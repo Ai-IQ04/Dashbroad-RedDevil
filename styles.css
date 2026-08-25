@@ -4456,3 +4456,38 @@ body:not(.neo-dark) #app-version-badge-footer {
   color: #b45309 !important;
   border-color: #e2e8f0 !important;
 }
+
+
+/* 🔑 ปุ่มเข้าสู่ระบบ (Admin Login Button) คมชัดทุกโหมด */
+body:not(.neo-dark) #admin-toggle-btn {
+  background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
+  color: #ffffff !important;
+  border: 1px solid #3730a3 !important;
+  box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3) !important;
+  font-weight: 800 !important;
+}
+
+body:not(.neo-dark) #admin-toggle-btn span,
+body:not(.neo-dark) #admin-toggle-btn i {
+  color: #ffffff !important;
+  display: inline-block !important;
+}
+
+body:not(.neo-dark) #admin-toggle-btn:hover {
+  background: linear-gradient(135deg, #4338ca, #312e81) !important;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.45) !important;
+}
+
+body.neo-dark #admin-toggle-btn {
+  background: rgba(99, 102, 241, 0.2) !important;
+  color: #c7d2fe !important;
+  border: 1px solid rgba(99, 102, 241, 0.45) !important;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.2) !important;
+  font-weight: 700 !important;
+}
+
+body.neo-dark #admin-toggle-btn span,
+body.neo-dark #admin-toggle-btn i {
+  color: #e0e7ff !important;
+  display: inline-block !important;
+}
