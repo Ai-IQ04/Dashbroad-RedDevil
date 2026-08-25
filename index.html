@@ -6337,7 +6337,8 @@
       requestType = 'คำขอ',
       details = '',
       reason = '',
-      adminEmail = currentAdminEmail || 'Admin'
+      adminEmail = currentAdminEmail || 'Admin',
+      adminName = ''
     }) {
       let discordMention = '';
       let matchedDiscord = member ? getDiscordVerifiedData(member) : null;
@@ -6384,6 +6385,10 @@
         fields.push({ name: '💬 เหตุผล (Reason)', value: String(reason), inline: false });
       }
 
+      // ดึงชื่อแอดมิน (ใช้ Name แทน Email)
+      const currentAcc = typeof getCurrentAdminAccount === 'function' ? getCurrentAdminAccount() : null;
+      const resolvedAdminName = adminName || (currentAcc && currentAcc.name) || ((adminEmail && adminEmail.includes('@')) ? adminEmail.split('@')[0] : (adminEmail || 'Admin'));
+
       if (typeof fbDb !== 'undefined' && fbDb) {
         const alertKey = 'res_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
         const mentionPrefix = discordMention ? `${discordMention} ` : '';
@@ -6393,7 +6398,7 @@
           title: title,
           color: color,
           fields: fields,
-          footerText: `🛡️ LORD NINE • RedDevil System • Admin: ${adminEmail}`,
+          footerText: `🛡️ LORD NINE • RedDevil System • Admin: ${resolvedAdminName}`,
           timestamp: Date.now()
         });
       }
