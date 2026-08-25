@@ -1387,55 +1387,76 @@
 
   <!-- ================= หน้าต่างป๊อปอัป: เข้าสู่ระบบ Admin (Email + Password) ================= -->
   <div id="admin-email-modal"
-    class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 hidden animate-fade-in">
     <div
-      class="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-sm p-5 shadow-2xl space-y-4 apple-modal-box">
+      class="bg-slate-950/98 border border-indigo-500/40 rounded-3xl w-full max-w-sm p-6 shadow-[0_0_40px_rgba(99,102,241,0.25)] space-y-4 apple-modal-box">
       <div class="text-center">
         <div
-          class="h-12 w-12 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center text-xl mx-auto mb-2">
-          <i class="fa-solid fa-shield-halved"></i>
+          class="h-14 w-14 rounded-2xl bg-gradient-to-tr from-indigo-500/20 to-purple-500/30 text-indigo-400 border border-indigo-400/40 flex items-center justify-center text-2xl mx-auto mb-2.5 shadow-lg shadow-indigo-500/20">
+          <i class="fa-solid fa-shield-halved filter drop-shadow"></i>
         </div>
-        <h3 id="admin-email-title" class="text-base font-bold text-white">เข้าสู่ระบบ Admin</h3>
-        <p id="admin-email-desc" class="text-xs text-slate-400 mt-1">กรอกอีเมลและรหัสผ่านเพื่อเข้าสู่ระบบ</p>
+        <h3 id="admin-email-title" class="text-base font-extrabold text-white">เข้าสู่ระบบแอดมิน (Admin Portal)</h3>
+        <p id="admin-email-desc" class="text-xs text-slate-400 mt-1">กรอกอีเมลและรหัสผ่านเพื่อเข้าถึงระบบจัดการกิลด์</p>
       </div>
 
-      <form onsubmit="handleAdminLogin(event)" class="space-y-3">
+      <!-- Alert Box สำหรับแสดงข้อผิดพลาด -->
+      <div id="admin-login-error-box" class="hidden p-3 rounded-2xl bg-rose-950/90 border border-rose-500/60 text-rose-200 text-xs flex items-start gap-2.5 shadow-md">
+        <i class="fa-solid fa-triangle-exclamation text-rose-400 mt-0.5 shrink-0 text-sm"></i>
+        <span id="admin-login-error" class="leading-relaxed font-medium"></span>
+      </div>
+
+      <form onsubmit="handleAdminLogin(event)" class="space-y-3.5">
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">อีเมล (Email) *</label>
-          <input type="email" id="admin-email-input" placeholder="your@email.com"
-            class="w-full bg-slate-950 border border-slate-700 text-sm rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
+          <label class="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1">
+            <i class="fa-solid fa-envelope text-indigo-400 text-[10px]"></i>
+            <span>อีเมล (Email) *</span>
+          </label>
+          <input type="email" id="admin-email-input" placeholder="admin@example.com"
+            class="w-full bg-slate-900 border border-slate-700 text-sm rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/50 transition shadow-inner"
             required autocomplete="email">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">รหัสผ่าน (Password) *</label>
+          <label class="block text-xs font-bold text-slate-300 mb-1 flex items-center justify-between">
+            <span class="flex items-center gap-1">
+              <i class="fa-solid fa-key text-amber-400 text-[10px]"></i>
+              <span>รหัสผ่าน (Password) *</span>
+            </span>
+          </label>
           <div class="relative">
             <input type="password" id="admin-password-input" placeholder="กรอกรหัสผ่าน"
-              class="w-full bg-slate-950 border border-slate-700 text-sm rounded-xl px-3 py-2 pr-10 text-white focus:outline-none focus:border-indigo-500"
+              class="w-full bg-slate-900 border border-slate-700 text-sm rounded-xl px-3.5 py-2.5 pr-10 text-white focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/50 transition shadow-inner"
               required autocomplete="current-password">
             <button type="button" onclick="togglePasswordVisibility('admin-password-input', this)"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs">
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs p-1">
               <i class="fa-regular fa-eye"></i>
             </button>
           </div>
-          <p id="admin-login-error" class="text-[11px] text-rose-400 mt-1 hidden"></p>
+        </div>
+
+        <div class="flex items-center justify-between text-xs pt-1">
+          <label class="flex items-center gap-2 text-slate-400 select-none cursor-pointer hover:text-slate-300 transition">
+            <input type="checkbox" id="admin-remember-me" class="rounded bg-slate-900 border-slate-700 text-indigo-500 focus:ring-0 cursor-pointer" checked>
+            <span>จดจำการเข้าสู่ระบบ</span>
+          </label>
         </div>
 
         <div class="flex items-center gap-2 pt-2">
           <button type="button" onclick="closeAdminEmailModal()"
-            class="apple-btn apple-btn-slate flex-1 py-2 rounded-xl text-slate-300 text-xs font-semibold">
+            class="apple-btn apple-btn-slate flex-1 py-2.5 rounded-xl text-slate-300 text-xs font-bold">
             ยกเลิก
           </button>
           <button type="submit" id="admin-email-submit-btn"
-            class="apple-btn apple-btn-indigo flex-1 py-2 rounded-xl text-white text-xs font-semibold shadow-md">
-            เข้าสู่ระบบ
+            class="apple-btn bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 flex-1 py-2.5 rounded-xl text-white text-xs font-bold shadow-lg shadow-indigo-600/30 active:scale-95 transition">
+            <i class="fa-solid fa-right-to-bracket mr-1.5"></i>เข้าสู่ระบบ
           </button>
         </div>
 
-        <div class="pt-2 border-t border-zinc-800 text-center">
+        <div class="pt-3 border-t border-slate-800/80 text-center">
           <button type="button" onclick="openAdminRegisterModal()"
-            class="text-[11px] text-indigo-400 hover:text-indigo-300 font-semibold transition">
-            <i class="fa-solid fa-user-plus mr-1"></i>ส่งคำขอสมัครเป็น Admin
+            class="text-[11.5px] text-indigo-400 hover:text-indigo-300 font-bold transition inline-flex items-center gap-1.5">
+            <i class="fa-solid fa-user-plus text-xs"></i>
+            <span>ยังไม่มีบัญชี? ส่งคำขอสมัครเป็น Admin</span>
           </button>
         </div>
       </form>
@@ -7819,18 +7840,55 @@
       renderTable();
     }
 
-    function toggleAdminMode() {
+    let adminLoginFailCount = 0;
+    let adminLoginLockUntil = 0;
+
+    function toggleAdminMode(e) {
+      if (e && e.stopPropagation) e.stopPropagation();
+      const dropdown = document.getElementById('admin-profile-dropdown');
+
       if (isAdmin) {
-        isAdmin = false;
-        isSuperAdmin = false;
-        currentAdminEmail = '';
-        localStorage.removeItem('guild_current_admin_email');
-        showToast(t('toast_logged_out'), "info");
-        updateAdminUI();
+        // Logged in -> toggle profile dropdown
+        if (dropdown) {
+          dropdown.classList.toggle('hidden');
+        }
       } else {
+        // Not logged in -> open login modal
         openAdminEmailModal();
       }
     }
+
+    function performAdminLogout() {
+      const dropdown = document.getElementById('admin-profile-dropdown');
+      if (dropdown) dropdown.classList.add('hidden');
+      isAdmin = false;
+      isSuperAdmin = false;
+      currentAdminEmail = '';
+      localStorage.removeItem('guild_current_admin_email');
+      showToast(t('toast_logged_out'), "info");
+      updateAdminUI();
+    }
+
+    function openAdminManagementFromDropdown() {
+      const dropdown = document.getElementById('admin-profile-dropdown');
+      if (dropdown) dropdown.classList.add('hidden');
+      openAdminManagementModal();
+    }
+
+    function openAuditLogsFromDropdown() {
+      const dropdown = document.getElementById('admin-profile-dropdown');
+      if (dropdown) dropdown.classList.add('hidden');
+      openAuditLogsModal();
+    }
+
+    // Close admin dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      const container = document.getElementById('admin-mode-container');
+      const dropdown = document.getElementById('admin-profile-dropdown');
+      if (dropdown && !dropdown.classList.contains('hidden') && container && !container.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
 
     function updateAdminPendingBadge() {
       const pending = pendingAdminRequests.filter(r => r.status === 'pending');
@@ -7859,8 +7917,8 @@
     }
 
     function openAdminEmailModal() {
-      const err = document.getElementById('admin-login-error');
-      if (err) err.classList.add('hidden');
+      const errorBox = document.getElementById('admin-login-error-box');
+      if (errorBox) errorBox.classList.add('hidden');
       const emailInput = document.getElementById('admin-email-input');
       const passInput = document.getElementById('admin-password-input');
       if (emailInput && currentAdminEmail) emailInput.value = currentAdminEmail;
@@ -7877,37 +7935,75 @@
 
     async function handleAdminLogin(e) {
       e.preventDefault();
+      const now = Date.now();
+      const errorBox = document.getElementById('admin-login-error-box');
+      const errorEl = document.getElementById('admin-login-error');
+
+      // Rate limit check
+      if (adminLoginLockUntil > now) {
+        const remainingSec = Math.ceil((adminLoginLockUntil - now) / 1000);
+        if (errorBox && errorEl) {
+          errorEl.textContent = `ระบบถูกระงับชั่วคราวเนื่องจากใส่รหัสผ่านผิดหลายครั้ง กรุณารออีก ${remainingSec} วินาที`;
+          errorBox.classList.remove('hidden');
+        }
+        return;
+      }
+
       const email = document.getElementById('admin-email-input').value.trim().toLowerCase();
       const password = document.getElementById('admin-password-input').value;
-      const errorEl = document.getElementById('admin-login-error');
+      const rememberMe = document.getElementById('admin-remember-me')?.checked ?? true;
 
       if (!email || !password) return;
 
       const account = adminAccounts.find(a => a.email.toLowerCase() === email);
       if (!account) {
-        if (errorEl) {
+        adminLoginFailCount++;
+        if (adminLoginFailCount >= 5) {
+          adminLoginLockUntil = Date.now() + 45000;
+        }
+        if (errorBox && errorEl) {
           errorEl.textContent = 'ไม่พบอีเมลนี้ในระบบ Admin (หากต้องการเป็น Admin ให้กดปุ่มขอสมัครด้านล่าง)';
-          errorEl.classList.remove('hidden');
+          errorBox.classList.remove('hidden');
         }
         return;
       }
 
-      // ตรวจสอบรหัสผ่านโดยใช้ verifyPassword (รองรับทั้ง hash และ plain text เก่า)
+      // ตรวจสอบรหัสผ่านโดยใช้ verifyPassword
       const isPasswordValid = await verifyPassword(password, account.password);
       if (!isPasswordValid) {
-        if (errorEl) {
-          errorEl.textContent = 'รหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง';
-          errorEl.classList.remove('hidden');
+        adminLoginFailCount++;
+        if (adminLoginFailCount >= 5) {
+          adminLoginLockUntil = Date.now() + 45000;
+          if (errorBox && errorEl) {
+            errorEl.textContent = 'ระบุรหัสผ่านผิดเกิน 5 ครั้ง บัญชีถูกระงับชั่วคราว 45 วินาที';
+            errorBox.classList.remove('hidden');
+          }
+          return;
+        }
+        if (errorBox && errorEl) {
+          errorEl.textContent = `รหัสผ่านไม่ถูกต้อง (ผิดครั้งที่ ${adminLoginFailCount}/5)`;
+          errorBox.classList.remove('hidden');
         }
         return;
       }
+
+      // Reset failure counter on success
+      adminLoginFailCount = 0;
+      adminLoginLockUntil = 0;
 
       // เข้าสู่ระบบสำเร็จ
       currentAdminEmail = account.email;
       isAdmin = true;
       isSuperAdmin = account.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() || account.role === 'superadmin';
       const isBossAdmin = account.role === 'boss_admin';
-      localStorage.setItem('guild_current_admin_email', account.email);
+
+      if (rememberMe) {
+        localStorage.setItem('guild_current_admin_email', account.email);
+      } else {
+        sessionStorage.setItem('guild_current_admin_email', account.email);
+        localStorage.removeItem('guild_current_admin_email');
+      }
+
       closeAdminEmailModal();
       updateAdminUI();
 
