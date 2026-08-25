@@ -7436,7 +7436,8 @@
       return str
         .toLowerCase()
         .replace(/[\s\-_[\]().*:`\u200B]/g, '')
-        .replace(/^(btc|r|reddevil|bluedevil)/g, '');
+        .replace(/^(btc|r|reddevil|bluedevil)/g, '')
+        .replace(/u/g, 'น');
     }
 
     function getDiscordVerifiedData(member) {
@@ -7470,25 +7471,7 @@
         }
       }
 
-      // 2. ตรวจสอบในฐานข้อมูลที่ลงทะเบียนผ่านแบบฟอร์ม (Form Registration)
-      if (discordVerifiedMembers && typeof discordVerifiedMembers === 'object') {
-        const entries = Object.values(discordVerifiedMembers);
-        for (const item of entries) {
-          if (!item || typeof item !== 'object') continue;
-          const itemEmail = (item.email || '').trim().toLowerCase();
-          const rawItemName = (item.characterName || item.name || '').trim();
-          const itemName = cleanDiscordName(rawItemName);
-
-          if (memEmail && itemEmail && memEmail === itemEmail) {
-            return { ...item, matchSource: 'form_verified' };
-          }
-          if (memName && itemName && (memName === itemName || rawMemName.toLowerCase() === rawItemName.toLowerCase())) {
-            return { ...item, matchSource: 'form_verified' };
-          }
-        }
-      }
-
-      // 3. ตรวจสอบแบบ Partial Match ในเซิร์ฟเวอร์ Discord (เช่น "xCOACH" ใน "R - xCOACH")
+      // 2. ตรวจสอบแบบ Partial Match ในเซิร์ฟเวอร์ Discord (เช่น "xCOACH" ใน "R - xCOACH")
       if (discordServerMembers && typeof discordServerMembers === 'object') {
         const serverEntries = Object.values(discordServerMembers);
         for (const sm of serverEntries) {
@@ -7509,6 +7492,27 @@
                 verified: true
               };
             }
+          }
+        }
+      }
+
+      // 3. ตรวจสอบในฐานข้อมูลที่ลงทะเบียนผ่านแบบฟอร์ม (Form Registration) - ข้ามบัญชีผู้รับฝากลงทะเบียนแทน
+      if (discordVerifiedMembers && typeof discordVerifiedMembers === 'object') {
+        const entries = Object.values(discordVerifiedMembers);
+        for (const item of entries) {
+          if (!item || typeof item !== 'object') continue;
+          const itemEmail = (item.email || '').trim().toLowerCase();
+          const rawItemName = (item.characterName || item.name || '').trim();
+          const itemName = cleanDiscordName(rawItemName);
+
+          const isProxyId = item.discordId === '1369921212062629939'; // บัญชีผู้รับฝากลงทะเบียน
+          if (isProxyId) continue;
+
+          if (memEmail && itemEmail && memEmail === itemEmail) {
+            return { ...item, matchSource: 'form_verified' };
+          }
+          if (memName && itemName && (memName === itemName || rawMemName.toLowerCase() === rawItemName.toLowerCase())) {
+            return { ...item, matchSource: 'form_verified' };
           }
         }
       }
