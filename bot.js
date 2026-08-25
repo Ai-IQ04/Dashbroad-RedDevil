@@ -366,7 +366,7 @@ async function checkOutboundAlertsCommand() {
         color: Number(item.color) || 0x3B82F6,
         description: item.description || undefined,
         timestamp: item.timestamp ? new Date(item.timestamp).toISOString() : new Date().toISOString(),
-        footer: { text: '🛡️ LORD NINE SYSTEM • Dashboard RedDevil' },
+        footer: { text: item.footerText || (item.footer && item.footer.text) || '🛡️ LORD NINE SYSTEM • Dashboard RedDevil' },
         fields: Array.isArray(item.fields) ? item.fields.map(f => ({
           name: String(f.name || ''),
           value: String(f.value || ''),

@@ -4516,6 +4516,7 @@
          "discord_field_reason": "📝 เหตุผล",
          "discord_no_reason": "ไม่ได้ระบุเหตุผล",
          "discord_field_time": "⏰ เวลายื่นคำขอ",
+         "appeal_reject_default_reason": "หลักฐานไม่เพียงพอ / ข้อมูลไม่ตรงกับการบันทึก",
          "btn_request_cp": "ขออัพเดท CP",
         "btn_approve_cp": "อนุมัติ CP",
         "btn_manage_admins": "จัดการ Admin",
@@ -5075,6 +5076,7 @@
          "discord_field_reason": "📝 Reason",
          "discord_no_reason": "No reason specified",
          "discord_field_time": "⏰ Requested Time",
+         "appeal_reject_default_reason": "Insufficient evidence or mismatched data",
          "btn_request_cp": "Request CP Update",
         "btn_approve_cp": "Approve CP",
         "btn_manage_admins": "Manage Admins",
@@ -5606,8 +5608,11 @@
     if (localStorage.getItem('guild_theme') === 'dark') {
       document.body.classList.add('neo-dark');
     }
-    window.addEventListener('DOMContentLoaded', applyThemeMode);
-    window.addEventListener('DOMContentLoaded', updateAdminUI);
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', applyThemeMode);
+    } else {
+      applyThemeMode();
+    }
 
     function applyStaticTranslations() {
       window.currentLang = currentLang;
@@ -5849,6 +5854,7 @@
 
     let isAdmin = Boolean(currentAdminEmail && adminAccounts.some(a => a.email.toLowerCase() === currentAdminEmail.toLowerCase()));
     let isSuperAdmin = currentAdminEmail.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+    let isViewerPreviewMode = false;
 
     function getCurrentAdminAccount() {
       if (!currentAdminEmail) return null;
@@ -6321,7 +6327,7 @@
 
 
     
-    // 📢 ฟังก์ชันส่งแจ้งเตือนผลการตอบโต้คำขอจาก Admin ไปยัง Discord พร้อมแท็กสมาชิก
+    // 📢 ฟังก์ชันส่งแจ้งเตือนผลการตอบโต้คำขอจาก Admin ไปยัง Discord (กระชับ & รองรับ TH/EN)
     function sendAdminActionDiscordNotification({
       targetChannelId = '1508499750859575476',
       member = null,
@@ -6352,40 +6358,42 @@
         discordMention = `<@${discordUserId}>`;
       } else if (discordContact && /^\d{17,20}$/.test(String(discordContact).trim())) {
         discordMention = `<@${String(discordContact).trim()}>`;
-      } else if (discordContact) {
-        discordMention = `**${discordContact}**`;
-      } else {
-        discordMention = `**${characterName || 'สมาชิก'}**`;
       }
 
       const isApproved = actionType === 'approve';
       const isNeedsInfo = actionType === 'info';
       const color = isApproved ? 0x10B981 : (isNeedsInfo ? 0xF59E0B : 0xEF4444);
-      const statusText = isApproved ? '✅ ผ่านการอนุมัติ (Approved)' : (isNeedsInfo ? 'ℹ️ ขอข้อมูลเพิ่มเติม (Needs Info)' : '❌ ไม่ผ่านการอนุมัติ (Rejected)');
-      const title = `${isApproved ? '✅' : (isNeedsInfo ? 'ℹ️' : '❌')} ผลการพิจารณาคำขอ: ${requestType}`;
+
+      const statusBadge = isApproved
+        ? '✅ ผ่านการอนุมัติ (Approved)'
+        : (isNeedsInfo ? 'ℹ️ ขอข้อมูลเพิ่ม (Needs Info)' : '❌ ไม่อนุมัติ (Rejected)');
+
+      const title = isApproved
+        ? `✅ อนุมัติคำขอ: ${requestType}`
+        : (isNeedsInfo ? `ℹ️ ขอข้อมูลเพิ่มเติม: ${requestType}` : `❌ ปฏิเสธคำขอ: ${requestType}`);
 
       const fields = [
-        { name: '👤 ตัวละคร / สมาชิก', value: `${characterName || '-'} ${discordMention.startsWith('<@') ? `(${discordMention})` : ''}`, inline: true },
-        { name: '📋 สถานะผลลัพธ์', value: `**${statusText}**`, inline: true },
-        { name: '🛡️ ดำเนินการโดย', value: `Admin: ${adminEmail}`, inline: true }
+        { name: '👤 ตัวละคร (Character)', value: `**${characterName || '-'}**`, inline: true },
+        { name: '📋 ผลลัพธ์ (Status)', value: `**${statusBadge}**`, inline: true }
       ];
 
       if (details) {
-        fields.push({ name: '📝 รายละเอียดคำขอ', value: String(details), inline: false });
+        fields.push({ name: '📝 รายละเอียด (Details)', value: String(details), inline: false });
       }
       if (reason) {
-        fields.push({ name: '💬 เหตุผล / ข้อความจาก Admin', value: String(reason), inline: false });
+        fields.push({ name: '💬 เหตุผล (Reason)', value: String(reason), inline: false });
       }
 
       if (typeof fbDb !== 'undefined' && fbDb) {
         const alertKey = 'res_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-        const mentionPrefix = discordMention.startsWith('<@') ? `${discordMention} ` : '';
+        const mentionPrefix = discordMention ? `${discordMention} ` : '';
         fbDb.ref('guild_app/bot_commands/outbound_alerts/' + alertKey).set({
           channelId: targetChannelId,
-          content: `${mentionPrefix}🔔 **ผลการพิจารณาคำขอ (${requestType})** สำหรับ **${characterName || 'สมาชิก'}**`,
+          content: `${mentionPrefix}🔔 **ผลการพิจารณาคำขอ (${requestType})**`,
           title: title,
           color: color,
           fields: fields,
+          footerText: `🛡️ LORD NINE • RedDevil System • Admin: ${adminEmail}`,
           timestamp: Date.now()
         });
       }
@@ -7643,7 +7651,10 @@
       const btnViewerPreview = document.getElementById('btn-toggle-viewer-preview');
 
       if (isAdmin) {
-        if (isSuperAdmin) {
+        if (isViewerPreviewMode) {
+          toggleBtn.className = "apple-btn bg-amber-500/25 hover:bg-amber-500/40 text-amber-300 border border-amber-500/50 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm font-bold";
+          toggleBtn.innerHTML = `<i class="fa-solid fa-eye text-amber-400 text-xs"></i><span>จำลองมุมมองสมาชิก</span>`;
+        } else if (isSuperAdmin) {
           toggleBtn.className = "apple-btn apple-btn-gold inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm";
           toggleBtn.innerHTML = `<i class="fa-solid fa-crown text-slate-950 text-xs"></i><span>${t('mode_super_admin')}</span>`;
         } else if (isBossAdmin) {
@@ -7652,6 +7663,45 @@
         } else {
           toggleBtn.className = "apple-btn apple-btn-ruby inline-flex items-center gap-1.5 px-3 py-1.5 text-xs shadow-sm";
           toggleBtn.innerHTML = `<i class="fa-solid fa-lock-open text-white text-xs"></i><span>${t('mode_admin')}</span>`;
+        }
+
+        // ปุ่ม Quick Logout และ Viewer Preview ใน Header
+        const quickLogoutBtn = document.getElementById('admin-quick-logout-btn');
+        if (quickLogoutBtn) {
+          quickLogoutBtn.classList.remove('hidden');
+          quickLogoutBtn.classList.add('inline-flex');
+        }
+        if (btnViewerPreview) {
+          btnViewerPreview.classList.remove('hidden');
+          btnViewerPreview.classList.add('inline-flex');
+          if (isViewerPreviewMode) {
+            btnViewerPreview.className = "apple-btn bg-amber-500 hover:bg-amber-600 text-slate-950 font-black inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm cursor-pointer rounded-xl transition active:scale-95";
+            btnViewerPreview.innerHTML = '<i class="fa-solid fa-eye-slash text-slate-950 text-xs"></i><span class="hidden sm:inline">ออกจากการจำลอง</span>';
+          } else {
+            btnViewerPreview.className = "apple-btn bg-slate-900 hover:bg-slate-800 border border-amber-500/40 text-amber-300 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm cursor-pointer rounded-xl font-bold transition active:scale-95";
+            btnViewerPreview.innerHTML = '<i class="fa-solid fa-eye text-amber-400 text-xs"></i><span class="hidden sm:inline">มุมมองสมาชิก</span>';
+          }
+        }
+
+        // อัปเดตข้อมูลบน Dropdown โปรไฟล์ Admin
+        const currentAcc = getCurrentAdminAccount();
+        const dropdownName = document.getElementById('dropdown-admin-name');
+        const dropdownRole = document.getElementById('dropdown-admin-role');
+        const dropdownAvatar = document.getElementById('dropdown-admin-avatar');
+        const dropdownViewerBtn = document.getElementById('dropdown-btn-viewer-preview');
+        if (dropdownName) dropdownName.textContent = (currentAcc && currentAcc.name) ? currentAcc.name : (currentAdminEmail || 'Admin');
+        if (dropdownRole) {
+          if (isSuperAdmin) dropdownRole.textContent = 'Super Admin';
+          else if (isBossAdmin) dropdownRole.textContent = 'Admin บอส';
+          else dropdownRole.textContent = 'Admin';
+        }
+        if (dropdownAvatar) dropdownAvatar.textContent = isSuperAdmin ? '👑' : (isBossAdmin ? '🐉' : '🛡️');
+        if (dropdownViewerBtn) {
+          if (isViewerPreviewMode) {
+            dropdownViewerBtn.innerHTML = '<i class="fa-solid fa-eye-slash text-emerald-400 text-xs w-4 text-center"></i><span class="font-bold text-emerald-300">กลับสู่โหมด Admin (Exit Viewer)</span>';
+          } else {
+            dropdownViewerBtn.innerHTML = '<i class="fa-solid fa-eye text-amber-400 text-xs w-4 text-center"></i><span class="font-bold text-amber-300">จำลองมุมมองสมาชิก (Viewer)</span>';
+          }
         }
 
         // เฉพาะ Full Admin และ Super Admin ที่เข้าถึงส่วนจัดการกิลด์และคะแนน (Boss Admin จะไม่เห็น 100%)
@@ -7764,7 +7814,10 @@
         }
 
         if (indicatorText) {
-          if (isSuperAdmin) {
+          if (isViewerPreviewMode) {
+            indicatorText.className = "text-[10px] ml-2 px-2 py-0.5 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30";
+            indicatorText.textContent = `👁️ กำลังจำลองมุมมองสมาชิก (${currentAdminEmail})`;
+          } else if (isSuperAdmin) {
             indicatorText.className = "text-[10px] ml-2 px-2 py-0.5 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30";
             indicatorText.textContent = t('status_super_admin', { email: currentAdminEmail });
           } else if (isBossAdmin) {
@@ -7808,6 +7861,16 @@
       } else {
         toggleBtn.className = "apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm";
         toggleBtn.innerHTML = `<i class="fa-solid fa-lock text-slate-400 text-[11px]"></i><span>${t('mode_viewer')}</span>`;
+
+        const quickLogoutBtn = document.getElementById('admin-quick-logout-btn');
+        if (quickLogoutBtn) {
+          quickLogoutBtn.classList.add('hidden');
+          quickLogoutBtn.classList.remove('inline-flex');
+        }
+        if (btnViewerPreview) {
+          btnViewerPreview.classList.add('hidden');
+          btnViewerPreview.classList.remove('inline-flex');
+        }
 
         if (addBtnTop) addBtnTop.classList.add('hidden');
         if (resetBtnTop) resetBtnTop.classList.add('hidden');
@@ -7975,6 +8038,7 @@
         }
       isAdmin = false;
       isSuperAdmin = false;
+      isViewerPreviewMode = false;
       currentAdminEmail = '';
       localStorage.removeItem('guild_current_admin_email');
       sessionStorage.removeItem('guild_current_admin_email');
@@ -15170,7 +15234,7 @@ Output strictly valid JSON with no markdown formatting.`;
     });
 
     // เริ่มต้นระบบ
-    document.addEventListener('DOMContentLoaded', () => {
+    function initGuildApp() {
       applyStaticTranslations();
       populateGuildSelects();
       renderTableHeader();
@@ -15190,7 +15254,13 @@ Output strictly valid JSON with no markdown formatting.`;
       if (typeof syncBossDataFromSheet === 'function') {
         syncBossDataFromSheet(true);
       }
-    });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initGuildApp);
+    } else {
+      initGuildApp();
+    }
     // ลงทะเบียน Service Worker สำหรับ PWA บนมือถือ
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
