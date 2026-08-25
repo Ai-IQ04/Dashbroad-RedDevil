@@ -997,37 +997,30 @@ body,
       box-shadow: var(--neo-shadow-pressed) !important;
     }
 
-    .apple-btn,
-    button,
-    input,
-    select,
-    textarea,
-    .rounded-xl,
-    .rounded-2xl,
-    .rounded-lg,
-    .rounded-full {
-      border-color: rgba(255, 255, 255, 0.04) !important;
+    /* Neutral Neumorphic Buttons (Light Mode) */
+    body:not(.neo-dark) .apple-btn:not([class*="apple-btn-"]):not([class*="bg-"]),
+    body:not(.neo-dark) button:not([class*="apple-btn-"]):not([class*="bg-"]):not(.dark-mode-toggle):not(#theme-toggle-btn) {
+      background: linear-gradient(145deg, #ffffff, #e6ecf5) !important;
+      color: #1e293b !important;
+      font-weight: 700;
+      border-radius: 1rem !important;
+      border: 1px solid rgba(148, 163, 184, 0.4) !important;
+      box-shadow: 3px 3px 8px #d1d9e6, -3px -3px 8px #ffffff !important;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .apple-btn,
-    button {
-      background: linear-gradient(145deg, #f7f9fc, #e1e7ef) !important;
-      color: var(--neo-text) !important;
-      border-radius: 1.15rem !important;
-      border: 1px solid rgba(126, 142, 163, 0.16) !important;
-      box-shadow: var(--neo-shadow-soft) !important;
+    body:not(.neo-dark) .apple-btn:not([class*="apple-btn-"]):not([class*="bg-"]):hover,
+    body:not(.neo-dark) button:not([class*="apple-btn-"]):not([class*="bg-"]):not(.dark-mode-toggle):not(#theme-toggle-btn):hover {
+      background: #ffffff !important;
+      color: #0f172a !important;
+      box-shadow: 4px 4px 10px #c2ccd9, -4px -4px 10px #ffffff !important;
+      border-color: rgba(100, 116, 139, 0.5) !important;
     }
 
-    .apple-btn:hover,
-    button:hover {
-      background: linear-gradient(145deg, #ffffff, #e6ebf2) !important;
-      color: var(--neo-text) !important;
-      box-shadow: var(--neo-shadow-raised) !important;
-    }
-
-    .apple-btn:active,
-    button:active {
-      box-shadow: var(--neo-shadow-pressed) !important;
+    body:not(.neo-dark) .apple-btn:not([class*="apple-btn-"]):not([class*="bg-"]):active,
+    body:not(.neo-dark) button:not([class*="apple-btn-"]):not([class*="bg-"]):not(.dark-mode-toggle):not(#theme-toggle-btn):active {
+      box-shadow: inset 2px 2px 5px #d1d9e6, inset -2px -2px 5px #ffffff !important;
+      transform: scale(0.97);
     }
 
     #nav-tab-scoring,
@@ -1041,9 +1034,104 @@ body,
     body:not(.neo-dark) .from-amber-600.to-orange-500,
     body:not(.neo-dark) .from-orange-500.to-rose-600,
     body:not(.neo-dark) .from-amber-500.via-orange-600.to-rose-600 {
-      background-image: linear-gradient(145deg, #ffab67, #f97316) !important;
+      background-image: linear-gradient(145deg, #f97316, #ea580c) !important;
       color: #ffffff !important;
-      box-shadow: 8px 8px 18px rgba(249, 115, 22, 0.18), -8px -8px 18px rgba(255, 255, 255, 0.8) !important;
+      font-weight: 800 !important;
+      box-shadow: 4px 4px 12px rgba(234, 88, 12, 0.3), -2px -2px 6px #ffffff !important;
+      border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    }
+
+    /* Vibrant Color Pills - Accessible Neumorphism (Light Mode) */
+    body:not(.neo-dark) .apple-btn-gold {
+      background: linear-gradient(135deg, #d97706, #b45309) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      border: 1px solid rgba(254, 240, 138, 0.6) !important;
+      box-shadow: 3px 3px 8px rgba(180, 83, 9, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    }
+    body:not(.neo-dark) .apple-btn-emerald {
+      background: linear-gradient(135deg, #059669, #047857) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      border: 1px solid rgba(167, 243, 208, 0.6) !important;
+      box-shadow: 3px 3px 8px rgba(4, 120, 87, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    }
+    body:not(.neo-dark) .apple-btn-sapphire {
+      background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      border: 1px solid rgba(199, 210, 254, 0.6) !important;
+      box-shadow: 3px 3px 8px rgba(67, 56, 202, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    }
+    body:not(.neo-dark) .apple-btn-sky {
+      background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      border: 1px solid rgba(186, 230, 253, 0.6) !important;
+      box-shadow: 3px 3px 8px rgba(2, 132, 199, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    }
+    body:not(.neo-dark) .apple-btn-magenta {
+      background: linear-gradient(135deg, #c026d3, #a21caf) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      border: 1px solid rgba(245, 208, 254, 0.6) !important;
+      box-shadow: 3px 3px 8px rgba(162, 28, 175, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    }
+    body:not(.neo-dark) .apple-btn-violet {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      border: 1px solid rgba(221, 214, 254, 0.6) !important;
+      box-shadow: 3px 3px 8px rgba(109, 40, 217, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    }
+    body:not(.neo-dark) .apple-btn-coral {
+      background: linear-gradient(135deg, #e11d48, #be123c) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      border: 1px solid rgba(254, 205, 211, 0.6) !important;
+      box-shadow: 3px 3px 8px rgba(190, 18, 60, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    }
+    body:not(.neo-dark) .apple-btn-orange {
+      background: linear-gradient(135deg, #ea580c, #c2410c) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      border: 1px solid rgba(254, 215, 170, 0.6) !important;
+      box-shadow: 3px 3px 8px rgba(194, 65, 12, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    }
+    body:not(.neo-dark) .apple-btn-teal {
+      background: linear-gradient(135deg, #0d9488, #0f766e) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      border: 1px solid rgba(153, 246, 228, 0.6) !important;
+      box-shadow: 3px 3px 8px rgba(15, 118, 110, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    }
+    body:not(.neo-dark) .apple-btn-forest {
+      background: linear-gradient(135deg, #15803d, #166534) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      border: 1px solid rgba(187, 247, 208, 0.6) !important;
+      box-shadow: 3px 3px 8px rgba(22, 101, 52, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    }
+    body:not(.neo-dark) .apple-btn-ocean {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      border: 1px solid rgba(191, 219, 254, 0.6) !important;
+      box-shadow: 3px 3px 8px rgba(29, 78, 216, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    }
+    body:not(.neo-dark) .apple-btn-cyan {
+      background: linear-gradient(135deg, #0891b2, #0e7490) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      border: 1px solid rgba(165, 243, 252, 0.6) !important;
+      box-shadow: 3px 3px 8px rgba(14, 116, 144, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    }
+    body:not(.neo-dark) .apple-btn-burgundy {
+      background: linear-gradient(135deg, #991b1b, #7f1d1d) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      border: 1px solid rgba(254, 202, 202, 0.6) !important;
+      box-shadow: 3px 3px 8px rgba(127, 29, 29, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
     }
 
     input,
@@ -1459,8 +1547,6 @@ body,
     }
 
     body.neo-dark header,
-    body.neo-dark .apple-btn,
-    body.neo-dark button,
     body.neo-dark table,
     body.neo-dark thead,
     body.neo-dark tbody,
@@ -1471,6 +1557,23 @@ body,
       color: var(--neo-text) !important;
       border-color: var(--neo-border) !important;
       box-shadow: var(--neo-shadow-soft) !important;
+    }
+
+    body.neo-dark .apple-btn:not([class*="apple-btn-"]):not([class*="bg-"]),
+    body.neo-dark button:not([class*="apple-btn-"]):not([class*="bg-"]):not(.dark-mode-toggle):not(#theme-toggle-btn) {
+      background: linear-gradient(145deg, #1e293b, #0f172a) !important;
+      color: #f1f5f9 !important;
+      font-weight: 700 !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.6), -1px -1px 4px rgba(255, 255, 255, 0.04) !important;
+    }
+
+    body.neo-dark .apple-btn:not([class*="apple-btn-"]):not([class*="bg-"]):hover,
+    body.neo-dark button:not([class*="apple-btn-"]):not([class*="bg-"]):not(.dark-mode-toggle):not(#theme-toggle-btn):hover {
+      background: linear-gradient(145deg, #334155, #1e293b) !important;
+      color: #ffffff !important;
+      border-color: rgba(255, 255, 255, 0.25) !important;
+      box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.8), -1px -1px 5px rgba(255, 255, 255, 0.06) !important;
     }
 
     /* ===== Level 2: Transition + Border Radius ทั้งระบบ (Dark Mode) ===== */

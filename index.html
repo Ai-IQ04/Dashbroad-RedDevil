@@ -96,8 +96,8 @@
               <span id="online-users-label" class="hidden sm:inline" data-i18n="online_users_label">คนออนไลน์</span>
             </div>
           </div>
-          <p class="text-[11px] text-slate-400 leading-none mt-1">
-            BlueDevil & RedDevil • <span data-i18n="header_subtitle">ระบบเช็คชื่อ & บอสไทม์เมอร์</span>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-none mt-1 font-medium" data-i18n="header_subtitle">
+            BlueDevil & RedDevil • ระบบเช็คชื่อ & บอสไทม์เมอร์
           </p>
         </div>
       </div>
@@ -4478,7 +4478,7 @@
         "badge_iron_vanguard": "ขุนศึกไร้พ่าย",
         "badge_elite_crusader": "วีรชนแนวหน้า",
         "page_title": "ระบบจัดการคะแนน & เช็คชื่อกิลด์ (BlueDevil & RedDevil Scoring)",
-        "header_subtitle": "BlueDevil & RedDevil • ระบบเช็คชื่อ & จัดอันดับตาม CP",
+        "header_subtitle": "BlueDevil & RedDevil • ระบบเช็คชื่อ & บอสไทม์เมอร์",
         "current_week": "สัปดาห์ที่ {week}",
         "btn_boss_viewer": "Boss Viewer",
          "btn_weekly_summary": "สรุปคะแนนรายสัปดาห์",
@@ -5038,7 +5038,7 @@
         "badge_iron_vanguard": "Iron Vanguard",
         "badge_elite_crusader": "Elite Crusader",
         "page_title": "Guild Activity & Scoring Management (BlueDevil & RedDevil)",
-        "header_subtitle": "BlueDevil & RedDevil • Attendance Check & CP-based Ranking",
+        "header_subtitle": "BlueDevil & RedDevil • Attendance & Boss Timer",
         "current_week": "Week {week}",
         "btn_boss_viewer": "Boss Viewer",
          "btn_weekly_summary": "Weekly Summary",
@@ -7573,8 +7573,8 @@
         if (isActive) {
           html += `
             <div onclick="switchWeek(${w})"
-              class="apple-btn bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 text-white font-bold text-[10px] px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-md shadow-orange-500/20 cursor-pointer transition-all duration-200 scale-105 border border-white/20">
-              <i class="fa-regular fa-calendar-check text-[9px]"></i>
+              class="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white font-black text-[10.5px] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md shadow-orange-500/30 cursor-pointer transition-all duration-200 scale-105 border border-white/40 ring-2 ring-orange-500/20">
+              <i class="fa-regular fa-calendar-check text-[10px]"></i>
               <span class="font-mono tracking-tight">${name}</span>
               ${lockIconHtml}
               ${editBtn}
@@ -7583,8 +7583,8 @@
         } else {
           html += `
             <div onclick="switchWeek(${w})"
-              class="text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 text-[10px] font-medium px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer transition">
-              <i class="fa-regular fa-calendar text-[9px] text-slate-500"></i>
+              class="text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white bg-white/80 dark:bg-slate-800/80 border border-slate-300/80 dark:border-slate-700/70 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 cursor-pointer transition shadow-sm hover:shadow hover:bg-white dark:hover:bg-slate-700 active:scale-95">
+              <i class="fa-regular fa-calendar text-[9.5px] text-slate-500 dark:text-slate-400"></i>
               <span class="font-mono tracking-tight">${name}</span>
               ${lockIconHtml}
               ${editBtn}
