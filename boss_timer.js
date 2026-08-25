@@ -677,13 +677,31 @@ function initBossTimerModule() {
     });
   }
 
-  // Live Timer Interval (every 1 second)
-  if (bossTimerInterval) clearInterval(bossTimerInterval);
-  bossTimerInterval = setInterval(() => {
-    updateCountdowns();
-    updateUpcomingBossWidget();
-    // Spawn alerts are handled by Apps Script to prevent duplicate Discord alerts.
-  }, 1000);
+  // Live Timer Interval (Visibility-aware: 1s when active, throttled to 10s when tab is backgrounded)
+  function restartBossTimerInterval() {
+    if (bossTimerInterval) clearInterval(bossTimerInterval);
+    const intervalMs = (typeof document !== 'undefined' && document.hidden) ? 10000 : 1000;
+    bossTimerInterval = setInterval(() => {
+      if (typeof document === 'undefined' || !document.hidden) {
+        updateCountdowns();
+        updateUpcomingBossWidget();
+      }
+    }, intervalMs);
+  }
+
+  restartBossTimerInterval();
+
+  if (typeof document !== 'undefined' && !window._bossVisibilityHandlerAttached) {
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        // Instant visual refresh on tab switch / unlock
+        updateCountdowns();
+        updateUpcomingBossWidget();
+      }
+      restartBossTimerInterval();
+    });
+    window._bossVisibilityHandlerAttached = true;
+  }
 
   // Setup Paste Handler for instant OCR anywhere in Boss Tab
   window.removeEventListener('paste', handleGlobalPasteForOCR);
@@ -3357,6 +3375,11 @@ function extractJsonFromGeminiResponse(text) {
 
   throw new Error('Invalid JSON structure in AI response: ' + trimmed.substring(0, 80));
 }
+
+// Expose Gemini AI utilities globally for index.html modules
+window.discoverActiveGeminiModel = discoverActiveGeminiModel;
+window.callGeminiVisionApiWithFallback = callGeminiVisionApiWithFallback;
+window.extractJsonFromGeminiResponse = extractJsonFromGeminiResponse;
 
 // Populate Modal Fields from Gemini AI Result (Unified)
 function populateModalFromGeminiData(data) {

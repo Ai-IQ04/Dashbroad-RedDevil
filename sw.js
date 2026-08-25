@@ -1,7 +1,8 @@
-const CACHE_NAME = 'reddevil-app-v61';
+const CACHE_NAME = 'reddevil-app-v62';
 const APP_SHELL = [
   './',
   './index.html',
+  './styles.css?v=1.0',
   './boss_timer.js?v=10.2',
   './assets/lordnine_logo.png',
   './assets/nong_devil.png',
@@ -33,6 +34,7 @@ self.addEventListener('fetch', event => {
   const isSameOrigin = requestUrl.origin === self.location.origin;
   const isAppAsset = requestUrl.pathname === '/' ||
     requestUrl.pathname.endsWith('/index.html') ||
+    requestUrl.pathname.endsWith('/styles.css') ||
     requestUrl.pathname.endsWith('/boss_timer.js') ||
     requestUrl.pathname.startsWith('/assets/') ||
     requestUrl.pathname.endsWith('/version.json');
