@@ -298,7 +298,12 @@ function switchAppModule(moduleName) {
   if (moduleName === 'boss_timer') {
     if (scoringContainer) scoringContainer.classList.add('hidden');
     if (scoringSubHeader) scoringSubHeader.classList.add('hidden');
-    if (bossContainer) bossContainer.classList.remove('hidden');
+    if (bossContainer) {
+      bossContainer.classList.remove('hidden');
+      bossContainer.classList.remove('module-fade-in');
+      void bossContainer.offsetWidth;
+      bossContainer.classList.add('module-fade-in');
+    }
 
     // Hide Scoring action buttons in Boss Timer
     if (btnAddMember) btnAddMember.classList.add('hidden');
@@ -313,7 +318,12 @@ function switchAppModule(moduleName) {
     }
     renderBossTimerCards();
   } else {
-    if (scoringContainer) scoringContainer.classList.remove('hidden');
+    if (scoringContainer) {
+      scoringContainer.classList.remove('hidden');
+      scoringContainer.classList.remove('module-fade-in');
+      void scoringContainer.offsetWidth;
+      scoringContainer.classList.add('module-fade-in');
+    }
     if (scoringSubHeader) scoringSubHeader.classList.remove('hidden');
     if (bossContainer) bossContainer.classList.add('hidden');
 

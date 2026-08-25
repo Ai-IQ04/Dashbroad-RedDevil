@@ -241,6 +241,90 @@ body,
       border: 1px solid rgba(255, 255, 255, 0.2) !important;
     }
 
+    /* ================= 🌟 Executive Micro-Animations Suite ================= */
+
+    /* 1. ✨ Tactile Press & Glowing Aura Hover */
+    .apple-btn,
+    button:not(.dark-mode-toggle):not(#theme-toggle-btn) {
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, background 0.2s ease !important;
+    }
+    .apple-btn:hover,
+    button:not(.dark-mode-toggle):not(#theme-toggle-btn):hover {
+      transform: translateY(-1px) scale(1.015);
+    }
+    .apple-btn:active,
+    button:not(.dark-mode-toggle):not(#theme-toggle-btn):active {
+      transform: translateY(1px) scale(0.96) !important;
+    }
+
+    /* 2. 🌊 Silky Smooth Page / Module Transition */
+    .module-fade-in {
+      animation: moduleSilkyFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes moduleSilkyFadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(10px) scale(0.995);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* 3. 💎 Logo Metallic Shimmer Sweep */
+    .logo-shimmer-container {
+      position: relative;
+      overflow: hidden;
+    }
+    .logo-shimmer-container::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -150%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        60deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.4) 50%,
+        transparent 70%
+      );
+      transform: rotate(25deg);
+      animation: logoShimmerSweep 7.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      pointer-events: none;
+    }
+    @keyframes logoShimmerSweep {
+      0%, 75% {
+        left: -150%;
+      }
+      88%, 100% {
+        left: 150%;
+      }
+    }
+
+    /* 4. 🔥 Upcoming Boss Widget Live Breathing Ambient Glow */
+    @keyframes bossBreathingPulse {
+      0%, 100% {
+        box-shadow: 0 4px 14px rgba(225, 29, 72, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        border-color: rgba(251, 113, 133, 0.35);
+      }
+      50% {
+        box-shadow: 0 6px 20px rgba(249, 115, 22, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        border-color: rgba(249, 115, 22, 0.7);
+        transform: scale(1.01);
+      }
+    }
+    #upcoming-boss-toolbar-widget {
+      animation: bossBreathingPulse 4s ease-in-out infinite;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #upcoming-boss-toolbar-widget:hover {
+      animation: none;
+      transform: translateY(-1.5px) scale(1.03);
+      box-shadow: 0 8px 24px rgba(249, 115, 22, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+    }
+
     /* ================= 100% Unified Minimal Executive Neumorphism (Orange / White / Black) ================= */
     /* ทุกปุ่มในระบบเป็น Soft Neumorphic ทรงเดียวกัน สีเดียวกัน 100% */
     .apple-btn,
