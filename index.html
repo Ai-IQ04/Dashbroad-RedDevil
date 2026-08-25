@@ -7446,25 +7446,7 @@
       const rawMemName = (member.characterName || member.name || '').trim();
       const memName = cleanDiscordName(rawMemName);
 
-      // 1. ตรวจสอบในฐานข้อมูลที่ลงทะเบียนผ่านแบบฟอร์ม (Form Registration)
-      if (discordVerifiedMembers && typeof discordVerifiedMembers === 'object') {
-        const entries = Object.values(discordVerifiedMembers);
-        for (const item of entries) {
-          if (!item || typeof item !== 'object') continue;
-          const itemEmail = (item.email || '').trim().toLowerCase();
-          const rawItemName = (item.characterName || item.name || '').trim();
-          const itemName = cleanDiscordName(rawItemName);
-
-          if (memEmail && itemEmail && memEmail === itemEmail) {
-            return { ...item, matchSource: 'form_verified' };
-          }
-          if (memName && itemName && (memName === itemName || rawMemName.toLowerCase() === rawItemName.toLowerCase())) {
-            return { ...item, matchSource: 'form_verified' };
-          }
-        }
-      }
-
-      // 2. ตรวจสอบในรายชื่อสมาชิกเซิร์ฟเวอร์ Discord (Discord Server Members)
+      // 1. ตรวจสอบในรายชื่อสมาชิกเซิร์ฟเวอร์ Discord โดยตรงแบบ Exact Match ก่อน (Real Server Members)
       if (discordServerMembers && typeof discordServerMembers === 'object') {
         const serverEntries = Object.values(discordServerMembers);
         for (const sm of serverEntries) {
@@ -7485,8 +7467,35 @@
               verified: true
             };
           }
+        }
+      }
 
-          // การจับคู่แบบ Partial Match สำหรับชื่อที่มีความยาว 3 ตัวอักษรขึ้นไป (เช่น "xCOACH" ใน "R - xCOACH")
+      // 2. ตรวจสอบในฐานข้อมูลที่ลงทะเบียนผ่านแบบฟอร์ม (Form Registration)
+      if (discordVerifiedMembers && typeof discordVerifiedMembers === 'object') {
+        const entries = Object.values(discordVerifiedMembers);
+        for (const item of entries) {
+          if (!item || typeof item !== 'object') continue;
+          const itemEmail = (item.email || '').trim().toLowerCase();
+          const rawItemName = (item.characterName || item.name || '').trim();
+          const itemName = cleanDiscordName(rawItemName);
+
+          if (memEmail && itemEmail && memEmail === itemEmail) {
+            return { ...item, matchSource: 'form_verified' };
+          }
+          if (memName && itemName && (memName === itemName || rawMemName.toLowerCase() === rawItemName.toLowerCase())) {
+            return { ...item, matchSource: 'form_verified' };
+          }
+        }
+      }
+
+      // 3. ตรวจสอบแบบ Partial Match ในเซิร์ฟเวอร์ Discord (เช่น "xCOACH" ใน "R - xCOACH")
+      if (discordServerMembers && typeof discordServerMembers === 'object') {
+        const serverEntries = Object.values(discordServerMembers);
+        for (const sm of serverEntries) {
+          if (!sm || typeof sm !== 'object') continue;
+          const sNick = cleanDiscordName(sm.nickname);
+          const sDisp = cleanDiscordName(sm.displayName);
+
           if (memName && memName.length >= 3) {
             if ((sDisp && sDisp.includes(memName)) || (sNick && sNick.includes(memName))) {
               return {
