@@ -145,10 +145,10 @@
 
         <!-- ปุ่มเปิด/ปิด เลขา AI น้องเดวิล (Admin Only) -->
         <button id="btn-toggle-nong-devil" onclick="toggleNongDevilVisibilityFromHeader()"
-          class="hidden apple-btn bg-slate-900 hover:bg-slate-800 border border-rose-500/40 text-rose-300 hover:text-white items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
+          class="apple-btn bg-slate-900 hover:bg-slate-800 border border-rose-500/40 text-rose-300 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm cursor-pointer"
           title="เปิด/ซ่อน เลขา AI น้องเดวิล">
           <i class="fa-solid fa-wand-magic-sparkles text-rose-400 text-xs"></i>
-          <span class="hidden xl:inline">น้องเดวิล AI</span>
+          <span class="inline font-bold">น้องเดวิล AI</span>
         </button>
 
         <!-- ปุ่มสลับภาษา -->
@@ -8540,17 +8540,19 @@
     }
 
     function toggleNongDevilVisibilityFromHeader() {
-      const isHidden = localStorage.getItem('guild_hide_nong_devil') === 'true';
       const floatingBtn = document.getElementById('nong-devil-floating-btn');
-      if (isHidden) {
+      const chatModal = document.getElementById('nong-devil-chat-modal');
+      const isCurrentlyVisible = floatingBtn && !floatingBtn.classList.contains('hidden');
+
+      if (isCurrentlyVisible) {
+        hideNongDevilPermanently();
+      } else {
         localStorage.removeItem('guild_hide_nong_devil');
-        if (floatingBtn && isAdmin) {
+        if (floatingBtn) {
           floatingBtn.classList.remove('hidden');
           floatingBtn.classList.add('flex');
         }
         showToast('เรียกน้องเดวิลกลับมาแล้วค่ะ! 😈', 'success');
-      } else {
-        hideNongDevilPermanently();
       }
     }
 
@@ -21791,6 +21793,13 @@ Output strictly valid JSON with no markdown formatting.`;
   <!-- 1. Floating Trigger Button (Frameless Cute Character) -->
   <div id="nong-devil-floating-btn" onclick="toggleNongDevilChat()"
     class="hidden fixed bottom-5 right-5 z-40 items-center gap-2 group cursor-pointer animate-fade-in select-none">
+    
+    <!-- 🔴 ปุ่มกากบาทซ่อนน้องเดวิล (X Close Button) -->
+    <button type="button" onclick="hideNongDevilPermanently(event)"
+      class="absolute -top-2.5 -left-2.5 w-7 h-7 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center text-xs shadow-2xl border-2 border-slate-950 z-50 cursor-pointer transition-all hover:scale-125 active:scale-95"
+      title="ซ่อนน้องเดวิล">
+      <i class="fa-solid fa-xmark text-xs font-black"></i>
+    </button>
     <div
       class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/95 backdrop-blur-md border border-rose-500/50 text-white text-xs font-bold shadow-2xl group-hover:scale-105 transition duration-200">
       <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
@@ -21836,7 +21845,13 @@ Output strictly valid JSON with no markdown formatting.`;
         </div>
       </div>
 
-      <div class="flex items-center gap-1">
+      <div class="flex items-center gap-1.5">
+        <button type="button" onclick="hideNongDevilPermanently(event)"
+          class="px-2 py-1 rounded-lg bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-500/40 text-[11px] font-medium flex items-center gap-1 transition cursor-pointer"
+          title="ซ่อนน้องเดวิล">
+          <i class="fa-solid fa-eye-slash text-[10px]"></i>
+          <span>ซ่อนน้องเดวิล</span>
+        </button>
         <button type="button" onclick="clearNongDevilChatHistory()"
           class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition"
           title="ล้างข้อความแชท">
