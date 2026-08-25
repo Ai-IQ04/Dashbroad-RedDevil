@@ -3316,8 +3316,8 @@ body,
         white-space: nowrap;
       }
 
-      #member-hub-container,
-      #admin-hub-container {
+      #member-hub-container:not(.hidden),
+      #admin-hub-container:not(.hidden) {
         width: 100%;
         display: grid !important;
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -4542,4 +4542,14 @@ body.neo-dark #admin-toggle-btn {
 body.neo-dark #admin-toggle-btn span,
 body.neo-dark #admin-toggle-btn i {
   color: #e0e7ff !important;
+}
+
+
+/* 🚫 บังคับซ่อน Element ที่มีคลาส .hidden อย่างเด็ดขาด */
+.hidden,
+[class~="hidden"],
+#member-hub-container.hidden,
+#admin-hub-container.hidden,
+#admin-profile-dropdown.hidden {
+  display: none !important;
 }
