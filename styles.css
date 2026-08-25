@@ -173,237 +173,152 @@ body,
       transform: scale(1.18);
     }
 
-    /* ================= Vibrant Non-Repeating Apple Pill Themes ================= */
-    /* 1. Gold / Amber (ร้านค้าของรางวัล) */
-    .apple-btn-gold {
-      background: linear-gradient(135deg, #d89b61 0%, #c77b3a 50%, #a85f2a 100%);
-      color: #141313;
-      border: 1px solid rgba(244, 186, 123, 0.45);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42), 0 4px 14px -2px rgba(217, 139, 90, 0.32);
-    }
-
-    .apple-btn-gold:hover {
-      background: linear-gradient(135deg, #e5ad74 0%, #d38b4d 50%, #bd6d31 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52), 0 8px 24px -2px rgba(217, 139, 90, 0.42);
-    }
-
-    /* 2. Ruby / Crimson (Boss Viewer) */
+    /* ================= Neumorphism Soft UI Theme (Orange / White / Black) ================= */
+    /* 1. Hero Orange (ปุ่มเด่น / คำขอด่วน / แอคชั่นสำคัญ) */
+    .apple-btn-gold,
+    .apple-btn-orange,
+    .apple-btn-amber,
+    .apple-btn-coral,
     .apple-btn-ruby {
-      background: linear-gradient(135deg, #e11d48 0%, #be123c 50%, #881337 100%);
-      color: #ffffff;
-      border: 1px solid rgba(251, 113, 133, 0.45);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 14px -2px rgba(225, 29, 72, 0.45);
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #c2410c 100%) !important;
+      color: #ffffff !important;
+      font-weight: 800 !important;
+      border: 1px solid rgba(255, 255, 255, 0.35) !important;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 4px 4px 10px rgba(234, 88, 12, 0.32), -2px -2px 6px rgba(255, 255, 255, 0.8) !important;
     }
-
+    .apple-btn-gold:hover,
+    .apple-btn-orange:hover,
+    .apple-btn-amber:hover,
+    .apple-btn-coral:hover,
     .apple-btn-ruby:hover {
-      background: linear-gradient(135deg, #f43f5e 0%, #e11d48 50%, #9f1239 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 8px 24px -2px rgba(244, 63, 94, 0.65);
+      background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%) !important;
+      color: #ffffff !important;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 6px 6px 14px rgba(234, 88, 12, 0.45), -3px -3px 8px rgba(255, 255, 255, 0.9) !important;
     }
 
-    /* 3. Sapphire / Indigo (สรุปคะแนน) */
-    .apple-btn-sapphire {
-      background: linear-gradient(135deg, #4f46e5 0%, #4338ca 50%, #312e81 100%);
-      color: #ffffff;
-      border: 1px solid rgba(165, 180, 252, 0.45);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 14px -2px rgba(79, 70, 229, 0.45);
+    /* 2. Neumorphic White with Black Text & Orange Icon (ปุ่มเครื่องมือ & ข้อมูลทั่วไป) */
+    .apple-btn-emerald,
+    .apple-btn-sapphire,
+    .apple-btn-sky,
+    .apple-btn-magenta,
+    .apple-btn-violet,
+    .apple-btn-teal,
+    .apple-btn-forest,
+    .apple-btn-ocean,
+    .apple-btn-cyan {
+      background: linear-gradient(145deg, #ffffff, #e6ecf5) !important;
+      color: #0f172a !important;
+      font-weight: 700 !important;
+      border: 1px solid rgba(203, 213, 225, 0.9) !important;
+      box-shadow: 3px 3px 8px #cdd6e4, -3px -3px 8px #ffffff !important;
+    }
+    .apple-btn-emerald i,
+    .apple-btn-sapphire i,
+    .apple-btn-sky i,
+    .apple-btn-magenta i,
+    .apple-btn-violet i,
+    .apple-btn-teal i,
+    .apple-btn-forest i,
+    .apple-btn-ocean i,
+    .apple-btn-cyan i {
+      color: #ea580c !important;
+    }
+    .apple-btn-emerald:hover,
+    .apple-btn-sapphire:hover,
+    .apple-btn-sky:hover,
+    .apple-btn-magenta:hover,
+    .apple-btn-violet:hover,
+    .apple-btn-teal:hover,
+    .apple-btn-forest:hover,
+    .apple-btn-ocean:hover,
+    .apple-btn-cyan:hover {
+      background: #ffffff !important;
+      color: #ea580c !important;
+      border-color: #f97316 !important;
+      box-shadow: 4px 4px 12px #bcc6d6, -4px -4px 12px #ffffff !important;
     }
 
-    .apple-btn-sapphire:hover {
-      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #3730a3 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 8px 24px -2px rgba(99, 102, 241, 0.65);
-    }
-
-    /* 4. Mint / Emerald (สรุป Top 10) */
-    .apple-btn-emerald {
-      background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
-      color: #ffffff;
-      border: 1px solid rgba(110, 231, 183, 0.45);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(16, 185, 129, 0.45);
-    }
-
-    .apple-btn-emerald:hover {
-      background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(16, 185, 129, 0.65);
-    }
-
-    /* 5. Electric Sky / Cyan (ขออัพเดท CP) */
-    .apple-btn-sky {
-      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
-      color: #ffffff;
-      border: 1px solid rgba(125, 211, 252, 0.45);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(14, 165, 233, 0.45);
-    }
-
-    .apple-btn-sky:hover {
-      background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 50%, #0284c7 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(56, 189, 248, 0.65);
-    }
-
-    /* 6. Vivid Magenta (ยื่นอุทธรณ์) */
-    .apple-btn-magenta {
-      background: linear-gradient(135deg, #d946ef 0%, #c026d3 50%, #86198f 100%);
-      color: #ffffff;
-      border: 1px solid rgba(240, 171, 252, 0.45);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(217, 70, 239, 0.45);
-    }
-
-    .apple-btn-magenta:hover {
-      background: linear-gradient(135deg, #e879f9 0%, #d946ef 50%, #a21caf 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(217, 70, 239, 0.65);
-    }
-
-    /* 7. Royal Violet (อนุมัติ CP) */
-    .apple-btn-violet {
-      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #5b21b6 100%);
-      color: #ffffff;
-      border: 1px solid rgba(196, 181, 253, 0.45);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(139, 92, 246, 0.45);
-    }
-
-    .apple-btn-violet:hover {
-      background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 50%, #6d28d9 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(139, 92, 246, 0.65);
-    }
-
-    /* 8. Coral Pink (อุทธรณ์เช็คชื่อ) */
-    .apple-btn-coral {
-      background: linear-gradient(135deg, #fb7185 0%, #e11d48 50%, #9f1239 100%);
-      color: #ffffff;
-      border: 1px solid rgba(254, 205, 211, 0.45);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(251, 113, 133, 0.45);
-    }
-
-    .apple-btn-coral:hover {
-      background: linear-gradient(135deg, #fda4af 0%, #fb7185 50%, #be123c 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(251, 113, 133, 0.65);
-    }
-
-    /* 9. Sunset Orange (อนุมัติรางวัล) */
-    .apple-btn-orange {
-      background: linear-gradient(135deg, #d9854a 0%, #c86f34 50%, #a85e2c 100%);
-      color: #ffffff;
-      border: 1px solid rgba(239, 180, 127, 0.38);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 14px -2px rgba(217, 133, 74, 0.32);
-    }
-
-    .apple-btn-orange:hover {
-      background: linear-gradient(135deg, #eb9d5d 0%, #d9854a 50%, #b8662d 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48), 0 8px 24px -2px rgba(217, 133, 74, 0.42);
-    }
-
-    /* 10. Aqua Teal (คลังของรางวัล) */
-    .apple-btn-teal {
-      background: linear-gradient(135deg, #14b8a6 0%, #0d9488 50%, #115e59 100%);
-      color: #ffffff;
-      border: 1px solid rgba(153, 246, 228, 0.45);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(20, 184, 166, 0.45);
-    }
-
-    .apple-btn-teal:hover {
-      background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 50%, #0f766e 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(20, 184, 166, 0.65);
-    }
-
-    /* 11. Forest Green (จัดการกิลด์) */
-    .apple-btn-forest {
-      background: linear-gradient(135deg, #16a34a 0%, #15803d 50%, #166534 100%);
-      color: #ffffff;
-      border: 1px solid rgba(134, 239, 172, 0.45);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(22, 163, 74, 0.45);
-    }
-
-    .apple-btn-forest:hover {
-      background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(34, 197, 94, 0.65);
-    }
-
-    /* 12. Ocean Blue (ติ๊ก All) */
-    .apple-btn-ocean {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
-      color: #ffffff;
-      border: 1px solid rgba(147, 197, 253, 0.45);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px -2px rgba(37, 99, 235, 0.45);
-    }
-
-    .apple-btn-ocean:hover {
-      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(59, 130, 246, 0.65);
-    }
-
-    /* 13. Wine Burgundy (ล้างติ๊ก) */
-    .apple-btn-burgundy {
-      background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 50%, #450a0a 100%);
-      color: #fecaca;
-      border: 1px solid rgba(248, 113, 113, 0.45);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 14px -2px rgba(153, 27, 27, 0.45);
-    }
-
-    .apple-btn-burgundy:hover {
-      background: linear-gradient(135deg, #b91c1c 0%, #991b1b 50%, #7f1d1d 100%);
-      color: #ffffff;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 8px 24px -2px rgba(185, 28, 28, 0.65);
-    }
-
-    /* 14. Steel Obsidian (ประวัติ) */
-    .apple-btn-steel {
-      background: linear-gradient(135deg, #334155 0%, #1e293b 50%, #0f172a 100%);
-      color: #fde68a;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 14px -2px rgba(15, 23, 42, 0.55);
-    }
-
-    .apple-btn-steel:hover {
-      background: linear-gradient(135deg, #475569 0%, #334155 50%, #1e293b 100%);
-      color: #ffffff;
-      border-color: rgba(251, 191, 36, 0.5);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 8px 24px -2px rgba(0, 0, 0, 0.7);
-    }
-
-    /* 15. Deep Royal Purple (สำรอง) */
-    .apple-btn-darkpurple {
-      background: linear-gradient(135deg, #581c87 0%, #3b0764 50%, #2e1065 100%);
-      color: #e9d5ff;
-      border: 1px solid rgba(192, 132, 252, 0.35);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 14px -2px rgba(88, 28, 135, 0.45);
-    }
-
-    .apple-btn-darkpurple:hover {
-      background: linear-gradient(135deg, #6b21a8 0%, #581c87 50%, #3b0764 100%);
-      color: #ffffff;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 8px 24px -2px rgba(107, 33, 168, 0.65);
-    }
-
-    /* Backward compatibility aliases */
-    .apple-btn-amber {
-      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-      color: #0f172a;
-      border: 1px solid rgba(253, 230, 138, 0.5);
-    }
-
+    /* 3. Deep Black & Obsidian (ปุ่มงานจัดการ & Admin) */
+    .apple-btn-steel,
+    .apple-btn-slate,
+    .apple-btn-burgundy,
+    .apple-btn-darkpurple,
+    .apple-btn-indigo,
+    .apple-btn-purple,
     .apple-btn-rose {
-      background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
-      color: #ffffff;
-      border: 1px solid rgba(251, 113, 133, 0.4);
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+      color: #fb923c !important;
+      font-weight: 700 !important;
+      border: 1px solid rgba(249, 115, 22, 0.35) !important;
+      box-shadow: 3px 3px 8px #cdd6e4, -2px -2px 6px #ffffff !important;
+    }
+    .apple-btn-steel:hover,
+    .apple-btn-slate:hover,
+    .apple-btn-burgundy:hover,
+    .apple-btn-darkpurple:hover,
+    .apple-btn-indigo:hover,
+    .apple-btn-purple:hover,
+    .apple-btn-rose:hover {
+      background: linear-gradient(135deg, #334155 0%, #1e293b 100%) !important;
+      color: #ffffff !important;
+      border-color: #f97316 !important;
+      box-shadow: 0 0 14px rgba(249, 115, 22, 0.35) !important;
     }
 
-    .apple-btn-indigo {
-      background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
-      color: #ffffff;
-      border: 1px solid rgba(165, 180, 252, 0.4);
+    /* Dark Mode Theme Overrides */
+    body.neo-dark .apple-btn-gold,
+    body.neo-dark .apple-btn-orange,
+    body.neo-dark .apple-btn-amber,
+    body.neo-dark .apple-btn-coral,
+    body.neo-dark .apple-btn-ruby {
+      background: linear-gradient(135deg, #f97316 0%, #c2410c 100%) !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(255, 255, 255, 0.25) !important;
+      box-shadow: 4px 4px 14px rgba(234, 88, 12, 0.5), -2px -2px 6px rgba(255, 255, 255, 0.05) !important;
     }
 
-    .apple-btn-purple {
-      background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
-      color: #ffffff;
-      border: 1px solid rgba(196, 181, 253, 0.4);
+    body.neo-dark .apple-btn-emerald,
+    body.neo-dark .apple-btn-sapphire,
+    body.neo-dark .apple-btn-sky,
+    body.neo-dark .apple-btn-magenta,
+    body.neo-dark .apple-btn-violet,
+    body.neo-dark .apple-btn-teal,
+    body.neo-dark .apple-btn-forest,
+    body.neo-dark .apple-btn-ocean,
+    body.neo-dark .apple-btn-cyan {
+      background: linear-gradient(145deg, #1e293b, #0f172a) !important;
+      color: #f8fafc !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.6), -1px -1px 4px rgba(255, 255, 255, 0.04) !important;
+    }
+    body.neo-dark .apple-btn-emerald:hover,
+    body.neo-dark .apple-btn-sapphire:hover,
+    body.neo-dark .apple-btn-sky:hover,
+    body.neo-dark .apple-btn-magenta:hover,
+    body.neo-dark .apple-btn-violet:hover,
+    body.neo-dark .apple-btn-teal:hover,
+    body.neo-dark .apple-btn-forest:hover,
+    body.neo-dark .apple-btn-ocean:hover,
+    body.neo-dark .apple-btn-cyan:hover {
+      background: linear-gradient(145deg, #334155, #1e293b) !important;
+      color: #fb923c !important;
+      border-color: rgba(249, 115, 22, 0.6) !important;
+      box-shadow: 4px 4px 14px rgba(0, 0, 0, 0.8), -1px -1px 5px rgba(255, 255, 255, 0.08) !important;
     }
 
-    .apple-btn-slate {
-      background: rgba(30, 41, 59, 0.7);
-      color: #cbd5e1;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+    body.neo-dark .apple-btn-steel,
+    body.neo-dark .apple-btn-slate,
+    body.neo-dark .apple-btn-burgundy,
+    body.neo-dark .apple-btn-darkpurple,
+    body.neo-dark .apple-btn-indigo,
+    body.neo-dark .apple-btn-purple,
+    body.neo-dark .apple-btn-rose {
+      background: linear-gradient(135deg, #111827 0%, #030712 100%) !important;
+      color: #fb923c !important;
+      border: 1px solid rgba(249, 115, 22, 0.35) !important;
+      box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.7), -1px -1px 4px rgba(255, 255, 255, 0.03) !important;
     }
-
+    
     /* ================= Page & Component Animations ================= */
     @keyframes appleFadeInDown {
       from {
@@ -1039,99 +954,6 @@ body,
       font-weight: 800 !important;
       box-shadow: 4px 4px 12px rgba(234, 88, 12, 0.3), -2px -2px 6px #ffffff !important;
       border: 1px solid rgba(255, 255, 255, 0.4) !important;
-    }
-
-    /* Vibrant Color Pills - Accessible Neumorphism (Light Mode) */
-    body:not(.neo-dark) .apple-btn-gold {
-      background: linear-gradient(135deg, #d97706, #b45309) !important;
-      color: #ffffff !important;
-      font-weight: 700 !important;
-      border: 1px solid rgba(254, 240, 138, 0.6) !important;
-      box-shadow: 3px 3px 8px rgba(180, 83, 9, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-    }
-    body:not(.neo-dark) .apple-btn-emerald {
-      background: linear-gradient(135deg, #059669, #047857) !important;
-      color: #ffffff !important;
-      font-weight: 700 !important;
-      border: 1px solid rgba(167, 243, 208, 0.6) !important;
-      box-shadow: 3px 3px 8px rgba(4, 120, 87, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-    }
-    body:not(.neo-dark) .apple-btn-sapphire {
-      background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
-      color: #ffffff !important;
-      font-weight: 700 !important;
-      border: 1px solid rgba(199, 210, 254, 0.6) !important;
-      box-shadow: 3px 3px 8px rgba(67, 56, 202, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-    }
-    body:not(.neo-dark) .apple-btn-sky {
-      background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-      color: #ffffff !important;
-      font-weight: 700 !important;
-      border: 1px solid rgba(186, 230, 253, 0.6) !important;
-      box-shadow: 3px 3px 8px rgba(2, 132, 199, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-    }
-    body:not(.neo-dark) .apple-btn-magenta {
-      background: linear-gradient(135deg, #c026d3, #a21caf) !important;
-      color: #ffffff !important;
-      font-weight: 700 !important;
-      border: 1px solid rgba(245, 208, 254, 0.6) !important;
-      box-shadow: 3px 3px 8px rgba(162, 28, 175, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-    }
-    body:not(.neo-dark) .apple-btn-violet {
-      background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
-      color: #ffffff !important;
-      font-weight: 700 !important;
-      border: 1px solid rgba(221, 214, 254, 0.6) !important;
-      box-shadow: 3px 3px 8px rgba(109, 40, 217, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-    }
-    body:not(.neo-dark) .apple-btn-coral {
-      background: linear-gradient(135deg, #e11d48, #be123c) !important;
-      color: #ffffff !important;
-      font-weight: 700 !important;
-      border: 1px solid rgba(254, 205, 211, 0.6) !important;
-      box-shadow: 3px 3px 8px rgba(190, 18, 60, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-    }
-    body:not(.neo-dark) .apple-btn-orange {
-      background: linear-gradient(135deg, #ea580c, #c2410c) !important;
-      color: #ffffff !important;
-      font-weight: 700 !important;
-      border: 1px solid rgba(254, 215, 170, 0.6) !important;
-      box-shadow: 3px 3px 8px rgba(194, 65, 12, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-    }
-    body:not(.neo-dark) .apple-btn-teal {
-      background: linear-gradient(135deg, #0d9488, #0f766e) !important;
-      color: #ffffff !important;
-      font-weight: 700 !important;
-      border: 1px solid rgba(153, 246, 228, 0.6) !important;
-      box-shadow: 3px 3px 8px rgba(15, 118, 110, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-    }
-    body:not(.neo-dark) .apple-btn-forest {
-      background: linear-gradient(135deg, #15803d, #166534) !important;
-      color: #ffffff !important;
-      font-weight: 700 !important;
-      border: 1px solid rgba(187, 247, 208, 0.6) !important;
-      box-shadow: 3px 3px 8px rgba(22, 101, 52, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-    }
-    body:not(.neo-dark) .apple-btn-ocean {
-      background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
-      color: #ffffff !important;
-      font-weight: 700 !important;
-      border: 1px solid rgba(191, 219, 254, 0.6) !important;
-      box-shadow: 3px 3px 8px rgba(29, 78, 216, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-    }
-    body:not(.neo-dark) .apple-btn-cyan {
-      background: linear-gradient(135deg, #0891b2, #0e7490) !important;
-      color: #ffffff !important;
-      font-weight: 700 !important;
-      border: 1px solid rgba(165, 243, 252, 0.6) !important;
-      box-shadow: 3px 3px 8px rgba(14, 116, 144, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-    }
-    body:not(.neo-dark) .apple-btn-burgundy {
-      background: linear-gradient(135deg, #991b1b, #7f1d1d) !important;
-      color: #ffffff !important;
-      font-weight: 700 !important;
-      border: 1px solid rgba(254, 202, 202, 0.6) !important;
-      box-shadow: 3px 3px 8px rgba(127, 29, 29, 0.25), -2px -2px 6px #ffffff, inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
     }
 
     input,
