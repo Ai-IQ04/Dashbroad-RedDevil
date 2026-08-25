@@ -244,7 +244,7 @@ body,
     /* ================= 100% Unified Minimal Executive Neumorphism (Orange / White / Black) ================= */
     /* ทุกปุ่มในระบบเป็น Soft Neumorphic ทรงเดียวกัน สีเดียวกัน 100% */
     .apple-btn,
-    button:not(.dark-mode-toggle):not(#theme-toggle-btn) {
+    button:not(.dark-mode-toggle):not(#theme-toggle-btn):not(#nav-tab-scoring):not(#nav-tab-boss-timer) {
       background: linear-gradient(145deg, #ffffff, #f1f5f9) !important;
       color: #0f172a !important;
       font-weight: 700 !important;
@@ -263,7 +263,7 @@ body,
 
     /* เอฟเฟกต์เมื่อ Hover */
     .apple-btn:hover,
-    button:not(.dark-mode-toggle):not(#theme-toggle-btn):hover {
+    button:not(.dark-mode-toggle):not(#theme-toggle-btn):not(#nav-tab-scoring):not(#nav-tab-boss-timer):hover {
       background: #ffffff !important;
       color: #ea580c !important;
       border-color: rgba(249, 115, 22, 0.45) !important;
@@ -277,7 +277,7 @@ body,
 
     /* เอฟเฟกต์เมื่อคลิก (Pressed) */
     .apple-btn:active,
-    button:not(.dark-mode-toggle):not(#theme-toggle-btn):active {
+    button:not(.dark-mode-toggle):not(#theme-toggle-btn):not(#nav-tab-scoring):not(#nav-tab-boss-timer):active {
       box-shadow: inset 2px 2px 5px #d2d9e4, inset -2px -2px 5px #ffffff !important;
       transform: scale(0.97) !important;
     }
@@ -300,7 +300,7 @@ body,
 
     /* ================= Dark Mode Overrides (100% Unified) ================= */
     body.neo-dark .apple-btn,
-    body.neo-dark button:not(.dark-mode-toggle):not(#theme-toggle-btn) {
+    body.neo-dark button:not(.dark-mode-toggle):not(#theme-toggle-btn):not(#nav-tab-scoring):not(#nav-tab-boss-timer) {
       background: linear-gradient(145deg, #1e293b, #0f172a) !important;
       color: #f8fafc !important;
       border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -311,7 +311,7 @@ body,
       color: #fb923c !important;
     }
     body.neo-dark .apple-btn:hover,
-    body.neo-dark button:not(.dark-mode-toggle):not(#theme-toggle-btn):hover {
+    body.neo-dark button:not(.dark-mode-toggle):not(#theme-toggle-btn):not(#nav-tab-scoring):not(#nav-tab-boss-timer):hover {
       background: linear-gradient(145deg, #334155, #1e293b) !important;
       color: #fb923c !important;
       border-color: rgba(249, 115, 22, 0.6) !important;
