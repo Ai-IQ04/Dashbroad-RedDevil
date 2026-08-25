@@ -71,39 +71,40 @@
     <!-- Tier 1: Main Header Bar (Logo / Module Switcher / System Controls) -->
     <div class="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
 
-      <!-- Left: Logo, Title, Online Count (Neumorphic Raised Plaque) -->
-      <div class="flex items-center gap-2.5 shrink-0">
-        <!-- Logo Raised Square -->
+      <!-- Left: Unified Brand Plaque (Logo + Title + Subtitle + Online Count) -->
+      <div class="flex items-center shrink-0">
         <div
-          class="h-11 w-11 rounded-2xl bg-white dark:bg-slate-900 flex items-center justify-center shrink-0 shadow-[3px_3px_8px_#d1d9e6,-3px_-3px_8px_#ffffff] dark:shadow-[3px_3px_8px_rgba(0,0,0,0.6),-1px_-1px_4px_rgba(255,255,255,0.04)] border border-slate-200/90 dark:border-white/10 p-1 cursor-pointer transition hover:scale-105 overflow-hidden group">
-          <img src="lord_nine_logo.jpg" alt="LORD NINE Logo" class="w-full h-full object-cover rounded-xl transition-transform duration-300 group-hover:scale-110">
-        </div>
-
-        <!-- Title & Subtitle Raised Plaque -->
-        <div
-          class="flex flex-col justify-center px-3 py-1.5 bg-white/80 dark:bg-slate-900/80 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-[3px_3px_8px_#d1d9e6,-3px_-3px_8px_#ffffff] dark:shadow-[3px_3px_8px_rgba(0,0,0,0.6),-1px_-1px_4px_rgba(255,255,255,0.03)] backdrop-blur-sm">
-          <div class="flex items-center gap-2">
-            <h1 class="text-xs sm:text-sm font-extrabold text-[#0f172a] dark:text-white leading-tight tracking-tight flex items-center gap-1.5">
-              <span>Guild Activity & Scoring</span>
-              <span id="app-version-badge-top" class="hidden"></span>
-            </h1>
-            
-            <!-- 🟢 ป้ายแสดงจำนวนคนออนไลน์ Real-time -->
-            <div id="online-presence-badge"
-              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100/90 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 text-[9.5px] font-bold shadow-inner select-none cursor-help transition"
-              title="กำลังใช้งานอยู่ 1 คน">
-              <span class="relative flex h-1.5 w-1.5">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-              </span>
-              <span id="online-users-count" class="font-mono font-bold text-slate-900 dark:text-white">1</span>
-              <span id="online-users-label" class="hidden sm:inline text-[9px]" data-i18n="online_users_label">คนออนไลน์</span>
-            </div>
+          class="flex items-center gap-3 px-3 py-1.5 bg-white/90 dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[3px_3px_8px_#d1d9e6,-3px_-3px_8px_#ffffff] dark:shadow-[3px_3px_8px_rgba(0,0,0,0.6),-1px_-1px_4px_rgba(255,255,255,0.03)] backdrop-blur-sm transition hover:shadow-md">
+          <!-- Logo Image -->
+          <div class="h-10 w-10 rounded-xl overflow-hidden shadow-inner shrink-0 border border-black/5 dark:border-white/10 group cursor-pointer">
+            <img src="lord_nine_logo.jpg" alt="LORD NINE Logo" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
           </div>
-          
-          <p class="text-[10px] sm:text-[10.5px] text-slate-500 dark:text-slate-400 leading-none mt-1 font-medium" data-i18n="header_subtitle">
-            BlueDevil & RedDevil • ระบบเช็คชื่อ & บอสไทม์เมอร์
-          </p>
+
+          <!-- Text Block -->
+          <div class="flex flex-col justify-center">
+            <div class="flex items-center gap-2">
+              <h1 class="text-xs sm:text-sm font-extrabold text-[#0f172a] dark:text-white leading-tight tracking-tight flex items-center gap-1.5">
+                <span>Guild Activity & Scoring</span>
+                <span id="app-version-badge-top" class="hidden"></span>
+              </h1>
+              
+              <!-- 🟢 ป้ายแสดงจำนวนคนออนไลน์ Real-time -->
+              <div id="online-presence-badge"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100/90 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 text-[9.5px] font-bold shadow-inner select-none cursor-help transition"
+                title="กำลังใช้งานอยู่ 1 คน">
+                <span class="relative flex h-1.5 w-1.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                </span>
+                <span id="online-users-count" class="font-mono font-bold text-slate-900 dark:text-white">1</span>
+                <span id="online-users-label" class="hidden sm:inline text-[9px]" data-i18n="online_users_label">คนออนไลน์</span>
+              </div>
+            </div>
+            
+            <p class="text-[10px] sm:text-[10.5px] text-slate-500 dark:text-slate-400 leading-none mt-1 font-medium" data-i18n="header_subtitle">
+              BlueDevil & RedDevil • ระบบเช็คชื่อ & บอสไทม์เมอร์
+            </p>
+          </div>
         </div>
       </div>
 
