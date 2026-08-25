@@ -1,4 +1,4 @@
-const CACHE_NAME = 'reddevil-app-v66';
+const CACHE_NAME = 'reddevil-app-v67';
 const APP_SHELL = [
   './',
   './index.html',
@@ -37,7 +37,7 @@ self.addEventListener('fetch', event => {
     requestUrl.pathname.endsWith('/styles.css') ||
     requestUrl.pathname.endsWith('/boss_timer.js') ||
     requestUrl.pathname.startsWith('/assets/') ||
-    requestUrl.pathname.endsWith('/version.json');
+    false; // version.json is always network only
 
   // Never cache Firebase, Gemini, CDN, webhook, or other third-party responses.
   if (!isSameOrigin || !isAppAsset) return;
