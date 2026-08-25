@@ -7961,14 +7961,10 @@
 
     function openAdminManagementFromDropdown() {
       const dropdown = document.getElementById('admin-profile-dropdown');
-        if (dropdown) dropdown.classList.add('hidden');
-        const quickLogoutBtn = document.getElementById('admin-quick-logout-btn');
-        if (quickLogoutBtn) {
-          quickLogoutBtn.classList.add('hidden');
-          quickLogoutBtn.classList.remove('inline-flex');
-        }
-      openAdminManagementModal();
+      if (dropdown) dropdown.classList.add('hidden');
+      openAdminApprovalModal();
     }
+    window.openAdminManagementModal = openAdminApprovalModal;
 
     function openAuditLogsFromDropdown() {
       const dropdown = document.getElementById('admin-profile-dropdown');
