@@ -4509,7 +4509,14 @@
          "member_dashboard_status_approved": "อนุมัติแล้ว",
          "member_dashboard_status_rejected": "ไม่อนุมัติ",
          "member_dashboard_status_unknown": "ไม่ทราบสถานะ",
-        "btn_request_cp": "ขออัพเดท CP",
+         "discord_appeal_title": "🔔 สมาชิกยื่นคำขออุทธรณ์คะแนนบอส",
+         "discord_field_char": "👤 สมาชิก / กิลด์",
+         "discord_field_week": "📅 สัปดาห์",
+         "discord_field_boss": "⚔️ บอสที่ยื่นขอ",
+         "discord_field_reason": "📝 เหตุผล",
+         "discord_no_reason": "ไม่ได้ระบุเหตุผล",
+         "discord_field_time": "⏰ เวลายื่นคำขอ",
+         "btn_request_cp": "ขออัพเดท CP",
         "btn_approve_cp": "อนุมัติ CP",
         "btn_manage_admins": "จัดการ Admin",
         "btn_add_char": "เพิ่มตัวละคร",
@@ -5061,7 +5068,14 @@
          "member_dashboard_status_approved": "Approved",
          "member_dashboard_status_rejected": "Rejected",
          "member_dashboard_status_unknown": "Unknown status",
-        "btn_request_cp": "Request CP Update",
+         "discord_appeal_title": "🔔 Member Attendance Appeal Request",
+         "discord_field_char": "👤 Member / Guild",
+         "discord_field_week": "📅 Week",
+         "discord_field_boss": "⚔️ Bosses Requested",
+         "discord_field_reason": "📝 Reason",
+         "discord_no_reason": "No reason specified",
+         "discord_field_time": "⏰ Requested Time",
+         "btn_request_cp": "Request CP Update",
         "btn_approve_cp": "Approve CP",
         "btn_manage_admins": "Manage Admins",
         "btn_add_char": "Add Character",
@@ -6322,10 +6336,18 @@
       let discordMention = '';
       let matchedDiscord = member ? getDiscordVerifiedData(member) : null;
       if (!matchedDiscord && characterName) {
-        matchedDiscord = getDiscordVerifiedData({ characterName });
+        const foundMem = (typeof members !== 'undefined' && Array.isArray(members))
+          ? members.find(m => (m.characterName || m.name || '').trim().toLowerCase() === String(characterName).trim().toLowerCase())
+          : null;
+        if (foundMem) {
+          matchedDiscord = getDiscordVerifiedData(foundMem);
+        }
+        if (!matchedDiscord) {
+          matchedDiscord = getDiscordVerifiedData({ characterName });
+        }
       }
 
-      const discordUserId = matchedDiscord?.id || matchedDiscord?.userId || matchedDiscord?.discordUserId;
+      const discordUserId = matchedDiscord?.discordId || matchedDiscord?.id || matchedDiscord?.userId || matchedDiscord?.discordUserId;
       if (discordUserId) {
         discordMention = `<@${discordUserId}>`;
       } else if (discordContact && /^\d{17,20}$/.test(String(discordContact).trim())) {
@@ -6357,9 +6379,10 @@
 
       if (typeof fbDb !== 'undefined' && fbDb) {
         const alertKey = 'res_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        const mentionPrefix = discordMention.startsWith('<@') ? `${discordMention} ` : '';
         fbDb.ref('guild_app/bot_commands/outbound_alerts/' + alertKey).set({
           channelId: targetChannelId,
-          content: discordMention.startsWith('<@') ? `${discordMention} 🔔 คำขอของคุณได้รับการตอบกลับจาก Admin แล้วครับ` : undefined,
+          content: `${mentionPrefix}🔔 **ผลการพิจารณาคำขอ (${requestType})** สำหรับ **${characterName || 'สมาชิก'}**`,
           title: title,
           color: color,
           fields: fields,

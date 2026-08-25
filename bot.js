@@ -350,10 +350,13 @@ async function checkOutboundAlertsCommand() {
     outboundAlertsInProgress = true;
     for (const [key, item] of Object.entries(data)) {
       if (!item) continue;
-      const targetChannelId = item.channelId || CONFIG.ADMIN_REQUEST_CHANNEL_ID || '1541279270096212068';
+      const targetChannelId = item.channelId || CONFIG.REGISTRATION_CHANNEL_ID || CONFIG.ADMIN_REQUEST_CHANNEL_ID || '1508499750859575476';
 
-      const fallbackRole = CONFIG.ADMIN_ROLE_ID ? `<@&${CONFIG.ADMIN_ROLE_ID}>` : '<@&1508502265097621544>';
-      let content = (item.content !== undefined && item.content !== null && item.content !== '') ? item.content : (item.mentionTag || fallbackRole);
+      let content = (item.content !== undefined && item.content !== null && item.content !== '') ? String(item.content) : (item.mentionTag || '');
+      if (!content && targetChannelId === CONFIG.ADMIN_REQUEST_CHANNEL_ID) {
+        content = CONFIG.ADMIN_ROLE_ID ? `<@&${CONFIG.ADMIN_ROLE_ID}>` : '<@&1508502265097621544>';
+      }
+
       if (typeof content === 'string' && content.startsWith('<a&')) {
         content = content.replace(/^<a&/, '<@&');
       }
