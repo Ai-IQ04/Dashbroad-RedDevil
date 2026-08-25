@@ -143,6 +143,14 @@
           </button>
         </div>
 
+        <!-- ปุ่มเปิด/ปิด เลขา AI น้องเดวิล (Admin Only) -->
+        <button id="btn-toggle-nong-devil" onclick="toggleNongDevilVisibilityFromHeader()"
+          class="hidden apple-btn bg-slate-900 hover:bg-slate-800 border border-rose-500/40 text-rose-300 hover:text-white items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
+          title="เปิด/ซ่อน เลขา AI น้องเดวิล">
+          <i class="fa-solid fa-wand-magic-sparkles text-rose-400 text-xs"></i>
+          <span class="hidden xl:inline">น้องเดวิล AI</span>
+        </button>
+
         <!-- ปุ่มสลับภาษา -->
         <button id="btn-lang-toggle" onclick="toggleLanguage()"
           class="apple-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sky-300 hover:text-white inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs shadow-sm"
@@ -7676,11 +7684,22 @@
           }
         }
 
-        // แสดงปุ่มเลขา AI น้องเดวิลเฉพาะ Admin
+        // แสดงปุ่มเลขา AI น้องเดวิลเฉพาะ Admin (และตรวจสอบว่าไม่ได้ถูกซ่อนไว้)
+        const isNongDevilHidden = localStorage.getItem('guild_hide_nong_devil') === 'true';
         const nongDevilBtn = document.getElementById('nong-devil-floating-btn');
+        const headerNongDevilBtn = document.getElementById('btn-toggle-nong-devil');
+        if (headerNongDevilBtn) {
+          headerNongDevilBtn.classList.remove('hidden');
+          headerNongDevilBtn.classList.add('inline-flex');
+        }
         if (nongDevilBtn) {
-          nongDevilBtn.classList.remove('hidden');
-          nongDevilBtn.classList.add('flex');
+          if (!isNongDevilHidden) {
+            nongDevilBtn.classList.remove('hidden');
+            nongDevilBtn.classList.add('flex');
+          } else {
+            nongDevilBtn.classList.add('hidden');
+            nongDevilBtn.classList.remove('flex');
+          }
         }
       } else {
         toggleBtn.className = "apple-btn apple-btn-slate inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold shadow-sm";
@@ -7722,6 +7741,11 @@
 
         // ซ่อนปุ่มและปิดหน้าต่างเลขา AI น้องเดวิลเมื่อเป็นโหมด Viewer
         const nongDevilBtn = document.getElementById('nong-devil-floating-btn');
+        const headerNongDevilBtn = document.getElementById('btn-toggle-nong-devil');
+        if (headerNongDevilBtn) {
+          headerNongDevilBtn.classList.add('hidden');
+          headerNongDevilBtn.classList.remove('inline-flex');
+        }
         if (nongDevilBtn) {
           nongDevilBtn.classList.add('hidden');
           nongDevilBtn.classList.remove('flex');
@@ -8495,6 +8519,39 @@
 
         showToast(`${actionLabel} ให้ ${guildLabel} (${actLabel}) จำนวน ${affectedCount} คน เรียบร้อยแล้ว!`, 'success');
       });
+    }
+
+    
+    // ================= 😈 ฟังก์ชันซ่อน/แสดงน้องเดวิล (Nong Devil Toggle Controller) =================
+    function hideNongDevilPermanently(e) {
+      if (e && e.stopPropagation) e.stopPropagation();
+      localStorage.setItem('guild_hide_nong_devil', 'true');
+      const floatingBtn = document.getElementById('nong-devil-floating-btn');
+      const chatModal = document.getElementById('nong-devil-chat-modal');
+      if (floatingBtn) {
+        floatingBtn.classList.add('hidden');
+        floatingBtn.classList.remove('flex');
+      }
+      if (chatModal) {
+        chatModal.classList.add('hidden');
+        chatModal.classList.remove('flex');
+      }
+      showToast('ซ่อนน้องเดวิลแล้วค่ะ (เปิดใหม่ได้ที่ปุ่ม "น้องเดวิล AI" บนหัวเว็บ)', 'info');
+    }
+
+    function toggleNongDevilVisibilityFromHeader() {
+      const isHidden = localStorage.getItem('guild_hide_nong_devil') === 'true';
+      const floatingBtn = document.getElementById('nong-devil-floating-btn');
+      if (isHidden) {
+        localStorage.removeItem('guild_hide_nong_devil');
+        if (floatingBtn && isAdmin) {
+          floatingBtn.classList.remove('hidden');
+          floatingBtn.classList.add('flex');
+        }
+        showToast('เรียกน้องเดวิลกลับมาแล้วค่ะ! 😈', 'success');
+      } else {
+        hideNongDevilPermanently();
+      }
     }
 
     // ================= 📸 ระบบ AI สแกนรูปจัดการชุมนุมเพื่อติ๊กคะแนนบอส (AI Squad Attendance Scanner) =================
