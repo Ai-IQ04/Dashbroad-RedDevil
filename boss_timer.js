@@ -713,11 +713,11 @@ function initBossTimerModule() {
 
   // Restore Last Active Module (Scoring vs Boss Timer)
   try {
-    const savedModule = localStorage.getItem('guild_active_app_module');
-    if (savedModule === 'boss_timer') {
-      switchAppModule('boss_timer');
-    }
-  } catch (e) { }
+    const savedModule = localStorage.getItem('guild_active_app_module') || 'scoring';
+    switchAppModule(savedModule);
+  } catch (e) {
+    switchAppModule('scoring');
+  }
 }
 
 // View Mode: 'grid' | 'table'
