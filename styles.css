@@ -4457,42 +4457,24 @@ body:not(.neo-dark) #app-version-badge-footer {
 }
 
 
-/* 🔑 ปุ่มเข้าสู่ระบบ (Admin Login Button) คมชัดทุกโหมด */
-body:not(.neo-dark) #admin-toggle-btn {
-  background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
-  color: #ffffff !important;
-  border: 1px solid #3730a3 !important;
-  box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3) !important;
-  font-weight: 800 !important;
+
+
+/* ==========================================================================
+   🔑 ADMIN & LOGIN BUTTON CONTROLS (CLEAN & BULLETPROOF)
+   ========================================================================== */
+
+/* 🚫 บังคับซ่อน Element ที่มีคลาส .hidden อย่างเด็ดขาด */
+.hidden,
+[class~="hidden"],
+#member-hub-container.hidden,
+#admin-hub-container.hidden,
+#admin-profile-dropdown.hidden,
+#admin-quick-logout-btn.hidden,
+#btn-toggle-viewer-preview.hidden {
+  display: none !important;
 }
 
-body:not(.neo-dark) #admin-toggle-btn span,
-body:not(.neo-dark) #admin-toggle-btn i {
-  color: #ffffff !important;
-  display: inline-block !important;
-}
-
-body:not(.neo-dark) #admin-toggle-btn:hover {
-  background: linear-gradient(135deg, #4338ca, #312e81) !important;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.45) !important;
-}
-
-body.neo-dark #admin-toggle-btn {
-  background: rgba(99, 102, 241, 0.2) !important;
-  color: #c7d2fe !important;
-  border: 1px solid rgba(99, 102, 241, 0.45) !important;
-  box-shadow: 0 0 12px rgba(99, 102, 241, 0.2) !important;
-  font-weight: 700 !important;
-}
-
-body.neo-dark #admin-toggle-btn span,
-body.neo-dark #admin-toggle-btn i {
-  color: #e0e7ff !important;
-  display: inline-block !important;
-}
-
-
-/* 🔑 บังคับให้ปุ่มเข้าสู่ระบบแสดงข้อความและไอคอนเสมอ */
+/* 🔘 ปุ่ม Admin Base */
 #admin-toggle-btn {
   display: inline-flex !important;
   align-items: center !important;
@@ -4501,102 +4483,74 @@ body.neo-dark #admin-toggle-btn i {
   padding: 0.35rem 0.75rem !important;
   border-radius: 0.85rem !important;
   white-space: nowrap !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
 }
 
 #admin-toggle-btn span {
   display: inline-block !important;
   font-size: 0.75rem !important;
-  font-weight: 700 !important;
-  visibility: visible !important;
 }
 
 #admin-toggle-btn i {
   display: inline-block !important;
   font-size: 0.75rem !important;
-  visibility: visible !important;
 }
 
-/* โหมดสว่าง */
-body:not(.neo-dark) #admin-toggle-btn {
-  background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
-  color: #ffffff !important;
-  border: 1px solid #3730a3 !important;
-  box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3) !important;
-}
-
-body:not(.neo-dark) #admin-toggle-btn span,
-body:not(.neo-dark) #admin-toggle-btn i {
-  color: #ffffff !important;
-}
-
-/* โหมดมืด */
-body.neo-dark #admin-toggle-btn {
-  background: rgba(99, 102, 241, 0.25) !important;
-  color: #c7d2fe !important;
-  border: 1px solid rgba(99, 102, 241, 0.5) !important;
-  box-shadow: 0 0 12px rgba(99, 102, 241, 0.25) !important;
-}
-
-body.neo-dark #admin-toggle-btn span,
-body.neo-dark #admin-toggle-btn i {
-  color: #e0e7ff !important;
-}
-
-
-/* 🚫 บังคับซ่อน Element ที่มีคลาส .hidden อย่างเด็ดขาด */
-.hidden,
-[class~="hidden"],
-#member-hub-container.hidden,
-#admin-hub-container.hidden,
-#admin-profile-dropdown.hidden {
-  display: none !important;
-}
-
-
-/* 🔑 สไตล์ปุ่ม Admin: แยกสถานะก่อนและหลังล็อกอินอย่างถูกต้อง */
+/* 1. เมื่อยังไม่ล็อกอิน (โหมดสว่าง) */
 body:not(.neo-dark) #admin-toggle-btn:not(.apple-btn-gold):not(.apple-btn-ruby):not(.apple-btn-amber) {
   background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
   color: #ffffff !important;
   border: 1px solid #3730a3 !important;
   box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3) !important;
 }
+body:not(.neo-dark) #admin-toggle-btn:not(.apple-btn-gold):not(.apple-btn-ruby):not(.apple-btn-amber) span,
+body:not(.neo-dark) #admin-toggle-btn:not(.apple-btn-gold):not(.apple-btn-ruby):not(.apple-btn-amber) i {
+  color: #ffffff !important;
+}
 
+/* 2. เมื่อยังไม่ล็อกอิน (โหมดมืด) */
 body.neo-dark #admin-toggle-btn:not(.apple-btn-gold):not(.apple-btn-ruby):not(.apple-btn-amber) {
   background: rgba(99, 102, 241, 0.25) !important;
   color: #c7d2fe !important;
   border: 1px solid rgba(99, 102, 241, 0.5) !important;
   box-shadow: 0 0 12px rgba(99, 102, 241, 0.25) !important;
 }
+body.neo-dark #admin-toggle-btn:not(.apple-btn-gold):not(.apple-btn-ruby):not(.apple-btn-amber) span,
+body.neo-dark #admin-toggle-btn:not(.apple-btn-gold):not(.apple-btn-ruby):not(.apple-btn-amber) i {
+  color: #e0e7ff !important;
+}
 
-/* 👑 เมื่อล็อกอินแล้ว: คงสีสันเฉพาะตัวตาม Role */
+/* 3. เมื่อล็อกอินเป็น Super Admin (สีทองอร่าม) */
 #admin-toggle-btn.apple-btn-gold {
   background: linear-gradient(135deg, #f59e0b, #d97706) !important;
   color: #0f172a !important;
   border: 1px solid #fde68a !important;
-  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4) !important;
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.45) !important;
 }
 #admin-toggle-btn.apple-btn-gold span,
 #admin-toggle-btn.apple-btn-gold i {
   color: #0f172a !important;
 }
 
+/* 4. เมื่อล็อกอินเป็น Admin ทั่วไป (สีทับทิม) */
 #admin-toggle-btn.apple-btn-ruby {
   background: linear-gradient(135deg, #e11d48, #be123c) !important;
   color: #ffffff !important;
   border: 1px solid #fda4af !important;
-  box-shadow: 0 2px 10px rgba(225, 29, 72, 0.35) !important;
+  box-shadow: 0 2px 10px rgba(225, 29, 72, 0.4) !important;
 }
 #admin-toggle-btn.apple-btn-ruby span,
 #admin-toggle-btn.apple-btn-ruby i {
   color: #ffffff !important;
 }
 
+/* 5. เมื่อล็อกอินเป็น Admin บอส (สีอำพัน) */
 #admin-toggle-btn.apple-btn-amber {
   background: linear-gradient(135deg, #f59e0b, #b45309) !important;
   color: #ffffff !important;
   border: 1px solid #fde68a !important;
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.35) !important;
 }
 #admin-toggle-btn.apple-btn-amber span,
 #admin-toggle-btn.apple-btn-amber i {
