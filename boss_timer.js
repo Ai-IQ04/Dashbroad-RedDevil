@@ -306,10 +306,10 @@ function switchAppModule(moduleName) {
     if (btnResetTop) btnResetTop.classList.add('hidden');
 
     if (tabScoring) {
-      tabScoring.className = "apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-2 active:scale-95";
+      tabScoring.classList.remove('active-module-tab');
     }
     if (tabBoss) {
-      tabBoss.className = "apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-orange-500/20 active:scale-95";
+      tabBoss.classList.add('active-module-tab');
     }
     renderBossTimerCards();
   } else {
@@ -333,10 +333,10 @@ function switchAppModule(moduleName) {
     }
 
     if (tabScoring) {
-      tabScoring.className = "apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-orange-500/20 active:scale-95";
+      tabScoring.classList.add('active-module-tab');
     }
     if (tabBoss) {
-      tabBoss.className = "apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-2 active:scale-95";
+      tabBoss.classList.remove('active-module-tab');
     }
 
     if (typeof renderTableHeader === 'function') renderTableHeader();

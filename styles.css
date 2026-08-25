@@ -173,6 +173,74 @@ body,
       transform: scale(1.18);
     }
 
+    /* ================= Neumorphic Capsule Module Switcher (Orange / White / Black) ================= */
+    #nav-module-switcher-container {
+      background: #eef2f6 !important;
+      border: 1px solid rgba(203, 213, 225, 0.9) !important;
+      box-shadow: inset 2px 2px 5px #d1d9e6, inset -2px -2px 5px #ffffff !important;
+      border-radius: 9999px !important;
+      padding: 4px !important;
+      gap: 4px !important;
+    }
+
+    #nav-module-switcher-container button {
+      border-radius: 9999px !important;
+      min-height: 2.25rem !important;
+      padding: 0.4rem 1.25rem !important;
+      border: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    /* Inactive Tab */
+    #nav-module-switcher-container button:not(.active-module-tab) {
+      color: #64748b !important;
+      font-weight: 700 !important;
+    }
+    #nav-module-switcher-container button:not(.active-module-tab) i {
+      color: #ea580c !important;
+    }
+    #nav-module-switcher-container button:not(.active-module-tab):hover {
+      color: #0f172a !important;
+      background: rgba(255, 255, 255, 0.65) !important;
+      box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    /* Active Tab (Hero Orange Glow) */
+    #nav-module-switcher-container button.active-module-tab {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+      color: #ffffff !important;
+      font-weight: 800 !important;
+      box-shadow: 3px 3px 10px rgba(234, 88, 12, 0.4), -2px -2px 6px #ffffff !important;
+      border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    }
+    #nav-module-switcher-container button.active-module-tab i {
+      color: #ffffff !important;
+    }
+
+    /* Dark Mode Module Switcher */
+    body.neo-dark #nav-module-switcher-container {
+      background: #090e17 !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.7), inset -1px -1px 3px rgba(255, 255, 255, 0.04) !important;
+    }
+    body.neo-dark #nav-module-switcher-container button:not(.active-module-tab) {
+      color: #94a3b8 !important;
+    }
+    body.neo-dark #nav-module-switcher-container button:not(.active-module-tab) i {
+      color: #fb923c !important;
+    }
+    body.neo-dark #nav-module-switcher-container button:not(.active-module-tab):hover {
+      color: #ffffff !important;
+      background: rgba(255, 255, 255, 0.06) !important;
+    }
+    body.neo-dark #nav-module-switcher-container button.active-module-tab {
+      background: linear-gradient(135deg, #f97316 0%, #c2410c 100%) !important;
+      box-shadow: 4px 4px 14px rgba(234, 88, 12, 0.5), -1px -1px 4px rgba(255, 255, 255, 0.05) !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+
     /* ================= 100% Unified Minimal Executive Neumorphism (Orange / White / Black) ================= */
     /* ทุกปุ่มในระบบเป็น Soft Neumorphic ทรงเดียวกัน สีเดียวกัน 100% */
     .apple-btn,

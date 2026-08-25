@@ -104,16 +104,16 @@
 
       <!-- Center: Prominent Segmented Nav Switcher -->
       <div class="flex items-center justify-center flex-1 mx-2">
-        <div
-          class="flex items-center p-1 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-xl backdrop-blur-xl">
+        <div id="nav-module-switcher-container"
+          class="flex items-center">
           <button id="nav-tab-scoring" onclick="switchAppModule('scoring')"
-            class="apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-orange-500/20 active:scale-95">
+            class="active-module-tab text-xs font-extrabold flex items-center gap-2 cursor-pointer active:scale-95">
             <i class="fa-solid fa-shield-halved text-sm"></i>
             <span data-i18n="nav_scoring">เช็คชื่อ & คะแนนกิลด์</span>
           </button>
           <button id="nav-tab-boss-timer" onclick="switchAppModule('boss_timer')"
-            class="apple-btn px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-2 active:scale-95">
-            <i class="fa-solid fa-stopwatch text-amber-400 text-sm"></i>
+            class="text-xs font-extrabold flex items-center gap-2 cursor-pointer active:scale-95">
+            <i class="fa-solid fa-stopwatch text-sm"></i>
             <span data-i18n="nav_boss_timer">บอสไทม์เมอร์</span>
             <span id="badge-boss-alive-count"
               class="hidden px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-rose-600 text-white animate-pulse shadow-md">0</span>
