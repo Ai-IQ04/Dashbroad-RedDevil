@@ -21094,14 +21094,14 @@ Output strictly valid JSON with no markdown formatting.`;
         </div>
         <div>
           <h3 class="text-sm font-bold text-white">รีเซ็ตเวลาหลังเปิดเซิร์ฟ (Maintenance)</h3>
-          <p class="text-[11px] text-slate-400">เริ่มนับเวลาบอสที่มีชม.เกิด (คอลัมน์ E) พร้อมกัน</p>
+          <p class="text-[11px] text-slate-400">ตั้งค่าบอส Interval ให้เกิดพร้อมกันทันทีหลังเปิดเซิร์ฟ</p>
         </div>
       </div>
 
       <div class="p-3 bg-amber-950/40 border border-amber-500/30 rounded-2xl text-[11px] text-amber-200 mb-4 space-y-1">
         <div class="font-bold flex items-center gap-1"><i class="fa-solid fa-circle-info"></i> คำแนะนำ:</div>
-        <div>• บอสที่นับชั่วโมงเกิด (Interval) ทุกตัวจะเริ่มนับเวลาเกิดใหม่พร้อมกัน ณ เวลาที่ระบุ</div>
-        <div>• บอสที่มีเวลาเกิดประจำสัปดาห์ (Fixed Schedule) จะไม่ถูกเปลี่ยนแปลง</div>
+        <div>• บอสที่นับชั่วโมงเกิด (Interval) ทุกตัวจะเปลี่ยนสถานะเป็น "🔥 เกิดแล้ว (ALIVE)" พร้อมกันทันที ณ เวลาเปิดเซิร์ฟ</div>
+        <div>• บอสที่มีเวลาเกิดประจำสัปดาห์ (Fixed Schedule) จะไม่ถูกเปลี่ยนแปลง (ยึดตามตารางเดิม)</div>
       </div>
 
       <form onsubmit="handleConfirmMaintenance(event)" class="space-y-3">

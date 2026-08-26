@@ -576,7 +576,12 @@ async function testBossDiscordAlert() {
 }
 
 function getBossTimerSourceLabel(boss, timer, isEn) {
-  if (timer && timer.customNextSpawn) return isEn ? 'Admin custom time' : 'เวลา Admin ตั้งเอง';
+  if (timer && timer.customNextSpawn) {
+    if (timer.recordedBy && timer.recordedBy.includes('Server Maintenance')) {
+      return isEn ? 'Spawned (Server Open)' : 'เกิดทันทีหลังเปิดเซิร์ฟ';
+    }
+    return isEn ? 'Admin custom time' : 'เวลา Admin ตั้งเอง';
+  }
   if (boss.respawnType === 'interval') return isEn ? `Interval ${boss.intervalHours}h` : `นับจากเวลาตาย ${boss.intervalHours} ชม.`;
   return isEn ? `Fixed • ${boss.scheduleText || 'Schedule'}` : `เกิดตามตาราง • ${boss.scheduleText || 'ตามตาราง'}`;
 }
@@ -2976,14 +2981,15 @@ function handleConfirmMaintenance(e) {
   const resetISO = resetDt.toISOString();
   let count = 0;
 
-  // Reset all interval bosses to calculate from this server open time
+  // Reset all interval bosses so they SPAWN IMMEDIATELY at server open time (ALIVE status)
+  // Fixed Schedule bosses are untouched (remain on their regular calendar schedule)
   bossList.forEach(boss => {
     if (boss.respawnType === 'interval') {
-      const nextSpawn = new Date(resetDt.getTime() + (boss.intervalHours * 3600 * 1000));
       bossTimerData[boss.id] = {
-        defeatedTime: resetISO,
-        nextSpawnTime: nextSpawn.toISOString(),
-        recordedBy: `${adminEmail} (Server Maintenance Reset)`,
+        defeatedTime: null,
+        customNextSpawn: resetISO,
+        nextSpawnTime: resetISO,
+        recordedBy: `${adminEmail} (Server Maintenance - Spawned)`,
         updatedAt: new Date().toISOString()
       };
       count++;
@@ -2996,13 +3002,13 @@ function handleConfirmMaintenance(e) {
   }
 
   if (typeof addAuditLog === 'function') {
-    addAuditLog('boss_maintenance', `รีเซ็ตเวลาบอส ${count} ตัวหลังเซิร์ฟเปิด`, `เวลาเปิดเซิร์ฟ: ${formatDateTimeShort(resetDt)} โดย: ${adminEmail}`, 'BossTimer');
+    addAuditLog('boss_maintenance', `รีเซ็ตบอสเกิดทันที ${count} ตัวหลังเซิร์ฟเปิด`, `เวลาเปิดเซิร์ฟ: ${formatDateTimeShort(resetDt)} โดย: ${adminEmail}`, 'BossTimer');
   }
 
   closeMaintenanceModal();
   renderBossTimerCards();
   updateUpcomingBossWidget();
-  showToast(`🛠️ รีเซ็ตเวลาบอสตามคอลัมน์ E ทั้งหมด ${count} ตัวเรียบร้อยแล้ว!`, 'success');
+  showToast(`🛠️ ปรับสถานะบอส Interval เกิดพร้อมกันทั้งหมด ${count} ตัวเรียบร้อยแล้ว!`, 'success');
   playChime();
 }
 
