@@ -7470,9 +7470,8 @@
       if (!str) return '';
       return str
         .toLowerCase()
-        .replace(/[\s\-_[\]().*:`\u200B]/g, '')
-        .replace(/^(btc|r|reddevil|bluedevil)/g, '')
-        .replace(/u/g, 'น');
+        .replace(/[\s\-_[\]().*:`\u200B|/\\#]/g, '')
+        .replace(/^(btc|r|reddevil|bluedevil)/g, '');
     }
 
     function getDiscordVerifiedData(member) {
@@ -18859,6 +18858,7 @@ Output strictly valid JSON with no markdown formatting.`;
         }
       }
 
+      const matchedDiscord = getDiscordVerifiedData(m);
       const reqEntry = {
         id: 'CHREQ-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
         originalCharName: originalCharName,
@@ -18868,6 +18868,8 @@ Output strictly valid JSON with no markdown formatting.`;
         newEmail: newEmail,
         oldGuild: m.guild || '-',
         newGuild: newGuild,
+        discordId: matchedDiscord?.discordId || m.discordId || '',
+        discordTag: matchedDiscord?.discordTag || m.discordTag || '',
         reason: reason || 'ขอแก้ไขข้อมูลตัวละคร',
         timestamp: Date.now(),
         dateStr: new Date().toLocaleString(currentLang === 'th' ? 'th-TH' : 'en-US'),
@@ -18999,11 +19001,15 @@ Output strictly valid JSON with no markdown formatting.`;
       const oldEmail = m.email || '-';
       const oldGuild = m.guild || '-';
 
+      // Pre-resolve Discord ID from old name/email before updating member object
+      const discordIdToUse = req.discordId || m.discordId || getDiscordVerifiedData(m)?.discordId || getDiscordVerifiedData({ characterName: oldName, email: oldEmail })?.discordId || '';
+
       // Update Member data
       m.characterName = req.newName;
       m.name = req.newName;
       m.email = req.newEmail;
       m.guild = req.newGuild;
+      if (discordIdToUse) m.discordId = discordIdToUse;
 
       // Update pin mapping if exists
       if (typeof memberPins !== 'undefined' && memberPins[oldName]) {
@@ -19033,9 +19039,11 @@ Output strictly valid JSON with no markdown formatting.`;
       sendAdminActionDiscordNotification({
         member: m,
         characterName: req.newName,
+        discordId: discordIdToUse,
+        discordContact: req.discordTag || req.discordId || oldEmail || req.newEmail,
         actionType: 'approve',
         requestType: 'แก้ไขข้อมูลตัวละคร / ย้ายกิลด์',
-        details: `อัปเดตชื่อเป็น "${req.newName}" และกิลด์ "${req.newGuild}" เรียบร้อยแล้ว`
+        details: `อัปเดตชื่อเป็น "${req.newName}" และกิลด์ "${req.newGuild}" เรียบร้อยแล้ว (ชื่อเดิม: ${oldName})`
       });
     }
 
@@ -19043,6 +19051,8 @@ Output strictly valid JSON with no markdown formatting.`;
       if (!isAdmin) return;
       const req = (charEditRequests || []).find(r => r.id === requestId);
       if (!req) return;
+
+      const discordIdToUse = req.discordId || getDiscordVerifiedData({ characterName: req.originalCharName, email: req.oldEmail })?.discordId || '';
 
       req.status = 'rejected';
       req.processedBy = currentAdminEmail || 'Admin';
@@ -19061,6 +19071,8 @@ Output strictly valid JSON with no markdown formatting.`;
       showToast(t('toast_char_edit_rejected', { name: req.originalCharName }), 'info');
       sendAdminActionDiscordNotification({
         characterName: req.originalCharName,
+        discordId: discordIdToUse,
+        discordContact: req.discordTag || req.discordId || req.oldEmail,
         actionType: 'reject',
         requestType: 'แก้ไขข้อมูลตัวละคร / ย้ายกิลด์',
         details: `คำขอแก้ไขข้อมูลของตัวละคร "${req.originalCharName}" ไม่ผ่านการอนุมัติ`
