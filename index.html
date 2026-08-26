@@ -6333,56 +6333,85 @@
 
 
     
-    // 📢 ฟังก์ชันส่งแจ้งเตือนผลการตอบโต้คำขอจาก Admin ไปยัง Discord (กระชับ & รองรับ TH/EN)
+    // 📢 ฟังก์ชันส่งแจ้งเตือนผลการตอบโต้คำขอจาก Admin ไปยัง Discord (ยึดแท็กตาม Discord ID 100%)
     function sendAdminActionDiscordNotification({
       targetChannelId = '1508499750859575476',
       member = null,
       characterName = '',
       discordContact = '',
-      actionType = 'approve', // 'approve' | 'reject' | 'info'
+      discordId = '',
+      actionType = 'approve', // 'approve' | 'reject' | 'info' | 'delivered'
       requestType = 'คำขอ',
       details = '',
       reason = '',
       adminEmail = currentAdminEmail || 'Admin',
       adminName = ''
     }) {
-      let discordMention = '';
-      let matchedDiscord = member ? getDiscordVerifiedData(member) : null;
-      if (!matchedDiscord && characterName) {
-        const foundMem = (typeof members !== 'undefined' && Array.isArray(members))
-          ? members.find(m => (m.characterName || m.name || '').trim().toLowerCase() === String(characterName).trim().toLowerCase())
-          : null;
-        if (foundMem) {
-          matchedDiscord = getDiscordVerifiedData(foundMem);
-        }
-        if (!matchedDiscord) {
-          matchedDiscord = getDiscordVerifiedData({ characterName });
+      let resolvedDiscordId = '';
+      
+      // 1. Direct ID passed
+      if (discordId && /^\d{17,20}$/.test(String(discordId).trim())) {
+        resolvedDiscordId = String(discordId).trim();
+      }
+
+      // 2. Direct ID from member object
+      if (!resolvedDiscordId && member) {
+        const mId = member.discordId || member.discordUserId || member.userId;
+        if (mId && /^\d{17,20}$/.test(String(mId).trim())) {
+          resolvedDiscordId = String(mId).trim();
         }
       }
 
-      const discordUserId = matchedDiscord?.discordId || matchedDiscord?.id || matchedDiscord?.userId || matchedDiscord?.discordUserId;
-      if (discordUserId) {
-        discordMention = `<@${discordUserId}>`;
-      } else if (discordContact && /^\d{17,20}$/.test(String(discordContact).trim())) {
-        discordMention = `<@${String(discordContact).trim()}>`;
+      // 3. Direct ID extracted from discordContact (e.g. "123456789012345678" or "<@123456789012345678>")
+      if (!resolvedDiscordId && discordContact) {
+        const match = String(discordContact).match(/(\d{17,20})/);
+        if (match && match[1]) {
+          resolvedDiscordId = match[1];
+        }
       }
+
+      // 4. Lookup from Discord Server Members and Registration DB via getDiscordVerifiedData
+      if (!resolvedDiscordId) {
+        let matchedDiscord = member ? getDiscordVerifiedData(member) : null;
+        if (!matchedDiscord && characterName) {
+          const foundMem = (typeof members !== 'undefined' && Array.isArray(members))
+            ? members.find(m => (m.characterName || m.name || '').trim().toLowerCase() === String(characterName).trim().toLowerCase())
+            : null;
+          if (foundMem) {
+            matchedDiscord = getDiscordVerifiedData(foundMem);
+          }
+          if (!matchedDiscord) {
+            matchedDiscord = getDiscordVerifiedData({ characterName });
+          }
+        }
+        if (matchedDiscord && matchedDiscord.discordId && /^\d{17,20}$/.test(String(matchedDiscord.discordId).trim())) {
+          resolvedDiscordId = String(matchedDiscord.discordId).trim();
+        }
+      }
+
+      let discordMention = resolvedDiscordId ? `<@${resolvedDiscordId}>` : '';
 
       const isApproved = actionType === 'approve';
       const isNeedsInfo = actionType === 'info';
-      const color = isApproved ? 0x10B981 : (isNeedsInfo ? 0xF59E0B : 0xEF4444);
+      const isDelivered = actionType === 'delivered';
+      const color = (isApproved || isDelivered) ? 0x10B981 : (isNeedsInfo ? 0xF59E0B : 0xEF4444);
 
-      const statusBadge = isApproved
+      let statusBadge = isApproved
         ? '✅ ผ่านการอนุมัติ (Approved)'
-        : (isNeedsInfo ? 'ℹ️ ขอข้อมูลเพิ่ม (Needs Info)' : '❌ ไม่อนุมัติ (Rejected)');
+        : (isNeedsInfo ? 'ℹ️ ขอข้อมูลเพิ่ม (Needs Info)' : (isDelivered ? '🎁 จัดส่งของรางวัลสำเร็จ (Delivered)' : '❌ ไม่อนุมัติ (Rejected)'));
 
-      const title = isApproved
+      let title = isApproved
         ? `✅ อนุมัติคำขอ: ${requestType}`
-        : (isNeedsInfo ? `ℹ️ ขอข้อมูลเพิ่มเติม: ${requestType}` : `❌ ปฏิเสธคำขอ: ${requestType}`);
+        : (isNeedsInfo ? `ℹ️ ขอข้อมูลเพิ่มเติม: ${requestType}` : (isDelivered ? `🎁 จัดส่งสำเร็จ: ${requestType}` : `❌ ปฏิเสธคำขอ: ${requestType}`));
 
       const fields = [
         { name: '👤 ตัวละคร (Character)', value: `**${characterName || '-'}**`, inline: true },
         { name: '📋 ผลลัพธ์ (Status)', value: `**${statusBadge}**`, inline: true }
       ];
+
+      if (resolvedDiscordId) {
+        fields.push({ name: '🆔 Discord Member', value: `<@${resolvedDiscordId}>`, inline: true });
+      }
 
       if (details) {
         fields.push({ name: '📝 รายละเอียด (Details)', value: String(details), inline: false });
@@ -7449,6 +7478,21 @@
     function getDiscordVerifiedData(member) {
       if (!member) return null;
 
+      // 0. หากมี Discord ID ระบุไว้โดยตรงในข้อมูลสมาชิก
+      const directId = member.discordId || member.discordUserId || member.userId;
+      if (directId && /^\d{17,20}$/.test(String(directId).trim())) {
+        return {
+          characterName: member.characterName || member.name || '',
+          discordName: member.discordName || member.name || '',
+          discordTag: member.discordTag || '',
+          discordId: String(directId).trim(),
+          roles: member.roles || [],
+          matchSource: 'direct_id',
+          active: true,
+          verified: true
+        };
+      }
+
       const memEmail = (member.email || '').trim().toLowerCase();
       const rawMemName = (member.characterName || member.name || '').trim();
       const memName = cleanDiscordName(rawMemName);
@@ -8494,6 +8538,15 @@
       );
 
       showToast(`อนุมัติสิทธิ์ ${roleName} ให้ "${req.email}" เรียบร้อยแล้ว`, 'success');
+      sendAdminActionDiscordNotification({
+        targetChannelId: '1541279270096212068',
+        characterName: req.name || req.email,
+        discordContact: req.discordTag || req.discordContact || req.email,
+        actionType: 'approve',
+        requestType: 'ขอสิทธิ์ผู้ดูแล (Admin Registration)',
+        details: `อนุมัติสิทธิ์ **${roleName}** สำหรับอีเมล \`${req.email}\` (ชื่อ: ${req.name || '-'}) เรียบร้อยแล้ว`,
+        adminEmail: currentAdminEmail || 'Super Admin'
+      });
     }
 
     function toggleAdminRole(email, newRole) {
@@ -8535,6 +8588,15 @@
       );
 
       showToast(`ปฏิเสธคำขอของ "${req.email}" แล้ว`, 'info');
+      sendAdminActionDiscordNotification({
+        targetChannelId: '1541279270096212068',
+        characterName: req.name || req.email,
+        discordContact: req.discordTag || req.discordContact || req.email,
+        actionType: 'reject',
+        requestType: 'ขอสิทธิ์ผู้ดูแล (Admin Registration)',
+        details: `คำขอสิทธิ์ผู้ดูแลสำหรับอีเมล \`${req.email}\` ไม่ผ่านการอนุมัติ`,
+        adminEmail: currentAdminEmail || 'Super Admin'
+      });
     }
 
     async function changeAdminPasswordPrompt(email) {
@@ -14299,9 +14361,15 @@ Output strictly valid JSON with no markdown formatting.`;
         );
       }
 
+      const member = (typeof members !== 'undefined' && Array.isArray(members))
+        ? (members.find(m => String(m.id) === String(req.memberId)) || members.find(m => (m.characterName || '').toLowerCase() === (req.characterName || '').toLowerCase()))
+        : null;
+
       showToast(t('toast_cp_rejected', { name: req.characterName }) + ` (เหตุผล: ${reason})`, 'info');
       sendAdminActionDiscordNotification({
+        member: member,
         characterName: req.characterName,
+        discordContact: req.discordContact || req.discordTag || req.discordId,
         actionType: 'reject',
         requestType: 'ปรับคะแนน CP',
         details: `คำขอปรับ CP เป็น ${Number(req.newCp).toLocaleString()} (สัปดาห์ที่ ${req.weekNumber || currentWeekNumber})`,
@@ -14559,6 +14627,17 @@ Output strictly valid JSON with no markdown formatting.`;
           req.characterName
         );
       }
+
+      showToast(t('toast_cp_approved', { name: req.characterName, cp: Number(req.newCp).toLocaleString() }), 'success');
+      sendAdminActionDiscordNotification({
+        member: member,
+        characterName: req.characterName,
+        discordContact: req.discordContact || req.discordTag || req.discordId,
+        actionType: 'approve',
+        requestType: 'ปรับคะแนน CP',
+        details: `อัปเดต CP เป็น **${Number(req.newCp).toLocaleString()}** (สัปดาห์ที่ ${req.weekNumber || currentWeekNumber}) เรียบร้อยแล้ว`,
+        adminEmail: currentAdminEmail || 'Admin'
+      });
     }
 
     function rejectCpRequest(requestId) {
@@ -17606,6 +17685,14 @@ Output strictly valid JSON with no markdown formatting.`;
       }
 
       showToast(`อนุมัติคำขอของ "${req.memberName}" แล้ว (ย้ายไปรอส่งของในเกม)`, 'success');
+      sendAdminActionDiscordNotification({
+        characterName: req.memberName,
+        discordContact: req.discordTag || req.discordId,
+        actionType: 'approve',
+        requestType: 'แลกของรางวัล',
+        details: `อนุมัติคำขอแลกของรางวัล **"${req.itemName}"** (${deductQty} ชิ้น) เรียบร้อยแล้ว (สถานะ: รอส่งของในเกม)`,
+        adminEmail: currentAdminEmail || 'Admin'
+      });
       renderRewardApprovalList();
       renderRewardStoreCatalog();
       renderAdminStoreInventory();
@@ -17640,6 +17727,14 @@ Output strictly valid JSON with no markdown formatting.`;
       }
 
       showToast(`ปฏิเสธคำขอของ "${req.memberName}" แล้ว (แต้มและสต็อกถูกคืนเข้าคลังเรียบร้อย)`, 'info');
+      sendAdminActionDiscordNotification({
+        characterName: req.memberName,
+        discordContact: req.discordTag || req.discordId,
+        actionType: 'reject',
+        requestType: 'แลกของรางวัล',
+        details: `คำขอแลกของรางวัล "${req.itemName}" ไม่ผ่านการอนุมัติ (แต้มคืนเข้าบัญชีแล้ว)`,
+        adminEmail: currentAdminEmail || 'Admin'
+      });
       renderRewardApprovalList();
       renderRewardStoreCatalog();
       renderAdminStoreInventory();
@@ -17668,6 +17763,14 @@ Output strictly valid JSON with no markdown formatting.`;
       }
 
       showToast(t('toast_marked_delivered', { name: req.memberName }), 'success');
+      sendAdminActionDiscordNotification({
+        characterName: req.memberName,
+        discordContact: req.discordTag || req.discordId,
+        actionType: 'delivered',
+        requestType: 'ส่งมอบของรางวัลในเกม',
+        details: `จัดส่งของรางวัล **"${req.itemName}"** ให้แก่ตัวละคร "${req.memberName}" ในเกมเรียบร้อยแล้ว! 🎁`,
+        adminEmail: currentAdminEmail || 'Admin'
+      });
       renderRewardApprovalList();
       renderStoreHistoryTable();
       updateRewardPendingBadge();
